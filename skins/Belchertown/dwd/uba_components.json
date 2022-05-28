@@ -1,0 +1,86 @@
+{
+    "1": {
+        "component id": "1",
+        "component code": "PM10",
+        "component symbol": "PM₁₀",
+        "component unit": "µg/m³",
+        "component name": "Feinstaub"
+    },
+    "2": {
+        "component id": "2",
+        "component code": "CO",
+        "component symbol": "CO",
+        "component unit": "mg/m³",
+        "component name": "Kohlenmonoxid"
+    },
+    "3": {
+        "component id": "3",
+        "component code": "O3",
+        "component symbol": "O₃",
+        "component unit": "µg/m³",
+        "component name": "Ozon"
+    },
+    "4": {
+        "component id": "4",
+        "component code": "SO2",
+        "component symbol": "SO₂",
+        "component unit": "µg/m³",
+        "component name": "Schwefeldioxid"
+    },
+    "5": {
+        "component id": "5",
+        "component code": "NO2",
+        "component symbol": "NO₂",
+        "component unit": "µg/m³",
+        "component name": "Stickstoffdioxid"
+    },
+    "6": {
+        "component id": "6",
+        "component code": "PM10PB",
+        "component symbol": "Pb",
+        "component unit": "µg/m³",
+        "component name": "Blei im Feinstaub"
+    },
+    "7": {
+        "component id": "7",
+        "component code": "PM10BAP",
+        "component symbol": "BaP",
+        "component unit": "ng/m³",
+        "component name": "Benzo(a)pyren im Feinstaub"
+    },
+    "8": {
+        "component id": "8",
+        "component code": "CHB",
+        "component symbol": "C₆H₆",
+        "component unit": "µg/m³",
+        "component name": "Benzol"
+    },
+    "9": {
+        "component id": "9",
+        "component code": "PM2",
+        "component symbol": "PM₂,₅",
+        "component unit": "µg/m³",
+        "component name": "Feinstaub"
+    },
+    "10": {
+        "component id": "10",
+        "component code": "PM10AS",
+        "component symbol": "As",
+        "component unit": "ng/m³",
+        "component name": "Arsen im Feinstaub"
+    },
+    "11": {
+        "component id": "11",
+        "component code": "PM10CD",
+        "component symbol": "Cd",
+        "component unit": "ng/m³",
+        "component name": "Cadmium im Feinstaub"
+    },
+    "12": {
+        "component id": "12",
+        "component code": "PM10NI",
+        "component symbol": "Ni",
+        "component unit": "ng/m³",
+        "component name": "Nickel im Feinstaub"
+    }
+}

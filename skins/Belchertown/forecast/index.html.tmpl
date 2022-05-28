@@ -1,0 +1,20 @@
+#errorCatcher Echo
+#encoding UTF-8
+#set global $page = "forecast"
+
+    #include "header.html.tmpl"
+
+    <div class="site-inner">
+        <main class="content">	
+            <article class="weewx forecast" itemscope itemtype="https://schema.org/CreativeWork">
+                
+                    #include "page-header.inc"
+
+                    #include "forecast.inc"
+                
+            </article>
+        </main>
+    </div>
+
+
+    #include "footer.html.tmpl"

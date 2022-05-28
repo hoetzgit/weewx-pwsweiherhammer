@@ -1,0 +1,6 @@
+#errorCatcher Echo
+#set $Temp="%6.1f"
+Temperature: $current.outTemp.toString($localize=False)
+Humidity: $current.outHumidity
+Dewpoint: $current.dewpoint.toString($localize=False)
+Cloud base: $current.cloudbase

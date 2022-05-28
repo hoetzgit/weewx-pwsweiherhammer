@@ -1,0 +1,11 @@
+sudo systemctl stop weewx
+
+sudo /home/weewx/bin/wee_database --config=/home/weewx/weewx.conf --reconfigure
+
+mysql> DROP DATABASE weewx;                             # Delete the old database
+mysql> CREATE DATABASE weewx;                           # Create a new one with the same name
+mysql> RENAME TABLE weewx_new.archive TO weewx.archive; # Rename to the nominal name
+
+sudo /home/weewx/bin/wee_database --config=/home/weewx/weewx.conf --rebuild-daily
+
+sudo systemctl restart weewx
