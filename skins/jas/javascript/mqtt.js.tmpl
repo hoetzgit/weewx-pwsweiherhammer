@@ -1,0 +1,129 @@
+//    Copyright (c) 2021-2022 Rich Bell <bellrichm@gmail.com>
+//    See the file LICENSE.txt for your rights.
+
+#import random
+var client;
+
+// Send log messages from the parent page to the child iframe.
+function logIt(message) {
+  // When running without a webserver, there is a lot of 'strangeness'
+  if (window.location.protocol == "file:") {
+      targetOrigin = "*";
+  }
+  else {
+      targetOrigin = window.location.origin;
+  }      
+
+  forwardedMessage = {};
+  forwardedMessage.kind = 'log';
+  forwardedMessage.message = message;
+
+  if (document.getElementById('child-iframe')) {
+    document.getElementById('child-iframe').contentWindow.postMessage(forwardedMessage, targetOrigin);
+  }
+  else {
+    window.self.postMessage(forwardedMessage, targetOrigin);
+  }
+}  
+
+function onConnect() {
+    #if $getVar("$Extras.pages.debug", False)
+        logIt("In onConnect");
+    #end if    
+    client.subscribe("$Extras.mqtt.topic");
+}
+
+function onConnected(reconn ,url){
+    #if $getVar("$Extras.pages.debug", False)
+        logIt("onConnected: " + reconn);
+        logIt("onConnected: " + url);
+    #end if       
+	
+    sessionStorage.setItem("MQTTConnected", true);
+}
+
+function onConnectionLost(responseObject) {
+    message = "";
+    if (responseObject.errorCode !== 0) {
+        message = responseObject.errorMessage;
+    }
+    #if $getVar("$Extras.pages.debug", False)
+        logIt("onConnectionLost: " + message);
+    #end if        
+
+    sessionStorage.removeItem("MQTTConnected");
+}
+
+function onFailure(message) {
+    #if $getVar("$Extras.pages.debug", False)
+        logIt("Failed: " + message);
+    #end if    
+}
+
+function onMessageArrived(message) {
+    #if $getVar("$Extras.pages.debug", False)
+        logIt("onMessageArrived: ");
+        logIt(message.payloadString);
+    #end if
+   
+
+    // When running without a webserver, there is a lot of 'strangeness'
+    if (window.location.protocol == "file:") {
+        targetOrigin = "*";
+    }
+    else {
+        targetOrigin = window.location.origin;
+    }
+    forwardedMessage = {};
+    forwardedMessage.kind = 'mqtt';
+    forwardedMessage.message = {};
+    forwardedMessage.message.topic = message.topic;
+    forwardedMessage.message.payload = message.payloadString;
+    forwardedMessage.message.qos = message.qos;
+    forwardedMessage.message.retain = message.retain;
+
+    if (document.getElementById('child-iframe')) {
+      document.getElementById('child-iframe').contentWindow.postMessage(forwardedMessage, targetOrigin);
+    }
+    else {
+      window.self.postMessage(forwardedMessage, targetOrigin);
+    }
+}
+
+function MQTTConnect() {
+    var clientID = "jasClientID-" + parseInt(Math.random() * 100);
+    client = new Paho.MQTT.Client("$Extras.mqtt.host", $Extras.mqtt.port, clientID);
+
+    client.onConnectionLost = onConnectionLost;
+    client.onMessageArrived = onMessageArrived;
+    client.onConnected = onConnected;
+
+    #if $getVar("$Extras.pages.debug", False)
+        logIt("Attempting to connect");
+        logIt("host: $Extras.mqtt.host");
+        logIt("port: $Extras.mqtt.port");
+        logIt("clientID: " + clientID);
+        logIt("timeout: $Extras.mqtt.timeout");
+        logIt("keepAliveInterval: $Extras.mqtt.keepAliveInterval");
+        logIt("cleanSession: $Extras.mqtt.cleanSession");
+        logIt("useSSL: $Extras.mqtt.useSSL");
+        logIt("reconnect: $Extras.mqtt.reconnect");
+    #end if    
+
+    client.connect({ 
+        timeout: $Extras.mqtt.timeout,
+        keepAliveInterval: $Extras.mqtt.keepAliveInterval,
+        cleanSession: $Extras.mqtt.cleanSession,
+        useSSL: $Extras.mqtt.useSSL,
+        reconnect: $Extras.mqtt.reconnect,
+        // end defaults
+        userName: "$getVar('$Extras.mqtt.username', '')",
+        password: "$getVar('$Extras.mqtt.password', '')",
+		onSuccess: onConnect,
+		onFailure: onFailure,        
+    });
+}
+
+function MQTTDisconnect() {
+    client.disconnect();
+}

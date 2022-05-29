@@ -529,7 +529,9 @@ class pwsWeiherhammer(weewx.xtypes.XType):
 
     # calculate sunshine duration in seconds
     def calc_sunshineDur(self, key, data, db_manager=None):
-        if 'interval' not in data:
+        if 'foshk_interval' not in data:
+            if self.sunshine_debug:
+                logdbg("Calculation sunshineDur aborting, foshk_interval not present.")
             raise weewx.CannotCalculate(key)
         if 'radiation' not in data:
             if self.sunshine_debug:
@@ -562,13 +564,13 @@ class pwsWeiherhammer(weewx.xtypes.XType):
             if hauteur_soleil > 3 and radiation > self.sunshine_min:
                 seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) *1080 * pow((sin(pi / 180) * hauteur_soleil), 1.25) * self.sunshine_coeff
                 if radiation > seuil:
-                    sunshine_time = data['interval'] * 60.0
+                    sunshine_time = data['foshk_interval']
         except Exception as e:
             logerr('Exception: %s' % e)
         retval = weewx.units.convertStd((sunshine_time, 'second', 'group_deltatime'), data['usUnits'])
         if self.sunshine_debug:
-            logdbg("Calculated sunshineDur based on radiation = %f, threshold = %f, sunshine_coeff = %f, interval = %d" %
-                (radiation, seuil, self.sunshine_coeff, data['interval']))
+            logdbg("Calculated sunshineDur based on radiation = %f, threshold = %f, sunshine_coeff = %f, foshk_interval = %d" %
+                (radiation, seuil, self.sunshine_coeff, data['foshk_interval']))
             logdbg("Calculated sunshineDur is %s" % (retval,))
         return retval
 

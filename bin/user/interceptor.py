@@ -2465,6 +2465,7 @@ class EcowittClient(Consumer):
             'winddir_avg10m': 'foshk_winddir_avg10m',
             'windspdmph_avg10m': 'foshk_windspeed_avg10m',
             'windgustmph_max10m': 'foshk_windgust_max10m',
+            'isintvl': 'foshk_interval',
         }
 
         IGNORED_LABELS = [
@@ -2472,7 +2473,7 @@ class EcowittClient(Consumer):
             'PASSKEY', 'dateutc', 'freq',
             # FOSHKplugin
             'ptrend1', 'pchange1', 'ptrend3', 'pchange3', 'runtime',
-            'isintvl', 'isintvl10', 'sunshine', 'osunhours', 'nsunhours'
+            'isintvl10', 'sunshine', 'osunhours', 'nsunhours'
         ]
 
         def __init__(self):
