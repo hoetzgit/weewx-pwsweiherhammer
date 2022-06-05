@@ -310,8 +310,9 @@
             <h2>Links zu Visualisierungen der Wetterdaten mit anderen Templates</h2>
             <ul>
                 <li><a href="https://seasons.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Seasons Skin</a> (Skin bei WeeWX dabei)</li>
-                <li><a href="https://sofa.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Sofa Skin</a> (Template  <a href="https://blauesledersofa.de" target="_blank" rel="noreferrer">Infos</a>)</li>
-                <li><a href="https://neowx.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX NeoWX Material Skin</a> (Template <a href="https://neoground.com/projects/neowx-material" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://wdc.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Weather Data Center Skin</a> (Skin <a href="https://github.com/Daveiano/weewx-wdc" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://neowx.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX NeoWX Material Skin</a> (Skin <a href="https://neoground.com/projects/neowx-material" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://sofa.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Sofa Skin</a> (Skin  <a href="https://blauesledersofa.de" target="_blank" rel="noreferrer">Infos</a>)</li>
             </ul>
         </div>
     </div>
