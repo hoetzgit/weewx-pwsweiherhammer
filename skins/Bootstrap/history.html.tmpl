@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>$BootstrapLabels.title</title>
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/live.css" rel="stylesheet">
+</head>
+<body>
+<!-- Menu navbar -->
+#include "nav.html.tmpl"
+<!-- Main container -->
+<div class="container-fluid">
+    <div class="row">
+        <!-- Gauge panel -->
+        #include "livegauges.html.tmpl"
+        <!-- Graph panel -->
+        <div class="col-md-9 main">
+            <h3 class="historyHeader">$BootstrapLabels.history_tables.min_temp</h3>
+            $min_temp_table
+
+            <h3 class="historyHeader">$BootstrapLabels.history_tables.avg_temp</h3>
+            $avg_temp_table
+
+            <h3 class="historyHeader">$BootstrapLabels.history_tables.max_temp</h3>
+            $max_temp_table
+
+            <h3 class="historyHeader">$BootstrapLabels.history_tables.rain</h3>
+            $rain_table
+
+            <h3 class="historyHeader">$BootstrapLabels.history_tables.rain_days</h3>
+            $rain_days_table
+
+            <h3 class="historyHeader">$BootstrapLabels.history_tables.max_wind</h3>
+            $max_wind_table
+
+            $NOAA_table
+        </div>
+    </div>
+    <hr>
+    <footer>
+        <p>$BootstrapLabels.footer</p>
+    </footer>
+</div>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="js/jquery-3.6.0.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="js/bootstrap.bundle.min.js"></script>
+<script src="js/mqtt.min.js"></script>
+<script src="js/units.js"></script>
+<script src="js/site.js"></script>
+<script src="js/echarts.min.js"></script>
+<script src="js/lang.js"></script>
+<script src="js/gauges.js"></script>
+</body>
+</html>
