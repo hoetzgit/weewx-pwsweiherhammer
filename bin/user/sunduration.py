@@ -4,6 +4,7 @@ from datetime import datetime
 import time
 import weewx
 from weewx.wxengine import StdService
+from weeutil.weeutil import to_int, to_float, to_bool
 import schemas.wview
 
 try:
@@ -54,51 +55,46 @@ class SunshineDuration(StdService):
         # Start intercepting events:
         self.bind(weewx.NEW_LOOP_PACKET, self.newLoopPacket)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)
-        self.lastdateTime = 0
-        self.LoopDuration = 0
-        self.LoopSunshineDuration = 0
-        self.sunshineSeconds = 0
-        self.lastSeuil = 0
-        self.firstArchive = True
+        self.lastDate = 0
+        self.sunshineDur = 0
+        self.debug = to_bool(self.config_dict["debug"])
 
     def newLoopPacket(self, event):
         """Gets called on a new loop packet event."""
         radiation = event.packet.get('radiation')
-        self.LoopSunshineDuration = 0
-        if radiation is not None:
-            if self.lastdateTime == 0:
-                self.lastdateTime = event.packet.get('dateTime')
-            self.LoopDuration = event.packet.get('dateTime') - self.lastdateTime
-            self.lastdateTime = event.packet.get('dateTime')
-            seuil = self.sunshineThreshold(event.packet.get('dateTime'))
-            if radiation > seuil and radiation > 18:
-                self.LoopSunshineDuration = self.LoopDuration
-            self.sunshineSeconds += self.LoopSunshineDuration
-            self.lastSeuil = seuil
-            logdbg("Calculated LOOP (%f s) sunshineDur = %f s, based on radiation = %f and threshold = %f" % (
-                   self.LoopDuration, self.LoopSunshineDuration, radiation, seuil))
+        loopDate = event.packet.get('dateTime')
+        stationInterval = event.packet.get('foshk_interval')
+        if radiation is None:
+            logerr("Determination LOOP sunshineDur not possible, radiation not present!")
+            return None
+        if loopDate is None:
+            logerr("Determination LOOP sunshineDur not possible, dateTime not present!")
+            return None
+        loopInterval = 0
+        if stationInterval is not None:
+            loopInterval = stationInterval
+            self.lastDate = loopDate
+        elif self.lastDate > 0 and loopDate is not None:
+            loopInterval = loopDate - self.lastDate
+            self.lastDate = loopDate
+        else:
+            logerr("Determination LOOP sunshineDur not possible, interval could not be determined!")
+            return None
+        # Determination LOOP sunshineDur is possible
+        loopSunshineDur = 0
+        threshold = self.sunshineThreshold(loopDate)
+        if radiation > threshold and radiation > 18:
+            loopSunshineDur = loopInterval
+        self.sunshineDur += loopSunshineDur
+        if self.debug:
+            logdbg("Determined LOOP sunshineDur = %f s, based on radiation = %f and threshold = %f. LOOP Sum = %f s" % (
+                    loopSunshineDur, radiation, threshold, self.sunshineDur))
 
     def newArchiveRecord(self, event):
         """Gets called on a new archive record event."""
-        if self.lastdateTime == 0 or self.firstArchive:  # LOOP packets not yet captured : missing archive record extracted from datalogger at start OR first archive record after weewx start
-            radiation = event.record.get('radiation')
-            event.record['sunshineDur'] = 0.0
-            event.record['sunshineThreshold'] = 0.0
-            if radiation is not None:
-                seuil = self.sunshineThreshold(event.record.get('dateTime'))
-                self.lastSeuil = seuil
-                if radiation > seuil and radiation > 18:
-                    event.record['sunshineDur'] = event.record['interval']
-                if self.lastdateTime != 0:  # LOOP already started, this is the first regular archive after weewx start
-                    self.firstArchive = False
-                event.record['sunshineThreshold'] = self.lastSeuil
-        else:
-            event.record['sunshineThreshold'] = self.lastSeuil
-            event.record['sunshineDur'] = self.sunshineSeconds
-        loginf("Calculated ARCHIVE sunshineDur = %f s, last radiation = %f and last threshold = %f" % (
-                event.record['sunshineDur'], event.record['radiation'], event.record['sunshineThreshold']))
-
-        self.sunshineSeconds = 0
+        event.record['sunshineDur'] = self.sunshineDur
+        self.sunshineDur = 0
+        loginf("Total ARCHIVE sunshineDur = %f s" % (event.record['sunshineDur']))
 
     def sunshineThreshold(self, mydatetime):
         coeff = 0.72  # change to calibrate with your sensor
@@ -108,7 +104,6 @@ class SunshineDuration(StdService):
         equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
             (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
             2 * (pi / 180) * theta)
-
         latitude = float(self.config_dict["Station"]["latitude"])
         longitude = float(self.config_dict["Station"]["longitude"])
         corrtemps = longitude * 4
