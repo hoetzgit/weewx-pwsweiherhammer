@@ -59,6 +59,32 @@ class SunshineDuration(StdService):
         self.sunshineDur = 0
         self.debug = to_bool(self.config_dict["debug"])
 
+    def sunshineThreshold(self, mydatetime):
+        coeff = 0.72  # change to calibrate with your sensor
+        utcdate = datetime.utcfromtimestamp(mydatetime)
+        dayofyear = int(time.strftime("%j", time.gmtime(mydatetime)))
+        theta = 360 * dayofyear / 365
+        equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
+            (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
+            2 * (pi / 180) * theta)
+        latitude = float(self.config_dict["Station"]["latitude"])
+        longitude = float(self.config_dict["Station"]["longitude"])
+        corrtemps = longitude * 4
+        declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
+            (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
+            2 * (pi / 180) * theta)) * (180 / pi)
+        minutesjour = utcdate.hour * 60 + utcdate.minute
+        tempsolaire = (minutesjour + corrtemps + equatemps) / 60
+        angle_horaire = (tempsolaire - 12) * 15
+        hauteur_soleil = asin(sin((pi / 180) * latitude) * sin((pi / 180) * declinaison) + cos(
+            (pi / 180) * latitude) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
+        if hauteur_soleil > 3:
+            seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
+                (sin(pi / 180) * hauteur_soleil), 1.25) * coeff
+        else:
+            seuil=0
+        return seuil
+
     def newLoopPacket(self, event):
         """Gets called on a new loop packet event."""
         radiation = event.packet.get('radiation')
@@ -95,31 +121,5 @@ class SunshineDuration(StdService):
         event.record['sunshineDur'] = self.sunshineDur
         self.sunshineDur = 0
         loginf("Total ARCHIVE sunshineDur = %f s" % (event.record['sunshineDur']))
-
-    def sunshineThreshold(self, mydatetime):
-        coeff = 0.72  # change to calibrate with your sensor
-        utcdate = datetime.utcfromtimestamp(mydatetime)
-        dayofyear = int(time.strftime("%j", time.gmtime(mydatetime)))
-        theta = 360 * dayofyear / 365
-        equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
-            (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
-            2 * (pi / 180) * theta)
-        latitude = float(self.config_dict["Station"]["latitude"])
-        longitude = float(self.config_dict["Station"]["longitude"])
-        corrtemps = longitude * 4
-        declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
-            (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
-            2 * (pi / 180) * theta)) * (180 / pi)
-        minutesjour = utcdate.hour * 60 + utcdate.minute
-        tempsolaire = (minutesjour + corrtemps + equatemps) / 60
-        angle_horaire = (tempsolaire - 12) * 15
-        hauteur_soleil = asin(sin((pi / 180) * latitude) * sin((pi / 180) * declinaison) + cos(
-            (pi / 180) * latitude) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
-        if hauteur_soleil > 3:
-            seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
-                (sin(pi / 180) * hauteur_soleil), 1.25) * coeff
-        else:
-            seuil=0
-        return seuil
 
     schema_with_sunshine_time = schemas.wview.schema + [('sunshineDur', 'REAL')]
