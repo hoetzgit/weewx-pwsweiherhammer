@@ -528,7 +528,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
         return weewx.units.convertStd((sunshine_time, 'minute', 'group_interval'), data['usUnits'])
 
     # calculate sunshine duration in seconds
-    def calc_sunshineDur(self, key, data, db_manager=None):
+    def calc_sunshineDurS(self, key, data, db_manager=None):
         if 'foshk_interval' not in data:
             if self.sunshine_debug:
                 logdbg("Calculation sunshineDur aborting, foshk_interval not present.")

@@ -272,8 +272,8 @@
                 <li><a href="https://obrienlabs.net/go/mqttbroker" target="_blank" rel="noreferrer">Mosquitto</a> MQTT Broker zur Aufnahme von Nachrichten per MQTT</li>
                 <li>Erweiterungen <a href="https://github.com/roe-dl/weewx-DWD" target="_blank" rel="noreferrer">weewx-DWD</a>, um Daten des Deutschen Wetterdienstes und des Umweltbundesamtes herunterzuladen und aufzubereiten.</li>
                 ##<li>Die Meteogramm-Visualisierung der DWD Vorhersage erfolgt mit dem Meteogramm von <a href="http://tools.wettersoftware.de" target="_blank" rel="noreferrer">wettersoftware.de</a></li>
-                <li>Eigene <a href="https://github.com/hoetzgit/weewx-aqi/tree/AQI-Umweltbundesamt" target="_blank" rel="noreferrer">Testversion</a> (Klassifizierung Luftqualit&auml;t Umweltbundesamt), basierend auf der
-                Erweiterung <a href="https://github.com/jonathankoren/weewx-aqi" target="_blank" rel="noreferrer">weewx-aqi</a></li>
+                <li>Erweiterung <a href="https://github.com/jonathankoren/weewx-aqi" target="_blank" rel="noreferrer">weewx-aqi</a>, modifizierte <a href="https://github.com/hoetzgit/weewx-aqi/tree/AQI-Umweltbundesamt" target="_blank" rel="noreferrer">Version</a> (Klassifizierung Luftqualit&auml;t Umweltbundesamt)</li>
+                <li>Erweiterung <a href="https://github.com/Jterrettaz/sunduration" target="_blank" rel="noreferrer">sunduration</a>, modifizierte <a href="https://github.com/hoetzgit/sunduration/tree/seconds" target="_blank" rel="noreferrer">Version</a> (Berechnet die Sonnenscheindauer in Sekunden)</li>
                 <li>Erweiterung <a href="https://github.com/roe-dl/weewx-mqtt/tree/aggregate_values" target="_blank" rel="noreferrer">weewx-mqtt</a> zum MQTT Upload, Version: 0.25 (PR#31)</li>
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-windy" target="_blank" rel="noreferrer">weewx-windy</a>, Upload zu Windy.com, Version: 0.7</li>
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-wetter" target="_blank" rel="noreferrer">weewx-wetter</a>, Upload zu wetter.com, Version: 0.7</li>
@@ -309,10 +309,11 @@
         <div class="col-sm-12">
             <h2>Links zu Visualisierungen der Wetterdaten mit anderen Templates</h2>
             <ul>
-                <li><a href="https://seasons.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Seasons Skin</a> (Skin bei WeeWX dabei)</li>
-                <li><a href="https://wdc.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Weather Data Center Skin</a> (Skin <a href="https://github.com/Daveiano/weewx-wdc" target="_blank" rel="noreferrer">Infos</a>)</li>
-                <li><a href="https://neowx.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX NeoWX Material Skin</a> (Skin <a href="https://neoground.com/projects/neowx-material" target="_blank" rel="noreferrer">Infos</a>)</li>
-                <li><a href="https://sofa.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Sofa Skin</a> (Skin  <a href="https://blauesledersofa.de" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://seasons.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Seasons</a> (Skin bei WeeWX dabei)</li>
+                <li><a href="https://wdc.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Weather Data Center (WDC)</a> (Skin <a href="https://github.com/Daveiano/weewx-wdc" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://fuzzy.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Fuzzy Archer</a> (Skin <a href="https://github.com/brewster76/fuzzy-archer" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://neowx.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX NeoWX Material</a> (Skin <a href="https://neoground.com/projects/neowx-material" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://sofa.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Sofa</a> (Skin  <a href="https://blauesledersofa.de" target="_blank" rel="noreferrer">Infos</a>)</li>
             </ul>
         </div>
     </div>

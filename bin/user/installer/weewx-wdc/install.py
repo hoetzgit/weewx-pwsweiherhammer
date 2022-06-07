@@ -11,7 +11,7 @@ def loader():
 class BasicInstaller(ExtensionInstaller):
     def __init__(self):
         super(BasicInstaller, self).__init__(
-            version="1.2.0",
+            version="1.2.2",
             name='weewx-wdc',
             description='Weather Data Center skin for weewx.',
             author="David Baetge",
@@ -28,11 +28,12 @@ class BasicInstaller(ExtensionInstaller):
             },
             files=[
                 ('bin/user', [
-                    'bin/user/diagram_util.py',
-                    'bin/user/stats_util.py',
-                    'bin/user/general_util.py',
-                    'bin/user/celestial_util.py',
                     'bin/user/archive_util.py',
+                    'bin/user/celestial_util.py',
+                    'bin/user/diagram_util.py',
+                    'bin/user/forecast_util.py',
+                    'bin/user/general_util.py',
+                    'bin/user/stats_util.py',
                     'bin/user/table_util.py'
                 ]),
                 ('skins/weewx-wdc',
@@ -107,6 +108,8 @@ class BasicInstaller(ExtensionInstaller):
                   'skins/weewx-wdc/includes/icons/forecast/SC.svg',
                   'skins/weewx-wdc/includes/icons/forecast/rain.svg',
                   'skins/weewx-wdc/includes/icons/forecast/snow.svg',
+                  'skins/weewx-wdc/includes/icons/forecast/snow--scattered.svg',
+                  'skins/weewx-wdc/includes/icons/forecast/rain--scattered.svg',
                   ]),
             ]
         )

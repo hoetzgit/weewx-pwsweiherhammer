@@ -98,7 +98,7 @@ class StatsUtil(SearchList):
                 time_unit='unix_epoch'
             )
 
-            days = filter(lambda x: x.raw < 0.0, list(day_series.data))
+            days = filter(lambda x: x.raw is not None and x.raw < 0.0, list(day_series.data))
 
             return len(list(days))
 
@@ -110,7 +110,7 @@ class StatsUtil(SearchList):
                 time_unit='unix_epoch'
             )
 
-            days = filter(lambda x: x.raw < 0.0, list(day_series.data))
+            days = filter(lambda x: x.raw is not None and x.raw < 0.0, list(day_series.data))
 
             return len(list(days))
 
@@ -129,7 +129,7 @@ class StatsUtil(SearchList):
             if getattr(unit_labels, 'windGust') == ' m/s':
                 value = 17.2
 
-            days = filter(lambda x: x.raw >= value, list(day_series.data))
+            days = filter(lambda x: x.raw is not None and x.raw >= value, list(day_series.data))
 
             return len(list(days))
 
@@ -141,7 +141,7 @@ class StatsUtil(SearchList):
                 time_unit='unix_epoch'
             )
 
-            days = filter(lambda x: x.raw > 0.0, list(day_series.data))
+            days = filter(lambda x: x.raw is not None and x.raw > 0.0, list(day_series.data))
 
             return len(list(days))
 
@@ -170,7 +170,7 @@ class StatsUtil(SearchList):
                 time_unit='unix_epoch'
             )
 
-            days = filter(lambda x: x.raw >= value, list(day_series.data))
+            days = filter(lambda x: x.raw is not None and x.raw >= value, list(day_series.data))
 
             return len(list(days))
 
@@ -297,9 +297,10 @@ class StatsUtil(SearchList):
             tempDays = []
 
             for day in days:
-                tempDays.append({
-                    'value': day[1].raw,
-                    'day': day[0].format("%Y-%m-%d")
-                })
+                if day[1].raw is not None:
+                    tempDays.append({
+                        'value': day[1].raw,
+                        'day': day[0].format("%Y-%m-%d")
+                    })
 
             return tempDays
