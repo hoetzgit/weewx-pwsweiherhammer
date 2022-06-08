@@ -78,29 +78,14 @@ except ImportError:
         logmsg(syslog.LOG_ERR, msg)
 
 DEFAULTS_INI = """
-[StdWXCalculate]
+[pwsWeiherhammer]
   [[WXXTypes]]
-    [[[windDir]]]
-       force_null = True
-    [[[maxSolarRad]]]
-      algorithm = rs
-      atc = 0.8
-      nfac = 2
-    [[[ET]]]
-      wind_height = 2.0
-      et_period = 3600
-    [[[heatindex]]]
+    [[[solar_heatindex]]]
       algorithm = new
-  [[PressureCooker]]
-    max_delta_12h = 1800
-    [[[altimeter]]]
-      algorithm = aaASOS    # Case-sensitive!
-  [[RainRater]]
-    rain_period = 900
-    retain_period = 930
-  [[Delta]]
-    [[[rain]]]
-      input = totalRain
+    [[[sunshine_time]]]
+      sunshine_coeff = 0.8
+      sunshine_min = 0.0
+      sunshine_debug = False
 """
 defaults_dict = weeutil.config.config_from_str(DEFAULTS_INI)
 
@@ -379,8 +364,8 @@ class pwsWeiherhammer(weewx.xtypes.XType):
 
     def __init__(self, altitude, latitude, longitude,
                  solar_heat_index_algo='new',
-                 sunshine_coeff=0.72,
-                 sunshine_min=18.0,
+                 sunshine_coeff=0.8,
+                 sunshine_min=0.0,
                  sunshine_debug=False
                  ):
         self.alt = altitude
@@ -655,7 +640,6 @@ class pwsWeiherhammer(weewx.xtypes.XType):
         return weewx.units.convertStd((val, u, 'group_pressure'), data['usUnits'])
 
 
-
 class pwsWeiherhammerService(StdService):
     """ WeeWX service whose job is to register the XTypes extension pwsWeiherhammer with the
     XType system.
@@ -674,7 +658,7 @@ class pwsWeiherhammerService(StdService):
         except KeyError:
             override_dict = {}
         # Get the default values, then merge the user overrides into it
-        option_dict = weeutil.config.deep_copy(defaults_dict['StdWXCalculate']['WXXTypes'])
+        option_dict = weeutil.config.deep_copy(defaults_dict['pwsWeiherhammer']['WXXTypes'])
         option_dict.merge(override_dict)
 
         # solar-heatindex-related options

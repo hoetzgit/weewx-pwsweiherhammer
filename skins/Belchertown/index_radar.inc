@@ -18,9 +18,7 @@
     <!-- Tabs contents -->
     <div class="tab">
         <div id="radar" class="tab-content">
-            <div class="radar_image">
-                <iframe width="650px" height="360px" src="https://embed.windy.com/embed2.html?lat=49.632&lon=12.056&zoom=8&level=surface&overlay=radar&menu=&message=&marker=&calendar=&pressure=&type=map&location=coordinates&detail=&detailLat=49.632&detailLon=12.056&metricWind=default&metricTemp=default&radarRange=-1" frameborder="0"></iframe>
-            </div>
+            <div class="radar_image">$radar_html</div>
         </div>
         <div id="webcam" class="tab-content">
             <a id="weathercam" name="weathercam" href="$relative_url/webcam"><img src="$relative_url/images/webcam_small.jpg" alt="Die Webcam der Wetterstation Weiherhammer"></a>
