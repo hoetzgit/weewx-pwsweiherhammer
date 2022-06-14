@@ -658,14 +658,14 @@ function changeCurrentSource(sourceName, toggleOverride = false) {
         #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
         jQuery("#currentSwitch").prop("checked", true);
         #end if
-        sessionStorage.setItem('currentSource', sourceName);
+        sessionStorage.setItem('currentSource', 'dwd');
         ajaxforecast();
     } else if (sourceName == "brightsky") {
         // Apply current source Brightsky
         #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
         jQuery("#currentSwitch").prop("checked", false);
         #end if
-        sessionStorage.setItem('currentSource', sourceName);
+        sessionStorage.setItem('currentSource', 'brightsky');
         ajaxforecast();
     }
 }
