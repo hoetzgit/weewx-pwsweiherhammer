@@ -60,7 +60,7 @@ class SunshineDuration(StdService):
         self.debug = to_bool(self.config_dict["debug"])
 
     def sunshineThreshold(self, mydatetime):
-        coeff = 0.72  # change to calibrate with your sensor
+        coeff = 0.8  # change to calibrate with your sensor
         utcdate = datetime.utcfromtimestamp(mydatetime)
         dayofyear = int(time.strftime("%j", time.gmtime(mydatetime)))
         theta = 360 * dayofyear / 365
@@ -109,7 +109,7 @@ class SunshineDuration(StdService):
         # Determination LOOP sunshineDur is possible
         loopSunshineDur = 0
         threshold = self.sunshineThreshold(loopDate)
-        if radiation > threshold and radiation > 18:
+        if radiation > threshold and radiation > 20:
             loopSunshineDur = loopInterval
         self.sunshineDur += loopSunshineDur
         if self.debug:

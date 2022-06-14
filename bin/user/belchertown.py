@@ -1421,7 +1421,8 @@ class getData(SearchList):
                 data = json.load(read_file)
 
             try:
-                cloud_cover = "{}%".format(data["current"][0]["response"]["ob"]["sky"])
+                #20220610,ho cloud_cover = "{} %".format(data["current"][0]["response"]["ob"]["sky"])
+                cloud_cover = "{} %".format(data["brightsky"][0]["response"]["ob"]["cloudcover"])
             except Exception:
                 loginf("No cloud cover data from Aeris weather")
                 cloud_cover = ""
@@ -1484,16 +1485,20 @@ class getData(SearchList):
                 == "1"
             ):
                 current_obs_summary = aeris_coded_weather(
-                    data["current"][0]["response"]["ob"]["weatherPrimaryCoded"]
+                    #20220610,ho data["current"][0]["response"]["ob"]["weatherPrimaryCoded"]
+                    data["brightsky"][0]["response"]["ob"]["weatherPrimaryCoded"]
                 )
                 current_obs_icon = (
-                    aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png"
+                    #20220610,ho aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png"
+                    aeris_icon(data["brightsky"][0]["response"]["ob"]["icon_aeris"]) + ".png"
                 )
 
                 if forecast_units in ("si", "ca"):
-                    if data["current"][0]["response"]["ob"]["visibilityKM"] is not None:
+                    #20220610,ho if data["current"][0]["response"]["ob"]["visibilityKM"] is not None:
+                    if data["brightsky"][0]["response"]["ob"]["visibilityKM"] is not None:
                         visibility = locale.format(
-                            "%g", data["current"][0]["response"]["ob"]["visibilityKM"]
+                            #20220610,ho "%g", data["current"][0]["response"]["ob"]["visibilityKM"]
+                            "%g", data["brightsky"][0]["response"]["ob"]["visibilityKM"]
                         )
                         visibility_unit = "km"
                     else:
