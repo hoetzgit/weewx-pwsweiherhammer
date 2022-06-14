@@ -61,6 +61,12 @@ jQuery(document).ready(function() {
         changeTheme(sessionStorage.getItem('currentTheme'));
     }
 
+    // If the visitor has overridden the current source, keep that current source going throughout the full site and their visit.
+    if (sessionStorage.getItem('currentSource') == "toggleOverride") {
+        belchertown_debug("currentSource: sessionStorage override in place.");
+        changeCurrentSource(sessionStorage.getItem('currentSource'));
+    }
+
     // Change theme if a URL variable is set
     if (window.location.search.indexOf('theme')) {
         if (window.location.search.indexOf('?theme=dark') === 0) {
@@ -84,6 +90,18 @@ jQuery(document).ready(function() {
         document.getElementById('themeSwitch').addEventListener('change', function(event) {
             belchertown_debug("Theme: Toggle button changed");
             (event.target.checked) ? changeTheme("dark", true) : changeTheme("light", true);
+        });
+    } catch (err) {
+        // Silently exit
+    }
+    #end if
+
+    #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
+    // current source checkbox toggle switcher
+    try {
+        document.getElementById('currentSwitch').addEventListener('change', function(event) {
+            belchertown_debug("currentSource: Toggle button changed");
+            (event.target.checked) ? changeCurrentSource("dwd", true) : changeCurrentSource("brightsky", true);
         });
     } catch (err) {
         // Silently exit
@@ -624,6 +642,31 @@ function changeTheme(themeName, toggleOverride = false) {
         jQuery("#logo_image").attr("src", get_relative_url() + "/images/$Extras.logo_image");
         #end if
         sessionStorage.setItem('currentTheme', 'light');
+    }
+}
+
+function changeCurrentSource(sourceName, toggleOverride = false) {
+    belchertown_debug("currentSource: Changing to " + sourceName);
+    if (toggleOverride) {
+        belchertown_debug("currentSource: toggle override clicked.");
+        belchertown_debug("currentSource: sessionStorage.getItem('currentSource') was previously: " + sessionStorage.getItem('currentSource'));
+        sessionStorage.setItem('currentSource', 'toggleOverride');
+        belchertown_debug("currentSource: sessionStorage.getItem('currentSource') is now: " + sessionStorage.getItem('currentSource'));
+    }
+    if (sourceName == "dwd") {
+        // Apply current source DWD
+        #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
+        jQuery("#currentSwitch").prop("checked", true);
+        #end if
+        sessionStorage.setItem('currentSource', sourceName);
+        ajaxforecast();
+    } else if (sourceName == "brightsky") {
+        // Apply current source Brightsky
+        #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
+        jQuery("#currentSwitch").prop("checked", false);
+        #end if
+        sessionStorage.setItem('currentSource', sourceName);
+        ajaxforecast();
     }
 }
 
@@ -1178,6 +1221,7 @@ function update_forecast_data(data) {
     belchertown_debug("Forecast: Provider is " + forecast_provider);
     belchertown_debug("Forecast: Updating data");
     belchertown_debug(data);
+    currentSource = sessionStorage.getItem('currentSource');
 
     if (forecast_provider == "N/A") {
         jQuery(".forecastrow").hide();
@@ -1188,14 +1232,22 @@ function update_forecast_data(data) {
         var forecast_issueTime_dwd = tzAdjustedMoment(data["current"][0]["response"]["obTimestamp"]).format('$obs.label.time_forecast_last_updated');
 
         try {
-            var wxicon = get_relative_url() + "/images/" + aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png";
+            if (currentSource == "dwd") {
+                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png";
+            } else if (currentSource == "brightsky") {
+                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["brightsky"][0]["response"]["ob"]["icon_aeris"]) + ".png";
+            }
         } catch (err) {
             // Returned "current" data does not have this value
         }
         
         // Current observation text
         try {
-            jQuery(".current-obs-text").html(aeris_coded_weather(data["current"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
+            if (currentSource == "dwd") {
+                jQuery(".current-obs-text").html(aeris_coded_weather(data["current"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
+            } else if (currentSource == "brightsky") {
+                jQuery(".current-obs-text").html(aeris_coded_weather(data["brightsky"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
+            }
         } catch (err) {
             // Returned "current" data does not have this value
         }
@@ -1227,7 +1279,11 @@ function update_forecast_data(data) {
         try {
             if (("$Extras.forecast_units" == "si") || ("$Extras.forecast_units" == "ca")) {
                 // si and ca = kilometer
-                visibility = data["current"][0]["response"]["ob"]["visibilityKM"];
+                if (currentSource == "dwd") {
+                    visibility = data["current"][0]["response"]["ob"]["visibilityKM"];
+                } else if (currentSource == "brightsky") {
+                    visibility = data["brightsky"][0]["response"]["ob"]["visibilityKM"];
+                }
 
             } else {
                 // us and uk2 and default = miles
@@ -1243,6 +1299,32 @@ function update_forecast_data(data) {
             jQuery(".station-observations .visibility").html(visibility_output);
         } catch (err) {
             // Visibility not in the station observation table or any of the unit arrays, so silently exit
+        }
+
+        // Cloudcover text in station observation table
+        try {
+            if (("$Extras.forecast_units" == "si") || ("$Extras.forecast_units" == "ca")) {
+                // si and ca = kilometer
+                if (currentSource == "dwd") {
+                    cloud_cover = data["current"][0]["response"]["ob"]["sky"];
+                } else if (currentSource == "brightsky") {
+                    cloud_cover = data["brightsky"][0]["response"]["ob"]["cloudcover"];
+                }
+
+            } else {
+                // us and uk2 and default = miles
+                cloud_cover = "N/A"
+            }
+        } catch (err) {
+            // Returned "current" data does not have this value
+        }
+
+        try {
+            cloud_cover_output = parseFloat(parseFloat(cloud_cover)).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["cloudcover"], maximumFractionDigits: unit_rounding_array["cloudcover"]}) + " " + unit_label_array["cloudcover"];
+
+            jQuery(".station-observations .cloud_cover").html(cloud_cover_output);
+        } catch (err) {
+            // Cloudcover not in the station observation table or any of the unit arrays, so silently exit
         }
 
         //  start of new composite version of forecast code
