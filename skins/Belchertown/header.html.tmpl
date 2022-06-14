@@ -26,6 +26,18 @@
         #end if
 #end if
 
+#set $currentSource = "brightsky"
+#set $currentSwitchChecked = ""
+#if $Extras.has_key('current_source')
+    #if $Extras.current_source == "brightsky"
+        #set $currentSource = "brightsky"
+        #set $currentSwitchChecked = ""
+    #elif $Extras.current_source == "dwd"
+        #set $currentSource = "light"
+        #set $currentSwitchChecked = "checked"
+    #end if
+#end if
+
 #if $obs.label.html_title != "" 
     #if $page == "home"
         #set $head_title = $obs.label.html_title

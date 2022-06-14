@@ -161,6 +161,27 @@ sub { top: 0.4em; }
     font-weight: 700;
 }
 
+/* current conditions source Switch */
+
+.currentSwitchLabel {
+  position: relative;
+  display: inline-block;
+  width: 35px;
+  height: 19px;
+}
+
+.currentSwitchLabel input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+@media only screen and (max-width: 800px) {
+    .currentSwitchLabel {
+        margin-top: 10px;
+    }
+}
+
 /* Back to top button */
 /* https://codepen.io/matthewcain/pen/ZepbeR */
 #btnTOP {
