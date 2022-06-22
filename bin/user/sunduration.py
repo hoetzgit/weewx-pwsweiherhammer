@@ -60,9 +60,11 @@ class SunshineDuration(StdService):
         self.debug = to_bool(self.config_dict["debug"])
 
     def sunshineThreshold(self, mydatetime):
-        coeff = 0.76  # change to calibrate with your sensor
+        # coeff = 0.76  # change to calibrate with your sensor
         utcdate = datetime.utcfromtimestamp(mydatetime)
         dayofyear = int(time.strftime("%j", time.gmtime(mydatetime)))
+        monthofyear = int(time.strftime("%m", time.gmtime(mydatetime)))
+        coeff = self.calib_dict[monthofyear]  # monthly calibration coefficient
         theta = 360 * dayofyear / 365
         equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
             (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
@@ -82,7 +84,7 @@ class SunshineDuration(StdService):
             seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
                 (sin(pi / 180) * hauteur_soleil), 1.25) * coeff
         else:
-            seuil=0
+            seuil = 0
         return seuil
 
     def newLoopPacket(self, event):
@@ -121,5 +123,8 @@ class SunshineDuration(StdService):
         event.record['sunshineDur'] = self.sunshineDur
         self.sunshineDur = 0
         loginf("Total ARCHIVE sunshineDur = %f s" % (event.record['sunshineDur']))
+
+    calib_dict_orig = {1: 1.35, 2: 1.3, 3: 1.1, 4: 1, 5: 0.97, 6: 0.94, 7: 0.94, 8: 0.97, 9: 1, 10: 1.1, 11: 1.3, 12: 1.35}
+    calib_dict = {1: 0.76, 2: 0.76, 3: 0.76, 4: 0.76, 5: 0.76, 6: 0.76, 7: 0.76, 8: 0.76, 9: 0.76, 10: 0.76, 11: 0.76, 12: 0.76}
 
     schema_with_sunshine_time = schemas.wview.schema + [('sunshineDur', 'REAL')]
