@@ -772,6 +772,13 @@ function update_weewx_data(data) {
     change_aqi_color(data["current"]["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot", "background-color");
     change_aqi_color(data["current"]["pws_aqi_o3_category"], ".pws_aqi_o3_dot", "background-color");
     change_aqi_color(data["current"]["pws_aqi_no2_category"], ".pws_aqi_no2_dot", "background-color");
+
+    // Sunshine Symbol
+    if (parseInt(data["current"]["sunshine"]) > 0) {
+        jQuery(".sunshine-symbol").html('<i class="fa fa-sun-o"></i>');
+    } else {
+        jQuery(".sunshine-symbol").html('');
+    }
 }
 
 //  function returns html for moon-icon according to moonphase value and currentTheme setting
@@ -2072,6 +2079,14 @@ function update_current_wx(data) {
     }
     if (data.hasOwnProperty("pws_aqi_no2_category")) {
         change_aqi_color(data["pws_aqi_no2_category"], ".pws_aqi_no2_dot", "background-color");
+    }
+    // Sunshine Symbol
+    if (data.hasOwnProperty("foshk_sunshine")) {
+        if (parseInt(data["foshk_sunshine"]) > 0) {
+            jQuery(".sunshine-symbol").html('<i class="fa fa-sun-o"></i>');
+        } else {
+            jQuery(".sunshine-symbol").html('');
+        }
     }
 };
 #end if

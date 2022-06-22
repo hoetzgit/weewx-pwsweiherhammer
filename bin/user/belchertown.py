@@ -1911,6 +1911,9 @@ class getData(SearchList):
                 else:
                     station_obs_html += '<i class="fa fa-arrow-up barometer-up"></i>'
                 station_obs_html += "</span>"  # Close the span
+            # 20220622,ho sunshine symbol
+            if obs == "radiation":
+                station_obs_html += ' <span class="sunshine-symbol"></span>'
             station_obs_html += "</td>"
             station_obs_html += "</tr>"
 
