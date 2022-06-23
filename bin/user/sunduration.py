@@ -32,7 +32,7 @@ except ImportError:
 
 
     def logmsg(level, msg):
-        syslog.syslog(level, 'meteotemplate: %s' % msg)
+        syslog.syslog(level, 'sunduration: %s' % msg)
 
 
     def logdbg(msg):
@@ -57,14 +57,13 @@ class SunshineDuration(StdService):
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)
         self.lastDate = 0
         self.sunshineDur = 0
+        self.sunshineDurOriginal = 0
         self.debug = to_bool(self.config_dict["debug"])
 
     def sunshineThreshold(self, mydatetime):
-        # coeff = 0.76  # change to calibrate with your sensor
+        coeff = 0.76  # change to calibrate with your sensor
         utcdate = datetime.utcfromtimestamp(mydatetime)
         dayofyear = int(time.strftime("%j", time.gmtime(mydatetime)))
-        monthofyear = int(time.strftime("%m", time.gmtime(mydatetime)))
-        coeff = self.calib_dict[monthofyear]  # monthly calibration coefficient
         theta = 360 * dayofyear / 365
         equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
             (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
@@ -87,16 +86,43 @@ class SunshineDuration(StdService):
             seuil = 0
         return seuil
 
+    def sunshineThresholdOriginal(self, mydatetime):
+        coeff = 0.9  # change to calibrate with your sensor
+        utcdate = datetime.utcfromtimestamp(mydatetime)
+        dayofyear = int(time.strftime("%j", time.gmtime(mydatetime)))
+        theta = 360 * dayofyear / 365
+        equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
+            (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
+            2 * (pi / 180) * theta)
+
+        latitude = float(self.config_dict["Station"]["latitude"])
+        longitude = float(self.config_dict["Station"]["longitude"])
+        corrtemps = longitude * 4
+        declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
+            (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
+            2 * (pi / 180) * theta)) * (180 / pi)
+        minutesjour = utcdate.hour * 60 + utcdate.minute
+        tempsolaire = (minutesjour + corrtemps + equatemps) / 60
+        angle_horaire = (tempsolaire - 12) * 15
+        hauteur_soleil = asin(sin((pi / 180) * latitude) * sin((pi / 180) * declinaison) + cos(
+            (pi / 180) * latitude) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
+        if hauteur_soleil > 0:
+            seuil = (0.97 + 0.2 * cos((pi / 180) * 360 * dayofyear / 365)) * 830 * pow(
+                (sin(pi / 180) * hauteur_soleil), 1.25) 
+        else :
+            seuil=0
+        return seuil
+
     def newLoopPacket(self, event):
         """Gets called on a new loop packet event."""
         radiation = event.packet.get('radiation')
         loopDate = event.packet.get('dateTime')
         stationInterval = event.packet.get('foshk_interval')
         if radiation is None:
-            logerr("Determination LOOP sunshineDur not possible, radiation not present!")
+            logerr("Calculation LOOP sunshineDur not possible, radiation not present!")
             return None
         if loopDate is None:
-            logerr("Determination LOOP sunshineDur not possible, dateTime not present!")
+            logerr("Calculation LOOP sunshineDur not possible, dateTime not present!")
             return None
         loopInterval = 0
         if stationInterval is not None:
@@ -106,25 +132,40 @@ class SunshineDuration(StdService):
             loopInterval = loopDate - self.lastDate
             self.lastDate = loopDate
         else:
-            logerr("Determination LOOP sunshineDur not possible, interval could not be determined!")
+            logerr("Calculation LOOP sunshineDur not possible, interval could not be determined!")
             return None
-        # Determination LOOP sunshineDur is possible
+        # Calculation LOOP sunshineDur is possible
         loopSunshineDur = 0
+        sunshining = 'NO'
         threshold = self.sunshineThreshold(loopDate)
         if radiation > threshold and radiation > 20:
             loopSunshineDur = loopInterval
+            sunshining = 'YES'
         self.sunshineDur += loopSunshineDur
         if self.debug:
-            logdbg("Determined LOOP sunshineDur = %f s, based on radiation = %f and threshold = %f. LOOP Sum = %f s" % (
-                    loopSunshineDur, radiation, threshold, self.sunshineDur))
+            logdbg("Calculated LOOP sunshineDur=%f, based on sunshining %s, radiation=%f and threshold=%f. LOOP Sum=%f" % (
+                    loopSunshineDur, sunshining, radiation, threshold, self.sunshineDur))
+
+        # Original Version
+        loopSunshineDurOriginal = 0
+        sunshining = 'NO'
+        threshold = self.sunshineThresholdOriginal(loopDate)
+        if radiation > threshold and radiation > 20:
+            loopSunshineDurOriginal = loopInterval
+            sunshining = 'YES'
+        self.sunshineDurOriginal += loopSunshineDurOriginal
+        if self.debug and (loopSunshineDur != loopSunshineDurOriginal):
+            logdbg("Calculated DIFF sunshineDur=%f, based on sunshining %s, radiation=%f and threshold=%f. LOOP Sum=%f" % (
+                    loopSunshineDurOriginal, sunshining, radiation, threshold, self.sunshineDurOriginal))
+
 
     def newArchiveRecord(self, event):
         """Gets called on a new archive record event."""
         event.record['sunshineDur'] = self.sunshineDur
         self.sunshineDur = 0
-        loginf("Total ARCHIVE sunshineDur = %f s" % (event.record['sunshineDur']))
-
-    calib_dict_orig = {1: 1.35, 2: 1.3, 3: 1.1, 4: 1, 5: 0.97, 6: 0.94, 7: 0.94, 8: 0.97, 9: 1, 10: 1.1, 11: 1.3, 12: 1.35}
-    calib_dict = {1: 0.76, 2: 0.76, 3: 0.76, 4: 0.76, 5: 0.76, 6: 0.76, 7: 0.76, 8: 0.76, 9: 0.76, 10: 0.76, 11: 0.76, 12: 0.76}
+        if self.debug:
+            logdbg("Total ARCHIVE sunshineDur=%f" % (event.record['sunshineDur']))
+            logdbg(" ORIG ARCHIVE sunshineDur=%f" % (self.sunshineDurOriginal))
+        self.sunshineDurOriginal = 0
 
     schema_with_sunshine_time = schemas.wview.schema + [('sunshineDur', 'REAL')]
