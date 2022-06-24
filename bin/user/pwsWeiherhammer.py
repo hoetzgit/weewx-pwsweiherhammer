@@ -497,97 +497,53 @@ class pwsWeiherhammer(weewx.xtypes.XType):
             u = 'degree_C'
         return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
 
-    # calculate sunshine duration in hours ** OBSOLETE **
-    def calc_sunshineDurH(self, key, data, db_manager=None):
-        if 'interval' not in data:
-            raise weewx.CannotCalculate(key)
-        if 'radiation' not in data:
-            if self.sunshine_debug:
-                logdbg("Calculation sunshine_time aborting, radiation not present.")
-            raise weewx.CannotCalculate(key)
-        if data['radiation'] is None:
-            if self.sunshine_debug:
-                logdbg("Calculation sunshine_time aborting, radiation is None.")
-            raise weewx.CannotCalculate(key)
+    # calculate sunshine threshold for sunshining yes/no
+    def calc_sunshineThreshold(self, key, data, db_manager=None):
+        utcdate = datetime.utcfromtimestamp(int(data['dateTime']))
+        dayofyear = int(time.strftime("%j",time.gmtime(int(data['dateTime']))))
+        theta = 360 * dayofyear / 365
+        equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
+            (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
+            2 * (pi / 180) * theta)
+        corrtemps = self.lon * 4
+        declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
+            (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
+            2 * (pi / 180) * theta)) * (180 / pi)
+        minutesjour = utcdate.hour * 60 + utcdate.minute
+        tempsolaire = (minutesjour + corrtemps + equatemps) / 60
+        angle_horaire = (tempsolaire - 12) * 15
+        hauteur_soleil = asin(sin((pi / 180) * self.lat) * sin((pi / 180) * declinaison) + cos(
+            (pi / 180) * self.lat) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
+        if hauteur_soleil > 3:
+            seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
+                (sin(pi / 180) * hauteur_soleil), 1.25) * self.sunshine_coeff
+        else:
+            seuil = 0.0
+        return weewx.units.convertStd((seuil, 'watt_per_meter_squared', 'group_radiation'), data['usUnits'])
 
-        try:
-            sunshine_time = 0.0
-            seuil = 0
-            radiation = float(data['radiation'])
-            utcdate = datetime.utcfromtimestamp(int(data['dateTime']))
-            dayofyear = int(time.strftime("%j",time.gmtime(int(data['dateTime']))))
-            theta = 360 * dayofyear / 365
-            equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
-                (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
-                2 * (pi / 180) * theta)
-            corrtemps = self.lon * 4
-            declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
-                (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
-                2 * (pi / 180) * theta)) * (180 / pi)
-            minutesjour = utcdate.hour*60 + utcdate.minute
-            tempsolaire = (minutesjour + corrtemps + equatemps) / 60
-            angle_horaire = (tempsolaire - 12) * 15
-            hauteur_soleil = asin(sin((pi / 180) * self.lat) * sin((pi / 180) * declinaison) + cos(
-                (pi / 180) * self.lat) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
-            if hauteur_soleil > 3 and radiation > self.sunshine_min:
-                seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) *1080 * pow((sin(pi / 180) * hauteur_soleil), 1.25) * self.sunshine_coeff
-                if radiation > seuil:
-                    sunshine_time = data['interval'] / 60.0
-            if self.sunshine_debug:
-#                logdbg("Calculated sunshine_time = %f, based on radiation = %f, and threshold = %f, %f" %
-#                    (sunshine_time, radiation, seuil, self.sunshine_coeff))
-                logdbg("Calculated sunshine_time = %f, based on radiation = %f, threshold = %f, sunshine_coeff = %f, interval = %d" %
-                    (sunshine_time, radiation, seuil, self.sunshine_coeff, data['interval']))
-        except Exception as e:
-            logerr('Exception: %s' % e)
-        return weewx.units.convertStd((sunshine_time, 'minute', 'group_interval'), data['usUnits'])
-
-    # calculate sunshine duration in seconds
-    def calc_sunshineDurS(self, key, data, db_manager=None):
-        if 'foshk_interval' not in data:
-            if self.sunshine_debug:
-                logdbg("Calculation sunshineDur aborting, foshk_interval not present.")
-            raise weewx.CannotCalculate(key)
-        if 'radiation' not in data:
-            if self.sunshine_debug:
-                logdbg("Calculation sunshineDur aborting, radiation not present.")
-            raise weewx.CannotCalculate(key)
-        if data['radiation'] is None:
-            if self.sunshine_debug:
-                logdbg("Calculation sunshineDur aborting, radiation is None.")
-            raise weewx.CannotCalculate(key)
-
-        sunshine_time = 0.0
-        try:
-            seuil = 0
-            radiation = float(data['radiation'])
-            utcdate = datetime.utcfromtimestamp(int(data['dateTime']))
-            dayofyear = int(time.strftime("%j",time.gmtime(int(data['dateTime']))))
-            theta = 360 * dayofyear / 365
-            equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
-                (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
-                2 * (pi / 180) * theta)
-            corrtemps = self.lon * 4
-            declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
-                (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
-                2 * (pi / 180) * theta)) * (180 / pi)
-            minutesjour = utcdate.hour*60 + utcdate.minute
-            tempsolaire = (minutesjour + corrtemps + equatemps) / 60
-            angle_horaire = (tempsolaire - 12) * 15
-            hauteur_soleil = asin(sin((pi / 180) * self.lat) * sin((pi / 180) * declinaison) + cos(
-                (pi / 180) * self.lat) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
-            if hauteur_soleil > 3 and radiation > self.sunshine_min:
-                seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) *1080 * pow((sin(pi / 180) * hauteur_soleil), 1.25) * self.sunshine_coeff
-                if radiation > seuil:
-                    sunshine_time = data['foshk_interval']
-        except Exception as e:
-            logerr('Exception: %s' % e)
-        retval = weewx.units.convertStd((sunshine_time, 'second', 'group_deltatime'), data['usUnits'])
-        if self.sunshine_debug:
-            logdbg("Calculated sunshineDur based on radiation = %f, threshold = %f, sunshine_coeff = %f, foshk_interval = %d" %
-                (radiation, seuil, self.sunshine_coeff, data['foshk_interval']))
-            logdbg("Calculated sunshineDur is %s" % (retval,))
-        return retval
+    # calculate sunshine threshold for sunshining yes/no
+    def calc_sunshineThresholdOriginal(self, key, data, db_manager=None):
+        utcdate = datetime.utcfromtimestamp(int(data['dateTime']))
+        dayofyear = int(time.strftime("%j",time.gmtime(int(data['dateTime']))))
+        theta = 360 * dayofyear / 365
+        equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
+            (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
+            2 * (pi / 180) * theta)
+        corrtemps = self.lon * 4
+        declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
+            (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
+            2 * (pi / 180) * theta)) * (180 / pi)
+        minutesjour = utcdate.hour * 60 + utcdate.minute
+        tempsolaire = (minutesjour + corrtemps + equatemps) / 60
+        angle_horaire = (tempsolaire - 12) * 15
+        hauteur_soleil = asin(sin((pi / 180) * self.lat) * sin((pi / 180) * declinaison) + cos(
+            (pi / 180) * self.lat) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
+        if hauteur_soleil > 0:
+            seuil = (0.7 + 0.085 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
+                (sin(pi / 180) * hauteur_soleil), 1.25) 
+        else:
+            seuil = 0.0
+        return weewx.units.convertStd((seuil, 'watt_per_meter_squared', 'group_radiation'), data['usUnits'])
 
     @staticmethod
     def calc_airDensity(key, data, db_manager=None):
@@ -680,10 +636,10 @@ class pwsWeiherhammerService(StdService):
         # solar-heatindex-related options
         solar_heatindex_algo = option_dict['solar_heatindex'].get('algorithm', 'new').lower()
 
-        # sunshine_time-related options
-        sunshine_coeff = float(option_dict['sunshine_time'].get('sunshine_coeff', 0.72))
-        sunshine_min = float(option_dict['sunshine_time'].get('sunshine_min', 18.0))
-        sunshine_debug = to_bool(option_dict['sunshine_time'].get('sunshine_debug', False))
+        # sunshine threshold related options
+        sunshine_coeff = float(option_dict['sunshineThreshold'].get('coeff', 0.76))
+        sunshine_min = float(option_dict['sunshineThreshold'].get('sunshine_min', 20.0))
+        sunshine_debug = to_bool(option_dict['sunshineThreshold'].get('debug', False))
 
         # Instantiate an instance of pwsWeiherhammer:
         self.pwsW = pwsWeiherhammer(altitude, latitude, longitude, 
