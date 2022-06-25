@@ -62,7 +62,7 @@ jQuery(document).ready(function() {
     }
 
     // If the visitor has overridden the current source, keep that current source going throughout the full site and their visit.
-    if (sessionStorage.getItem('currentSource') == "toggleOverride") {
+    if (sessionStorage.getItem('csource') == "toggleOverride") {
         belchertown_debug("currentSource: sessionStorage override in place.");
         changeCurrentSource(sessionStorage.getItem('currentSource'));
     }
@@ -101,7 +101,7 @@ jQuery(document).ready(function() {
     try {
         document.getElementById('currentSwitch').addEventListener('change', function(event) {
             belchertown_debug("currentSource: Toggle button changed");
-            (event.target.checked) ? changeCurrentSource("dwd", true) : changeCurrentSource("brightsky", true);
+            (event.target.checked) ? changeCurrentSource("$Extras.current_source", true) : changeCurrentSource("dwd", true);
         });
     } catch (err) {
         // Silently exit
@@ -221,6 +221,28 @@ function get_outTemp_color(unit, outTemp, returnColor = false) {
     } else {
         jQuery(".outtemp_outer").css("color", outTemp_color);
     }
+}
+
+// Brightsky condition label
+// condition - dry┃fog┃rain┃sleet┃snow┃hail┃thunderstorm┃
+function brightsky_condition_label(condition) {
+    var res = condition;
+    if (condition == 'dry') {
+        res = '$obs.label.brightsky_dry';
+    } else if (condition == 'fog') {
+        res = '$obs.label.brightsky_fog';
+    } else if (condition == 'rain') {
+        res = '$obs.label.brightsky_rain';
+    } else if (condition == 'sleet') {
+        res = '$obs.label.brightsky_sleet';
+    } else if (condition == 'snow') {
+        res = '$obs.label.brightsky_snow';
+    } else if (condition == 'hail') {
+        res = '$obs.label.brightsky_hail';
+    } else if (condition == 'thunderstorm') {
+        res = '$obs.label.brightsky_thunderstorm';
+    }
+    return res;
 }
 
 // Change the color of the aqi variable according to US-EPA standards
@@ -650,22 +672,36 @@ function changeCurrentSource(sourceName, toggleOverride = false) {
     if (toggleOverride) {
         belchertown_debug("currentSource: toggle override clicked.");
         belchertown_debug("currentSource: sessionStorage.getItem('currentSource') was previously: " + sessionStorage.getItem('currentSource'));
-        sessionStorage.setItem('currentSource', 'toggleOverride');
+        sessionStorage.setItem('csource', 'toggleOverride');
         belchertown_debug("currentSource: sessionStorage.getItem('currentSource') is now: " + sessionStorage.getItem('currentSource'));
     }
     if (sourceName == "dwd") {
         // Apply current source DWD
         #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
-        jQuery("#currentSwitch").prop("checked", true);
+        jQuery("#currentSwitch").prop("checked", false);
         #end if
         sessionStorage.setItem('currentSource', 'dwd');
         ajaxforecast();
     } else if (sourceName == "brightsky") {
         // Apply current source Brightsky
         #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
-        jQuery("#currentSwitch").prop("checked", false);
+        jQuery("#currentSwitch").prop("checked", true);
         #end if
         sessionStorage.setItem('currentSource', 'brightsky');
+        ajaxforecast();
+    } else if (sourceName == "metar") {
+        // Apply current source Metar
+        #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
+        jQuery("#currentSwitch").prop("checked", true);
+        #end if
+        sessionStorage.setItem('currentSource', 'metar');
+        ajaxforecast();
+    } else if (sourceName == "conditions") {
+        // Apply current source conditions
+        #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
+        jQuery("#currentSwitch").prop("checked", true);
+        #end if
+        sessionStorage.setItem('currentSource', 'conditions');
         ajaxforecast();
     }
 }
@@ -1242,7 +1278,11 @@ function update_forecast_data(data) {
             if (currentSource == "dwd") {
                 var wxicon = get_relative_url() + "/images/" + aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png";
             } else if (currentSource == "brightsky") {
-                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["brightsky"][0]["response"]["ob"]["icon_aeris"]) + ".png";
+                var wxicon = get_relative_url() + "/images/" + data["brightsky"][0]["response"]["ob"]["icon"];
+            } else if (currentSource == "metar") {
+                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["metar"][0]["response"][0]["ob"]["icon"]) + ".png";
+            } else if (currentSource == "conditions") {
+                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["conditions"][0]["response"][0]["periods"][0]["icon"]) + ".png";
             }
         } catch (err) {
             // Returned "current" data does not have this value
@@ -1253,7 +1293,11 @@ function update_forecast_data(data) {
             if (currentSource == "dwd") {
                 jQuery(".current-obs-text").html(aeris_coded_weather(data["current"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
             } else if (currentSource == "brightsky") {
-                jQuery(".current-obs-text").html(aeris_coded_weather(data["brightsky"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
+                jQuery(".current-obs-text").html(brightsky_condition_label(data["brightsky"][0]["response"]["ob"]["condition"]));
+            } else if (currentSource == "metar") {
+                jQuery(".current-obs-text").html(aeris_coded_weather(data["metar"][0]["response"][0]["ob"]["weatherPrimaryCoded"], true));
+            } else if (currentSource == "conditions") {
+                jQuery(".current-obs-text").html(aeris_coded_weather(data["conditions"][0]["response"][0]["periods"][0]["weatherPrimaryCoded"], true));
             }
         } catch (err) {
             // Returned "current" data does not have this value
@@ -1290,6 +1334,10 @@ function update_forecast_data(data) {
                     visibility = data["current"][0]["response"]["ob"]["visibilityKM"];
                 } else if (currentSource == "brightsky") {
                     visibility = data["brightsky"][0]["response"]["ob"]["visibilityKM"];
+                } else if (currentSource == "metar") {
+                    visibility = data["metar"][0]["response"][0]["ob"]["visibilityKM"];
+                } else if (currentSource == "conditions") {
+                    visibility = data["conditions"][0]["response"][0]["periods"][0]["visibilityKM"];
                 }
 
             } else {
@@ -1315,7 +1363,11 @@ function update_forecast_data(data) {
                 if (currentSource == "dwd") {
                     cloud_cover = data["current"][0]["response"]["ob"]["sky"];
                 } else if (currentSource == "brightsky") {
-                    cloud_cover = data["brightsky"][0]["response"]["ob"]["cloudcover"];
+                    cloud_cover = data["brightsky"][0]["response"]["ob"]["sky"];
+                } else if (currentSource == "metar") {
+                    cloud_cover = data["metar"][0]["response"][0]["ob"]["sky"];
+                } else if (currentSource == "conditions") {
+                    cloud_cover = data["conditions"][0]["response"][0]["periods"][0]["sky"];
                 }
 
             } else {
