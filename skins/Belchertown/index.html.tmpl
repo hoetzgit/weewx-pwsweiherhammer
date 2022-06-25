@@ -325,6 +325,11 @@
                                                     <td class="beaufort" colspan="4"></td>
                                                 </tr>
                                                 #end if
+                                                #if $day.windrun.has_data
+                                                <tr>
+                                                   <td style="padding-top:5px">$obs.label.windrun</td><td class="dailywindrun" style="padding-top:5px">$day.windrun.sum</td>
+                                                </tr>
+                                                #end if
                                             </tbody>
                                         </table>
                                     </div>

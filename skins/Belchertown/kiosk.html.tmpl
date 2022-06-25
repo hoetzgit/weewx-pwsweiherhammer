@@ -297,7 +297,7 @@
                                             </tr>
                                             #if $day.windrun.has_data
                                             <tr>
-                                                <td style="padding-top:5px">Wind Run</td><td class="dailywindrun" style="padding-top:5px">$day.windrun.sum</td>
+                                                <td style="padding-top:5px">$obs.label.windrun</td><td class="dailywindrun" style="padding-top:5px">$day.windrun.sum</td>
                                             </tr>
                                             #end if
                                         </tbody>
@@ -389,7 +389,7 @@
                 <div class="row forecastrow">
                     <!-- Forecast -->
                     <div class="col-lg-8 forecast-title">
-                        $obs.label.forecast_header <span class="forecast-subtitle"></span><!-- moment.js -->
+                        $obs.label.forecast_header_dwd <span class="forecast-subtitle"></span><!-- moment.js -->
                     </div>
                     <div class="col-lg-4 forecast-menu">
                         $obs.label.forecast_interval_caption <div class="forecast-button" onclick="forecast_select(1);" id="button1">1</div>
