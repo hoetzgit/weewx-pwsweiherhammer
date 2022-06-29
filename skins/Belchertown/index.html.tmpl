@@ -224,10 +224,12 @@
                                         <div class="current-obs-text">
                                             $current_obs_summary
                                         </div>
-                                        #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
+                                        <div class="avg10m-obs-symbols">
+                                        </div>
+                                        #if $Extras.has_key('current_source_toggle') and $Extras.current_source_toggle == '1'
                                         <div class="aqi_outer">
                                             <label class="currentSwitchLabel">
-                                                <input type="checkbox" id="currentSwitch" $currentSwitchChecked>
+                                                <input type="checkbox" id="current_source_toggle" $current_source_toggle_checked>
                                                 <span class="slider round"></span>
                                             </label>
                                         </div>

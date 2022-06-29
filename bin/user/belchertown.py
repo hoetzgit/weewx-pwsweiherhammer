@@ -1428,8 +1428,28 @@ class getData(SearchList):
             with open(forecast_file, "r") as read_file:
                 data = json.load(read_file)
 
+            # 20220624,ho dwd|brightsky|metar|conditions|mesonet|pws
+            current_source_default = self.generator.skin_dict["Extras"].get("current_source_default", "dwd")
+            current_source_alternative = self.generator.skin_dict["Extras"].get("current_source_alternative", current_source_default)
+            current_source_toggle = self.generator.skin_dict["Extras"].get("current_source_toggle", 0)
+            current_source_toggle_checked = ""
+
             try:
-                cloud_cover = "{} %".format(data["current"][0]["response"]["ob"]["sky"])
+                # 20220624,ho dwd|brightsky|metar|conditions|mesonet|pws
+                if (current_source_default == "dwd"):
+                    cloud_cover = "{} %".format(data["current"][0]["response"]["ob"]["sky"])
+                elif (current_source_default == "brightsky"):
+                    cloud_cover = "{} %".format(data["brightsky"][0]["response"]["ob"]["sky"])
+                elif (current_source_default == "metar"):
+                    cloud_cover = "{} %".format(data["metar"][0]["response"][0]["ob"]["sky"])
+                elif (current_source_default == "mesonet"):
+                    cloud_cover = "{} %".format(data["mesonet"][0]["response"][0]["ob"]["sky"])
+                elif (current_source_default == "pws"):
+                    cloud_cover = "{} %".format(data["pws"][0]["response"][0]["ob"]["sky"])
+                elif (current_source_default == "conditions"):
+                    cloud_cover = "{} %".format(data["conditions"][0]["response"][0]["periods"][0]["sky"])
+                else:
+                    cloud_cover = "{} %".format(data["current"][0]["response"]["ob"]["sky"])
             except Exception:
                 loginf("No cloud cover data from Aeris weather")
                 cloud_cover = ""
@@ -1491,53 +1511,124 @@ class getData(SearchList):
                 and self.generator.skin_dict["Extras"]["forecast_aeris_use_metar"]
                 == "1"
             ):
-                # 20220624,ho dwd, brightsky, metar, conditions
-                current_source = self.generator.skin_dict["Extras"].get("current_source", "dwd")
-                currentSwitchChecked = ""
-                if (current_source == "dwd"):
-                    current_obs_summary = aeris_coded_weather(
-                        data["current"][0]["response"]["ob"]["weatherPrimaryCoded"]
-                    )
-                    current_obs_icon = (
-                        aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png"
-                    )
-                elif (current_source == "brightsky"):
-                    current_obs_summary = brightsky_coded_weather(data["brightsky"][0]["response"]["ob"]["condition"])
-                    current_obs_icon = data["brightsky"][0]["response"]["ob"]["icon"] + ".png"
-                    currentSwitchChecked = "checked"
-                elif (current_source == "metar"):
-                    current_obs_summary = aeris_coded_weather(
-                        data["metar"][0]["response"][0]["ob"]["weatherPrimaryCoded"]
-                    )
-                    current_obs_icon = (
-                        aeris_icon(data["metar"][0]["response"][0]["ob"]["icon"]) + ".png"
-                    )
-                    currentSwitchChecked = "checked"
-                elif (current_source == "conditions"):
-                    current_obs_summary = aeris_coded_weather(
-                        data["conditions"][0]["response"][0]["periods"][0]["weatherPrimaryCoded"]
-                    )
-                    current_obs_icon = (
-                        aeris_icon(data["conditions"][0]["response"][0]["periods"][0]["icon"]) + ".png"
-                    )
-                    currentSwitchChecked = "checked"
-                else:
-                    current_obs_summary = aeris_coded_weather(
-                        data["current"][0]["response"]["ob"]["weatherPrimaryCoded"]
-                    )
-                    current_obs_icon = (
-                        aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png"
-                    )
+                # 20220624,ho dwd|brightsky|metar|conditions|mesonet|pws
+                try:
+                    if (current_source_default == "dwd"):
+                        current_obs_summary = aeris_coded_weather(
+                            data["current"][0]["response"]["ob"]["weatherPrimaryCoded"]
+                        )
+                        current_obs_icon = (
+                            aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png"
+                        )
+                    elif (current_source_default == "brightsky"):
+                        current_obs_summary = brightsky_coded_weather(data["brightsky"][0]["response"]["ob"]["condition"])
+                        current_obs_icon = data["brightsky"][0]["response"]["ob"]["icon"] + ".png"
+                    elif (current_source_default == "metar"):
+                        current_obs_summary = aeris_coded_weather(
+                            data["metar"][0]["response"][0]["ob"]["weatherPrimaryCoded"]
+                        )
+                        current_obs_icon = (
+                            aeris_icon(data["metar"][0]["response"][0]["ob"]["icon"]) + ".png"
+                        )
+                    elif (current_source_default == "mesonet"):
+                        current_obs_summary = aeris_coded_weather(
+                            data["mesonet"][0]["response"][0]["ob"]["weatherPrimaryCoded"]
+                        )
+                        current_obs_icon = (
+                            aeris_icon(data["mesonet"][0]["response"][0]["ob"]["icon"]) + ".png"
+                        )
+                    elif (current_source_default == "pws"):
+                        current_obs_summary = aeris_coded_weather(
+                            data["pws"][0]["response"][0]["ob"]["weatherPrimaryCoded"]
+                        )
+                        current_obs_icon = (
+                            aeris_icon(data["pws"][0]["response"][0]["ob"]["icon"]) + ".png"
+                        )
+                    elif (current_source_default == "conditions"):
+                        current_obs_summary = aeris_coded_weather(
+                            data["conditions"][0]["response"][0]["periods"][0]["weatherPrimaryCoded"]
+                        )
+                        current_obs_icon = (
+                            aeris_icon(data["conditions"][0]["response"][0]["periods"][0]["icon"]) + ".png"
+                        )
+                    else:
+                        current_obs_summary = aeris_coded_weather(
+                            data["current"][0]["response"]["ob"]["weatherPrimaryCoded"]
+                        )
+                        current_obs_icon = (
+                            aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png"
+                        )
+                except Exception:
+                    logerr("No obs icon and text from forecast.json")
+                    current_obs_summary = ""
+                    current_obs_icon = ""
 
                 if forecast_units in ("si", "ca"):
-                    if data["current"][0]["response"]["ob"]["visibilityKM"] is not None:
-                        visibility = locale.format(
-                            "%g", data["current"][0]["response"]["ob"]["visibilityKM"]
-                        )
-                        visibility_unit = "km"
+                    # 20220624,ho dwd|brightsky|metar|conditions|mesonet|pws
+
+                    if (current_source_default == "dwd"):
+                        if data["current"][0]["response"]["ob"]["visibilityKM"] is not None:
+                            visibility = locale.format(
+                                "%g", data["current"][0]["response"]["ob"]["visibilityKM"]
+                            )
+                            visibility_unit = "km"
+                        else:
+                            visibility = "N/A"
+                            visibility_unit = ""
+                    elif (current_source_default == "brightsky"):
+                        if data["brightsky"][0]["response"]["ob"]["visibilityKM"] is not None:
+                            visibility = locale.format(
+                                "%g", data["brightsky"][0]["response"]["ob"]["visibilityKM"]
+                            )
+                            visibility_unit = "km"
+                        else:
+                            visibility = "N/A"
+                            visibility_unit = ""
+                    elif (current_source_default == "metar"):
+                        if data["metar"][0]["response"][0]["ob"]["visibilityKM"] is not None:
+                            visibility = locale.format(
+                                "%g", data["metar"][0]["response"][0]["ob"]["visibilityKM"]
+                            )
+                            visibility_unit = "km"
+                        else:
+                            visibility = "N/A"
+                            visibility_unit = ""
+                    elif (current_source_default == "mesonet"):
+                        if data["mesonet"][0]["response"][0]["ob"]["visibilityKM"] is not None:
+                            visibility = locale.format(
+                                "%g", data["mesonet"][0]["response"][0]["ob"]["visibilityKM"]
+                            )
+                            visibility_unit = "km"
+                        else:
+                            visibility = "N/A"
+                            visibility_unit = ""
+                    elif (current_source_default == "pws"):
+                        if data["pws"][0]["response"][0]["ob"]["visibilityKM"] is not None:
+                            visibility = locale.format(
+                                "%g", data["pws"][0]["response"][0]["ob"]["visibilityKM"]
+                            )
+                            visibility_unit = "km"
+                        else:
+                            visibility = "N/A"
+                            visibility_unit = ""
+                    elif (current_source_default == "conditions"):
+                        if data["conditions"][0]["response"][0]["periods"][0]["visibilityKM"] is not None:
+                            visibility = locale.format(
+                                "%g", data["conditions"][0]["response"][0]["periods"][0]["visibilityKM"]
+                            )
+                            visibility_unit = "km"
+                        else:
+                            visibility = "N/A"
+                            visibility_unit = ""
                     else:
-                        visibility = "N/A"
-                        visibility_unit = ""
+                        if data["current"][0]["response"]["ob"]["visibilityKM"] is not None:
+                            visibility = locale.format(
+                                "%g", data["current"][0]["response"]["ob"]["visibilityKM"]
+                            )
+                            visibility_unit = "km"
+                        else:
+                            visibility = "N/A"
+                            visibility_unit = ""
                 else:
                     # us, uk2 and default to miles per hour
                     if data["current"][0]["response"]["ob"]["visibilityMI"] is not None:
@@ -1948,7 +2039,7 @@ class getData(SearchList):
                 station_obs_html += "</span>"  # Close the span
             # 20220622,ho sunshine symbol
             if obs == "radiation":
-                station_obs_html += ' <span class="sunshine-symbol"></span>'
+                station_obs_html += ' <span class="current-sunshine-symbol"></span>'
             station_obs_html += "</td>"
             station_obs_html += "</tr>"
 
@@ -2120,7 +2211,10 @@ class getData(SearchList):
             "default_noaa_file": default_noaa_file,
             "current_obs_icon": current_obs_icon,
             "current_obs_summary": current_obs_summary,
-            "currentSwitchChecked": currentSwitchChecked,
+            "current_source_toggle": current_source_toggle,
+            "current_source_toggle_checked": current_source_toggle_checked,
+            "current_source_default": current_source_default,
+            "current_source_alternative": current_source_alternative,
             "visibility": visibility,
             "visibility_unit": visibility_unit,
             "cloud_cover": cloud_cover,

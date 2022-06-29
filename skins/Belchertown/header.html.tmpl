@@ -26,24 +26,6 @@
         #end if
 #end if
 
-#set $currentSource = "conditions"
-#set $currentSwitchChecked = ""
-#if $Extras.has_key('current_source')
-    #if $Extras.current_source == "brightsky"
-        #set $currentSource = "brightsky"
-        #set $currentSwitchChecked = "checked"
-    #elif $Extras.current_source == "metar"
-        #set $currentSource = "metar"
-        #set $currentSwitchChecked = "checked"
-    #elif $Extras.current_source == "conditions"
-        #set $currentSource = "conditions"
-        #set $currentSwitchChecked = "checked"
-    #elif $Extras.current_source == "dwd"
-        #set $currentSource = "dwd"
-        #set $currentSwitchChecked = ""
-    #end if
-#end if
-
 #if $obs.label.html_title != "" 
     #if $page == "home"
         #set $head_title = $obs.label.html_title
@@ -210,10 +192,15 @@
             if ( sessionStorage.getItem('currentTheme') === null ) {
                 sessionStorage.setItem('currentTheme', '$bodyTheme');
             }
-            // Set the session variables for currentSource
-            if ( sessionStorage.getItem('currentSource') === null ) {
-                sessionStorage.setItem('currentSource', '$Extras.current_source');
+            #if $Extras.has_key('current_source_toggle') and $Extras.current_source_toggle == '1'
+            // Set the session variables for current_source_toggle_checked
+            if ( sessionStorage.getItem('current_source_toggle') === null ) {
+                sessionStorage.setItem('current_source_toggle', '');
             }
+            if ( sessionStorage.getItem('current_source_toggle_checked') === null ) {
+                sessionStorage.setItem('current_source_toggle_checked', '');
+            }
+            #end if
         </script>
         #end if
         

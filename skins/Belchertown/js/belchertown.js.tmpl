@@ -48,6 +48,10 @@ function belchertown_debug(message) {
     }
 }
 
+function belchertown_log(message) {
+    // console.log(message);
+}
+
 jQuery(document).ready(function() {
 
     // Bootstrap hover tooltips
@@ -59,12 +63,6 @@ jQuery(document).ready(function() {
     if (sessionStorage.getItem('theme') == "toggleOverride") {
         belchertown_debug("Theme: sessionStorage override in place.");
         changeTheme(sessionStorage.getItem('currentTheme'));
-    }
-
-    // If the visitor has overridden the current source, keep that current source going throughout the full site and their visit.
-    if (sessionStorage.getItem('csource') == "toggleOverride") {
-        belchertown_debug("currentSource: sessionStorage override in place.");
-        changeCurrentSource(sessionStorage.getItem('currentSource'));
     }
 
     // Change theme if a URL variable is set
@@ -96,15 +94,21 @@ jQuery(document).ready(function() {
     }
     #end if
 
-    #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
+    #if $Extras.has_key('current_source_toggle') and $Extras.current_source_toggle == '1'
+    // If the visitor has overridden the current source, keep that current source going throughout the full site and their visit.
+    if (sessionStorage.getItem('current_source_toggle') == "toggleOverride") {
+        belchertown_log("current_source_toggle: sessionStorage override in place.");
+        changeCurrentSourceToggle(sessionStorage.getItem('current_source_toggle_checked'));
+    }
+
     // current source checkbox toggle switcher
     try {
-        document.getElementById('currentSwitch').addEventListener('change', function(event) {
-            belchertown_debug("currentSource: Toggle button changed");
-            (event.target.checked) ? changeCurrentSource("$Extras.current_source", true) : changeCurrentSource("dwd", true);
+        document.getElementById('current_source_toggle').addEventListener('change', function(event) {
+            belchertown_log("current_source_toggle: Toggle button changed");
+           (event.target.checked) ? changeCurrentSourceToggle("checked", true) : changeCurrentSourceToggle("", true);
         });
     } catch (err) {
-        // Silently exit
+         // Silently exit
     }
     #end if
 
@@ -667,44 +671,25 @@ function changeTheme(themeName, toggleOverride = false) {
     }
 }
 
-function changeCurrentSource(sourceName, toggleOverride = false) {
-    belchertown_debug("currentSource: Changing to " + sourceName);
+#if $Extras.has_key('current_source_toggle') and $Extras.current_source_toggle == '1'
+function changeCurrentSourceToggle(checked, toggleOverride = false) {
+    belchertown_log("changeCurrentSourceToggle: Changing to: " + checked);
     if (toggleOverride) {
-        belchertown_debug("currentSource: toggle override clicked.");
-        belchertown_debug("currentSource: sessionStorage.getItem('currentSource') was previously: " + sessionStorage.getItem('currentSource'));
-        sessionStorage.setItem('csource', 'toggleOverride');
-        belchertown_debug("currentSource: sessionStorage.getItem('currentSource') is now: " + sessionStorage.getItem('currentSource'));
+        sessionStorage.setItem('current_source_toggle', 'toggleOverride');
     }
-    if (sourceName == "dwd") {
-        // Apply current source DWD
-        #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
-        jQuery("#currentSwitch").prop("checked", false);
-        #end if
-        sessionStorage.setItem('currentSource', 'dwd');
-        ajaxforecast();
-    } else if (sourceName == "brightsky") {
-        // Apply current source Brightsky
-        #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
-        jQuery("#currentSwitch").prop("checked", true);
-        #end if
-        sessionStorage.setItem('currentSource', 'brightsky');
-        ajaxforecast();
-    } else if (sourceName == "metar") {
-        // Apply current source Metar
-        #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
-        jQuery("#currentSwitch").prop("checked", true);
-        #end if
-        sessionStorage.setItem('currentSource', 'metar');
-        ajaxforecast();
-    } else if (sourceName == "conditions") {
-        // Apply current source conditions
-        #if $Extras.has_key('current_toggle_enabled') and $Extras.current_toggle_enabled == '1'
-        jQuery("#currentSwitch").prop("checked", true);
-        #end if
-        sessionStorage.setItem('currentSource', 'conditions');
-        ajaxforecast();
+    if (checked == "checked") {
+        jQuery("#current_source_toggle").prop("checked", true);
+    } else {
+        jQuery("#current_source_toggle").prop("checked", false);
     }
+    sessionStorage.setItem('current_source_toggle_checked', checked);
+
+    belchertown_log("changeCurrentSourceToggle: Session current_source_toggle is " + sessionStorage.getItem('current_source_toggle'));
+    belchertown_log("changeCurrentSourceToggle: Session current_source_toggle_checked is " + sessionStorage.getItem('current_source_toggle_checked'));
+
+    ajaxforecast();
 }
+#end if
 
 async function ajaxweewx() {
     resp = await fetch(get_relative_url() + "/json/weewx_data.json");
@@ -809,12 +794,13 @@ function update_weewx_data(data) {
     change_aqi_color(data["current"]["pws_aqi_o3_category"], ".pws_aqi_o3_dot", "background-color");
     change_aqi_color(data["current"]["pws_aqi_no2_category"], ".pws_aqi_no2_dot", "background-color");
 
-    // Sunshine Symbol
-    if (parseInt(data["current"]["sunshine"]) > 0) {
-        jQuery(".sunshine-symbol").html('<i class="fa fa-sun-o"></i>');
-    } else {
-        jQuery(".sunshine-symbol").html('');
+    try {
+        // Barometer trending by finding a negative number
+        count = (data["current"]["barometer_trend"].match(/-/g) || []).length
+    } catch (err) {
+        // Returned "current" data does not have this value
     }
+
 }
 
 //  function returns html for moon-icon according to moonphase value and currentTheme setting
@@ -1264,7 +1250,14 @@ function update_forecast_data(data) {
     belchertown_debug("Forecast: Provider is " + forecast_provider);
     belchertown_debug("Forecast: Updating data");
     belchertown_debug(data);
-    currentSource = sessionStorage.getItem('currentSource');
+    current_source_toggle_checked = sessionStorage.getItem('current_source_toggle_checked');
+    if (current_source_toggle_checked == "checked") {
+        current_source_selected = "$current_source_alternative"
+    } else {
+        current_source_selected = "$current_source_default"
+    }
+    belchertown_log("current_source_toggle_checked: " + current_source_toggle_checked);
+    belchertown_log("current_source_selected: " + current_source_selected);
 
     if (forecast_provider == "N/A") {
         jQuery(".forecastrow").hide();
@@ -1275,14 +1268,20 @@ function update_forecast_data(data) {
         var forecast_issueTime_dwd = tzAdjustedMoment(data["current"][0]["response"]["obTimestamp"]).format('$obs.label.time_forecast_last_updated');
 
         try {
-            if (currentSource == "dwd") {
+            if (current_source_selected == "dwd") {
                 var wxicon = get_relative_url() + "/images/" + aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png";
-            } else if (currentSource == "brightsky") {
+            } else if (current_source_selected == "brightsky") {
                 var wxicon = get_relative_url() + "/images/" + data["brightsky"][0]["response"]["ob"]["icon"];
-            } else if (currentSource == "metar") {
+            } else if (current_source_selected == "metar") {
                 var wxicon = get_relative_url() + "/images/" + aeris_icon(data["metar"][0]["response"][0]["ob"]["icon"]) + ".png";
-            } else if (currentSource == "conditions") {
+            } else if (current_source_selected == "mesonet") {
+                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["mesonet"][0]["response"][0]["ob"]["icon"]) + ".png";
+            } else if (current_source_selected == "pws") {
+                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["pws"][0]["response"][0]["ob"]["icon"]) + ".png";
+            } else if (current_source_selected == "conditions") {
                 var wxicon = get_relative_url() + "/images/" + aeris_icon(data["conditions"][0]["response"][0]["periods"][0]["icon"]) + ".png";
+            } else {
+                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png";
             }
         } catch (err) {
             // Returned "current" data does not have this value
@@ -1290,14 +1289,20 @@ function update_forecast_data(data) {
         
         // Current observation text
         try {
-            if (currentSource == "dwd") {
+            if (current_source_selected == "dwd") {
                 jQuery(".current-obs-text").html(aeris_coded_weather(data["current"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
-            } else if (currentSource == "brightsky") {
+            } else if (current_source_selected == "brightsky") {
                 jQuery(".current-obs-text").html(brightsky_condition_label(data["brightsky"][0]["response"]["ob"]["condition"]));
-            } else if (currentSource == "metar") {
+            } else if (current_source_selected == "metar") {
                 jQuery(".current-obs-text").html(aeris_coded_weather(data["metar"][0]["response"][0]["ob"]["weatherPrimaryCoded"], true));
-            } else if (currentSource == "conditions") {
+            } else if (current_source_selected == "mesonet") {
+                jQuery(".current-obs-text").html(aeris_coded_weather(data["mesonet"][0]["response"][0]["ob"]["weatherPrimaryCoded"], true));
+            } else if (current_source_selected == "pws") {
+                jQuery(".current-obs-text").html(aeris_coded_weather(data["pws"][0]["response"][0]["ob"]["weatherPrimaryCoded"], true));
+            } else if (current_source_selected == "conditions") {
                 jQuery(".current-obs-text").html(aeris_coded_weather(data["conditions"][0]["response"][0]["periods"][0]["weatherPrimaryCoded"], true));
+            } else {
+                jQuery(".current-obs-text").html(aeris_coded_weather(data["current"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
             }
         } catch (err) {
             // Returned "current" data does not have this value
@@ -1330,14 +1335,20 @@ function update_forecast_data(data) {
         try {
             if (("$Extras.forecast_units" == "si") || ("$Extras.forecast_units" == "ca")) {
                 // si and ca = kilometer
-                if (currentSource == "dwd") {
+                if (current_source_selected == "dwd") {
                     visibility = data["current"][0]["response"]["ob"]["visibilityKM"];
-                } else if (currentSource == "brightsky") {
+                } else if (current_source_selected == "brightsky") {
                     visibility = data["brightsky"][0]["response"]["ob"]["visibilityKM"];
-                } else if (currentSource == "metar") {
+                } else if (current_source_selected == "metar") {
                     visibility = data["metar"][0]["response"][0]["ob"]["visibilityKM"];
-                } else if (currentSource == "conditions") {
+                } else if (current_source_selected == "mesonet") {
+                    visibility = data["mesonet"][0]["response"][0]["ob"]["visibilityKM"];
+                } else if (current_source_selected == "pws") {
+                    visibility = data["pws"][0]["response"][0]["ob"]["visibilityKM"];
+                } else if (current_source_selected == "conditions") {
                     visibility = data["conditions"][0]["response"][0]["periods"][0]["visibilityKM"];
+                } else {
+                    visibility = data["current"][0]["response"]["ob"]["visibilityKM"];
                 }
 
             } else {
@@ -1360,14 +1371,20 @@ function update_forecast_data(data) {
         try {
             if (("$Extras.forecast_units" == "si") || ("$Extras.forecast_units" == "ca")) {
                 // si and ca = kilometer
-                if (currentSource == "dwd") {
+                if (current_source_selected == "dwd") {
                     cloud_cover = data["current"][0]["response"]["ob"]["sky"];
-                } else if (currentSource == "brightsky") {
+                } else if (current_source_selected == "brightsky") {
                     cloud_cover = data["brightsky"][0]["response"]["ob"]["sky"];
-                } else if (currentSource == "metar") {
+                } else if (current_source_selected == "metar") {
                     cloud_cover = data["metar"][0]["response"][0]["ob"]["sky"];
-                } else if (currentSource == "conditions") {
+                } else if (current_source_selected == "mesonet") {
+                    cloud_cover = data["mesonet"][0]["response"][0]["ob"]["sky"];
+                } else if (current_source_selected == "pws") {
+                    cloud_cover = data["pws"][0]["response"][0]["ob"]["sky"];
+                } else if (current_source_selected == "conditions") {
                     cloud_cover = data["conditions"][0]["response"][0]["periods"][0]["sky"];
+                } else {
+                    cloud_cover = data["current"][0]["response"]["ob"]["sky"];
                 }
 
             } else {
@@ -2132,17 +2149,52 @@ function update_current_wx(data) {
     if (data.hasOwnProperty("pws_aqi_no2_category")) {
         change_aqi_color(data["pws_aqi_no2_category"], ".pws_aqi_no2_dot", "background-color");
     }
-    // Sunshine Symbol
-    if (data.hasOwnProperty("foshk_sunshine")) {
-        if (parseInt(data["foshk_sunshine"]) > 0) {
-            jQuery(".sunshine-symbol").html('<i class="fa fa-sun-o"></i>');
+    // current Sunshine Symbol
+    if (data.hasOwnProperty("sunshine")) {
+        if (parseInt(data["sunshine"]) > 0) {
+            jQuery(".current-sunshine-symbol").html('<i class="fa fa-sun-o"></i>');
         } else {
-            jQuery(".sunshine-symbol").html('');
+            jQuery(".current-sunshine-symbol").html('');
         }
     }
+
+    // avg10m Symbols
+    avg10m_output = '';
+    if (data.hasOwnProperty("radiation")) {
+        if (parseFloat(data["radiation"]) > 20.0) {
+            if (data.hasOwnProperty("sunshine")) {
+                if (parseInt(data["sunshine"]) > 0) {
+                    avg10m_output += ' <i class="fa fa-sun-o"></i>';
+                }
+            }
+            if (avg10m_output.trim() == '') {
+                if (data.hasOwnProperty("sunshine_avg10m")) {
+                    if (parseFloat(data["sunshine_avg10m"]) > 0.0) {
+                        avg10m_output += ' <i class="fa fa-sun-o"></i>';
+                    }
+                }
+            }
+            if (data.hasOwnProperty("sunshine_avg10m")) {
+               if (parseFloat(data["sunshine_avg10m"]) < 1.0) {
+                   avg10m_output += ' <i class="fa fa-cloud"></i>';
+               }
+            }
+        }
+    }
+    if (data.hasOwnProperty("raining_avg10m")) {
+        if (parseFloat(data["raining_avg10m"]) > 0.0) {
+            avg10m_output += ' <i class="fa fa-tint"></i>';
+        }
+    }
+    if (data.hasOwnProperty("thunderstorm_avg10m")) {
+        if (parseFloat(data["thunderstorm_avg10m"]) > 0.0) {
+            avg10m_output += ' <i class="fa fa-bolt"></i>';
+        }
+    }
+    jQuery(".avg10m-obs-symbols").html(avg10m_output.trim());
+
 };
 #end if
-
 
 Highcharts.setOptions({
     global: {

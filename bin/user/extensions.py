@@ -131,8 +131,8 @@ weewx.units.obs_group_dict['uba_o3'] = 'group_concentration'
 weewx.units.obs_group_dict['uba_o3_category'] = 'group_count'
 #
 # additional Values, Groups, Units, Formats
-# https://github.com/hes19073/hesweewx
 weewx.units.obs_group_dict['airDensity'] = 'group_pressure3'
+weewx.units.obs_group_dict['sunshineDurOriginal'] = 'group_deltatime'
 weewx.units.obs_group_dict['thswIndex'] = 'group_temperature'
 weewx.units.obs_group_dict['thwIndex'] = 'group_temperature'
 weewx.units.obs_group_dict['vaporPressure'] = 'group_pressure2'
@@ -149,6 +149,7 @@ weewx.units.default_unit_format_dict['N_per_meter_squared'] = '%.3f'
 weewx.units.default_unit_format_dict['kg_per_meter_qubic'] = '%.3f'
 weewx.units.default_unit_label_dict['N_per_meter_squared'] = ' N/m²'
 weewx.units.default_unit_label_dict['kg_per_meter_qubic'] = ' kg/m³'
+
 #
 # TEST TEST TEST
 weewx.units.obs_group_dict['rain2'] = 'group_rain'

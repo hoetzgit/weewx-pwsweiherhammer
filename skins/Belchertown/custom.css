@@ -4,6 +4,12 @@
 	padding-bottom: 10px;
 }
 
+/* Test Symbols */
+.avg10m-obs-symbols, .dark .avg10m-obs-symbols {
+    text-align:center;
+    padding-top: 0px;
+}
+
 /* AQI */
 @media only screen and (max-width: 1196px) {
     .obs-aqi-divider, .dark .obs-aqi-divider {

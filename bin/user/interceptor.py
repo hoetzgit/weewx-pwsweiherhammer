@@ -301,9 +301,12 @@ except ImportError:
 
 import weewx.drivers
 import weeutil.weeutil
+from collections import deque
+from datetime import datetime
+from math import sin, cos, pi, asin
 
 DRIVER_NAME = 'Interceptor'
-DRIVER_VERSION = '0.54ho'
+DRIVER_VERSION = '0.55ho'
 
 DEFAULT_ADDR = ''
 DEFAULT_PORT = 80
@@ -340,6 +343,14 @@ def _cgi_to_dict(s):
     if '=' in s:
         return dict([y.strip() for y in x.split('=')] for x in s.split('&'))
     return dict()
+
+def _init_Deque(val, lenval, initval=0):
+    i = 1
+    while i <= lenval:
+        val.append(initval)
+        i += 1
+    return val
+
 
 
 class Consumer(object):
@@ -693,20 +704,6 @@ class Consumer(object):
                        (rain, last_rain))
                 return rain
             return rain - last_rain
-
-        @staticmethod
-        def _delta_strikes(strikes, last_strikes):
-            if strikes is None:
-                return None
-            if last_strikes is None:
-                loginf("skipping lightning strikes measurement of %s: no last strikes" % strikes)
-                return None
-            if strikes < last_strikes:
-                loginf("lightning strikes wraparound detected: new=%s last=%s" %
-                       (strikes, last_strikes))
-                return strikes
-            return strikes - last_strikes
-
 
         @staticmethod
         def decode_float(x):
@@ -2484,7 +2481,107 @@ class EcowittClient(Consumer):
             self._strikes_mapping_confirmed = False
             self._model = None
             self._stationtype = None
+            self._interval = 16
+
+            # thunderstorm oberservations
+            maxlen = int(10*60/int(self._interval))
+            self._thunderstorm_10 = deque(maxlen=(maxlen))
+            #self._thunderstorm_10 = _init_Deque(self._thunderstorm_10, maxlen)
+            maxlen = int(20*60/int(self._interval))
+            self._thunderstorm_20 = deque(maxlen=(maxlen))
+            #self._thunderstorm_20 = _init_Deque(self._thunderstorm_20, maxlen)
+            maxlen = int(30*60/int(self._interval))
+            self._thunderstorm_30 = deque(maxlen=(maxlen))
+            #self._thunderstorm_30 = _init_Deque(self._thunderstorm_30, maxlen)
+            maxlen = int(60*60/int(self._interval))
+            self._thunderstorm_60 = deque(maxlen=(maxlen))
+            #self._thunderstorm_60 = _init_Deque(self._thunderstorm_60, maxlen)
+
+            # rain oberservations
+            maxlen = int(10*60/int(self._interval))
+            self._rain_10 = deque(maxlen=(maxlen))
+            #self._rain_10 = _init_Deque(self._rain_10, maxlen)
+            maxlen = int(20*60/int(self._interval))
+            self._rain_20 = deque(maxlen=(maxlen))
+            #self._rain_20 = _init_Deque(self._rain_20, maxlen)
+            maxlen = int(30*60/int(self._interval))
+            self._rain_30 = deque(maxlen=(maxlen))
+            #self._rain_30 = _init_Deque(self._rain_30, maxlen)
+            maxlen = int(60*60/int(self._interval))
+            self._rain_60 = deque(maxlen=(maxlen))
+            #self._rain_60 = _init_Deque(self._rain_60, maxlen)
+
+            # sunshine oberservations
+            maxlen = int(10*60/int(self._interval))
+            self._sunshine_10 = deque(maxlen=(maxlen))
+            #self._sunshine_10 = _init_Deque(self._sunshine_10, maxlen)
+            maxlen = int(20*60/int(self._interval))
+            self._sunshine_20 = deque(maxlen=(maxlen))
+            #self._sunshine_20 = _init_Deque(self._sunshine_20, maxlen)
+            maxlen = int(30*60/int(self._interval))
+            self._sunshine_30 = deque(maxlen=(maxlen))
+            #self._sunshine_30 = _init_Deque(self._sunshine_30, maxlen)
+            maxlen = int(60*60/int(self._interval))
+            self._sunshine_60 = deque(maxlen=(maxlen))
+            #self._sunshine_60 = _init_Deque(self._sunshine_60, maxlen)
+
+            self._latitude = 49.632270
+            self._longitude = 12.056186
+            self._sunshine_coeff = 0.76
+            self._sunshine_min = 20.0
             
+
+        @staticmethod
+        # calculate sunshine threshold for sunshining yes/no
+        def _sunshine_Threshold(dateval, lat, lon, coeff):
+            utcdate = datetime.utcfromtimestamp(int(dateval))
+            dayofyear = int(time.strftime("%j",time.gmtime(int(dateval))))
+            theta = 360 * dayofyear / 365
+            equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
+                (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
+                2 * (pi / 180) * theta)
+            corrtemps = lon * 4
+            declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
+                (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
+                2 * (pi / 180) * theta)) * (180 / pi)
+            minutesjour = utcdate.hour * 60 + utcdate.minute
+            tempsolaire = (minutesjour + corrtemps + equatemps) / 60
+            angle_horaire = (tempsolaire - 12) * 15
+            hauteur_soleil = asin(sin((pi / 180) * lat) * sin((pi / 180) * declinaison) + cos(
+                (pi / 180) * lat) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
+            if hauteur_soleil > 3:
+                seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
+                    (sin(pi / 180) * hauteur_soleil), 1.25) * coeff
+            else:
+                seuil = 0.0
+            return seuil
+
+        @staticmethod
+        def _avg_Deque(val):
+            sumval = 0
+            avgval = 0
+            elems = len(val)
+            if elems > 0:
+                for i in range(elems):
+                    sumval += val[i]
+                avgval = round(sumval/elems,2)
+            else:
+                return None
+            return avgval
+
+        @staticmethod
+        def _delta_strikes(strikes, last_strikes):
+            if strikes is None:
+                return None
+            if last_strikes is None:
+                loginf("skipping lightning strikes measurement of %s: no last strikes" % strikes)
+                return None
+            if strikes < last_strikes:
+                loginf("lightning strikes wraparound detected: new=%s last=%s" %
+                       (strikes, last_strikes))
+                return strikes
+            return strikes - last_strikes
+
         def parse(self, s):
             pkt = dict()
             try:
@@ -2540,7 +2637,7 @@ class EcowittClient(Consumer):
                             val = 'X' * len(data[n])
                         logdbg("ignored parameter %s=%s" % (n, val))
                     else:
-                        loginf("unrecognized parameter %s=%s" % (n, data[n]))
+                        logerr("unrecognized parameter %s=%s" % (n, data[n]))
 
                 #Fix lightinig distance unit
                 if 'lightning_distance' in pkt:
@@ -2554,18 +2651,78 @@ class EcowittClient(Consumer):
                     newtot = pkt['rain_total']
                     logdbg("Rain old tot: %s" % str(self._last_rain))
                     logdbg("Rain new tot: %s" % str(newtot))
-                    pkt['rain'] = self._delta_rain(newtot, self._last_rain)
+                    new_delta = self._delta_rain(newtot, self._last_rain)
+                    pkt['rain'] = new_delta
                     logdbg("Rain: %s" % str(pkt['rain']))
                     self._last_rain = newtot
+                    raining = 0
+                    if new_delta is not None:
+                        if (float(new_delta) > 0.0):
+                            raining = 1
+                    self._rain_10.append(raining)
+                    self._rain_20.append(raining)
+                    self._rain_30.append(raining)
+                    self._rain_60.append(raining)
+                    pkt['raining'] = raining
+                    pkt['raining_avg10m'] = self._avg_Deque(self._rain_10)
+                    pkt['raining_avg20m'] = self._avg_Deque(self._rain_20)
+                    pkt['raining_avg30m'] = self._avg_Deque(self._rain_30)
+                    pkt['raining_avg60m'] = self._avg_Deque(self._rain_60)
+                    logdbg("Raining: %s" % str(pkt['raining']))
 
                 # get the lightinig this period from total
                 if 'lightning_num' in pkt:
                     new_strikes_total = pkt['lightning_num']
                     logdbg("Lightning old tot: %s" % str(self._last_strikes_total))
                     logdbg("Lightning new tot: %s" % str(new_strikes_total))
-                    pkt['lightning_strike_count'] = self._delta_strikes(new_strikes_total, self._last_strikes_total)
+                    new_delta = self._delta_strikes(new_strikes_total, self._last_strikes_total)
+                    pkt['lightning_strike_count'] = new_delta
                     logdbg("Lightning: %s" % str(pkt['lightning_strike_count']))
                     self._last_strikes_total = new_strikes_total
+                    thunderstorm = 0
+                    if new_delta is not None:
+                        if (int(new_delta) > 0):
+                            thunderstorm = 1
+                    self._thunderstorm_10.append(thunderstorm)
+                    self._thunderstorm_20.append(thunderstorm)
+                    self._thunderstorm_30.append(thunderstorm)
+                    self._thunderstorm_60.append(thunderstorm)
+                    pkt['thunderstorm'] = thunderstorm
+                    pkt['thunderstorm_avg10m'] = self._avg_Deque(self._thunderstorm_10)
+                    pkt['thunderstorm_avg20m'] = self._avg_Deque(self._thunderstorm_20)
+                    pkt['thunderstorm_avg30m'] = self._avg_Deque(self._thunderstorm_30)
+                    pkt['thunderstorm_avg60m'] = self._avg_Deque(self._thunderstorm_60)
+                    logdbg("Thunderstorm: %s" % str(pkt['thunderstorm']))
+
+                # get the sunshining this period
+                if ('solar_radiation' in pkt) and ('dateTime' in pkt):
+                    sunshine = 0
+                    if pkt['solar_radiation'] is not None:
+                        if (float(pkt['solar_radiation']) > self._sunshine_min):
+                            threshold = float(self._sunshine_Threshold(pkt['dateTime'], self._latitude, self._longitude, self._sunshine_coeff))
+                            if (float(pkt['solar_radiation']) > threshold):
+                                sunshine = 1
+                    self._sunshine_10.append(sunshine)
+                    self._sunshine_20.append(sunshine)
+                    self._sunshine_30.append(sunshine)
+                    self._sunshine_60.append(sunshine)
+                    pkt['sunshine'] = sunshine
+                    pkt['sunshine_avg10m'] = self._avg_Deque(self._sunshine_10)
+                    pkt['sunshine_avg20m'] = self._avg_Deque(self._sunshine_20)
+                    pkt['sunshine_avg30m'] = self._avg_Deque(self._sunshine_30)
+                    pkt['sunshine_avg60m'] = self._avg_Deque(self._sunshine_60)
+                    logdbg("Sunshine: %s" % str(pkt['sunshine']))
+                    logdbg("sunshine_avg10m=%s, len=%d" % (str(self._sunshine_10),len(self._sunshine_10)))
+                    logdbg("sunshine_avg20m=%s, len=%d" % (str(self._sunshine_20),len(self._sunshine_20)))
+                    logdbg("sunshine_avg30m=%s, len=%d" % (str(self._sunshine_30),len(self._sunshine_30)))
+                    logdbg("sunshine_avg60m=%s, len=%d" % (str(self._sunshine_60),len(self._sunshine_60)))
+
+                # calculate luminosity
+                if ('solar_radiation' in pkt):
+                    luminosity = None
+                    if pkt['solar_radiation'] is not None:
+                        luminosity = float(pkt['solar_radiation']) * 126.7
+                    pkt['luminosity'] = luminosity
 
             except ValueError as e:
                 logerr("parse failed for %s: %s" % (s, e))

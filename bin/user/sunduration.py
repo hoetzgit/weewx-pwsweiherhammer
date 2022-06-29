@@ -5,7 +5,6 @@ import time
 import weewx
 from weewx.wxengine import StdService
 from weeutil.weeutil import to_bool
-from collections import deque
 import schemas.wview
 
 try:
@@ -51,18 +50,7 @@ class SunshineDuration(StdService):
         self.lastDate = 0
         self.sunshineDur = 0
         self.sunshineDurOriginal = 0
-        self.sunshineObs = deque(maxlen=(int(10*60/int(16)))) # 10 minutes sunshine oberservations
         self.debug = to_bool(self.config_dict["debug"])
-
-    def avgSunshine(self):
-       s = 0
-       a = 0
-       l = len(self.sunshineObs)
-       if l > 0:
-           for i in range(l):
-               s = s + self.sunshineObs[i]
-           a = round(s/l,2)
-       return a
 
     def newLoopPacket(self, event):
         """Gets called on a new loop packet event."""
@@ -93,44 +81,35 @@ class SunshineDuration(StdService):
         # Calculation LOOP sunshineDur is possible
         # Classic Version
         loopSunshineDur = 0
-        sunshining = 0
         if radiation > threshold and radiation > 20:
             loopSunshineDur = int(loopInterval)
-            sunshining = 1
         self.sunshineDur += loopSunshineDur
-        self.sunshineObs.append(sunshining)
         if self.debug:
-            logdbg("Added LOOP Interval=%d, based on sunshine=%d, radiation=%f and threshold=%f. LOOP sunshineDur=%d" % (
-                    loopSunshineDur, sunshining, radiation, threshold, int(self.sunshineDur)))
+            logdbg("Added LOOP Interval=%d, based on radiation=%f and threshold=%f. LOOP sunshineDur=%d" % (
+                    loopSunshineDur, radiation, threshold, int(self.sunshineDur)))
 
         # Original Version
         loopSunshineDurOriginal = 0
-        sunshining = 0
         threshold = event.packet.get('sunshineThresholdOriginal')
         if threshold is None:
             logdbg("Calculation LOOP sunshineDurOriginal not possible, sunshineThresholdOriginal not present!")
             return None
         if radiation > threshold and radiation > 20:
             loopSunshineDurOriginal = int(loopInterval)
-            sunshining = 1
         self.sunshineDurOriginal += loopSunshineDurOriginal
         if self.debug:
             logdbg("Original Version:")
-            logdbg("Added LOOP Interval=%d, based on sunshine=%d, radiation=%f and threshold=%f. LOOP sunshineDur=%d" % (
-                    loopSunshineDurOriginal, sunshining, radiation, threshold, int(self.sunshineDurOriginal)))
-
-        if self.debug:
-            logdbg("sunshineObs: %s Avg10: %0.2f" % (str(self.sunshineObs), self.avgSunshine()))
+            logdbg("Added LOOP Interval=%d, based on radiation=%f and threshold=%f. LOOP sunshineDur=%d" % (
+                    loopSunshineDurOriginal, radiation, threshold, int(self.sunshineDurOriginal)))
 
     def newArchiveRecord(self, event):
         """Gets called on a new archive record event."""
         event.record['sunshineDur'] = int(self.sunshineDur)
-        event.record['sunshine_avg10m'] = self.avgSunshine()
         event.record['sunshineDurOriginal'] = int(self.sunshineDurOriginal)
         self.sunshineDur = 0
         self.sunshineDurOriginal = 0
         if self.debug:
-            logdbg("Total ARCHIVE sunshineDur=%d sunshine_avg10m=%0.2f" % (event.record['sunshineDur'], event.record['sunshine_avg10m']))
+            logdbg("Total ARCHIVE sunshineDur=%d" % (event.record['sunshineDur']))
             logdbg("Original Version:")
             logdbg("Total ARCHIVE sunshineDur=%d" % (event.record['sunshineDurOriginal']))
 
