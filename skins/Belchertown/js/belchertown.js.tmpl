@@ -748,7 +748,6 @@ function update_weewx_data(data) {
         // Returned "current" data does not have this value
     }
 
-
     jQuery(".dailystatshigh").html(data["day"]["outTemp"]["max"]);
     jQuery(".dailystatslow").html(data["day"]["outTemp"]["min"]);
     jQuery(".dailystatswindavg").html(data["day"]["wind"]["average"]);
@@ -2029,6 +2028,13 @@ function update_current_wx(data) {
         jQuery(".outtemp").html(outTemp);
     }
 
+    // Temperature C PWS Weiherhammer
+    if (data.hasOwnProperty("outTemp")) {
+        outTemp = parseFloat(parseFloat(data["outTemp"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]});
+        get_outTemp_color("degree_C", outTemp);
+        jQuery(".outtemp").html(outTemp);
+    }
+
     // Apparent Temperature US
     if (data.hasOwnProperty("appTemp_F")) {
         jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["appTemp_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
@@ -2039,7 +2045,12 @@ function update_current_wx(data) {
         jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["appTemp_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
     }
 
-    // THSW Temperature Metric
+    // Apparent Temperature Metric PWS Weiherhammer
+    //if (data.hasOwnProperty("appTemp")) {
+    //    jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["appTemp"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
+    //}
+
+    // THSW Temperature Metric PWS Weiherhammer
     if (data.hasOwnProperty("thswIndex")) {
         jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["thswIndex"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
     }
@@ -2061,7 +2072,7 @@ function update_current_wx(data) {
     if (data.hasOwnProperty("windSpeed_kph")) {
         jQuery(".curwindspeed").html(parseFloat(parseFloat(data["windSpeed_kph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
     }
-    // Windspeed Metric
+    // Windspeed Metric PWS Weiherhammer
     if (data.hasOwnProperty("windSpeed")) {
         jQuery(".curwindspeed").html(parseFloat(parseFloat(data["windSpeed"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
     }
@@ -2094,7 +2105,7 @@ function update_current_wx(data) {
     if (data.hasOwnProperty("windGust_kph")) {
         jQuery(".curwindgust").html(parseFloat(parseFloat(data["windGust_kph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}));
     }
-    // Wind Gust Metric
+    // Wind Gust Metric PWS Weiherhammer
     if (data.hasOwnProperty("windGust")) {
         jQuery(".curwindgust").html(parseFloat(parseFloat(data["windGust"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}));
     }
@@ -2112,12 +2123,21 @@ function update_current_wx(data) {
     }
 
     // Windchill US
-    if (data.hasOwnProperty("windchill")) {
-        jQuery(".curwindchill").html(parseFloat(parseFloat(data["windchill"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp");
+    if (data.hasOwnProperty("windchill_F")) {
+        jQuery(".curwindchill").html(parseFloat(parseFloat(data["windchill_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp");
     }
     // Windchill Metric
     if (data.hasOwnProperty("windchill_C")) {
         jQuery(".curwindchill").html(parseFloat(parseFloat(data["windchill_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp");
+    }
+    // Windchill Metric PWS Weiherhammer
+    if (data.hasOwnProperty("windchill")) {
+        jQuery(".curwindchill").html(parseFloat(parseFloat(data["windchill"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp");
+    }
+
+    // Daily Windrun Metric PWS Weiherhammer
+    if (data.hasOwnProperty("dayWindrun")) {
+        jQuery(".dailywindrun").html(parseFloat(parseFloat(data["dayWindrun"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windrun"], maximumFractionDigits: unit_rounding_array["windrun"]}) + "$unit.label.windrun");
     }
 
     // PWS Weiherhammer Airquality
