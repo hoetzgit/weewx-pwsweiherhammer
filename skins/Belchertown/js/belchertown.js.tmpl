@@ -754,7 +754,7 @@ function update_weewx_data(data) {
     jQuery(".dailystatswindmax").html(data["day"]["wind"]["max"]);
     jQuery(".dailystatsrain").html(data["day"]["rain"]["sum"]);
     jQuery(".dailystatsrainrate").html(data["day"]["rain"]["max"]);
-    jQuery(".dailywindrun").html(data["day"]["wind"]["windrun"]);
+    // jQuery(".dailywindrun").html(data["day"]["wind"]["windrun"]);
 
     // Month Snapshot Stats Section
     jQuery(".monthstatshigh").html(data["month"]["outTemp"]["max"]);
@@ -2137,7 +2137,7 @@ function update_current_wx(data) {
 
     // Daily Windrun Metric PWS Weiherhammer
     if (data.hasOwnProperty("dayWindrun")) {
-        jQuery(".dailywindrun").html(parseFloat(parseFloat(data["dayWindrun"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windrun"], maximumFractionDigits: unit_rounding_array["windrun"]}) + "$unit.label.windrun");
+        jQuery(".dailywindrun").html("$obs.label.windrun " + parseFloat(parseFloat(data["dayWindrun"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windrun"], maximumFractionDigits: unit_rounding_array["windrun"]}) + "$unit.label.windrun");
     }
 
     // PWS Weiherhammer Airquality

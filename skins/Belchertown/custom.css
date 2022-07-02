@@ -10,13 +10,6 @@
     padding-top: 0px;
 }
 
-/* AQI */
-@media only screen and (max-width: 1196px) {
-    .obs-aqi-divider, .dark .obs-aqi-divider {
-        display: none;    
-    }
-}
-
 .obs-aqi-divider, .dark .obs-aqi-divider {
     height: 1px;
     width: 104%;
@@ -80,6 +73,10 @@
 
 .current_wind, .dark .current_wind {
     padding:5px 0px 0px 0px !important;
+}
+
+.windspeedtable {
+    padding-top:0px;
 }
 
 /* Index Radar */
@@ -182,11 +179,44 @@ sub { top: 0.4em; }
   height: 0;
 }
 
+/* https://www.w3schools.com/css/css_rwd_mediaqueries.asp */
+/* Extra small devices (phones, 600px and down) */
+@media only screen and (max-width: 600px) {
+}
+
 @media only screen and (max-width: 800px) {
     .currentSwitchLabel {
         margin-top: 10px;
     }
+    .toprow-height {
+        min-height: 0 !important;
+    }
 }
+
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media only screen and (min-width: 600px) {
+}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (min-width: 768px) {
+}
+
+/* Large devices (laptops/desktops, 992px and up) */
+@media only screen and (min-width: 992px) {
+}
+
+/* Extra large devices (large laptops and desktops, 1200px and up) */
+@media only screen and (min-width: 1200px) {
+}
+
+@media only screen and (max-width: 1196px) {
+    /* AQI
+    .obs-aqi-divider, .dark .obs-aqi-divider {
+        display: none;    
+    }
+ */
+}
+
 
 /* Back to top button */
 /* https://codepen.io/matthewcain/pen/ZepbeR */

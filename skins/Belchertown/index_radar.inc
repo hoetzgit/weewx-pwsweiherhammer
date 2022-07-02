@@ -27,13 +27,11 @@
         #if os.path.exists("allsky/allskycam01.up")
         <div id="allsky01" class="tab-content">
             <a id="allskycam01" name="allskycam01" href="https://allsky.ott24.net" target="_blank" rel="noreferrer"><img src="https://allsky.ott24.net/image.jpg" alt="Die AllSky Kamera 1 der PWS Weiherhammer"></a>
-            ##<div style="text-align:center"><small>$obs.label.radar_content_allskycam01</small></div>
         </div>
         #end if
         #if os.path.exists("allsky/allskycam02.up")
         <div id="allsky02" class="tab-content">
             <a id="allskycam02" name="allskycam02" href="https://allsky02.ott24.net" target="_blank" rel="noreferrer"><img src="https://allsky02.ott24.net/image.jpg" alt="Die AllSky Kamera 2 der PWS Weiherhammer"></a>
-            ##<div style="text-align:center"><small>$obs.label.radar_content_allskycam02</small></div>
         </div>
         #end if
     </div>

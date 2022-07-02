@@ -27,14 +27,15 @@
         <div class="col-sm-12">
             <h3>Sainlogic WS3500</h3>
             <p>Die Y-f&ouml;rmige Station <a href="https://www.amazon.de/Sainlogic-Profi-WLAN-Wetterstation-Wettervorhersage/dp/B07TVMQ2CK" target="_blank" rel="noreferrer">Sainlogic WS3500</a> 
-            ist ein <a href="http://www.foshk.com" target="_blank" rel="noreferrer">Fine Offset</a>/<a href="https://www.ecowitt.com/shop/homePage" target="_blank" rel="noreferrer">Ecowitt</a> Klon. Sie besteht aus einem Kombinationssensor WH65 und der Konsole WH2910. 
-            Im Januar 2022 wurde die Sation mit dem <a href="https://www.ecowitt.com/shop/goodsDetail/107" target="_blank" rel="noreferrer">Ecowitt Funkgateway GW1100</a> 
-            und einem <a href="https://www.ecowitt.com/shop/goodsDetail/64" target="_blank" rel="noreferrer">Ecowitt WH57 Blitzsensor</a> erg&auml;nzt.</p>
+            ist ein <a href="http://www.foshk.com" target="_blank" rel="noreferrer">Fine Offset</a>/<a href="https://www.ecowitt.com/shop/homePage" target="_blank" rel="noreferrer">Ecowitt</a> Klon. 
+            Sie besteht aus einem Kombinationssensor WH65 und der Konsole WH2910. Im Januar 2022 wurde die Sation mit dem <a href="https://www.ecowitt.com/shop/goodsDetail/107" target="_blank" rel="noreferrer">Ecowitt Funkgateway GW1100</a> 
+            und einem <a href="https://www.ecowitt.com/shop/goodsDetail/64" target="_blank" rel="noreferrer">Ecowitt WH57 Blitzsensor</a> erg&auml;nzt. Der WH57 Sensor befindet sich unterhalb der 
+            Wetterstation und wurde in einer <a href="https://www.tfa-dostmann.de/produkt/schutzhuelle-fuer-aussensender-98-1114/" target="_blank" rel="noreferrer">TFA Dostmann Schutzh&uuml;lle</a> untergebracht.</p>
         </div>
 
         <div class="col-sm-4">
             <img src="$relative_url/images/Wetterstation_Sainlogic.jpg" alt="Sainlogic WS3500 Wetterstation in Weiherhammer" title="Sainlogic WS3500 Wetterstation in Weiherhammer" style="horizontal-align: middle;"/>
-            <p><small>Sainlogic WS3500 im Garten, ca. 6m H&ouml;he</small></p>
+            <p><small>Sainlogic WS3500 im Garten, ca. 5m H&ouml;he</small></p>
         </div>
 
         <div class="col-sm-8">
@@ -82,7 +83,7 @@
                 <li>Luftfeuchtigkeit</li>
                 <li>Luftdruck</li>
             </ul>
-            <p>Die Messwerte k&ouml;nnen <a href="https://www.weiherhammer-wetter.de/graphs/?graph=Solar" target="_blank" rel="noreferrer">hier</a> angesehen werden.</p>
+            <p>Die Messwerte k&ouml;nnen <a href="https://www.weiherhammer-wetter.de/graphs/?graph=SolarStation" target="_blank" rel="noreferrer">hier</a> angesehen werden.</p>
         </div>
 
         <div class="col-sm-12">
@@ -194,7 +195,7 @@
             <ul>
                 <li>Temperatur</li>
             </ul>
-            <p>Die Messwerte k&ouml;nnen <a href="https://www.weiherhammer-wetter.de/graphs/?graph=Allsky" target="_blank" rel="noreferrer">hier</a> angesehen werden.</p>
+            <p>Die Messwerte k&ouml;nnen <a href="https://www.weiherhammer-wetter.de/graphs/?graph=AllSky" target="_blank" rel="noreferrer">hier</a> angesehen werden.</p>
             <p>Als AllSky Backend und zur Darstellung der AllSky Webseite verwende ich das Projekt von <a href="https://github.com/thomasjacquin/allsky" target="_blank" rel="noreferrer">Thomas Jacquin</a>.</p>
         </div>
     </div>

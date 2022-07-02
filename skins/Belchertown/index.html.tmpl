@@ -329,7 +329,7 @@
                                                 #end if
                                                 #if $day.windrun.has_data
                                                 <tr>
-                                                   <td style="padding-top:5px">$obs.label.windrun</td><td class="dailywindrun" style="padding-top:5px">$day.windrun.sum</td>
+                                                   <td class="dailywindrun" colspan="3" style="padding-top:8px">$obs.label.windrun $day.windrun.sum</td>
                                                 </tr>
                                                 #end if
                                             </tbody>
@@ -417,6 +417,10 @@
                                                     </div>
                                                 </div>
                                                 #end if
+                                                ##<div class="clear"></div>
+                                                ##<div class="daySunshineDur">
+                                                ##    $day.sunshineDur.sum.format('%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s')
+                                                ##</div>
                                             </div>
                                         </td>
                                     </tr>
