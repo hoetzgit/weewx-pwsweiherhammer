@@ -227,28 +227,6 @@ function get_outTemp_color(unit, outTemp, returnColor = false) {
     }
 }
 
-// Brightsky condition label
-// condition - dry┃fog┃rain┃sleet┃snow┃hail┃thunderstorm┃
-function brightsky_condition_label(condition) {
-    var res = condition;
-    if (condition == 'dry') {
-        res = '$obs.label.brightsky_dry';
-    } else if (condition == 'fog') {
-        res = '$obs.label.brightsky_fog';
-    } else if (condition == 'rain') {
-        res = '$obs.label.brightsky_rain';
-    } else if (condition == 'sleet') {
-        res = '$obs.label.brightsky_sleet';
-    } else if (condition == 'snow') {
-        res = '$obs.label.brightsky_snow';
-    } else if (condition == 'hail') {
-        res = '$obs.label.brightsky_hail';
-    } else if (condition == 'thunderstorm') {
-        res = '$obs.label.brightsky_thunderstorm';
-    }
-    return res;
-}
-
 // Change the color of the aqi variable according to US-EPA standards
 // (adjusted to match skin colors better)
 function get_aqi_color(aqi, returnColor = false) {
@@ -1267,18 +1245,17 @@ function update_forecast_data(data) {
         var forecast_issueTime_dwd = tzAdjustedMoment(data["current"][0]["response"]["obTimestamp"]).format('$obs.label.time_forecast_last_updated');
 
         try {
+            // 20220624,ho dwd | brightsky | weatherbit | AERIS: metar | conditions
             if (current_source_selected == "dwd") {
-                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png";
+                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["dwd"][0]["response"]["ob"]["icon"]) + ".png";
             } else if (current_source_selected == "brightsky") {
-                var wxicon = get_relative_url() + "/images/" + data["brightsky"][0]["response"]["ob"]["icon"];
+                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["brightsky"][0]["response"]["ob"]["icon"]) + ".png";
+            } else if (current_source_selected == "weatherbit") {
+                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["weatherbit"][0]["response"]["ob"]["icon"]) + ".png";
             } else if (current_source_selected == "metar") {
-                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["metar"][0]["response"][0]["ob"]["icon"]) + ".png";
-            } else if (current_source_selected == "mesonet") {
-                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["mesonet"][0]["response"][0]["ob"]["icon"]) + ".png";
-            } else if (current_source_selected == "pws") {
-                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["pws"][0]["response"][0]["ob"]["icon"]) + ".png";
+                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["metar"][0]["response"]["ob"]["icon"]) + ".png";
             } else if (current_source_selected == "conditions") {
-                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["conditions"][0]["response"][0]["periods"][0]["icon"]) + ".png";
+                var wxicon = get_relative_url() + "/images/" + aeris_icon(data["conditions"][0]["response"]["ob"]["icon"]) + ".png";
             } else {
                 var wxicon = get_relative_url() + "/images/" + aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png";
             }
@@ -1288,18 +1265,17 @@ function update_forecast_data(data) {
         
         // Current observation text
         try {
+            // 20220624,ho dwd | brightsky | weatherbit | AERIS: metar | conditions
             if (current_source_selected == "dwd") {
-                jQuery(".current-obs-text").html(aeris_coded_weather(data["current"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
+                jQuery(".current-obs-text").html(aeris_coded_weather(data["dwd"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
             } else if (current_source_selected == "brightsky") {
-                jQuery(".current-obs-text").html(brightsky_condition_label(data["brightsky"][0]["response"]["ob"]["condition"]));
+                jQuery(".current-obs-text").html(aeris_coded_weather(data["brightsky"][0]["response"]["ob"]["weatherPrimaryCoded"]));
+            } else if (current_source_selected == "weatherbit") {
+                jQuery(".current-obs-text").html(aeris_coded_weather(data["weatherbit"][0]["response"]["ob"]["weatherPrimaryCoded"]));
             } else if (current_source_selected == "metar") {
-                jQuery(".current-obs-text").html(aeris_coded_weather(data["metar"][0]["response"][0]["ob"]["weatherPrimaryCoded"], true));
-            } else if (current_source_selected == "mesonet") {
-                jQuery(".current-obs-text").html(aeris_coded_weather(data["mesonet"][0]["response"][0]["ob"]["weatherPrimaryCoded"], true));
-            } else if (current_source_selected == "pws") {
-                jQuery(".current-obs-text").html(aeris_coded_weather(data["pws"][0]["response"][0]["ob"]["weatherPrimaryCoded"], true));
+                jQuery(".current-obs-text").html(aeris_coded_weather(data["metar"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
             } else if (current_source_selected == "conditions") {
-                jQuery(".current-obs-text").html(aeris_coded_weather(data["conditions"][0]["response"][0]["periods"][0]["weatherPrimaryCoded"], true));
+                jQuery(".current-obs-text").html(aeris_coded_weather(data["conditions"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
             } else {
                 jQuery(".current-obs-text").html(aeris_coded_weather(data["current"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
             }
@@ -1334,18 +1310,17 @@ function update_forecast_data(data) {
         try {
             if (("$Extras.forecast_units" == "si") || ("$Extras.forecast_units" == "ca")) {
                 // si and ca = kilometer
+                // 20220624,ho dwd | brightsky | weatherbit | AERIS: metar | conditions
                 if (current_source_selected == "dwd") {
-                    visibility = data["current"][0]["response"]["ob"]["visibilityKM"];
+                    visibility = data["dwd"][0]["response"]["ob"]["visibilityKM"];
                 } else if (current_source_selected == "brightsky") {
                     visibility = data["brightsky"][0]["response"]["ob"]["visibilityKM"];
+                } else if (current_source_selected == "weatherbit") {
+                    visibility = data["weatherbit"][0]["response"]["ob"]["visibilityKM"];
                 } else if (current_source_selected == "metar") {
-                    visibility = data["metar"][0]["response"][0]["ob"]["visibilityKM"];
-                } else if (current_source_selected == "mesonet") {
-                    visibility = data["mesonet"][0]["response"][0]["ob"]["visibilityKM"];
-                } else if (current_source_selected == "pws") {
-                    visibility = data["pws"][0]["response"][0]["ob"]["visibilityKM"];
+                    visibility = data["metar"][0]["response"]["ob"]["visibilityKM"];
                 } else if (current_source_selected == "conditions") {
-                    visibility = data["conditions"][0]["response"][0]["periods"][0]["visibilityKM"];
+                    visibility = data["conditions"][0]["response"]["ob"]["visibilityKM"];
                 } else {
                     visibility = data["current"][0]["response"]["ob"]["visibilityKM"];
                 }
@@ -1370,18 +1345,17 @@ function update_forecast_data(data) {
         try {
             if (("$Extras.forecast_units" == "si") || ("$Extras.forecast_units" == "ca")) {
                 // si and ca = kilometer
+                // 20220624,ho dwd | brightsky | weatherbit | AERIS: metar | conditions
                 if (current_source_selected == "dwd") {
-                    cloud_cover = data["current"][0]["response"]["ob"]["sky"];
+                    cloud_cover = data["dwd"][0]["response"]["ob"]["sky"];
                 } else if (current_source_selected == "brightsky") {
                     cloud_cover = data["brightsky"][0]["response"]["ob"]["sky"];
+                } else if (current_source_selected == "weatherbit") {
+                    cloud_cover = data["weatherbit"][0]["response"]["ob"]["sky"];
                 } else if (current_source_selected == "metar") {
-                    cloud_cover = data["metar"][0]["response"][0]["ob"]["sky"];
-                } else if (current_source_selected == "mesonet") {
-                    cloud_cover = data["mesonet"][0]["response"][0]["ob"]["sky"];
-                } else if (current_source_selected == "pws") {
-                    cloud_cover = data["pws"][0]["response"][0]["ob"]["sky"];
+                    cloud_cover = data["metar"][0]["response"]["ob"]["sky"];
                 } else if (current_source_selected == "conditions") {
-                    cloud_cover = data["conditions"][0]["response"][0]["periods"][0]["sky"];
+                    cloud_cover = data["conditions"][0]["response"]["ob"]["sky"];
                 } else {
                     cloud_cover = data["current"][0]["response"]["ob"]["sky"];
                 }

@@ -1075,14 +1075,6 @@ class getData(SearchList):
             forecast_stale_timer = self.generator.skin_dict["Extras"]["forecast_stale"]
             forecast_is_stale = False
 
-            # 20220624,ho 
-            def brightsky_coded_weather(condition):
-                label = "brightsky_" + condition
-                if label in label_dict:
-                    return label_dict[label]
-                else:
-                    return "N/A"
-
             def aeris_coded_weather(data):
                 # https://www.aerisweather.com/support/docs/api/reference/weather-codes/
                 output = ""
@@ -1428,26 +1420,24 @@ class getData(SearchList):
             with open(forecast_file, "r") as read_file:
                 data = json.load(read_file)
 
-            # 20220624,ho dwd|brightsky|metar|conditions|mesonet|pws
+            # 20220624,ho dwd | brightsky | weatherbit | AERIS: metar | conditions
             current_source_default = self.generator.skin_dict["Extras"].get("current_source_default", "dwd")
             current_source_alternative = self.generator.skin_dict["Extras"].get("current_source_alternative", current_source_default)
             current_source_toggle = self.generator.skin_dict["Extras"].get("current_source_toggle", 0)
             current_source_toggle_checked = ""
 
             try:
-                # 20220624,ho dwd|brightsky|metar|conditions|mesonet|pws
+                # 20220624,ho dwd | brightsky | weatherbit | AERIS: metar | conditions
                 if (current_source_default == "dwd"):
-                    cloud_cover = "{} %".format(data["current"][0]["response"]["ob"]["sky"])
+                    cloud_cover = "{} %".format(data["dwd"][0]["response"]["ob"]["sky"])
                 elif (current_source_default == "brightsky"):
                     cloud_cover = "{} %".format(data["brightsky"][0]["response"]["ob"]["sky"])
+                elif (current_source_default == "weatherbit"):
+                    cloud_cover = "{} %".format(data["weatherbit"][0]["response"]["ob"]["sky"])
                 elif (current_source_default == "metar"):
-                    cloud_cover = "{} %".format(data["metar"][0]["response"][0]["ob"]["sky"])
-                elif (current_source_default == "mesonet"):
-                    cloud_cover = "{} %".format(data["mesonet"][0]["response"][0]["ob"]["sky"])
-                elif (current_source_default == "pws"):
-                    cloud_cover = "{} %".format(data["pws"][0]["response"][0]["ob"]["sky"])
+                    cloud_cover = "{} %".format(data["metar"][0]["response"]["ob"]["sky"])
                 elif (current_source_default == "conditions"):
-                    cloud_cover = "{} %".format(data["conditions"][0]["response"][0]["periods"][0]["sky"])
+                    cloud_cover = "{} %".format(data["conditions"][0]["response"]["ob"]["sky"])
                 else:
                     cloud_cover = "{} %".format(data["current"][0]["response"]["ob"]["sky"])
             except Exception:
@@ -1511,45 +1501,42 @@ class getData(SearchList):
                 and self.generator.skin_dict["Extras"]["forecast_aeris_use_metar"]
                 == "1"
             ):
-                # 20220624,ho dwd|brightsky|metar|conditions|mesonet|pws
+                # 20220624,ho dwd | brightsky | weatherbit | AERIS: metar | conditions
                 try:
                     if (current_source_default == "dwd"):
                         current_obs_summary = aeris_coded_weather(
-                            data["current"][0]["response"]["ob"]["weatherPrimaryCoded"]
+                            data["dwd"][0]["response"]["ob"]["weatherPrimaryCoded"]
                         )
                         current_obs_icon = (
-                            aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png"
+                            aeris_icon(data["dwd"][0]["response"]["ob"]["icon"]) + ".png"
                         )
                     elif (current_source_default == "brightsky"):
-                        current_obs_summary = brightsky_coded_weather(data["brightsky"][0]["response"]["ob"]["condition"])
-                        current_obs_icon = data["brightsky"][0]["response"]["ob"]["icon"] + ".png"
+                        current_obs_summary = aeris_coded_weather(
+                            data["brightsky"][0]["response"]["ob"]["weatherPrimaryCoded"]
+                        )
+                        current_obs_icon = (
+                            aeris_icon(data["brightsky"][0]["response"]["ob"]["icon"]) + ".png"
+                        )
+                    elif (current_source_default == "weatherbit"):
+                        current_obs_summary = aeris_coded_weather(
+                            data["weatherbit"][0]["response"]["ob"]["weatherPrimaryCoded"]
+                        )
+                        current_obs_icon = (
+                            aeris_icon(data["weatherbit"][0]["response"]["ob"]["icon"]) + ".png"
+                        )
                     elif (current_source_default == "metar"):
                         current_obs_summary = aeris_coded_weather(
-                            data["metar"][0]["response"][0]["ob"]["weatherPrimaryCoded"]
+                            data["metar"][0]["response"]["ob"]["weatherPrimaryCoded"]
                         )
                         current_obs_icon = (
-                            aeris_icon(data["metar"][0]["response"][0]["ob"]["icon"]) + ".png"
-                        )
-                    elif (current_source_default == "mesonet"):
-                        current_obs_summary = aeris_coded_weather(
-                            data["mesonet"][0]["response"][0]["ob"]["weatherPrimaryCoded"]
-                        )
-                        current_obs_icon = (
-                            aeris_icon(data["mesonet"][0]["response"][0]["ob"]["icon"]) + ".png"
-                        )
-                    elif (current_source_default == "pws"):
-                        current_obs_summary = aeris_coded_weather(
-                            data["pws"][0]["response"][0]["ob"]["weatherPrimaryCoded"]
-                        )
-                        current_obs_icon = (
-                            aeris_icon(data["pws"][0]["response"][0]["ob"]["icon"]) + ".png"
+                            aeris_icon(data["metar"][0]["response"]["ob"]["icon"]) + ".png"
                         )
                     elif (current_source_default == "conditions"):
                         current_obs_summary = aeris_coded_weather(
-                            data["conditions"][0]["response"][0]["periods"][0]["weatherPrimaryCoded"]
+                            data["conditions"][0]["response"]["ob"]["weatherPrimaryCoded"]
                         )
                         current_obs_icon = (
-                            aeris_icon(data["conditions"][0]["response"][0]["periods"][0]["icon"]) + ".png"
+                            aeris_icon(data["conditions"][0]["response"]["ob"]["icon"]) + ".png"
                         )
                     else:
                         current_obs_summary = aeris_coded_weather(
@@ -1564,12 +1551,12 @@ class getData(SearchList):
                     current_obs_icon = ""
 
                 if forecast_units in ("si", "ca"):
-                    # 20220624,ho dwd|brightsky|metar|conditions|mesonet|pws
+                    # 20220624,ho dwd | brightsky | weatherbit | AERIS: metar | conditions
 
                     if (current_source_default == "dwd"):
-                        if data["current"][0]["response"]["ob"]["visibilityKM"] is not None:
+                        if data["dwd"][0]["response"]["ob"]["visibilityKM"] is not None:
                             visibility = locale.format(
-                                "%g", data["current"][0]["response"]["ob"]["visibilityKM"]
+                                "%g", data["dwd"][0]["response"]["ob"]["visibilityKM"]
                             )
                             visibility_unit = "km"
                         else:
@@ -1584,37 +1571,28 @@ class getData(SearchList):
                         else:
                             visibility = "N/A"
                             visibility_unit = ""
+                    elif (current_source_default == "weatherbit"):
+                        if data["weatherbit"][0]["response"]["ob"]["visibilityKM"] is not None:
+                            visibility = locale.format(
+                                "%g", data["weatherbit"][0]["response"]["ob"]["visibilityKM"]
+                            )
+                            visibility_unit = "km"
+                        else:
+                            visibility = "N/A"
+                            visibility_unit = ""
                     elif (current_source_default == "metar"):
-                        if data["metar"][0]["response"][0]["ob"]["visibilityKM"] is not None:
+                        if data["metar"][0]["response"]["ob"]["visibilityKM"] is not None:
                             visibility = locale.format(
-                                "%g", data["metar"][0]["response"][0]["ob"]["visibilityKM"]
-                            )
-                            visibility_unit = "km"
-                        else:
-                            visibility = "N/A"
-                            visibility_unit = ""
-                    elif (current_source_default == "mesonet"):
-                        if data["mesonet"][0]["response"][0]["ob"]["visibilityKM"] is not None:
-                            visibility = locale.format(
-                                "%g", data["mesonet"][0]["response"][0]["ob"]["visibilityKM"]
-                            )
-                            visibility_unit = "km"
-                        else:
-                            visibility = "N/A"
-                            visibility_unit = ""
-                    elif (current_source_default == "pws"):
-                        if data["pws"][0]["response"][0]["ob"]["visibilityKM"] is not None:
-                            visibility = locale.format(
-                                "%g", data["pws"][0]["response"][0]["ob"]["visibilityKM"]
+                                "%g", data["metar"][0]["response"]["ob"]["visibilityKM"]
                             )
                             visibility_unit = "km"
                         else:
                             visibility = "N/A"
                             visibility_unit = ""
                     elif (current_source_default == "conditions"):
-                        if data["conditions"][0]["response"][0]["periods"][0]["visibilityKM"] is not None:
+                        if data["conditions"][0]["response"]["ob"]["visibilityKM"] is not None:
                             visibility = locale.format(
-                                "%g", data["conditions"][0]["response"][0]["periods"][0]["visibilityKM"]
+                                "%g", data["conditions"][0]["response"]["ob"]["visibilityKM"]
                             )
                             visibility_unit = "km"
                         else:
