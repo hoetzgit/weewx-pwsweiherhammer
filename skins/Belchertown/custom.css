@@ -10,6 +10,20 @@
     padding-top: 0px;
 }
 
+/* current source toggle **/
+.currentSourceToggle, .dark .currentSourceToggle{
+    text-align:center;
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+.currentSourceSelected {
+    font-size:10px;
+    text-align:center;
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
 .obs-aqi-divider, .dark .obs-aqi-divider {
     height: 1px;
     width: 104%;

@@ -1235,6 +1235,9 @@ function update_forecast_data(data) {
     }
     belchertown_log("current_source_toggle_checked: " + current_source_toggle_checked);
     belchertown_log("current_source_selected: " + current_source_selected);
+    #if $Extras.has_key('current_source_toggle') and $Extras.current_source_toggle == '1'
+    jQuery(".currentSourceSelected").html(current_source_selected);
+    #end if
 
     if (forecast_provider == "N/A") {
         jQuery(".forecastrow").hide();
