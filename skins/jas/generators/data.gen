@@ -2,6 +2,7 @@
 ##    See the file LICENSE.txt for your rights.
 
 #import time
+#from weeutil.weeutil import to_bool
 #set $start_time = time.time()
 ## Create time stamps by aggregation time for the end of interval
 ## For example: endTimestamp_min, endTimestamp_max
@@ -10,7 +11,7 @@
     #set aggregate_interval = $getVar('Extras.page_definition.' + $page_definition_name_global + '.aggregate_interval.' + $aggregate_type)
     ## The 'start' and 'end' tags ignore/do not use the '$data_binding' on the 'time period'.
     ## This makes sense because a DB call is not needed.
-    ## ToDo - verify: Either reading code or ask.
+    ## ToDo: verify: Either reading code or ask.
     #if $aggregate_interval == 'day'
         #set source = "#set global $endTimestamp = ((($" + $interval_name_global + ".end.raw // 86400) * 86400)  - ($utcOffset * 60)) * 1000;\n"
         ##set source = "#set global $endTimestamp = ((($" + $interval_name_global + "($data_binding='wx_binding').end.raw // 86400) * 86400)  - ($utcOffset * 60)) * 1000;\n"
@@ -63,22 +64,23 @@
     #end for
 #end for
 
-## ToDo - wind rose proof of concept
+## Proof of concept - wind rose
 ## Create data for wind rose chart
 #if $getVar('Extras.pages.' + $page_definition_name_global + '.windRose',None) is not None
-    ## ToDo - wind data_binding?
     #set $data_binding = $getVar('Extras.pages.' + $page_definition_name_global + '.data_binding', $getVar("$Extras.data_binding", 'wx_binding'))
-    #set avg, max, wind_directions, wind_range_legend = $windCompass()
+    #set avg, max, wind_directions, wind_range_legend = $windCompass(data_binding=$data_binding, start_time=$interval_start_seconds_global, end_time=$interval_end_seconds_global)
     #set line = "var windRangeLegend = " + $wind_range_legend
     $line;
     #set i = 0
     #for $wind in $wind_directions
-        #set line = $interval_name_global + "_avg.windCompassRange"  + str($i) + "_" + $data_binding + " = "  + str($wind) +  ";"
+        #set line = $interval_long_name_global + "avg.windCompassRange"  + str($i) + "_" + $data_binding + " = "  + str($wind) +  ";"
         $line
         #set $i += 1
     #end for
 #end if
 
 #set elapsed_time = time.time() - $start_time
-#set log_msg = "Generated " + $filename + " in " + str($elapsed_time)
-##$loginf($log_msg)
+#set log_msg = "Generated " + $HTML_ROOT + "/" + $filename + " in " + str($elapsed_time)
+#if to_bool($getVar("$Extras.log_times", True))
+    $logdbg($log_msg)
+#end if

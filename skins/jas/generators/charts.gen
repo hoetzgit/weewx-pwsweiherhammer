@@ -2,11 +2,14 @@
 ##    See the file LICENSE.txt for your rights.
 
 #import time
+#from weeutil.weeutil import to_bool
 #set $start_time = time.time()
 
 #set charts = $genCharts($page_definition_name_global, $interval_name_global, $page_name_global)
 #include source=$charts
 
 #set elapsed_time = time.time() - $start_time
-#set log_msg = "Generated " + $filename + " in " + str($elapsed_time)
-##$loginf($log_msg)
+#set log_msg = "Generated " + $HTML_ROOT + "/" + $filename + " in " + str($elapsed_time)
+#if to_bool($getVar("$Extras.log_times", True))
+    $logdbg($log_msg)
+#end if
