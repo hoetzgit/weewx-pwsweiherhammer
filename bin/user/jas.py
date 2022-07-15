@@ -1,4 +1,4 @@
-#    Copyright (c) 2021 Rich Bell <bellrichm@gmail.com>
+#    Copyright (c) 2021-2022 Rich Bell <bellrichm@gmail.com>
 #    See the file LICENSE.txt for your rights.
 
 """
@@ -55,7 +55,7 @@ This search list extension provides the following tags:
   $version
     Returns:
       The version of this skin.
-      
+
   $windCompass(start_offset, end_offset)
     Arguments:
       start_offset: The starting time offset from the current time. Default is 86400, 24 hours.
@@ -131,7 +131,7 @@ except ImportError:
         logmsg(syslog.LOG_ERR, msg)
 
 
-VERSION = "0.2.1"
+VERSION = "0.2.2-rc01"
 
 class JAS(SearchList):
     """ Implement tags used by templates in the skin. """
@@ -171,9 +171,6 @@ class JAS(SearchList):
         self.html_root = html_root
         self.mkdir_p(os.path.join(self.html_root, 'data'))
 
-        client_id = self.skin_dict['Extras']['client_id']
-        client_secret = self.skin_dict['Extras']['client_secret']
-
         latitude = self.generator.config_dict['Station']['latitude']
         longitude = self.generator.config_dict['Station']['longitude']
 
@@ -183,11 +180,14 @@ class JAS(SearchList):
         self.raw_forecast_data_file = os.path.join(
             self.html_root, 'data', 'raw.forecast.json')
 
-        self.forecast_url = "%s%s,%s?format=json&filter=day&limit=7&client_id=%s&client_secret=%s" \
-                            % (forecast_endpoint, latitude, longitude, client_id, client_secret)
+        client_id = self.skin_dict['Extras'].get('client_id')
+        if client_id:
+            client_secret = self.skin_dict['Extras']['client_secret']
+            self.forecast_url = "%s%s,%s?format=json&filter=day&limit=7&client_id=%s&client_secret=%s" \
+                                % (forecast_endpoint, latitude, longitude, client_id, client_secret)
 
-        self.current_url = "%s%s,%s?&format=json&filter=allstations&limit=1&client_id=%s&client_secret=%s" \
-                           % (current_endpoint, latitude, longitude, client_id, client_secret)
+            self.current_url = "%s%s,%s?&format=json&filter=allstations&limit=1&client_id=%s&client_secret=%s" \
+                            % (current_endpoint, latitude, longitude, client_id, client_secret)
 
         self.observations, self.aggregate_types = self._get_observations()
 
@@ -206,7 +206,7 @@ class JAS(SearchList):
         self.timespan = timespan
         self.db_lookup = db_lookup
 
-        search_list_extension = {'aggregate_types': self.aggregate_types,   
+        search_list_extension = {'aggregate_types': self.aggregate_types,
                                  'current_observation': self.data_current,
                                  'forecasts': self.data_forecast,
                                  'genCharts': self._gen_charts,
@@ -492,39 +492,53 @@ class JAS(SearchList):
 
     def _get_observations(self):
         # todo - rename now has 'side effect' of returning aggregate_types
+        
         observations = {}
         aggregate_types = {}
+        skin_data_binding = self.skin_dict['Extras'].get('data_binding','wx_binding')
         charts = self.skin_dict.get('Extras', {}).get('chart_definitions', {})
 
-        for chart in charts:
-            series = charts[chart].get('series', {})
-            for obs in series:
-                weewx_options = series[obs].get('weewx', {})
-                observation = weewx_options.get('observation', obs)
-                if observation not in self.wind_observations:
-                    if observation not in observations:
-                        observations[observation] = {}
-                        observations[observation]['aggregate_types'] = {}
+        pages =  self.skin_dict.get('Extras', {}).get('pages', {})
+        for page in pages:
+            for chart in pages[page].sections:
+                if chart in charts:
+                    chart_data_binding = charts[chart].get('weewx', {}).get('data_binding', skin_data_binding)
+                    series = charts[chart].get('series', {})
+                    for obs in series:
+                        weewx_options = series[obs].get('weewx', {})
+                        observation = weewx_options.get('observation', obs)
+                        data_binding =  series[obs].get('weewx', {}).get('data_binding', chart_data_binding)
+                        if observation not in self.wind_observations:
+                            if observation not in observations:
+                                observations[observation] = {}
+                                observations[observation]['aggregate_types'] = {}
 
-                    aggregate_type = weewx_options.get('aggregate_type', 'avg')
-                    observations[observation]['aggregate_types'][aggregate_type] = {}
-                    aggregate_types[aggregate_type] = {}
+                            aggregate_type = weewx_options.get('aggregate_type', 'avg')
+                            if aggregate_type not in observations[observation]['aggregate_types']:
+                                observations[observation]['aggregate_types'][aggregate_type] = {}
+
+                            observations[observation]['aggregate_types'][aggregate_type][data_binding] = {}
+                            aggregate_types[aggregate_type] = {}
 
         minmax_observations = self.skin_dict.get('Extras', {}).get('minmax', {}).get('observations', {})
+        minmax_data_binding = self.skin_dict.get('Extras', {}).get('minmax', {}).get('data_binding', skin_data_binding)
         for observation in minmax_observations:
+            data_binding =  minmax_observations[observation].get('data_binding', minmax_data_binding)
             if observation not in self.wind_observations:
                 if observation not in observations:
                     observations[observation] = {}
                     observations[observation]['aggregate_types'] = {}
 
                 observations[observation]['aggregate_types']['min'] = {}
+                observations[observation]['aggregate_types']['min'][data_binding] = {}
                 aggregate_types['min'] = {}
                 observations[observation]['aggregate_types']['max'] = {}
+                observations[observation]['aggregate_types']['max'][data_binding] = {}
                 aggregate_types['max'] = {}
 
         return observations, aggregate_types
 
-    def _iterdict(self, indent, page, chart, chart_js, interval, dictionary):
+    def _iterdict(self, indent, page, chart, chart_js, series_type, interval, dictionary):
         chart2 = chart_js
         for key, value in dictionary.items():
             if isinstance(value, dict):
@@ -532,32 +546,45 @@ class JAS(SearchList):
                     continue
                 if key == 'series':
                     chart2 += indent + "series: [\n"
-                    for obs in value:
-                        observation = weewx_options = self.skin_dict['Extras']['chart_definitions'][chart]['series'][obs]['weewx']['observation']
-                        aggregate_type = weewx_options = self.skin_dict['Extras']['chart_definitions'][chart]['series'][obs]['weewx']['aggregate_type']
-                        aggregate_interval = self.skin_dict['Extras']['page_definition'][page]['aggregate_interval'].get(aggregate_type, 'none')
+                    
+                    if series_type == 'comparison':
+                        obs = next(iter(value))
+                        for year in range(int(self.skin_dict['Extras']['pages'][page]['start']), int(self.skin_dict['Extras']['pages'][page]['end']) + 1):
+                            chart2 += indent + " {\n"
+                            chart2 += "    name: '" + str(year) + "',\n"
+                            chart2 = self._iterdict(indent + '  ', page, chart, chart2, series_type, interval, value[obs])
+                            chart2 += indent + "  },\n"
+                    else:
+                        for obs in value:
+                            aggregate_type = self.skin_dict['Extras']['chart_definitions'][chart]['series'][obs]['weewx']['aggregate_type']
+                            aggregate_interval = self.skin_dict['Extras']['page_definition'][page].get('aggregate_interval', {}).get(aggregate_type, 'none')
 
-                        # set the aggregate_interval at the beginning of the chart definition, somit can be used in the chart
-                        # Note, this means the last observation's aggregate type will be used to determine the aggregate interval
-                        chart2 = "#set global aggregate_interval_global = 'aggregate_interval_" + aggregate_interval + "'\n" + chart2
+                            # set the aggregate_interval at the beginning of the chart definition, so it can be used in the chart
+                            # Note, this means the last observation's aggregate type will be used to determine the aggregate interval
+                            if series_type == 'multiple':
+                                chart2 = "#set global aggregate_interval_global = 'aggregate_interval_multiyear" + "'\n" + chart2
+                            elif series_type == 'mqtt':
+                                chart2 = "#set global aggregate_interval_global = 'aggregate_interval_mqtt" + "'\n" + chart2                                
+                            else:
+                                chart2 = "#set global aggregate_interval_global = 'aggregate_interval_" + aggregate_interval + "'\n" + chart2
 
-                        chart2 += indent + " {\n"
-                        chart2 = self._iterdict(indent + '  ', page, chart, chart2, interval, value[obs])
+                            chart2 += indent + " {\n"
+                            chart2 = self._iterdict(indent + '  ', page, chart, chart2, series_type, interval, value[obs])
 
-                        chart2 += indent + "},\n"
-                    chart2 += indent +"]\n"
+                            chart2 += indent + "},\n"
+
+                    chart2 += indent +"],\n"
                 else:
                     chart2 += indent + key + ":" + " {\n"
-                    chart2 = self._iterdict(indent + '  ', page, chart, chart2, interval, value)
+                    chart2 = self._iterdict(indent + '  ', page, chart, chart2, series_type, interval, value)
                     chart2 += indent + "},\n"
             else:
                 chart2 += indent + key + ": " + value + ",\n"
         return chart2
-        
+
     def _set_chart_defs(self):
         self.chart_defs = configobj.ConfigObj()
         for chart in self.skin_dict['Extras']['chart_definitions'].sections:
-            self.chart_config = configobj.ConfigObj(StringIO("[%s]" % (chart)))
             self.chart_defs[chart] = {}
             if 'polar' in self.skin_dict['Extras']['chart_definitions'][chart]:
                 coordinate_type = 'polar'
@@ -565,15 +592,13 @@ class JAS(SearchList):
                 coordinate_type = 'grid'
             else:
                 coordinate_type = 'grid'
-            self.chart_config[chart].merge(self.chart_defaults.get(coordinate_type, {}))
             self.chart_defs[chart].merge(self.chart_defaults.get(coordinate_type, {}))
 
-            self.chart_config[chart].merge(self.skin_dict['Extras']['chart_definitions'][chart])
             self.chart_defs[chart].merge(self.skin_dict['Extras']['chart_definitions'][chart])
 
             weewx_options = {}
             weewx_options['aggregate_type'] = 'avg'
-                                  
+
             for value in self.skin_dict['Extras']['chart_definitions'][chart]['series']:
                 charttype =  self.skin_dict['Extras']['chart_definitions'][chart]['series'][value]['type']
                 self.chart_defs[chart]['series'][value].merge((self.chart_series_defaults.get(coordinate_type, {}).get(charttype,{})))
@@ -582,48 +607,95 @@ class JAS(SearchList):
                     self.chart_defs[chart]['series'][value]['weewx'] = {}
                 weeutil.config.conditional_merge(self.chart_defs[chart]['series'][value]['weewx'], weewx_options)
 
-    def _gen_charts(self, page, interval):
+    def _gen_charts(self, page, interval, page_name):
+        skin_data_binding = self.skin_dict['Extras'].get('data_binding','wx_binding')
+        page_series_type = self.skin_dict['Extras']['page_definition'][page].get('series_type', 'single')
+
         #chart_final = 'var pageCharts = [];\n'
         chart_final = '## charts\n'
         chart2 = ""
+        charts = self.skin_dict['Extras']['chart_definitions']
         for chart in self.skin_dict['Extras']['pages'][page]:
-            if chart in self.skin_dict['Extras']['chart_definitions'].sections:
+            if chart in charts.sections:
+                chart_data_binding = charts[chart].get('weewx', {}).get('data_binding', skin_data_binding)
+                chart_series_type = self.skin_dict['Extras']['pages'][page][chart].get('series_type')
+
+                if chart_series_type and chart_series_type == 'mqtt':
+                    series_type = chart_series_type
+                else:
+                    if chart_series_type and chart_series_type != 'mqtt':
+                        logerr("only mqtt supported")
+                    series_type = page_series_type
+
+                chart_def = copy.deepcopy(self.chart_defs[chart])
+                if 'polar' not in chart_def:
+                    weeutil.config.conditional_merge(chart_def, self.skin_dict['Extras']['chart_defaults']['series_type'].get(series_type, {}))                    
+                    
                 chart2 += "#set global series_observations_global = []\n"
 
                 # for now, do not support overriding chart options by page
                 #self.charts_def[chart].merge(self.skin_dict['Extras']['pages'][page][chart])
-                for observation in self.chart_defs[chart]['series']:
-                    obs = self.chart_defs[chart]['series'][observation].get('weewx', {}).get('observation', observation)
+                for observation in chart_def['series']:
+                    obs = chart_def['series'][observation].get('weewx', {}).get('observation', observation)
+                    data_binding = chart_def['series'][observation].get('weewx', {}).get('data_binding', chart_data_binding)
                     chart2 += "$series_observations_global.append('" + obs + "')\n"
-                chart2 += "$series_observations_global\n"
+                #chart2 += "$series_observations_global\n"
 
                 chart_js = "var option = {\n"
-                chart2 += self._iterdict('  ', page, chart, chart_js, interval, self.chart_defs[chart])
+                chart2 += self._iterdict('  ', page, chart, chart_js, series_type, interval, chart_def)
                 chart2 += "};\n"
-                chart2 += "var telem = document.getElementById('" + chart + interval + "');\n"
-                chart2 += "var " + chart + "chart = echarts.init(document.getElementById('" + chart + interval + "'));\n"
+                chart2 += "var telem = document.getElementById('" + chart + page_name + "');\n"
+                chart2 += "var " + chart + "chart = echarts.init(document.getElementById('" + chart + page_name + "'));\n"
                 chart2 += chart + "chart.setOption(option);\n"
 
                 chart2 += "pageChart = {};\n"
 
-                if interval != 'mqtt':
+                if series_type == 'mqtt':
+                    chart2 += "pageChart.option = null;\n"
+                elif series_type == 'multiple':
+                    chart2 += "option = {\n"
+                    chart2 += "  series: [\n"    
+                    for obs in chart_def['series']:
+                        aggregate_type = chart_def['series'][obs]['weewx']['aggregate_type']
+                        chart2 += "    {name: " + chart_def['series'][obs]['name'] + ",\n"
+                        chart2 += "     data: [\n" 
+                        for year in range(int(self.skin_dict['Extras']['pages'][page]['start']), int(self.skin_dict['Extras']['pages'][page]['end']) + 1):
+                            chart2 += "            ...year" + str(year) + "_" + aggregate_type + "." + chart_def['series'][obs]['weewx']['observation'] + "_"  + data_binding + ",\n"
+                        chart2 += "          ]},\n"
+                    chart2 += "]};\n"
+                    chart2 += "pageChart.option = option;\n"
+                elif series_type == 'comparison':
                     chart2 += "option = {\n"
                     chart2 += "  series: [\n"
-                    for obs in self.chart_defs[chart]['series']:
-                        aggregate_type = self.chart_defs[chart]['series'][obs]['weewx']['aggregate_type']
-                        chart2 += "    {name: " + self.chart_defs[chart]['series'][obs]['name'] + ",\n"
-                        chart2 += "    data: " + interval + "_" + aggregate_type + "." + self.chart_defs[chart]['series'][obs]['weewx']['observation'] + "},\n"
+                    obs = next(iter(chart_def['series']))
+                    aggregate_type = chart_def['series'][obs]['weewx']['aggregate_type']
+                    for year in range(int(self.skin_dict['Extras']['pages'][page]['start']), int(self.skin_dict['Extras']['pages'][page]['end']) + 1):
+                        chart2 += "    {name: '" + str(year) + "',\n"
+                        chart2 += "     data: year" + str(year) + "_" + aggregate_type \
+                                + "." + obs + "_"  + data_binding \
+                                + ".map(arr => [moment.unix(arr[0] / 1000).utcOffset(" + "-240.0).format('MM/DD'), arr[1]]),\n" \
+                                + "},\n"
                     chart2 += "]};\n"
                     chart2 += "pageChart.option = option;\n"
                 else:
-                    chart2 += "pageChart.option = null;\n"
+                    chart2 += "option = {\n"
+                    chart2 += "  series: [\n"
+                    for obs in chart_def['series']:
+                        aggregate_type = chart_def['series'][obs]['weewx']['aggregate_type']
+                        chart2 += "    {name: " + chart_def['series'][obs]['name'] + ",\n"
+                        chart2 += "    data: " \
+                                + interval + "_" + aggregate_type \
+                                + "." + chart_def['series'][obs]['weewx']['observation'] + "_"  + data_binding \
+                                + "},\n"
+                    chart2 += "]};\n"
+                    chart2 += "pageChart.option = option;\n"
 
                 chart2 += "pageChart.chart = " + chart + "chart;\n"
                 chart2 += "pageCharts.push(pageChart);\n"
                 chart2 += "#set global series_observations_global = None\n"
                 chart2 += "$series_observations_global\n"
 
-                chart_final += chart2
+        chart_final += chart2
 
         return chart_final
 

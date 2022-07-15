@@ -1,12 +1,20 @@
 from weewx.cheetahgenerator import SearchList
+from weewx.units import UnitInfoHelper, ObsInfoHelper
 from user.diagram_util import DiagramUtil
 from datetime import datetime
+from pprint import pprint
 
 # Copyright 2022 David Bätge
 # Distributed under the terms of the GNU Public License (GPLv3)
 
 
 class TableUtil(SearchList):
+    def __init__(self, generator):
+        SearchList.__init__(self, generator)
+        self.unit = UnitInfoHelper(generator.formatter, generator.converter)
+        self.obs = ObsInfoHelper(generator.skin_dict)
+        self.diagram_util = DiagramUtil(SearchList)
+
     def get_table_aggregate_interval(self, observation, precision):
         """
         aggregate_interval for observations series for tables.
@@ -18,26 +26,46 @@ class TableUtil(SearchList):
         Returns:
             int: aggregate_interval
         """
-        if precision == 'day':
+        if precision == "day":
             return 900 * 8  # 2 hours
 
-        if precision == 'week':
+        if precision == "week":
             return 900 * 24  # 6 hours
 
-        if precision == 'month':
+        if precision == "month":
             return 900 * 48  # 12 hours
 
-        if precision == 'year' or precision == 'alltime':
+        if precision == "year" or precision == "alltime":
             return 3600 * 24  # 1 day
 
-    def get_table_headers(self, obs, unit_labels, obs_labels, period):
+    def get_table_boundary(self, precision):
+        """
+        boundary for observations series for tables.
+
+        Args:
+            precision (string): Day, week, month, year, alltime
+
+        Returns:
+            string: None | 'midnight'
+        """
+        if precision == "day":
+            return None
+
+        if precision == "week":
+            return None
+
+        if precision == "month":
+            return None
+
+        if precision == "year" or precision == "alltime":
+            return "midnight"
+
+    def get_table_headers(self, obs, period):
         """
         Returns tableheaders for use in carbon data table.
 
         Args:
             obs (list): $DisplayOptions.get("table_tile_..")
-            unit_labels (dict): weewx $unit.labels
-            obs_labels (obj): weewx $obs.labels
             period (obj): Period to use, eg. $year, month, $span
 
         Returns:
@@ -45,17 +73,19 @@ class TableUtil(SearchList):
         """
         carbon_headers = []
 
-        carbon_headers.append({
-            "title": "Time",
-            "id": "timeParsed",
-            "sortCycle": "tri-states-from-ascending",
-        })
+        carbon_headers.append(
+            {
+                "title": "Time",
+                "id": "time",
+                "sortCycle": "tri-states-from-ascending",
+            }
+        )
 
         for header in obs:
             if getattr(period, header).has_data:
                 carbon_header = {
-                    "title": obs_labels[header],
-                    "small": "in " + getattr(unit_labels, header),
+                    "title": self.obs.label[header],
+                    "small": "in " + getattr(self.unit.label, header),
                     "id": header,
                     "sortCycle": "tri-states-from-ascending",
                 }
@@ -77,34 +107,41 @@ class TableUtil(SearchList):
         """
         carbon_values = []
 
-        diagramUtil = DiagramUtil(SearchList)
-
+        # TODO: Get values directly from DB?
         for observation in obs:
             if getattr(period, observation).has_data:
-                series = getattr(period, observation).series(
-                    aggregate_type=diagramUtil.get_aggregate_type(observation),
-                    aggregate_interval=self.get_table_aggregate_interval(
-                        observation,
-                        precision
-                    ),
-                    time_series='start',
-                    time_unit='unix_epoch'
-                ).round(diagramUtil.get_rounding(observation))
+                series = (
+                    getattr(period, observation)
+                    .series(
+                        aggregate_type=self.diagram_util.get_aggregate_type(
+                            observation
+                        ),
+                        aggregate_interval=self.get_table_aggregate_interval(
+                            observation, precision
+                        ),
+                        time_series="start",
+                        time_unit="unix_epoch",
+                    )
+                    .round(self.diagram_util.get_rounding(observation))
+                )
 
                 for start, data in zip(series.start, series.data):
                     cs_time = datetime.fromtimestamp(start.raw)
                     # The current series item by time.
-                    cs_item = list(filter(
-                        lambda x: (x['timeParsed'] == cs_time.isoformat()),
-                        carbon_values
-                    ))
+                    cs_item = list(
+                        filter(
+                            lambda x: (x["time"] == cs_time.isoformat()), carbon_values
+                        )
+                    )
 
                     if len(cs_item) == 0:
-                        carbon_values.append({
-                            "timeParsed": cs_time.isoformat(),
-                            observation: data.raw,
-                            'id': start.raw
-                        })
+                        carbon_values.append(
+                            {
+                                "time": cs_time.isoformat(),
+                                observation: data.raw,
+                                "id": start.raw,
+                            }
+                        )
                     else:
                         cs_item = cs_item[0]
                         cs_item_index = carbon_values.index(cs_item)
@@ -112,8 +149,6 @@ class TableUtil(SearchList):
                         carbon_values[cs_item_index] = cs_item
 
         # Sort per time
-        carbon_values.sort(
-            key=lambda item: datetime.fromisoformat(item['timeParsed'])
-        )
+        carbon_values.sort(key=lambda item: datetime.fromisoformat(item["time"]))
 
         return carbon_values

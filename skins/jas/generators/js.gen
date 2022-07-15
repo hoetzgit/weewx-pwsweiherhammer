@@ -3,9 +3,14 @@
 
 #import datetime
 #from weeutil.weeutil import to_bool
+#import time
+#set $start_time = time.time()
  /* jshint esversion: 6 */
 
+#set $skin_data_binding = $getVar("$Extras.data_binding", 'wx_binding')
+
 var pageCharts = [];
+var mqttData = {}
 
 // Update the chart's data
 function updateCharts() {
@@ -46,104 +51,96 @@ function handleLog(message) {
 function handleMQTT(message) {
     var test_obj = JSON.parse(message.payload);
 
-    // Handle the 'header' section of current observations.
-    header = JSON.parse(sessionStorage.getItem("header"));
-    if (test_obj[header.name]) {
-        header.value = test_obj[header.name];
-        if (test_obj[header.unit]) {
-            header.unit = test_obj[header.unit];
-        }
-        sessionStorage.setItem("header", JSON.stringify(header));
-        headerElem = document.getElementById(header.name);
-        if (headerElem) {
-            headerElem.innerHTML = header.value + header.unit;
-        }  
-    }
-
-    // Handle information that will be appended to the observation's value.
-    suffixes = sessionStorage.getItem("suffixes").split(",");
-    suffixes.forEach(function(suffix) {
-        if (test_obj[suffix]) {
-            data = JSON.parse(sessionStorage.getItem(suffix));
-            data.value = test_obj[suffix];
-            sessionStorage.setItem(suffix, JSON.stringify(data));
-        }
-    });
-
-    // Process each observation in the 'current' section.
-    observations = sessionStorage.getItem("observations").split(",");
-    observations.forEach(function(observation) {
-        if (test_obj[observation]) {
-            data = JSON.parse(sessionStorage.getItem(observation));
-            data.value = test_obj[observation];
-            sessionStorage.setItem(observation, JSON.stringify(data));
-
-            suffix = JSON.parse(sessionStorage.getItem(data.suffix));
-            if ( suffix=== null) {
-                suffixText = "";
+    #if to_bool($getVar('Extras.pages.' + $page + '.mqtt', True))
+        // Handle the 'header' section of current observations.
+        header = JSON.parse(sessionStorage.getItem("header"));
+        if (test_obj[header.name]) {
+            header.value = test_obj[header.name];
+            if (test_obj[header.unit]) {
+                header.unit = test_obj[header.unit];
             }
-            else {
-                suffixText = " " + suffix.value;
-            }
+            sessionStorage.setItem("header", JSON.stringify(header));
+            headerElem = document.getElementById(header.name);
+            if (headerElem) {
+                headerElem.innerHTML = header.value + header.unit;
+            }  
+        }
 
-            labelElem = document.getElementById(observation + "_label");
-            if (labelElem) {
-                labelElem.innerHTML = data.label;
+        // Handle information that will be appended to the observation's value.
+        suffixes = sessionStorage.getItem("suffixes").split(",");
+        suffixes.forEach(function(suffix) {
+            if (test_obj[suffix]) {
+                data = JSON.parse(sessionStorage.getItem(suffix));
+                data.value = test_obj[suffix];
+                sessionStorage.setItem(suffix, JSON.stringify(data));
             }
-            dataElem = document.getElementById(data.name + "_value");
-            if (dataElem) {
-                dataElem.innerHTML = data.value + data.unit + suffixText;
+        });
+
+        // Process each observation in the 'current' section.
+        observations = sessionStorage.getItem("observations").split(",");
+        observations.forEach(function(observation) {
+            if (test_obj[observation]) {
+                data = JSON.parse(sessionStorage.getItem(observation));
+                data.value = test_obj[observation];
+                sessionStorage.setItem(observation, JSON.stringify(data));
+
+                suffix = JSON.parse(sessionStorage.getItem(data.suffix));
+                if ( suffix=== null) {
+                    suffixText = "";
+                }
+                else {
+                    suffixText = " " + suffix.value;
+                }
+
+                labelElem = document.getElementById(observation + "_label");
+                if (labelElem) {
+                    labelElem.innerHTML = data.label;
+                }
+                dataElem = document.getElementById(data.name + "_value");
+                if (dataElem) {
+                    dataElem.innerHTML = data.value + data.unit + suffixText;
+                }
+            }
+        });
+
+        // And the 'current' section's date/time.
+        if (test_obj.dateTime) {
+            sessionStorage.setItem("updateDate", test_obj.dateTime*1000);
+            timeElem = document.getElementById("updateDate");
+            if (timeElem) {
+                timeElem.innerHTML = moment.unix(test_obj.dateTime).utcOffset($utcOffset).format('$gettext("current_date_time")');
             }
         }
-    });
-
-    // And the 'current' section's date/time.
-    if (test_obj.dateTime) {
-        sessionStorage.setItem("updateDate", test_obj.dateTime*1000);
-        timeElem = document.getElementById("updateDate");
-        if (timeElem) {
-            timeElem.innerHTML = moment.unix(test_obj.dateTime).utcOffset($utcOffset).format('$gettext("current_date_time")');
-        }
-    }
+    #end if
 
     ## ToDo - proof of concept, charting MQTT data
+    #set page_series_type = $getVar('Extras.page_definition.' + $page + '.series_type', 'single')
     #for $chart in $getVar('$Extras.chart_definitions')
-        #for $data in $getVar('$Extras.chart_definitions.' + $chart + '.series')
-                #set weewx_options = $getVar('$Extras.chart_definitions.' + $chart + '.series.' + $data + '.weewx', None)
-                #if $weewx_options
-                    #set aggregation_type = $getVar('$Extras.chart_definitions.' + $chart + '.series.' + $data + '.weewx.aggregate_type', None)
-                    #if $aggregation_type == 'mqtt'
-                        // update any charts that get updated with MQTT data.
-                        #set $data_name = $data + 'MQTT'
-                        $data_name = JSON.parse(sessionStorage.getItem('$data_name'));
-                        #set $line = "if (" + $data_name + ".length >= 1800) {" + $data_name + ".shift();}"
+        #set chart_series_type = $getVar('Extras.pages.' + $page + '.' + chart + '.series_type', $page_series_type)
+        #if $chart_series_type == 'mqtt'
+            #set $option_line = $chart + 'chart.setOption({\n'
+            #set $option_line += '            series: [\n'
+            #for $observation in $getVar('$Extras.chart_definitions.' + $chart + '.series')
+                if (test_obj['$observation']) {
+                    #set line = "if (!mqttData['" + $observation + "'])"
+                    $line
+                    {
+                        #set $line = "mqttData['" + $observation + "'] = []"
                         $line
-                        #set $line = $data_name +".push([parseInt(test_obj.dateTime) * 1000, parseFloat(test_obj." + $data + ")]);"
-                        $line
-                        sessionStorage.setItem('$data_name', JSON.stringify($data_name));
-                    #end if
-                #end if
-        #end for
-    #end for
-
-    #if $interval_name_global == "mqtt"
-        #for $section in $getVar('Extras.pages.' + $page)
-            #set $observations = []
-            ## todo - cleanup to not use continue
-            #if $section not in $getVar('$Extras.chart_definitions')
-                #continue
-            #end if
-            #set $line = $section + 'chart.setOption({'
-            $line
-                series: [
-            #for $data in $getVar('$Extras.chart_definitions.' + $section + '.series')
-                #set $data_name = $data + "MQTT"
-                    {data: $data_name},
-                $observations.append($data_name)
+                    }    
+                    
+                    #set $line = "if (mqttData['" + $observation + "'].length >= 1800) {mqttData['" + $observation + "'].shift();}"
+                    $line
+                    #set $line = "mqttData['" + $observation + "'].push([parseInt(test_obj.dateTime) * 1000, parseFloat(test_obj." + $observation + ")]);"
+                    $line
+                    
+                    #set $option_line += "          {data: mqttData['" + $observation + "']},\n"                    
+                }    
             #end for
-                ]});
-        #end for
-    #end if
+            #set $option_line += '                ]});\n'
+            $option_line
+        #end if
+    #end for
 }
 
 #if to_bool($getVar('$Extras.pages.' + $page + '.reload', False))
@@ -159,29 +156,37 @@ function handleMQTT(message) {
 #end if
 
 #if $getVar('$Extras.pages.' + $page + '.zoomControl', False)
+    #set $startDate = $interval_long_name_global + "startDate"
+    #set $endDate = $interval_long_name_global + "endDate"
+    #set $startTimestamp = $interval_long_name_global + "startTimestamp"
+    #set $endTimestamp = $interval_long_name_global + "endTimestamp"
+
     // Handle reset button
     function resetRange() {
-        dateRangePicker2.setStartDate(startDate);
-        dateRangePicker2.setEndDate(endDate);
+        dateRangePicker2.setStartDate($startDate);
+        dateRangePicker2.setEndDate($endDate);
         #for $section in $getVar('Extras.pages.' + $page)
             ## todo - cleanup to not use continue
             #if $section not in $getVar('$Extras.chart_definitions')
                 #continue
             #end if
-            #set line = $section + "chart" + ".dispatchAction({type: 'dataZoom', startValue: startTimestamp, endValue: endTimestamp});"
+            #set line = $section + "chart" + ".dispatchAction({type: 'dataZoom', startValue: " + $startTimestamp + ", endValue: " + $endTimestamp + "});"
             $line
         #end for
-        updateMinMax(startTimestamp, endTimestamp_min);
+        #set line = "updateMinMax(" + $interval_long_name_global + "startTimestamp, " + $interval_long_name_global + "endTimestamp_min);\n"
+        $line
     }
 #end if
 
 #if 'current' in $getVar('$Extras.pages.' + $page)
     function updateCurrentObservations() {
-        if(sessionStorage.getItem("header") === null || !MQTTConfig){
-            sessionStorage.setItem("header", JSON.stringify(current.header));
-        }
-        header = JSON.parse(sessionStorage.getItem("header"));
-        document.getElementById("$Extras.current.observation").innerHTML = header.value + header.unit;
+        #if $getVar('$Extras.current.observation', False)
+            if(sessionStorage.getItem("header") === null || !MQTTConfig){
+                sessionStorage.setItem("header", JSON.stringify(current.header));
+            }
+            header = JSON.parse(sessionStorage.getItem("header"));
+            document.getElementById("$Extras.current.observation").innerHTML = header.value + header.unit;
+        #end if
 
         // ToDo - cleanup, perhaps put suffix data into an array and store that
         // ToDo - do a bit more in cheetah?
@@ -224,14 +229,16 @@ function handleMQTT(message) {
 #end if
 
 #if 'minmax' in $getVar('$Extras.pages.' + $page)
+    #set $minmax_data_binding = $getVar("$Extras.minmax.data_binding", $skin_data_binding)
     // Update the min/max observations
     function updateMinMax(startTimestamp, endTimestamp) {
         ## todo - optimize to only get index once for all observations?
         #for $observation in $getVar('Extras.minmax.observations')
+            #set $data_binding = $getVar("$Extras.minmax.observations." + $observation + ".data_binding", minmax_data_binding)
             #set min_datetime_array = $interval_name_global + "_min_" + $observation + "_dateTime";
-            #set min_data_array = $interval_name_global + "_min_" + $observation + "_data";
+            #set min_data_array = $interval_name_global + "_min_" + $observation + "_" + $data_binding + "_data";
             #set max_datetime_array = $interval_name_global + "_max_" + $observation + "_dateTime";
-            #set max_data_array = $interval_name_global + "_max_" + $observation + "_data";
+            #set max_data_array = $interval_name_global + "_max_" + $observation + "_" + $data_binding + "_data";
             #set min_id = $observation + "_minmax_min";
             #set max_id = $observation + "_minmax_max";
             #set label = $getVar('unit.label.' + $observation);
@@ -255,6 +262,8 @@ function handleMQTT(message) {
 #end if
 
 #if 'thisdate' in $getVar('$Extras.pages.' + $page)
+    #set $thisdate_data_binding = $getVar("$Extras.minmax.data_binding", $skin_data_binding)
+
     // Get the observation for timeSramp
     function getObservation(timeStamp, observations) {
         var array_result = observations.filter(function(v,i) { return v[0] === timeStamp; });
@@ -268,22 +277,23 @@ function handleMQTT(message) {
     // Update the 'on this date' observations with observations at timeStamp
     function updateThisDate(timeStamp) {
         #for observation in $Extras.thisdate.observations
+            #set $data_binding = $getVar("$Extras.thisdate.observations" + $observation + ".data_binding", $thisdate_data_binding)
             #set aggregation_type = $getVar("$Extras.thisdate.observations." + $observation + ".type", None)
             #if $aggregation_type is None
-                #set value = $interval_name_global + '_min.' + $observation
+                #set value = $interval_name_global + '_min.' + $observation + "_" + $data_binding
                 #set line = "obs = getObservation(timeStamp, " + $value + ");"
                 #set id = $observation + "_thisdate_min"
                 $line
                 observation=document.getElementById("$id");
                 observation.innerHTML = obs;        
-                #set value = $interval_name_global + '_max.' + $observation
+                #set value = $interval_name_global + '_max.' + $observation + "_" + $data_binding
                 #set line = "obs = getObservation(timeStamp, " + $value + ");"
                 #set id = $observation + "_thisdate_max"
                 $line
                 observation=document.getElementById("$id");
                 observation.innerHTML = obs;      
             #else
-                #set value = $interval_name_global + '_' + $aggregation_type + '.' + $observation
+                #set value = $interval_name_global + '_' + $aggregation_type + '.' + $observation + "_" + $data_binding
                 #set line = "obs = getObservation(timeStamp, " + $value + ");"
                 #set id = $observation + "_thisdate_" + $aggregation_type
                 $line
@@ -331,12 +341,14 @@ window.addEventListener("load", function (event) {
 
     #if $getVar('$Extras.pages.' + $page + '.zoomControl', False)
         // Set up the date/time picker
+        #set $startDate = $interval_long_name_global + "startDate"
+        #set $endDate = $interval_long_name_global + "endDate"
         dateRangePicker2 = new DateRangePicker('datetimerange-input2',
                             {
-                                minDate: startDate,
-                                maxDate: endDate,
-                                startDate: startDate,
-                                endDate: endDate,
+                                minDate: $startDate,
+                                maxDate: $endDate,
+                                startDate: $startDate,
+                                endDate: $endDate,
                             },
                             function(start, end, label) {
                                 // Update all charts with selected date/time and min/max values
@@ -356,18 +368,21 @@ window.addEventListener("load", function (event) {
 
     #if 'minmax' in $getVar('$Extras.pages.' + $page)
         #if $getVar('Extras.page_definition.' + $page + '.aggregate_interval.min', None) is not None
-            #set $endTimestamp = "endTimestamp_min"
+            #set $endTimestamp = $interval_long_name_global + "endTimestamp_min"
         #else
-            #set $endTimestamp = "endTimestamp"
+            #set $endTimestamp = $interval_long_name_global + "endTimestamp"
         #end if
-        updateMinMax(startTimestamp, $endTimestamp);
+        #set $startTimestamp = $interval_long_name_global + "startTimestamp"
+        updateMinMax($startTimestamp, $endTimestamp);
     #end if
 
     #if 'thisdate' in $getVar('$Extras.pages.' + $page)
+        #set $startDate = $interval_long_name_global + "startDate"
+        #set $endDate = $interval_long_name_global + "endDate"
         var dateRangePicker = new DateRangePicker('datetimerange-input1',
                             {singleDatePicker: true,
-                                minDate: startDate,
-                                maxDate: endDate
+                                minDate: $startDate,
+                                maxDate: $endDate
                             },
                                 function(start, end, label) {
                                     updateThisDate(start.unix() * 1000);
@@ -397,10 +412,13 @@ window.addEventListener("load", function (event) {
         updateThisDate(selectedDate * 1000);
     #end if
 
-    #if 'current' in $getVar('$Extras.pages.' + $page)
-        // ToDo
-        MQTTConfig = $Extras.mqtt.enable.lower();
+    #if (to_bool($getVar('Extras.pages.' + $page + '.mqtt', True)) and to_bool($getVar('Extras.mqtt.enable', False)) or $page == 'debug' )
+        MQTTConfig = true;
+    #else 
+        MQTTConfig = false;
+    #end if
 
+    #if 'current' in $getVar('$Extras.pages.' + $page)
         updateCurrentObservations();
     #end if
 
@@ -436,3 +454,7 @@ window.addEventListener('message',
                         }},
                         false
                        );
+
+#set elapsed_time = time.time() - $start_time
+#set log_msg = "Generated " + $filename + " in " + str($elapsed_time)
+##$loginf($log_msg)

@@ -99,6 +99,29 @@
         </div>
     </div>
 
+    ###if os.path.exists("dwd/forecast-10688.inc")
+    ##<div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
+    ##    <div class="col-md-12 forecast-title">
+    ##        Wettervorhersage der Station Weiden i.d. OPf
+    ##    </div>
+    ##    <div class="col-md-12">
+    ##        #include raw "dwd/forecast-10688.inc"
+    ##    </div>
+    ##</div>
+    ###end if
+
+    ###if os.path.exists("dwd/forecast-10688-hourly.inc")
+    ##<!-- Wettervorhersage Stündlich DWD Station 10688 -->
+    ##<div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
+    ##    <div class="col-md-12 forecast-title">
+    ##        Wettervorhersage st&uuml;ndlich der Station Weiden i.d. OPf
+    ##    </div>
+    ##    <div class="col-md-12">
+    ##        #include raw "dwd/forecast-10688-hourly.inc"
+    ##    </div>
+    ##</div>
+    ###end if
+
     <!-- DWD Meteogramm weewx-DWD -->
     <script type='text/javascript'>showChart("DWD");</script>
 
@@ -205,29 +228,6 @@
         </div>
     </div>
     #end if
-
-    ###if os.path.exists("dwd/forecast-10688.inc")
-    ##<div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-    ##    <div class="col-md-12 forecast-title">
-    ##        Wettervorhersage der Station Weiden i.d. OPf
-    ##    </div>
-    ##    <div class="col-md-12">
-    ##        #include raw "dwd/forecast-10688.inc"
-    ##    </div>
-    ##</div>
-    ###end if
-
-    ###if os.path.exists("dwd/forecast-10688-hourly.inc")
-    ##<!-- Wettervorhersage Stündlich DWD Station 10688 -->
-    ##<div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-    ##    <div class="col-md-12 forecast-title">
-    ##        Wettervorhersage st&uuml;ndlich der Station Weiden i.d. OPf
-    ##    </div>
-    ##    <div class="col-md-12">
-    ##        #include raw "dwd/forecast-10688-hourly.inc"
-    ##    </div>
-    ##</div>
-    ###end if
 
     #if os.path.exists("dwd/bwk_bodendruck_na_ana.png")
     <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">

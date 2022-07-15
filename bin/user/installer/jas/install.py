@@ -12,10 +12,12 @@ except ImportError:
 import configobj
 from weecfg.extension import ExtensionInstaller
 
-VERSION = "0.2.1"
+VERSION = "0.2.2-rc02"
 
 EXTENSION_CONFIG = """
 [StdReport]
+    # jas (Just another Skin) is highly configurable. This is an example to get the skin up and running.
+    # For more information head over to, https://github.com/bellrichm/weewx-jas/wiki/Getting-Started
     [[jas]]
         skin = jas
         HTML_ROOT = jas
@@ -40,21 +42,28 @@ EXTENSION_CONFIG = """
                 
                 topic = REPLACE_ME
                 
-            # Create an additional chart.
-            [[[[charts]]]]
+            # Define an additional chart.
+            # Once a chart is defined, it can be added to pages.
+            # https://github.com/bellrichm/weewx-jas/wiki/Defining-New-Charts
+            [[[[chart_definitions]]]]
                 # The name of this chart is inTemp. It could be anything.
-                # The name is used to add it to a page.
                 [[[[[inTemp]]]]]
-                    [[[[[[chart]]]]]]
-                        # The chart type is line.
-                        type = "'line'"            
-                    [[[[[[dataLabels]]]]]]
-                        enabled = false
+                    # Options that are not used by eCharts are put under 'weewx' stanzas'
+                    [[[[[[weewx]]]]]]
+                        title = Inside Temperature
                     [[[[[[series]]]]]]
                         # Chart one observation, inTemp
                         [[[[[[[inTemp]]]]]]]
+                            # The name of the series. 
+                            # This is a literal in javascript, so it needs the single quote in its value
+                            name = "'Temperature'"
+                            # The series type. 'line' and 'bar' are the most common.
+                            # This is a literal in javascript, so it needs the single quote in its value
+                            type = "'line'"     
 
             # The '$current' value of these observations will be displayed.
+            # If MQTT is enabled, these will be updated when a message is received.
+            # https://github.com/bellrichm/weewx-jas/wiki/Sections#current
             [[[[current]]]]
                 # The header observation is outTemp
                 observation = outTemp
@@ -72,6 +81,7 @@ EXTENSION_CONFIG = """
                         type = sum
             
             # The minimum and maximum values of these observations will be displayed. 
+            # https://github.com/bellrichm/weewx-jas/wiki/Sections#minmax
             [[[[minmax]]]]
                 [[[[[observations]]]]]
                     [[[[[[outTemp]]]]]]
@@ -82,6 +92,7 @@ EXTENSION_CONFIG = """
                     [[[[[[barometer]]]]]]
             
             # For the selected date, values of these observations will be displayed.
+            # https://github.com/bellrichm/weewx-jas/wiki/Sections#thisdate
             [[[[thisdate]]]]
                 [[[[[observations]]]]]
                     [[[[[[outTemp]]]]]]
@@ -91,8 +102,11 @@ EXTENSION_CONFIG = """
                         type = sum
 
             # The pages and the content on the pages to display.
+            # https://github.com/bellrichm/weewx-jas/wiki/Pages
+            # https://github.com/bellrichm/weewx-jas/wiki/Predefined-Charts
+            # https://github.com/bellrichm/weewx-jas/wiki/Sections
             [[[[pages]]]]
-                [[[[[index]]]]]
+                [[[[[last24hours]]]]]
                     [[[[[[current]]]]]]
                     [[[[[[minmax]]]]]]
                     #[[[[[[forecast]]]]]]
@@ -102,7 +116,9 @@ EXTENSION_CONFIG = """
                     [[[[[[outHumidity]]]]]]  
                     [[[[[[wind]]]]]]  
                     [[[[[[rain]]]]]]                      
-                    [[[[[[radar]]]]]]              
+                    [[[[[[radar]]]]]]
+                    # Here is the user defined chart, inTemp
+                    [[[[[[inTemp]]]]]]             
                 [[[[[last7days]]]]]
                     [[[[[[minmax]]]]]]
                     [[[[[[outTemp]]]]]]
@@ -174,12 +190,13 @@ class JASInstaller(ExtensionInstaller):
                                   'skins/jas/pages/week.html.tmpl',
                                   'skins/jas/pages/year.html.tmpl',
                                   'skins/jas/pages/yesterday.html.tmpl',
+                                  'skins/jas/pages/yeartoyear.html.tmpl',
+                                  'skins/jas/pages/multiyear.html.tmpl',
                                   'skins/jas/pages/%Y.html.tmpl',
                                   'skins/jas/pages/%Y-%m.html.tmpl'
                                   ]),
                    ('skins/jas/charts', ['skins/jas/charts/day.js.tmpl',
                                          'skins/jas/charts/debug.js.tmpl',
-                                         'skins/jas/charts/index.js.tmpl',
                                          'skins/jas/charts/last7days.js.tmpl',
                                          'skins/jas/charts/last24hours.js.tmpl',
                                          'skins/jas/charts/last31days.js.tmpl',
@@ -188,12 +205,15 @@ class JASInstaller(ExtensionInstaller):
                                          'skins/jas/charts/week.js.tmpl',
                                          'skins/jas/charts/year.js.tmpl',
                                          'skins/jas/charts/yesterday.js.tmpl',
+                                         'skins/jas/charts/yeartoyear.js.tmpl',
+                                         'skins/jas/charts/multiyear.js.tmpl',
                                          'skins/jas/charts/%Y.js.tmpl',
                                          'skins/jas/charts/%Y-%m.js.tmpl'
                                          ]),
                    ('skins/jas/data', ['skins/jas/data/current.js.tmpl',
                                        'skins/jas/data/alltime.js.tmpl',
                                        'skins/jas/data/forecast.js.tmpl',
+                                       'skins/jas/data/debug.js.tmpl',
                                        'skins/jas/data/day.js.tmpl',
                                        'skins/jas/data/last7days.js.tmpl',
                                        'skins/jas/data/last24hours.js.tmpl',
@@ -206,7 +226,8 @@ class JASInstaller(ExtensionInstaller):
                                        'skins/jas/data/year%Y.js.tmpl',
                                        'skins/jas/data/month%Y%m.js.tmpl'
                                       ]),
-                   ('skins/jas/generators', ['skins/jas/generators/data.gen',
+                   ('skins/jas/generators', ['skins/jas/generators/charts.gen',
+                                            'skins/jas/generators/data.gen',
                                              'skins/jas/generators/js.gen',
                                              'skins/jas/generators/navbar.gen',
                                              'skins/jas/generators/pages.gen',
@@ -226,14 +247,17 @@ class JASInstaller(ExtensionInstaller):
                                              'skins/jas/javascript/week.js.tmpl',
                                              'skins/jas/javascript/year.js.tmpl',
                                              'skins/jas/javascript/yesterday.js.tmpl',
+                                             'skins/jas/javascript/yeartoyear.js.tmpl',
+                                             'skins/jas/javascript/multiyear.js.tmpl',
                                              'skins/jas/javascript/%Y.js.tmpl',
                                              'skins/jas/javascript/%Y-%m.js.tmpl'
                                              ]),
                    ('skins/jas/lang', ['skins/jas/lang/en.conf']),
                    ('skins/jas/sections', [
+                                           'skins/jas/sections/current.inc',
+                                           'skins/jas/sections/debug.inc',
                                            'skins/jas/sections/forecast.inc',
                                            'skins/jas/sections/minmax.inc',
-                                           'skins/jas/sections/current.inc',
                                            'skins/jas/sections/radar.inc',
                                            'skins/jas/sections/thisdate.inc',
                                            'skins/jas/sections/zoomControl.inc'

@@ -225,6 +225,55 @@
                                             $current_obs_summary
                                         </div>
                                         <div class="avg10m-obs-symbols"></div>
+
+                                        ###if $Extras.has_key("current_source_debug") and $Extras.current_source_debug == '1'
+                                        ##<!-- Current Source Debug Modal -->
+                                        ##<div class="sun-moon-modal"><a href="#current-source-debug" data-toggle="modal" data-target="#current-source-debug">Vergleich</a></div>
+                                        ##<!-- Current Source Debug -->
+                                        ##<div class="modal fade" id="current-source-debug" tabindex="-1" role="dialog" aria-labelledby="current-source-debug" aria-hidden="true">
+                                        ##    <div class="modal-dialog modal-lg" role="document">
+                                        ##        <div class="modal-content">
+                                        ##            <div class="modal-header">
+                                        ##                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        ##                    <span aria-hidden="true">&times;</span>
+                                        ##                </button>
+                                        ##                <h4 class="modal-title" id="current-source-debug">Vergleich Anbieter aktuelle Wetterbedingungen</h4>
+                                        ##            </div>
+                                        ##            <div class="current-source-debug-extras-modal-body modal-body">
+                                        ##               <div class="row">
+                                        ##                   <div class="col-sm-12">
+                                        ##                       <div class="col-sm-4">
+                                        ##                           <div>DWD</div>
+                                        ##                           <img id="wxicon-dwd" src="$relative_url/images/$current_obs_icon">
+                                        ##                           <div class="current-obs-text-dwd">
+                                        ##                               $current_obs_summary
+                                        ##                           </div>
+                                        ##                       </div>
+                                        ##                       <div class="col-sm-4">
+                                        ##                           <div>Brightsky API</div>
+                                        ##                           <img id="wxicon-brightsky" src="$relative_url/images/$current_obs_icon">
+                                        ##                           <div class="current-obs-text-brightsky">
+                                        ##                               $current_obs_summary
+                                        ##                           </div>
+                                        ##                       </div>
+                                        ##                       <div class="col-sm-4">
+                                        ##                           <div>OWM API</div>
+                                        ##                           <img id="wxicon-owm" src="$relative_url/images/$current_obs_icon">
+                                        ##                           <div class="current-obs-text-owm">
+                                        ##                               $current_obs_summary
+                                        ##                           </div>
+                                        ##                       </div>
+                                        ##                   </div>
+                                        ##               </div>
+                                        ##            </div><!-- AJAX -->
+                                        ##            <div class="modal-footer">
+                                        ##                <button type="button" class="btn btn-primary" data-dismiss="modal">$obs.label.close</button>
+                                        ##            </div>
+                                        ##        </div>
+                                        ##    </div>
+                                        ##</div>
+                                        ###end if
+
                                         #if $Extras.has_key('current_source_toggle') and $Extras.current_source_toggle == '1'
                                         <div class="currentSourceToggle">
                                             <label class="currentSwitchLabel">
@@ -232,8 +281,10 @@
                                                 <span class="slider round"></span>
                                             </label>
                                         </div>
-                                        <div class="currentSourceSelected">$Extras.current_source_default</div>
+                                        ##<div class="currentSourceSelected">$Extras.current_source_default</div>
+                                        <div class="currentSourceSelected"></div><!-- AJAX -->
                                         #end if
+
                                         ###if $Extras.has_key("aqi_enabled") and $Extras.aqi_enabled == '1'
                                         ##<div class="aqi_outer">
                                         ##    $obs.label.aqi: <span class="wx-aqi">$aqi</span> (<span class="wx-aqi-category">$aqi_category</span>)
@@ -329,7 +380,7 @@
                                                 #end if
                                                 #if $day.windrun.has_data
                                                 <tr>
-                                                   <td class="dailywindrun" colspan="3" style="padding-top:8px">$obs.label.windrun $day.windrun.sum</td>
+                                                   <td class="dailywindrun" colspan="3" style="padding-top:8px">$obs.label.windrun: $day.windrun.sum</td>
                                                 </tr>
                                                 #end if
                                             </tbody>
@@ -417,10 +468,6 @@
                                                     </div>
                                                 </div>
                                                 #end if
-                                                ##<div class="clear"></div>
-                                                ##<div class="daySunshineDur">
-                                                ##    $day.sunshineDur.sum.format('%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s')
-                                                ##</div>
                                             </div>
                                         </td>
                                     </tr>

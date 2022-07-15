@@ -1,3 +1,9 @@
+/* forecast */
+
+.dark .forecastweekend {
+    color: orange;
+}
+
 /* Temperature */
 
 .stn-high-low, .dark .stn-high-low {

@@ -1,6 +1,5 @@
-#encoding UTF-8
-#if $encoding == 'UTF-8'
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+#if $encoding == 'utf8'
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 #end if
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/webcomponentsjs/2.6.0/webcomponents-loader.min.js"></script>
