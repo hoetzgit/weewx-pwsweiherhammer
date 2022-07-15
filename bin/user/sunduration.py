@@ -47,6 +47,7 @@ class SunshineDuration(StdService):
         # Start intercepting events:
         self.bind(weewx.NEW_LOOP_PACKET, self.newLoopPacket)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)
+        self.radiation_min = 20
         self.lastDate = 0
         self.sunshineDur = 0
         self.sunshineDurOriginal = 0
@@ -54,20 +55,20 @@ class SunshineDuration(StdService):
 
     def newLoopPacket(self, event):
         """Gets called on a new loop packet event."""
-        radiation = event.packet.get('radiation')
+        radiation = event.packet.get('radiation', None)
         if radiation is None:
             logerr("Calculation LOOP sunshineDur not possible, radiation not present!")
             return None
-        loopDate = event.packet.get('dateTime')
+        loopDate = event.packet.get('dateTime', None)
         if loopDate is None:
             logerr("Calculation LOOP sunshineDur not possible, dateTime not present!")
             return None
-        threshold = event.packet.get('sunshineThreshold')
+        threshold = event.packet.get('sunshineThreshold', None)
         if threshold is None:
             logdbg("Calculation LOOP sunshineDur not possible, sunshineThreshold not present!")
             return None
         loopInterval = 0
-        stationInterval = event.packet.get('foshk_interval')
+        stationInterval = event.packet.get('foshk_interval', None)
         if stationInterval is not None:
             loopInterval = stationInterval
             self.lastDate = loopDate
@@ -81,7 +82,7 @@ class SunshineDuration(StdService):
         # Calculation LOOP sunshineDur is possible
         # Classic Version
         loopSunshineDur = 0
-        if radiation > threshold and radiation > 20 and threshold > 0:
+        if threshold > 0 and radiation > threshold and radiation > self.radiation_min:
             loopSunshineDur = int(loopInterval)
         self.sunshineDur += loopSunshineDur
         if self.debug:
@@ -90,11 +91,11 @@ class SunshineDuration(StdService):
 
         # Original Version
         loopSunshineDurOriginal = 0
-        threshold = event.packet.get('sunshineThresholdOriginal')
+        threshold = event.packet.get('sunshineThresholdOriginal', None)
         if threshold is None:
             logdbg("Calculation LOOP sunshineDurOriginal not possible, sunshineThresholdOriginal not present!")
             return None
-        if radiation > threshold and radiation > 20 and threshold > 0:
+        if threshold > 0 and radiation > threshold and radiation > self.radiation_min:
             loopSunshineDurOriginal = int(loopInterval)
         self.sunshineDurOriginal += loopSunshineDurOriginal
         if self.debug:

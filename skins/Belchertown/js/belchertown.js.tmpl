@@ -2135,11 +2135,14 @@ function update_current_wx(data) {
     }
     // current Sunshine Symbol
     if (data.hasOwnProperty("sunshine")) {
+        sun_output = ''
         if (parseInt(data["sunshine"]) > 0) {
-            jQuery(".current-sunshine-symbol").html('<i class="fa fa-sun-o"></i>');
-        } else {
-            jQuery(".current-sunshine-symbol").html('');
+            sun_output += '<i class="fa fa-sun-o"></i><sup>1</sup> '
         }
+        if (parseInt(data["sunshineOriginal"]) > 0) {
+            sun_output += '<i class="fa fa-sun-o"></i><sup>2</sup>'
+        }
+       jQuery(".current-sunshine-symbol").html(sun_output);
     }
 
     // avg10m Symbols

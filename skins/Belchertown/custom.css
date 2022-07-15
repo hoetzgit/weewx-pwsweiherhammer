@@ -99,6 +99,10 @@
     padding-top:0px;
 }
 
+.windrow {
+    padding-top: 5px;
+}
+
 /* Index Radar */
 .dark .tabs-menu > li > a {
     padding: 0px 5px;

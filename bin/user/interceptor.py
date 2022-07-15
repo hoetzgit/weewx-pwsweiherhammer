@@ -2527,7 +2527,7 @@ class EcowittClient(Consumer):
 
             self._latitude = 49.632270
             self._longitude = 12.056186
-            self._sunshine_coeff = 0.76
+            self._sunshine_coeff = 0.79
             self._sunshine_min = 20.0
             
 
@@ -2554,6 +2554,32 @@ class EcowittClient(Consumer):
                     (sin(pi / 180) * hauteur_soleil), 1.25) * coeff
             else:
                 seuil = 0.0
+            return seuil
+
+        @staticmethod
+        # calculate sunshine threshold for sunshining yes/no original code
+        # https://github.com/Jterrettaz/sunduration/blob/master/sunduration.py
+        def _sunshine_ThresholdOriginal(dateval, lat, lon):
+            utcdate = datetime.utcfromtimestamp(dateval)
+            dayofyear = int(time.strftime("%j", time.gmtime(dateval)))
+            theta = 360 * dayofyear / 365
+            equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
+                (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
+                2 * (pi / 180) * theta)
+            corrtemps = lon * 4
+            declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
+                (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
+                 2 * (pi / 180) * theta)) * (180 / pi)
+            minutesjour = utcdate.hour * 60 + utcdate.minute
+            tempsolaire = (minutesjour + corrtemps + equatemps) / 60
+            angle_horaire = (tempsolaire - 12) * 15
+            hauteur_soleil = asin(sin((pi / 180) * lat) * sin((pi / 180) * declinaison) + cos(
+                (pi / 180) * lat) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
+            if hauteur_soleil > 0:
+                seuil = (0.7 + 0.085 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
+                    (sin(pi / 180) * hauteur_soleil), 1.25) 
+            else:
+                seuil=0
             return seuil
 
         @staticmethod
@@ -2697,21 +2723,27 @@ class EcowittClient(Consumer):
                 # get the sunshining this period
                 if ('solar_radiation' in pkt) and ('dateTime' in pkt):
                     sunshine = 0
+                    sunshineOriginal = 0
                     if pkt['solar_radiation'] is not None:
                         if (float(pkt['solar_radiation']) > self._sunshine_min):
                             threshold = float(self._sunshine_Threshold(pkt['dateTime'], self._latitude, self._longitude, self._sunshine_coeff))
-                            if (float(pkt['solar_radiation']) > threshold):
+                            if (threshold > 0.0) and (float(pkt['solar_radiation']) > threshold):
                                 sunshine = 1
+                            threshold = float(self._sunshine_ThresholdOriginal(pkt['dateTime'], self._latitude, self._longitude))
+                            if (threshold > 0.0) and (float(pkt['solar_radiation']) > threshold):
+                                sunshineOriginal = 1
                     self._sunshine_10.append(sunshine)
                     self._sunshine_20.append(sunshine)
                     self._sunshine_30.append(sunshine)
                     self._sunshine_60.append(sunshine)
                     pkt['sunshine'] = sunshine
+                    pkt['sunshineOriginal'] = sunshineOriginal
                     pkt['sunshine_avg10m'] = self._avg_Deque(self._sunshine_10)
                     pkt['sunshine_avg20m'] = self._avg_Deque(self._sunshine_20)
                     pkt['sunshine_avg30m'] = self._avg_Deque(self._sunshine_30)
                     pkt['sunshine_avg60m'] = self._avg_Deque(self._sunshine_60)
                     logdbg("Sunshine: %s" % str(pkt['sunshine']))
+                    logdbg("SunshineOriginal: %s" % str(pkt['sunshineOriginal']))
                     logdbg("sunshine_avg10m=%s, len=%d" % (str(self._sunshine_10),len(self._sunshine_10)))
                     logdbg("sunshine_avg20m=%s, len=%d" % (str(self._sunshine_20),len(self._sunshine_20)))
                     logdbg("sunshine_avg30m=%s, len=%d" % (str(self._sunshine_30),len(self._sunshine_30)))

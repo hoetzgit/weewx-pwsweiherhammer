@@ -637,7 +637,7 @@ class pwsWeiherhammerService(StdService):
         solar_heatindex_algo = option_dict['solar_heatindex'].get('algorithm', 'new').lower()
 
         # sunshine threshold related options
-        sunshine_coeff = float(option_dict['sunshineThreshold'].get('coeff', 0.76))
+        sunshine_coeff = float(option_dict['sunshineThreshold'].get('coeff', 0.79))
         sunshine_min = float(option_dict['sunshineThreshold'].get('sunshine_min', 20.0))
         sunshine_debug = to_bool(option_dict['sunshineThreshold'].get('debug', False))
 
