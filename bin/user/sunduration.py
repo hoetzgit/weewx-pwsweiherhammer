@@ -81,9 +81,11 @@ class SunshineDuration(StdService):
 
         # Calculation LOOP sunshineDur is possible
         # Classic Version
+        # packet = event.packet
         loopSunshineDur = 0
         if threshold > 0 and radiation > threshold and radiation > self.radiation_min:
             loopSunshineDur = int(loopInterval)
+            event.packet['sunshineDurTest'] = loopSunshineDur
         self.sunshineDur += loopSunshineDur
         if self.debug:
             logdbg("Added LOOP Interval=%d, based on radiation=%f and threshold=%f. LOOP sunshineDur=%d" % (

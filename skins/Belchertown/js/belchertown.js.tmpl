@@ -1439,9 +1439,9 @@ function update_forecast_data(data) {
                 var forecast_link = '<a href="' + forecast_link_setup + '" target="_blank">$obs.label.daily_forecast</a>';
 
                 //20220227,ho
-                var windDirDEG = data[(forecast_interval)][0]["response"][0]["periods"][i]["windDirDEG"];
-                var windDir = data[(forecast_interval)][0]["response"][0]["periods"][i]["windDir"];
-                var pressureMB = data[(forecast_interval)][0]["response"][0]["periods"][i]["pressureMB"];
+                var windDirDEG = data[(forecast_interval)][0]["response"][0]["periods"][i]["windDirDEG"] || 0;
+                var windDir = data[(forecast_interval)][0]["response"][0]["periods"][i]["windDir"] || 0;
+                var pressureMB = data[(forecast_interval)][0]["response"][0]["periods"][i]["pressureMB"] || 0;
 
                 forecast_row.push({
                     "weekday": weekday,
@@ -1502,6 +1502,13 @@ function update_forecast_data(data) {
                     output_html += parseFloat(forecast_row[i]["avgTemp"]).toFixed(0) + '&deg;</div>';
                     output_html += '</div>';
                     //  output_html += '<br>';
+
+                    #if $Extras.has_key("forecast_show_dewpoint") and $Extras.forecast_show_dewpoint == '1'
+                    output_html += '<div class="forecast-dewpoint">';
+                    output_html += '<i class="wi wi-thermometer wi-raindrops rain-precip"></i> <span>' + parseFloat(forecast_row[i]["dewPoint"]).toFixed(0) + '&deg;</span>';
+                    output_html += '</div>';
+                    #end if
+
                     output_html += '<div class="forecast-precip">';
                     #if $Extras.has_key("forecast_show_humidity_dewpoint") and $Extras.forecast_show_humidity_dewpoint == '1'
                     output_html += '<div><i class="wi wi-humidity rain-precip"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span></div>';
@@ -1520,18 +1527,28 @@ function update_forecast_data(data) {
                     }
                     output_html += '</div>';
 
+                    #if $Extras.has_key("forecast_show_humidity") and $Extras.forecast_show_humidity == '1'
+                    output_html += '<div class="forecast-humidity">';
+                    output_html += '<i class="wi wi-humidity rain-precip"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span>';
+                    output_html += '</div>';
+                    #end if
+
                     output_html += '<div class="forecast-wind" title="' + '$unit.label.windSpeed' + '">';
                     //20220225,ho output_html += '<i class="wi wi-strong-wind"></i> <span>' + parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span>';
                     output_html += '<i class="wi wi-strong-wind"></i> <span>'+ parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span>|<span>' + parseFloat(forecast_row[i]["windGust"]).toFixed(0) + '</span>';        
                     output_html += '</div>';
 
-                    output_html += '<div class="forecast-wind">';
+                    #if $Extras.has_key("forecast_show_winddirdeg") and $Extras.forecast_show_winddirdeg == '1'
+                    output_html += '<div class="forecast-winddirdeg">';
                     output_html += '<i class="wi wi-wind wi-from-n" style="transform:rotate(' + parseFloat(forecast_row[i]["windDirDEG"]).toFixed(0) + 'deg);font-size:30px"></i> <span style="font-size:12px">' + forecast_row[i]["windDir"] + '</span>';
                     output_html += '</div>';
+                    #end if
 
+                    #if $Extras.has_key("forecast_show_pressure") and $Extras.forecast_show_pressure == '1'
                     output_html += '<div class="forecast-pressure" title="' + '$unit.label.barometer' + '">';
-                    output_html += '<i class="wi wi-barometer"></i><span>' + parseFloat(forecast_row[i]["pressureMB"]).toFixed(0) + '</span>';
+                    output_html += '<i class="wi wi-barometer"></i> <span>' + parseFloat(forecast_row[i]["pressureMB"]).toFixed(0) + '</span>';
                     output_html += '</div>';
+                    #end if
 
                     #if $Extras.has_key("forecast_show_daily_forecast_link") and $Extras.forecast_show_daily_forecast_link == '1'
                     output_html += forecast_row[i]["forecast_link"];
@@ -1564,6 +1581,13 @@ function update_forecast_data(data) {
                     output_html += '</div>';
                     output_html += '<span class="forecast-high">' + parseFloat(forecast_row[i]["minTemp"]).toFixed(0) + '&deg;</span> | <span class="forecast-low">' + parseFloat(forecast_row[i]["maxTemp"]).toFixed(0) + '&deg;</span>';
                     output_html += '<br>';
+
+                    #if $Extras.has_key("forecast_show_dewpoint") and $Extras.forecast_show_dewpoint == '1'
+                    output_html += '<div class="forecast-dewpoint">';
+                    output_html += '<i class="wi wi-thermometer wi-raindrops rain-precip"></i> <span>' + parseFloat(forecast_row[i]["dewPoint"]).toFixed(0) + '&deg;</span>';
+                    output_html += '</div>';
+                    #end if
+
                     output_html += '<div class="forecast-precip">';
                     #if $Extras.has_key("forecast_show_humidity_dewpoint") and $Extras.forecast_show_humidity_dewpoint == '1'
                     output_html += '<i class="wi wi-humidity rain-precip"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span> | ';
@@ -1581,17 +1605,27 @@ function update_forecast_data(data) {
                     }
                     output_html += '</div>';
 
+                    #if $Extras.has_key("forecast_show_humidity") and $Extras.forecast_show_humidity == '1'
+                    output_html += '<div class="forecast-humidity">';
+                    output_html += '<i class="wi wi-humidity rain-precip"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span>';
+                    output_html += '</div>';
+                    #end if
+
                     output_html += '<div class="forecast-wind">';
                     output_html += '<i class="wi wi-strong-wind"></i> <span>' + parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span> | <span> ' + parseFloat(forecast_row[i]["windGust"]).toFixed(0) + '$unit.label.windSpeed' + '</span>';
                     output_html += '</div>';
 
-                    output_html += '<div class="forecast-wind">';
+                    #if $Extras.has_key("forecast_show_winddirdeg") and $Extras.forecast_show_winddirdeg == '1'
+                    output_html += '<div class="forecast-winddirdeg">';
                     output_html += '<i class="wi wi-wind wi-from-n" style="transform:rotate(' + parseFloat(forecast_row[i]["windDirDEG"]).toFixed(0) + 'deg);font-size:30px"></i> <span>' + forecast_row[i]["windDir"] + '</span>';
                     output_html += '</div>';
+                    #end if
 
+                    #if $Extras.has_key("forecast_show_pressure") and $Extras.forecast_show_pressure == '1'
                     output_html += '<div class="forecast-pressure">';
                     output_html += '<i class="wi wi-barometer"></i> <span>' + parseFloat(forecast_row[i]["pressureMB"]).toFixed(0) + '$unit.label.barometer' + '</span>';
                     output_html += '</div>';
+                    #end if
 
                     #if $Extras.has_key("forecast_show_daily_forecast_link") and $Extras.forecast_show_daily_forecast_link == '1'
                     output_html += forecast_row[i]["forecast_link"];
@@ -2144,42 +2178,31 @@ function update_current_wx(data) {
         }
        jQuery(".current-sunshine-symbol").html(sun_output);
     }
-
     // avg10m Symbols
     avg10m_output = '';
-    if (data.hasOwnProperty("radiation")) {
-        if (parseFloat(data["radiation"]) > 20.0) {
-            if (data.hasOwnProperty("sunshine")) {
-                if (parseInt(data["sunshine"]) > 0) {
-                    avg10m_output += ' <i class="fa fa-sun-o"></i>';
-                }
-            }
-            if (avg10m_output.trim() == '') {
-                if (data.hasOwnProperty("sunshine_avg10m")) {
-                    if (parseFloat(data["sunshine_avg10m"]) > 0.0) {
-                        avg10m_output += ' <i class="fa fa-sun-o"></i>';
-                    }
-                }
-            }
-            if (data.hasOwnProperty("sunshine_avg10m")) {
-               if (parseFloat(data["sunshine_avg10m"]) < 1.0) {
-                   avg10m_output += ' <i class="fa fa-cloud"></i>';
-               }
+    if ((data.hasOwnProperty("radiation")) && (parseFloat(data["radiation"]) > 20.0)) {
+        if (data.hasOwnProperty("sunshine_avg10m")) {
+            sunshine_avg10m = parseFloat(data["sunshine_avg10m"]);
+            if ((sunshine_avg10m > 0.0) && (sunshine_avg10m < 1.0)) {
+                avg10m_output = '<i class="wi wi-day-cloudy"></i>';
+            } else if (sunshine_avg10m = 0.0) {
+                avg10m_output = '<i class="wi wi-cloudy"></i>';
+            } else if (sunshine_avg10m = 1.0) {
+                avg10m_output = '<i class="wi wi-day-sunny"></i>';
             }
         }
     }
     if (data.hasOwnProperty("raining_avg10m")) {
         if (parseFloat(data["raining_avg10m"]) > 0.0) {
-            avg10m_output += ' <i class="fa fa-tint"></i>';
+            avg10m_output = '<i class="wi wi-rain"></i>';
         }
     }
     if (data.hasOwnProperty("thunderstorm_avg10m")) {
         if (parseFloat(data["thunderstorm_avg10m"]) > 0.0) {
-            avg10m_output += ' <i class="fa fa-bolt"></i>';
+            avg10m_output = '<i class="wi wi-lightning"></i>';
         }
     }
-    jQuery(".avg10m-obs-symbols").html(avg10m_output.trim());
-
+    jQuery(".avg10m-obs-symbols").html(avg10m_output);
 };
 #end if
 
