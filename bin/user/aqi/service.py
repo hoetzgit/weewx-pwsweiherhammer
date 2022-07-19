@@ -3,7 +3,6 @@
 # License: GPL 3
 
 import sys
-import syslog
 import time
 
 import weeutil.weeutil
@@ -23,6 +22,37 @@ except ImportError:
     from urlparse import urlparse
 from weeutil.weeutil import to_bool
 import json
+
+try:
+    # Test for new-style weewx logging by trying to import weeutil.logger
+    import weeutil.logger
+    import logging
+    log = logging.getLogger(__name__)
+
+    def logdbg(msg):
+        log.debug(msg)
+
+    def loginf(msg):
+        log.info(msg)
+
+    def logerr(msg):
+        log.error(msg)
+
+except ImportError:
+    # Old-style weewx logging
+    import syslog
+
+    def logmsg(level, msg):
+        syslog.syslog(level, 'AqiService: %s' % msg)
+
+    def logdbg(msg):
+        logmsg(syslog.LOG_DEBUG, msg)
+
+    def loginf(msg):
+        logmsg(syslog.LOG_INFO, msg)
+
+    def logerr(msg):
+        logmsg(syslog.LOG_ERR, msg)
 
 schema = [
     ('dateTime', 'INTEGER NOT NULL PRIMARY KEY'),
@@ -174,11 +204,11 @@ class AqiService(weewx.engine.StdService):
         self.mqtt_qos = int(mqtt_config_dict.get('qos',0))
         self.mqtt_retain = to_bool(mqtt_config_dict.get('retain',False))
         if self.mqtt_enable:
-            syslog.syslog(syslog.LOG_DEBUG, "AqiService: MQTT is enabled.")
-            #syslog.syslog(syslog.LOG_DEBUG, "AqiService: MQTT server: %s" % self.mqtt_server_url)
-            #syslog.syslog(syslog.LOG_DEBUG, "AqiService: MQTT topic: %s" % self.mqtt_topic)
+            logdbg("MQTT is enabled.")
+            #logdbg("MQTT server: %s" % self.mqtt_server_url)
+            #logdbg("MQTT topic: %s" % self.mqtt_topic)
         else:
-            syslog.syslog(syslog.LOG_DEBUG, "AqiService: MQTT is disabled.")
+            logdbg("MQTT is disabled.")
 
     def _publish_data_to_mqtt(self, record):
         """ Publish archive record to MQTT Message Broker """
@@ -186,19 +216,19 @@ class AqiService(weewx.engine.StdService):
             url = urlparse(self.mqtt_server_url)
             #create client object
             mqttclient = paho.Client(self.mqtt_client_id)
-            #syslog.syslog(syslog.LOG_DEBUG, "AqiService: MQTT initialized.")
+            #logdbg("MQTT initialized.")
 
             #connect broker
             mqttclient.connect(url.hostname, url.port)
-            #syslog.syslog(syslog.LOG_DEBUG, "AqiService: MQTT connected.")
+            #logdbg("MQTT connected.")
 
             res = mqttclient.publish(self.mqtt_topic, json.dumps(record), retain=self.mqtt_retain, qos=int(self.mqtt_qos))
-            syslog.syslog(syslog.LOG_DEBUG, "AqiService: MQTT data published with status: %s" % str(res))
+            #logdbg("MQTT data published with status: %s" % str(res))
 
             mqttclient.disconnect()
-            #syslog.syslog(syslog.LOG_DEBUG, "AqiService: MQTT disconnected.")
+            #logdbg("MQTT disconnected.")
         except Exception as e:
-            syslog.syslog(syslog.LOG_ERR, "AqiService: MQTT Error publishing to broker: %s" % e)
+            logerr("MQTT Error publishing to broker: %s" % e)
 
     def _get_polution_sensor_columns(self):
         '''Returns a mapping from canonical to configured column names. If a
@@ -293,6 +323,7 @@ class AqiService(weewx.engine.StdService):
         sql += ' FROM %s WHERE %s >= ? AND %s <= ? ORDER BY %s ASC' % (self.sensor_dbm.table_name,
             self.sensor_epoch_seconds_column, self.sensor_epoch_seconds_column,
             self.sensor_epoch_seconds_column)
+        #logdbg("SQL1: %s --Start: %s Ende: %s" % (sql, str(start_time),str(end_time)))
         pollutant_observations = self.sensor_dbm.genSql(sql, (start_time, end_time))
 
         # query the weather sensors
@@ -316,6 +347,7 @@ class AqiService(weewx.engine.StdService):
                 self.sensor_epoch_seconds_column,
                 self.sensor_epoch_seconds_column,
                 self.sensor_epoch_seconds_column)
+            #logdbg("SQL2: %s --Start: %s Ende: %s" % (sql, str(start_time),str(end_time)))
             weather_observations = self.sensor_dbm.genSql(sql, (start_time, end_time))
         else:
             # We can't get the weather data from the air sensor, so use the main sensor instead
@@ -332,6 +364,7 @@ class AqiService(weewx.engine.StdService):
                 sql += real_col + ' AS ' + as_col
                 first = False
             sql += ' FROM archive WHERE dateTime >= ? AND dateTime <= ? ORDER BY dateTime ASC'
+            #logdbg("SQL3: %s --Start: %s Ende: %s" % (sql, str(start_time),str(end_time)))
             weather_observations = self.weather_dbm.genSql(sql, (start_time, end_time))
 
         # we need to be able to map back to underlying column for unit conversion
@@ -364,7 +397,7 @@ class AqiService(weewx.engine.StdService):
                     else:
                         temp_kelvin = weewx.units.CtoK(weewx.units.FtoC(row['outTemp']))
             except TypeError:
-                syslog.syslog(syslog.LOG_WARNING, "AqiService: outTemp is missing, some AQIs may be skipped")
+                logerr("outTemp is missing, some AQIs may be skipped")
 
             # convert pressure to pascals
             pressure_unit = get_unit_from_column(as_column_to_real_column['pressure'], row['weather_usUnits'])
@@ -374,7 +407,7 @@ class AqiService(weewx.engine.StdService):
                     press_kilopascals = weewx.units.conversionDict[pressure_unit]['hPa'](press_kilopascals)
                 press_kilopascals /= 10
             except TypeError:
-                syslog.syslog(syslog.LOG_WARNING, "AqiService: pressure is missing, some AQIs may be skipped")
+                logerr("pressure is missing, some AQIs may be skipped")
 
             for (pollutant, required_unit) in list(self.aqi_standard.get_pollutants().items()):
                 if pollutant in row:
@@ -382,13 +415,13 @@ class AqiService(weewx.engine.StdService):
                     try:
                         obs_unit = get_unit_from_column(as_column_to_real_column[pollutant], row['usUnits'])
                     except KeyError:
-                        syslog.syslog(syslog.LOG_WARNING, "AqiService: AQI calculation could not find unit for column %s, assuming %s" \
+                        logerr("AQI calculation could not find unit for column %s, assuming %s" \
                             % (as_column_to_real_column[pollutant], required_unit))
                         obs_unit = required_unit
                     try:
                         joined[i][pollutant] = units.convert_pollutant_units(pollutant, row[pollutant], obs_unit, required_unit, temp_kelvin, press_kilopascals)
                     except TypeError:
-                        syslog.syslog(syslog.LOG_WARNING, "AqiService: Could not convert %s from %s units to %s units (%f %s, %f K, %f kPa)" \
+                        logerr("Could not convert %s from %s units to %s units (%f %s, %f K, %f kPa)" \
                             % (pollutant, obs_unit, required, row[pollutant], obs_unit, required_unit, temp_kelvin, press_kilopascals))
                         joined[i][pollutant] = None
 
@@ -406,7 +439,7 @@ class AqiService(weewx.engine.StdService):
                     (record['aqi_' + pollutant], record['aqi_' + pollutant + '_category']) = \
                         self.aqi_standard.calculate_aqi(pollutant, required_unit, joined)
                 except ValueError as e:
-                    syslog.syslog(syslog.LOG_ERR, "AqiService: %s AQI calculation for %s on %s failed: %s" % (type(e).__name__, pollutant, event.record['dateTime'], str(e)))
+                    logerr("%s AQI calculation for %s on %s failed: %s" % (type(e).__name__, pollutant, event.record['dateTime'], str(e)))
                 except NotImplementedError as e:
                     # Canada's AQHI does not define indcies for individual pollutants
                     pass
@@ -417,14 +450,14 @@ class AqiService(weewx.engine.StdService):
                 (record['aqi_composite'], record['aqi_composite_category']) = \
                     self.aqi_standard.calculate_composite_aqi(self.aqi_standard.get_pollutants(), joined)
             except (ValueError, TypeError) as e:
-                syslog.syslog(syslog.LOG_ERR, "AqiService: %s AQI calculation for composite on %s failed: %s" % (type(e).__name__, event.record['dateTime'], str(e)))
+                logerr("%s AQI calculation for composite on %s failed: %s" % (type(e).__name__, event.record['dateTime'], str(e)))
 
         if len(record) > 4:
             self.aqi_dbm.addRecord(record)
             if self.mqtt_enable:
                 self._publish_data_to_mqtt(record)
         else:
-            syslog.syslog(syslog.LOG_ERR, "AqiService: not storing record for dateTime %d" % (now))
+            logerr("not storing record for dateTime %d" % (now))
 
 
 class AqiSearchList(weewx.cheetahgenerator.SearchList):

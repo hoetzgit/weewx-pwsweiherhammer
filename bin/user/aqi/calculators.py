@@ -4,7 +4,37 @@
 
 from abc import ABCMeta, abstractmethod
 import operator
-import syslog
+
+try:
+    # Test for new-style weewx logging by trying to import weeutil.logger
+    import weeutil.logger
+    import logging
+    log = logging.getLogger(__name__)
+
+    def logdbg(msg):
+        log.debug(msg)
+
+    def loginf(msg):
+        log.info(msg)
+
+    def logerr(msg):
+        log.error(msg)
+
+except ImportError:
+    # Old-style weewx logging
+    import syslog
+
+    def logmsg(level, msg):
+        syslog.syslog(level, 'AqiService: %s' % msg)
+
+    def logdbg(msg):
+        logmsg(syslog.LOG_DEBUG, msg)
+
+    def loginf(msg):
+        logmsg(syslog.LOG_INFO, msg)
+
+    def logerr(msg):
+        logmsg(syslog.LOG_ERR, msg)
 
 from six import with_metaclass
 
@@ -165,7 +195,7 @@ class AqiCalculator(with_metaclass(ABCMeta)):
                 clean_observations[j] = (observations[i]['dateTime'], self.data_cleaner(observations[i][pollutant]))
                 j += 1
             except TypeError as e:
-                syslog.syslog(syslog.LOG_WARNING, "%s at %d threw exception %s" % (pollutant, observations[i]['dateTime'], str(e)))
+                logerr("%s at %d threw exception %s" % (pollutant, observations[i]['dateTime'], str(e)))
         observations = clean_observations[:j]
 
         # validate observations
