@@ -1,0 +1,54 @@
+# Edit this file to introduce tasks to be run by cron.
+#
+# Each task to run has to be defined through a single line
+# indicating with different fields when the task will be run
+# and what command to run for the task
+#
+# To define the time you can provide concrete values for
+# minute (m), hour (h), day of month (dom), month (mon),
+# and day of week (dow) or use '*' in these fields (for 'any').
+#
+# Notice that tasks will be started based on the cron's system
+# daemon's notion of time and timezones.
+#
+# Output of the crontab jobs (including errors) is sent through
+# email to the user the crontab file belongs to (unless redirected).
+#
+# For example, you can run a backup of all your user accounts
+# at 5 a.m every week with:
+# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
+#
+# For more information see the manual pages of crontab(5) and cron(8)
+#
+# m h dom mon dow command
+10      *   * * * /usr/sbin/ntpdate ptbtime1.ptb.de ptbtime2.ptb.de >/dev/null 2>&1
+0       */4 * * * /bin/bash /usr/local/bin/backup_host.sh >/var/log/weewx/backup_host.log 2>&1
+0,20,40 *   * * * /bin/bash /usr/local/bin/backup_db_weewx.sh >/var/log/weewx/backup_db_weewx.log 2>&1
+#
+# Webcam/AllSky to Website
+*/1 * * * * /bin/bash /usr/local/bin/create_allsky_weather_data.sh >/dev/null 2>&1
+*/1 * * * * /bin/bash /usr/local/bin/copy_allsky_image_to_belchertown.sh  >/dev/null 2>&1
+*/1 * * * * /bin/bash /usr/local/bin/copy_webcam_image_to_belchertown.sh  >/dev/null 2>&1
+#
+# DWD Forecast and Warnings
+0,15,30,45 * * * * /bin/bash /usr/local/bin/weewx-DWD/wget-dwd >/var/log/weewx/wget-dwd.log 2>&1
+0,15,30,45 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-cap-warnings --config=/home/weewx/weewx.conf --resolution=county --verbose >/var/log/weewx/dwd-cap-warnings-county.log 2>&1
+0,15,30,45 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-cap-warnings --config=/home/weewx/weewx.conf --resolution=city --verbose >/var/log/weewx/dwd-cap-warnings-city.log 2>&1
+#
+# DWD original dwd-mosmix
+#2,12,22,32,42,52 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx.conf --verbose --database --belchertown  10688 >/var/log/weewx/dwd-mosmix-belchertown-10688.log 2>&1
+#1,16,31,46       * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx.conf --verbose --html --daily --hide-placemark 10688 >/var/log/weewx/dwd-mosmix-html-daily-10688.log 2>&1
+#1,16,31,46       * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx.conf --verbose --html --hourly --hide-placemark 10688 >/var/log/weewx/dwd-mosmix-html-hourly-10688.log 2>&1
+#
+# DWD dwd-pwsWeiherhammer
+2,12,22,32,42,52 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --database --belchertown  10688 >/var/log/weewx/dwd-pwsWeiherhammer-belchertown-10688.log 2>&1
+#2,12,22,32,42,52 * * * * sleep 5; /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --html --daily --hide-placemark 10688 >/var/log/weewx/dwd-pwsWeiherhammer-html-daily-10688.log 2>&1
+#2,12,22,32,42,52 * * * * sleep 10; /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --html --hourly --hide-placemark 10688 >/var/log/weewx/dwd-pwsWeiherhammer-html-hourly-10688.log 2>&1
+#
+# API to MQTT
+*/1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_aeris_airquality.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_aeris_airquality.log 2>&1
+*/1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_owm_airquality.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_owm_airquality.log 2>&1
+*/1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_uba_airquality.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_uba_airquality.log 2>&1
+*/1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_luftdaten_airquality.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_luftdaten_airquality.log 2>&1
+*/1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_luftdaten_airquality_local.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_luftdaten_airquality_local.log 2>&1
+*/1 * * * * sleep 30; /usr/bin/python3 /usr/local/bin/weewx-API/api_luftdaten_airquality_local.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_luftdaten_airquality_local.log 2>&1

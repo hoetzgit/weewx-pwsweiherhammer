@@ -1,0 +1,57 @@
+#!/bin/bash
+# Herunterladen von Dateien beim Deutschen Wetterdienst
+# Copyright (C) 2021 Johanna Roedenbeck
+# licensed under the terms of the General Public License (GPL) v3
+
+# vom Benutzer anzupassen
+
+# URLs der herunterzuladenden Dateien beim DWD
+# (muss ggf. an das eigene Bundesland angepasst werden)
+DWD_URL="https://opendata.dwd.de/weather/text_forecasts/html"
+#DWD_BUNDESLAND="DWLG"
+DWD_BUNDESLAND="DWMG"
+DWD_MAP="https://www.dwd.de/DWD/wetter/wv_spez/hobbymet/wetterkarten/bwk_bodendruck_na_ana.png"
+DWD_MAP2="https://www.dwd.de/DWD/wetter/wv_spez/hobbymet/wetterkarten/bwk_bodendruck_weu_ana.png"
+#DWD_WARN="https://www.dwd.de/DWD/warnungen/warnstatus/SchilderLZ.jpg"
+DWD_WARN="https://www.dwd.de/DWD/warnungen/warnstatus/SchilderMS.jpg"
+DWD_WARNJ="https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json"
+
+# Log-Datei
+LOG_FN="/var/log/weewx/wget-dwd.log"
+
+# Zielpfad zum Speichern der Dateien
+# (Das Verzeichnis muss vorher vom Benutzer angelegt werden.)
+# PTH="/etc/weewx/skins/Belchertown/dwd"
+PTH="/home/weewx/skins/Belchertown/dwd"
+
+# Ende des vom Benutzer anzupassenden Bereichs
+
+# Programm zum Herunterladen
+WGET="/usr/bin/wget"
+TOUCH="/usr/bin/touch"
+TMP="/tmp/wget-dwd.tmp"
+
+# Logdatei loeschen
+#/bin/rm "$LOG_FN" 2>/dev/null
+
+# Herunterladen der Vorhersage-Dateien und Zeichensatz konvertieren
+for i in 50 51 52 53 54; do
+
+  FN="VHDL${i}_${DWD_BUNDESLAND}_LATEST"
+  $WGET -a "$LOG_FN" -O "${TMP}" "$DWD_URL/${FN}_html"
+  if [ "$?" -eq 0 ]; then
+    #/usr/bin/dos2unix "${TMP}"
+    #sed -i 's/.$/<br>/' "${TMP}"
+    #sed -e 's/^M$//' "${TMP}"
+    /usr/local/bin/weewx-DWD/html2ent.ansi <"${TMP}" >"$PTH/$FN.html"
+    $TOUCH -r "${TMP}" "$PTH/$FN.html"
+    rm "${TMP}"
+  fi
+
+done
+
+# Herunterladen der uebrigen Dateien
+$WGET -a "$LOG_FN" -O "$PTH/${DWD_MAP##*/}" $DWD_MAP
+$WGET -a "$LOG_FN" -O "$PTH/${DWD_MAP2##*/}" $DWD_MAP2
+$WGET -a "$LOG_FN" -O "$PTH/${DWD_WARN##*/}" $DWD_WARN
+$WGET -a "$LOG_FN" -O "$PTH/${DWD_WARNJ##*/}" $DWD_WARNJ
