@@ -34,6 +34,10 @@
         <td class="data">$day.lightning_distance.min</td>
       </tr>
       <tr>
+        <td class="label">$gettext("Lightning distance avg")</td>
+        <td class="data">$day.lightning_distance.avg</td>
+      </tr>
+      <tr>
         <td class="label">$gettext("Lightning distance max")</td>
         <td class="data">$day.lightning_distance.max</td>
       </tr>

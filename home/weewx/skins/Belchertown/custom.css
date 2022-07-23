@@ -1,9 +1,3 @@
-/* forecast */
-
-.dark .forecastweekend {
-    color: orange;
-}
-
 /* Temperature */
 
 .stn-high-low, .dark .stn-high-low {
@@ -171,6 +165,11 @@ sup, sub {
 sub { top: 0.4em; }
 
 /* forecast */
+
+.dark .forecastweekend {
+    color: orange;
+}
+
 .forecast-pressure, .forecast-dewpoint, .forecast-humidity, .forecast-winddirdeg{
     font-size:15px;
 }
