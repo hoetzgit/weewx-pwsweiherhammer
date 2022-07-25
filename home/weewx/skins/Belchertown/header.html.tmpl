@@ -27,7 +27,7 @@
 #end if
 
 #if $obs.label.html_title != "" 
-    #if $page == "home"
+    #if $page == "home" or $page == "kiosk"
         #set $head_title = $obs.label.html_title
     #else if $page == "forecast"
         #set $head_title = $obs.label.html_title_forecast
@@ -53,7 +53,7 @@
 #end if
 
 #if $obs.label.html_description != "" 
-    #if $page == "home"
+    #if $page == "home" or $page == "kiosk"
         #set $head_desc = $obs.label.html_description
     #else if $page == "forecast"
         #set $head_desc = $obs.label.html_description_forecast
@@ -132,7 +132,7 @@
         <link rel='stylesheet' href='$relative_url/style.min.css?ver=#echo int( time.time() ) #' type='text/css' media='all' id="belchertownStyle" />
         <link rel='stylesheet' href='$relative_url/belchertown-dark.min.css?ver=#echo int( time.time() ) #' type='text/css' media='all' id="belchertownDarkStyle" />
         #if $page == "kiosk"
-        <link rel='stylesheet' href='$relative_url/kiosk.css?ver=#echo int( time.time() ) #' type='text/css' media='all' id="belchertownCustomStyle" />
+        <link rel='stylesheet' href='$relative_url/kiosk.css?ver=#echo int( time.time() ) #' type='text/css' media='all' id="belchertownKioskStyle" />
         #end if
         #if $custom_css_exists
         <link rel='stylesheet' href='$relative_url/custom.css?ver=#echo int( time.time() ) #' type='text/css' media='all' id="belchertownCustomStyle" />

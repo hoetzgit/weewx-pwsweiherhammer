@@ -1483,25 +1483,22 @@ function update_forecast_data(data) {
                     }
                     output_html += '<span id="weekday">' + forecast_time(i, forecast_interval, forecast_row[i]["weekday"]) + '</span>';
                     output_html += '<br>';
-                    output_html += '<div class="forecast-conditions"';
-                    #if $Extras.has_key("forecast_show_humidity_dewpoint") and $Extras.forecast_show_humidity_dewpoint > '0'
-                    output_html += ' style="min-height:155px">'
-                    output_html += '<div class="forecast-temp-graph" style="padding-top:';
-                    //  padding = ( ( highTemp - forecast_row[i]["avgTemp"] = offset ) * 76 / ( rangeTemp) ) where 100 ~ max calculated space available for padding
-                    output_html += parseInt((highTemp - forecast_row[i]["avgTemp"] + offset) * 76 / (rangeTemp)) + 'px';
-                    output_html += '; height:155px">'
-                    #else
-                    output_html += '>'
+
+                    #if $Extras.has_key("forecast_show_conditions") and $Extras.forecast_show_conditions == '1'
+                    output_html += '<div class="forecast-conditions"</div>';
+                    #end if
+
+                    #if $Extras.has_key("forecast_show_temperature") and $Extras.forecast_show_temperature == '1'
                     output_html += '<div class="forecast-temp-graph" style="padding-top:';
                     //  padding = ( ( highTemp - forecast_row[i]["avgTemp"] = offset ) * 100 / ( rangeTemp) ) where 100 ~ max calculated space available for padding
                     output_html += parseInt((highTemp - forecast_row[i]["avgTemp"] + offset) * 100 / (rangeTemp)) + 'px">';
-                    #end if
                     output_html += '<div class="forecast-image">';
                     output_html += '<img id="icon" src="' + forecast_row[i]["image_url"] + '" alt="Vorhersagesymbol ' + forecast_row[i]["weekday"] + '">';
                     output_html += '</div>';
                     output_html += parseFloat(forecast_row[i]["avgTemp"]).toFixed(0) + '&deg;</div>';
                     output_html += '</div>';
-                    //  output_html += '<br>';
+                    #end if
+
 
                     #if $Extras.has_key("forecast_show_dewpoint") and $Extras.forecast_show_dewpoint == '1'
                     output_html += '<div class="forecast-dewpoint">';
@@ -1509,12 +1506,8 @@ function update_forecast_data(data) {
                     output_html += '</div>';
                     #end if
 
+                    #if $Extras.has_key("forecast_show_pop") and $Extras.forecast_show_pop == '1'
                     output_html += '<div class="forecast-precip">';
-                    #if $Extras.has_key("forecast_show_humidity_dewpoint") and $Extras.forecast_show_humidity_dewpoint == '1'
-                    output_html += '<div><i class="wi wi-humidity rain-precip"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span></div>';
-                    #elif $Extras.has_key("forecast_show_humidity_dewpoint") and $Extras.forecast_show_humidity_dewpoint == '2'
-                    output_html += '<div><i class="wi wi-raindrops rain-precip"></i> <span>' + parseFloat(forecast_row[i]["dewPoint"]).toFixed(0) + '&deg;</span></div>';
-                    #end if
                     if (forecast_row[i]["snow_depth"] > 0) {
                         output_html += '<div class="snow-precip">';
                         // output_html += '<img src="'+get_relative_url()+'/images/snowflake-icon-15px.png"> <span>';
@@ -1526,6 +1519,7 @@ function update_forecast_data(data) {
                         output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-no-precip"></i> <span>0%</span>';
                     }
                     output_html += '</div>';
+                    #end if
 
                     #if $Extras.has_key("forecast_show_humidity") and $Extras.forecast_show_humidity == '1'
                     output_html += '<div class="forecast-humidity">';
@@ -1533,10 +1527,12 @@ function update_forecast_data(data) {
                     output_html += '</div>';
                     #end if
 
+                    #if $Extras.has_key("forecast_show_windspeed") and $Extras.forecast_show_windspeed == '1'
                     output_html += '<div class="forecast-wind" title="' + '$unit.label.windSpeed' + '">';
                     //20220225,ho output_html += '<i class="wi wi-strong-wind"></i> <span>' + parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span>';
                     output_html += '<i class="wi wi-strong-wind"></i> <span>'+ parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span>|<span>' + parseFloat(forecast_row[i]["windGust"]).toFixed(0) + '</span>';        
                     output_html += '</div>';
+                    #end if
 
                     #if $Extras.has_key("forecast_show_winddirdeg") and $Extras.forecast_show_winddirdeg == '1'
                     output_html += '<div class="forecast-winddirdeg">';
@@ -1574,13 +1570,19 @@ function update_forecast_data(data) {
                     }
                     output_html += '<span id="weekday">' + forecast_time(i, forecast_interval, forecast_row[i]["weekday"]) + '</span>';
                     output_html += '<br>';
+
+                    #if $Extras.has_key("forecast_show_conditions") and $Extras.forecast_show_conditions == '1'
                     output_html += '<div class="forecast-conditions">';
                     output_html += '<img id="icon" src="' + forecast_row[i]["image_url"] + '" alt="Vorhersagesymbol ' + forecast_row[i]["weekday"] + '">';
                     output_html += '<br>';
                     output_html += '<span class="forecast-condition-text">' + forecast_row[i]["condition_text"] + '</span>';
                     output_html += '</div>';
+                    #end if
+
+                    #if $Extras.has_key("forecast_show_temperature") and $Extras.forecast_show_temperature == '1'
                     output_html += '<span class="forecast-high">' + parseFloat(forecast_row[i]["minTemp"]).toFixed(0) + '&deg;</span> | <span class="forecast-low">' + parseFloat(forecast_row[i]["maxTemp"]).toFixed(0) + '&deg;</span>';
                     output_html += '<br>';
+                    #end if
 
                     #if $Extras.has_key("forecast_show_dewpoint") and $Extras.forecast_show_dewpoint == '1'
                     output_html += '<div class="forecast-dewpoint">';
@@ -1588,12 +1590,8 @@ function update_forecast_data(data) {
                     output_html += '</div>';
                     #end if
 
+                    #if $Extras.has_key("forecast_show_pop") and $Extras.forecast_show_pop == '1'
                     output_html += '<div class="forecast-precip">';
-                    #if $Extras.has_key("forecast_show_humidity_dewpoint") and $Extras.forecast_show_humidity_dewpoint == '1'
-                    output_html += '<i class="wi wi-humidity rain-precip"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span> | ';
-                    #elif $Extras.has_key("forecast_show_humidity_dewpoint") and $Extras.forecast_show_humidity_dewpoint == '2'
-                    output_html += '<i class="wi wi-raindrops rain-precip"></i> <span>' + parseFloat(forecast_row[i]["dewPoint"]).toFixed(0) + '&deg;</span> | ';
-                    #end if
                     if (forecast_row[i]["snow_depth"] > 0) {
                         output_html += '<div class="snow-precip">';
                         output_html += '<img src="' + get_relative_url() + '/images/snowflake-icon-15px.png"> <span>' + parseFloat(forecast_row[i]["snow_depth"]).toFixed(0) + '<span> ' + forecast_row[i]["snow_unit"];
@@ -1604,6 +1602,7 @@ function update_forecast_data(data) {
                         output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-no-precip"></i> <span>0%</span>';
                     }
                     output_html += '</div>';
+                    #end if
 
                     #if $Extras.has_key("forecast_show_humidity") and $Extras.forecast_show_humidity == '1'
                     output_html += '<div class="forecast-humidity">';
@@ -1611,9 +1610,11 @@ function update_forecast_data(data) {
                     output_html += '</div>';
                     #end if
 
+                    #if $Extras.has_key("forecast_show_windspeed") and $Extras.forecast_show_windspeed == '1'
                     output_html += '<div class="forecast-wind">';
                     output_html += '<i class="wi wi-strong-wind"></i> <span>' + parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span> | <span> ' + parseFloat(forecast_row[i]["windGust"]).toFixed(0) + '$unit.label.windSpeed' + '</span>';
                     output_html += '</div>';
+                    #end if
 
                     #if $Extras.has_key("forecast_show_winddirdeg") and $Extras.forecast_show_winddirdeg == '1'
                     output_html += '<div class="forecast-winddirdeg">';

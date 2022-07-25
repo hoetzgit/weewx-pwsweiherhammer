@@ -207,21 +207,21 @@
                                             <span class="aqi_location_outer"><br>$aqi_location</span>
                                             #end if
                                         </div>
-                                        #else
-                                        <div class="stn-high-low station-observations">
-                                            <table class="stn-high-low-table">
-                                                <tbody>
-                                                    <tr>
-                                                        <td class="stn-high-low-table-title">$obs.label.inTemp</td>
-                                                        <td class="stn-high-low-table-title border-left">$obs.label.inHumidity</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td><span class="inTemp">$current.inTemp</span></td>
-                                                        <td class="border-left"><span class="inHumidity">$current.inHumidity</span></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                        ##else
+                                        ##<div class="stn-high-low station-observations">
+                                        ##    <table class="stn-high-low-table">
+                                        ##        <tbody>
+                                        ##            <tr>
+                                        ##                <td class="stn-high-low-table-title">$obs.label.inTemp</td>
+                                        ##                <td class="stn-high-low-table-title border-left">$obs.label.inHumidity</td>
+                                        ##            </tr>
+                                        ##            <tr>
+                                        ##                <td><span class="inTemp">$current.inTemp</span></td>
+                                        ##                <td class="border-left"><span class="inHumidity">$current.inHumidity</span></td>
+                                        ##            </tr>
+                                        ##        </tbody>
+                                        ##    </table>
+                                        ##</div>
                                         #end if
                                     </div>
                                     <div class="col-sm-6">
@@ -297,7 +297,7 @@
                                             </tr>
                                             #if $day.windrun.has_data
                                             <tr>
-                                                <td style="padding-top:5px">$obs.label.windrun</td><td class="dailywindrun" style="padding-top:5px">$day.windrun.sum</td>
+                                                <td class="dailywindrun" colspan="3" style="padding-top:8px">$obs.label.windrun: $day.windrun.sum</td>
                                             </tr>
                                             #end if
                                         </tbody>
