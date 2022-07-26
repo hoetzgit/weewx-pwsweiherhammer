@@ -84,9 +84,95 @@
         "highcharts_homepage_graphgroup": "$Extras.highcharts_homepage_graphgroup",
         "highcharts_decimal": "$Extras.highcharts_decimal",
         "highcharts_thousands": "$Extras.highcharts_thousands",
+        #if $Extras.has_key("current_source_default")
         "current_source_default": "$Extras.current_source_default",
+        #end if
+        #if $Extras.has_key("current_source_alternative")
         "current_source_alternative": "$Extras.current_source_alternative",
-        "current_source_toggle": "$Extras.current_source_toggle"
+        #end if
+        #if $Extras.has_key("current_source_toggle")
+        "current_source_toggle": "$Extras.current_source_toggle",
+        #end if
+        #if $Extras.has_key("forecast_show_conditions")
+        "forecast_show_conditions": "$Extras.forecast_show_conditions",
+        #else
+        "forecast_show_conditions": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_conditions")
+        "forecast_show_temperature": "$Extras.forecast_show_temperature",
+        #else
+        "forecast_show_temperature": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_pop")
+        "forecast_show_pop": "$Extras.forecast_show_pop",
+        #else
+        "forecast_show_pop": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_dewpoint")
+        "forecast_show_dewpoint": "$Extras.forecast_show_dewpoint",
+        #else
+        "forecast_show_dewpoint": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_humidity")
+        "forecast_show_humidity": "$Extras.forecast_show_humidity",
+        #else
+        "forecast_show_humidity": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_windspeed")
+        "forecast_show_windspeed": "$Extras.forecast_show_windspeed",
+        #else
+        "forecast_show_windspeed": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_winddirdeg")
+        "forecast_show_winddirdeg": "$Extras.forecast_show_winddirdeg",
+        #else
+        "forecast_show_winddirdeg": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_pressure")
+        "forecast_show_pressure": "$Extras.forecast_show_pressure",
+        #else
+        "forecast_show_pressure": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_conditions_console")
+        "forecast_show_conditions_console": "$Extras.forecast_show_conditions_console",
+        #else
+        "forecast_show_conditions_console": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_conditions_console")
+        "forecast_show_temperature_console": "$Extras.forecast_show_temperature_console",
+        #else
+        "forecast_show_temperature_console": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_pop_console")
+        "forecast_show_pop_console": "$Extras.forecast_show_pop_console",
+        #else
+        "forecast_show_pop_console": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_dewpoint_console")
+        "forecast_show_dewpoint_console": "$Extras.forecast_show_dewpoint_console",
+        #else
+        "forecast_show_dewpoint_console": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_humidity_console")
+        "forecast_show_humidity_console": "$Extras.forecast_show_humidity_console",
+        #else
+        "forecast_show_humidity_console": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_windspeed_console")
+        "forecast_show_windspeed_console": "$Extras.forecast_show_windspeed_console",
+        #else
+        "forecast_show_windspeed_console": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_winddirdeg_console")
+        "forecast_show_winddirdeg_console": "$Extras.forecast_show_winddirdeg_console",
+        #else
+        "forecast_show_winddirdeg_console": "0",
+        #end if
+        #if $Extras.has_key("forecast_show_pressure_console")
+        "forecast_show_pressure_console": "$Extras.forecast_show_pressure_console"
+        #else
+        "forecast_show_pressure_console": "0"
+        #end if
     },
     "earthquake": {
         "time": "$earthquake_time",

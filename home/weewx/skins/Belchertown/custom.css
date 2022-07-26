@@ -166,6 +166,11 @@ sub { top: 0.4em; }
 
 /* forecast */
 
+.forecast-avg {
+    font-size:20px;
+    font-weight:500;
+}
+
 .dark .forecastweekend {
     color: orange;
 }

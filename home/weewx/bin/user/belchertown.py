@@ -522,6 +522,18 @@ class getData(SearchList):
                 self.generator.skin_dict["Extras"]["radar_html_kiosk"]
             )
 
+        # If the console radar is different then the homepage one.
+        if self.generator.skin_dict["Extras"].get("radar_html_console") == "":
+            radar_html_console = radar_html
+        else:
+            radar_width_console = self.generator.skin_dict["Extras"]["radar_width_console"]
+            radar_height_console = self.generator.skin_dict["Extras"]["radar_height_console"]
+            radar_html_console = '<iframe width="{}px" height="{}px" src="{}" frameborder="0"></iframe>'.format(
+                radar_width_console,
+                radar_height_console,
+                self.generator.skin_dict["Extras"]["radar_html_console"]
+            )
+
 
         # ==============================================================================
         # Build the all time stats.
@@ -2059,6 +2071,24 @@ class getData(SearchList):
             mqtt_websockets_port_kiosk = self.generator.skin_dict["Extras"]["mqtt_websockets_port"]
             mqtt_websockets_ssl_kiosk = self.generator.skin_dict["Extras"]["mqtt_websockets_ssl"]
 
+        #==============================================================================
+        # MQTT settings for Console page
+        # ==============================================================================
+
+        if self.generator.skin_dict["Extras"]["mqtt_websockets_host_console"] != "":
+            if self.generator.skin_dict["Extras"]["mqtt_websockets_port_console"] != "":
+                mqtt_websockets_port_console = self.generator.skin_dict["Extras"]["mqtt_websockets_port_console"]
+            else:
+                mqtt_websockets_port_console = self.generator.skin_dict["Extras"]["mqtt_websockets_port"]
+            if self.generator.skin_dict["Extras"]["mqtt_websockets_ssl_console"] != "":
+                mqtt_websockets_ssl_console = self.generator.skin_dict["Extras"]["mqtt_websockets_ssl_console"]
+            else:
+                mqtt_websockets_ssl_console = self.generator.skin_dict["Extras"]["mqtt_websockets_ssl"]
+        else:
+            mqtt_websockets_port_console = self.generator.skin_dict["Extras"]["mqtt_websockets_host"]
+            mqtt_websockets_port_console = self.generator.skin_dict["Extras"]["mqtt_websockets_port"]
+            mqtt_websockets_ssl_console = self.generator.skin_dict["Extras"]["mqtt_websockets_ssl"]
+
 
 
         # Include custom.css if it exists in the HTML_ROOT folder
@@ -2081,6 +2111,7 @@ class getData(SearchList):
             "radar_html": radar_html,
             "radar_html_dark": radar_html_dark,
             "radar_html_kiosk": radar_html_kiosk,
+            "radar_html_console": radar_html_console,
             "archive_interval_ms": archive_interval_ms,
             "ordinate_names": ordinate_names,
             "charts": json.dumps(charts),
@@ -2148,6 +2179,8 @@ class getData(SearchList):
             "beaufort12": label_dict["beaufort12"],
             "mqtt_websockets_port_kiosk": mqtt_websockets_port_kiosk,
             "mqtt_websockets_ssl_kiosk": mqtt_websockets_ssl_kiosk,
+            "mqtt_websockets_port_console": mqtt_websockets_port_console,
+            "mqtt_websockets_ssl_console": mqtt_websockets_ssl_console,
         }
         # Finally, return our extension as a list:
         return [search_list_extension]
