@@ -17,6 +17,32 @@
     padding-bottom: 0px;
 }
 
+.temp-observation {
+    padding-top: 20px;
+}
+
+.current_wind, .dark .current_wind {
+    padding: 30px 0px 0px 0px !important;
+}
+
+.compass {
+    display: block;
+    width: 120px;
+    height: 120px;
+    border-radius: 100%;
+    position: relative;
+    color: #555;
+    border: solid gray 5px;
+    margin-left: 60px;
+    margin: 0 auto;
+}
+
+.direction .curwinddir {
+    font-size: 30px;
+    padding-top: 30px;
+    display: block;
+}
+
 .forecast-title {
     text-align: left;
     font-size: 20px;
@@ -33,7 +59,7 @@
 }
 
 .forecast-conditions-1hour {
-    min-height: 70px;
+    min-height: 100px;
     word-wrap:break-word;
 }
 
@@ -57,10 +83,6 @@
 
 .moon {
     text-align:left;
-}
-
-.current_wind, .dark .current_wind {
-    padding: 15px 0px 0px 0px !important;
 }
 
 @media only screen and (max-width: 800px) {

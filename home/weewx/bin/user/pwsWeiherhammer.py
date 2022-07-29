@@ -379,8 +379,8 @@ class pwsWeiherhammer(weewx.xtypes.XType):
 
     def __init__(self, altitude, latitude, longitude,
                  solar_heat_index_algo='new',
-                 sunshine_coeff=0.72,
-                 sunshine_min=18.0,
+                 sunshine_coeff=0.79,
+                 sunshine_min=20.0,
                  sunshine_debug=False
                  ):
         self.alt = altitude
