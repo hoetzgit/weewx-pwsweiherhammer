@@ -237,7 +237,7 @@
                 <li>Anzeige von Erdbeben mit Daten der <a href="http://earthquake.usgs.gov/fdsnws/event/1/" target="_blank" rel="noreferrer">USGS.gov Earthquake Catalog Developer API</a></li>
             </ul>
             <h3>Luftqualit&auml;t</h3>
-            <p>Erg&auml;nzend zu meinen airRohr-Feinstaubdaten (PM<sub>10</sub>) werden zur Berechnung des Luftqualit&auml;tslevels weitere Daten - Ozon (O<sub>3</sub>) und Stickstoffdioxid (NO<sub>2</sub>) - der Station Weiden i.d. OPf, Nikolaistra&szlig;e (DEBY075) geladen.
+            <p>Erg&auml;nzend zu meinen airRohr-Feinstaubdaten (PM<sub>2.5</sub>/PM<sub>10</sub>) werden zur Berechnung des Luftqualit&auml;tslevels weitere Daten - Ozon (O<sub>3</sub>) und Stickstoffdioxid (NO<sub>2</sub>) - der Station Weiden i.d. OPf, Nikolaistra&szlig;e (DEBY075) geladen.
             Die Berechnung und Einteilung der Luftqualit&auml;t erfolgt nach den <a href="https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex" target="_blank" rel="noreferrer">Berechnungsgrundlagen Luftqualit&auml;tsindex</a> des Umweltbundesamtes.</p>
             <ul>
                 <li><a href="https://www.umweltbundesamt.de/daten/luft/luftdaten/doc" target="_blank" rel="noreferrer">Umweltbundesamt Air Data API</a></li>

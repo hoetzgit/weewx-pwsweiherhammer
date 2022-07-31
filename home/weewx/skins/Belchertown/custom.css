@@ -165,6 +165,9 @@ sup, sub {
 sub { top: 0.4em; }
 
 /* forecast */
+.snow-precip, .rain-precip, .humidity-forecast {
+    color:#42b5e7;
+}
 
 .forecast-avg {
     font-size:20px;

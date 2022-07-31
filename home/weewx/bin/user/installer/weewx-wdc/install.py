@@ -11,7 +11,7 @@ def loader():
 class BasicInstaller(ExtensionInstaller):
     def __init__(self):
         super(BasicInstaller, self).__init__(
-            version="1.3.3",
+            version="2.0.0",
             name="weewx-wdc",
             description="Weather Data Center skin for weewx.",
             author="David Baetge",
@@ -30,13 +30,8 @@ class BasicInstaller(ExtensionInstaller):
                 (
                     "bin/user",
                     [
-                        "bin/user/archive_util.py",
-                        "bin/user/celestial_util.py",
-                        "bin/user/diagram_util.py",
-                        "bin/user/forecast_util.py",
-                        "bin/user/general_util.py",
-                        "bin/user/stats_util.py",
-                        "bin/user/table_util.py",
+                        "bin/user/weewx_wdc.py",
+                        "bin/user/weewx_wdc_forecast.py",
                     ],
                 ),
                 (
@@ -63,9 +58,10 @@ class BasicInstaller(ExtensionInstaller):
                         "skins/weewx-wdc/lang/de.conf",
                         "skins/weewx-wdc/lang/en.conf",
                         "skins/weewx-wdc/service-worker.js",
-                        "skins/weewx-wdc/dist/scss/index.css",
-                        "skins/weewx-wdc/dist/js/index.js",
+                        "skins/weewx-wdc/dist/main.css",
+                        "skins/weewx-wdc/dist/main.js",
                         "skins/weewx-wdc/favicon.ico",
+                        "skins/weewx-wdc/plotly-custom-build.min.js",
                         "skins/weewx-wdc/includes/html-head.inc",
                         "skins/weewx-wdc/includes/almanac-tile.inc",
                         "skins/weewx-wdc/includes/almanac-tile-simple.inc",
@@ -74,10 +70,14 @@ class BasicInstaller(ExtensionInstaller):
                         "skins/weewx-wdc/includes/combined-diagram-tile.inc",
                         "skins/weewx-wdc/includes/data-table-tile.inc",
                         "skins/weewx-wdc/includes/diagram-tile.inc",
+                        "skins/weewx-wdc/includes/diagram-tile-wind-rose.inc",
                         "skins/weewx-wdc/includes/stat-tile.inc",
+                        "skins/weewx-wdc/includes/conditions-table.inc",
                         "skins/weewx-wdc/includes/climatological-days.inc",
                         "skins/weewx-wdc/includes/ui-shell.inc",
                         "skins/weewx-wdc/includes/footer.inc",
+                        "skins/weewx-wdc/includes/body-classic.inc",
+                        "skins/weewx-wdc/includes/body-alternative.inc",
                         "skins/weewx-wdc/includes/forecast.inc",
                         "skins/weewx-wdc/includes/forecast-table.inc",
                         "skins/weewx-wdc/includes/icons/barometer.svg",
@@ -122,10 +122,3 @@ class BasicInstaller(ExtensionInstaller):
                 ),
             ],
         )
-
-    # def configure(self, engine):
-    #    """Customized configuration that sets a language code"""
-    #    # TODO: Set a units code as well
-    #    code = engine.get_lang_code('wdc', 'en')
-    #    self['config']['StdReport']['WdcReport']['lang'] = code
-    #    return True

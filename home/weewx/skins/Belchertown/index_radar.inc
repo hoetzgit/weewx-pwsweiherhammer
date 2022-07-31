@@ -6,6 +6,7 @@
      <!-- Nav tabs -->
     <ul class="nav nav-tabs tabs-menu" role="tablist">
         <li role="presentation" class="active"><a href="#radar" aria-controls="radar" role="tab" data-toggle="tab">$obs.label.radar_tab_windy</a></li>
+        <li role="presentation"><a href="#dwdradar" aria-controls="dwdradar" role="tab" data-toggle="tab">$obs.label.radar_tab_dwd</a></li>
         <li role="presentation"><a href="#webcam" aria-controls="webcam" role="tab" data-toggle="tab">$obs.label.radar_tab_webcam</a></li>
         #if os.path.exists("allsky/allskycam01.up")
         <li role="presentation"><a href="#allsky01" aria-controls="allsky01" role="tab" data-toggle="tab">$obs.label.radar_tab_allskycam01</a></li>
@@ -19,6 +20,9 @@
     <div class="tab">
         <div id="radar" class="tab-content">
             <div class="radar_image">$radar_html</div>
+        </div>
+        <div id="dwdradar" class="tab-content">
+            <a id="radardwd" name="radardwd" href="https://www.dwd.de/DE/leistungen/radarbild_film/radarbild_film.html"><img src="https://www.dwd.de/DWD/wetter/radar/radfilm_bay_akt.gif" alt="DWD Radar" width="420px"></a>
         </div>
         <div id="webcam" class="tab-content">
             <a id="weathercam" name="weathercam" href="$relative_url/webcam"><img src="$relative_url/images/webcam_small.jpg" alt="Die Webcam der Wetterstation Weiherhammer"></a>

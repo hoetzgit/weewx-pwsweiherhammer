@@ -21,17 +21,26 @@
           #include $get_icon($partial_obs)
           #end if
 
+          <!--prettier-ignore-->
           <span>
             <!--prettier-ignore-->
             #if $precision == 'day'
+              #if $partial_obs == "windDir" and $to_bool($DisplayOptions.get('stat_tile_winddir_ordinal', True))
+              $getattr($current, $partial_obs).ordinal_compass<span>, $getattr($current, $partial_obs)</span>
+              #else
               $getattr($current, $partial_obs)
+              #end if
             #else
               #if $get_show_sum($partial_obs)
                 $getattr($get_time_span_from_attr($precision, $day, $week, $month, $year, $alltime), $partial_obs).sum
               #else if $get_show_max($partial_obs)
                 $getattr($get_time_span_from_attr($precision, $day, $week, $month, $year, $alltime), $partial_obs).max
               #else
-                $getattr($get_time_span_from_attr($precision, $day, $week, $month, $year, $alltime), $partial_obs).avg
+                #if $partial_obs == "windDir" and $to_bool($DisplayOptions.get('stat_tile_winddir_ordinal', True))
+                  $getattr($get_time_span_from_attr($precision, $day, $week, $month, $year, $alltime), $partial_obs).avg.ordinal_compass<span>, $getattr($get_time_span_from_attr($precision, $day, $week, $month, $year, $alltime), $partial_obs).avg</span>
+                #else
+                  $getattr($get_time_span_from_attr($precision, $day, $week, $month, $year, $alltime), $partial_obs).avg
+                #end if
               #end if
             #end if
             <!--prettier-ignore-->
@@ -94,7 +103,7 @@
           #if $precision == 'year' or $precision == 'alltime'
           <bx-tooltip-definition
             alignment="center"
-            body-text="$getattr($get_time_span_from_attr($precision, $day, $week, $month, $year, $alltime), $partial_obs).mintime.format('%d.%m.%Y %H:%M')"
+            body-text="$getattr($get_time_span_from_attr($precision, $day, $week, $month, $year, $alltime), $partial_obs).mintime.format($get_time_format_dict['stats'])"
             direction="top"
           >
             $gettext($label_min)
@@ -116,7 +125,7 @@
           #if $precision == 'year' or $precision == 'alltime'
           <bx-tooltip-definition
             alignment="center"
-            body-text="$getattr($get_time_span_from_attr($precision, $day, $week, $month, $year, $alltime), $partial_obs).maxtime.format('%d.%m.%Y %H:%M')"
+            body-text="$getattr($get_time_span_from_attr($precision, $day, $week, $month, $year, $alltime), $partial_obs).maxtime.format($get_time_format_dict['stats'])"
             direction="top"
           >
             $gettext($label_max)

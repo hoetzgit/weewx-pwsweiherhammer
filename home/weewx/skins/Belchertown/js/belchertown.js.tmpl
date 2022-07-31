@@ -1541,22 +1541,21 @@ function update_forecast_data(data) {
                             output_html += '<img src="' + get_relative_url() + '/images/snowflake-icon-15px.png"> <span>' + parseFloat(forecast_row[i]["snow_depth"]).toFixed(0) + '<span> ' + forecast_row[i]["snow_unit"];
                             output_html += '</div>';
                         } else if (forecast_row[i]["precip"] > 0) {
-                            output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-precip"></i> <span>' + parseFloat(forecast_row[i]["precip"]).toFixed(0) + '%</span>';
+                            output_html += '<i class="fa fa-umbrella rain-precip"></i> <span>' + parseFloat(forecast_row[i]["precip"]).toFixed(0) + '%</span>';
                         } else {
-                            output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-no-precip"></i> <span>0%</span>';
+                            output_html += '<i class="fa fa-umbrella rain-no-precip"></i> <span>0%</span>';
                         }
                         output_html += '</div>';
                     }
 
                     if (forecast_show_humidity == "1") {
                         output_html += '<div class="forecast-humidity">';
-                        output_html += '<i class="wi wi-humidity rain-precip"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span>';
+                        output_html += '<i class="wi wi-humidity humidity-forecast"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span>';
                         output_html += '</div>';
                     }
 
                     if (forecast_show_windspeed == "1") {
                         output_html += '<div class="forecast-wind" title="' + '$unit.label.windSpeed' + '">';
-                        //20220225,ho output_html += '<i class="wi wi-strong-wind"></i> <span>' + parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span>';
                         output_html += '<i class="wi wi-strong-wind"></i> <span>'+ parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span>|<span>' + parseFloat(forecast_row[i]["windGust"]).toFixed(0) + '</span>';        
                         output_html += '</div>';
                     }
@@ -1601,14 +1600,12 @@ function update_forecast_data(data) {
                     if (forecast_show_conditions == "1") {
                         output_html += '<div class="forecast-conditions">';
                         output_html += '<img id="icon" src="' + forecast_row[i]["image_url"] + '" alt="Vorhersagesymbol ' + forecast_row[i]["weekday"] + '">';
-                        ##output_html += '<br>';
                         output_html += '<div class="forecast-condition-text">' + forecast_row[i]["condition_text"] + '</div>';
                         output_html += '</div>';
                     }
 
                     if (forecast_show_temperature == "1") {
                         output_html += '<div class="forecast-high">' + parseFloat(forecast_row[i]["minTemp"]).toFixed(0) + '&deg;</span> | <span class="forecast-low">' + parseFloat(forecast_row[i]["maxTemp"]).toFixed(0) + '&deg;</div>';
-                        ##output_html += '<br>';
                     }
 
                     if (forecast_show_dewpoint == "1") {
@@ -1624,16 +1621,16 @@ function update_forecast_data(data) {
                             output_html += '<img src="' + get_relative_url() + '/images/snowflake-icon-15px.png"> <span>' + parseFloat(forecast_row[i]["snow_depth"]).toFixed(0) + '<span> ' + forecast_row[i]["snow_unit"];
                             output_html += '</div>';
                         } else if (forecast_row[i]["precip"] > 0) {
-                            output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-precip"></i> <span>' + parseFloat(forecast_row[i]["precip"]).toFixed(0) + '%</span>';
+                            output_html += '<i class="fa fa-umbrella rain-precip"></i> <span>' + parseFloat(forecast_row[i]["precip"]).toFixed(0) + '%</span>';
                         } else {
-                            output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-no-precip"></i> <span>0%</span>';
+                            output_html += '<i class="fa fa-umbrella rain-no-precip"></i> <span>0%</span>';
                         }
                         output_html += '</div>';
                     }
 
                     if (forecast_show_humidity == "1") {
                         output_html += '<div class="forecast-humidity">';
-                        output_html += '<i class="wi wi-humidity rain-precip"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span>';
+                        output_html += '<i class="wi wi-humidity humidity-forecast"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span>';
                         output_html += '</div>';
                     }
 
