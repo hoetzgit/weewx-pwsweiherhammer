@@ -412,7 +412,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
         else:
             val = wetbulb_Metric(data['outTemp'], data['outHumidity'], data['pressure'])
             u = 'degree_C'
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     @staticmethod
     def calc_solar_wetBulb(key, data, db_manager=None):
@@ -425,7 +425,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
         else:
             val = wetbulb_Metric(data['solar_temperature'], data['solar_humidity'], data['solar_pressure'])
             u = 'degree_C'
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     def calc_solar_heatindex(self, key, data, db_manager=None):
         if 'solar_temperature' not in data or 'solar_humidity' not in data:
@@ -438,7 +438,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
             val = weewx.wxformulas.heatindexC(data['solar_temperature'], data['solar_humidity'],
                                               algorithm=self.solar_heat_index_algo)
             u = 'degree_C'
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     @staticmethod
     def calc_solar_dewpoint(key, data, db_manager=None):
@@ -450,7 +450,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
         else:
             val = weewx.wxformulas.dewpointC(data['solar_temperature'], data['solar_humidity'])
             u = 'degree_C'
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     @staticmethod
     def calc_solar_windchill(key, data, db_manager=None):
@@ -467,7 +467,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
             u = 'degree_C'
         else:
             raise weewx.ViolatedPrecondition("Unknown unit system %s" % data['usUnits'])
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     @staticmethod
     def calc_solar_humidex(key, data, db_manager=None):
@@ -479,7 +479,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
         else:
             val = weewx.wxformulas.humidexC(data['solar_temperature'], data['solar_humidity'])
             u = 'degree_C'
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     @staticmethod
     def calc_solar_appTemp(key, data, db_manager=None):
@@ -495,7 +495,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
             windspeed_mps = weewx.units.convert(windspeed_vt, 'meter_per_second')[0]
             val = weewx.wxformulas.apptempC(data['solar_temperature'], data['solar_humidity'], windspeed_mps)
             u = 'degree_C'
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     # calculate sunshine threshold for sunshining yes/no
     def calc_sunshineThreshold(self, key, data, db_manager=None):
@@ -519,7 +519,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
                 (sin(pi / 180) * hauteur_soleil), 1.25) * self.sunshine_coeff
         else:
             seuil = 0.0
-        return weewx.units.convertStd((seuil, 'watt_per_meter_squared', 'group_radiation'), data['usUnits'])
+        return ValueTuple(seuil, 'watt_per_meter_squared', 'group_radiation')
 
     # calculate sunshine threshold for sunshining yes/no
     def calc_sunshineThresholdOriginal(self, key, data, db_manager=None):
@@ -543,7 +543,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
                 (sin(pi / 180) * hauteur_soleil), 1.25) 
         else:
             seuil = 0.0
-        return weewx.units.convertStd((seuil, 'watt_per_meter_squared', 'group_radiation'), data['usUnits'])
+        return ValueTuple(seuil, 'watt_per_meter_squared', 'group_radiation')
 
     @staticmethod
     def calc_airDensity(key, data, db_manager=None):
@@ -556,7 +556,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
         else:
             val = airDensity_Metric(data['dewpoint'], data['outTemp'], data['pressure'])
             u = 'kg_per_meter_qubic'
-        return weewx.units.convertStd((val, u, 'group_pressure3'), data['usUnits'])
+        return ValueTuple(val, u, 'group_pressure3')
 
     @staticmethod
     def calc_windPressure(key, data, db_manager=None):
@@ -569,7 +569,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
         else:
             val = windPressure_Metric(data['dewpoint'], data['outTemp'], data['pressure'], data['windSpeed'])
             u = 'N_per_meter_squared'
-        return weewx.units.convertStd((val, u, 'group_pressure2'), data['usUnits'])
+        return ValueTuple(val, u, 'group_pressure2')
 
     @staticmethod
     def calc_thwIndex(key, data, db_manager=None):
@@ -582,7 +582,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
         else:
             val = thwIndex_Metric(data['outTemp'], data['outHumidity'], data['windSpeed'])
             u = 'degree_C'
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     @staticmethod
     def calc_thswIndex(key, data, db_manager=None):
@@ -595,7 +595,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
         else:
             val = thswIndex_Metric(data['outTemp'], data['outHumidity'], data['windSpeed'], data['radiation'])
             u = 'degree_C'
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     @staticmethod
     def calc_vaporPressure(key, data, db_manager=None):
@@ -608,7 +608,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
         else:
             val = vaporPressure_C(data['outTemp'])
             u = 'mbar'
-        return weewx.units.convertStd((val, u, 'group_pressure'), data['usUnits'])
+        return ValueTuple(val, u, 'group_pressure')
 
 
 

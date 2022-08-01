@@ -272,6 +272,7 @@
                 <li>WeeWX Treiber <a href="https://github.com/matthewwall/weewx-interceptor" target="_blank" rel="noreferrer">WeeWX-Interceptor</a> (ecowitt-client) zum Empfang der Daten von FOSHKplugin per HTTP, Version: 0.53, an eigene Sensoren angepasst</li>
                 <li>WeeWX Service <a href="https://github.com/bellrichm/WeeWX-MQTTSubscribe" target="_blank" rel="noreferrer">WeeWX-MQTTSubscribe</a> zum Empfang von zusätzlichen Daten (Solar Station, Wetter API's u.s.w.) per MQTT, Version: 2.1.0</li>
                 <li>Erweiterungen <a href="https://github.com/roe-dl/weewx-DWD" target="_blank" rel="noreferrer">weewx-DWD</a>, um Daten des Deutschen Wetterdienstes und des Umweltbundesamtes herunterzuladen und aufzubereiten (angepasst)</li>
+                <li>Erweiterung <a href="https://github.com/roe-dl/weewx-GTS" target="_blank" rel="noreferrer">weewx-GTS</a>, generiert Grünlandtemperatursumme und viele weitere Daten, Version: 0.8a2</li>
                 ##<li>Die Meteogramm-Visualisierung der DWD Vorhersage erfolgt mit dem Meteogramm von <a href="http://tools.wettersoftware.de" target="_blank" rel="noreferrer">wettersoftware.de</a></li>
                 <li>Erweiterung <a href="https://github.com/jonathankoren/weewx-aqi" target="_blank" rel="noreferrer">weewx-aqi</a>, angepasste <a href="https://github.com/hoetzgit/weewx-aqi/tree/CustomAirQualityIndex" target="_blank" rel="noreferrer">Version</a> (Klassifizierung Luftqualit&auml;t Umweltbundesamt)</li>
                 <li>Erweiterung <a href="https://github.com/Jterrettaz/sunduration" target="_blank" rel="noreferrer">sunduration</a>, angepasste <a href="https://github.com/hoetzgit/sunduration/tree/sunshineDur_seconds" target="_blank" rel="noreferrer">Version</a> (Berechnet die Sonnenscheindauer in Sekunden)</li>
@@ -312,6 +313,7 @@
             <ul>
                 <li><a href="https://seasons.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Seasons</a> (Skin bei WeeWX dabei)</li>
                 <li><a href="https://wdc.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WDC</a> (Weather Data Center, Skin <a href="https://github.com/Daveiano/weewx-wdc" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://pwsd.weiherhammer-wetter.de" target="_blank" rel="noreferrer">PWS Dashboard</a> (PHP Dashboard <a href="https://pwsdashboard.com" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://fuzzy.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Fuzzy Archer</a> (Skin <a href="https://github.com/brewster76/fuzzy-archer" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://neowx.weiherhammer-wetter.de" target="_blank" rel="noreferrer">NeoWX Material</a> (Skin <a href="https://neoground.com/projects/neowx-material" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://sofa.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Sofa Skin</a> (Skin  <a href="https://blauesledersofa.de" target="_blank" rel="noreferrer">Infos</a>)</li>
