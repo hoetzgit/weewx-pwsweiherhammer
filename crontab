@@ -25,10 +25,13 @@
 0       */4 * * * /bin/bash /usr/local/bin/backup_host.sh >/var/log/weewx/backup_host.log 2>&1
 0,20,40 *   * * * /bin/bash /usr/local/bin/backup_db_weewx.sh >/var/log/weewx/backup_db_weewx.log 2>&1
 #
+# PWS Dashboard
+*/5 * * * * /usr/bin/php7.4 /var/www/html/pwsWD/PWS_cron_stationcron.php >/dev/null 2>&1
+#
 # Webcam/AllSky to Website
 */1 * * * * /bin/bash /usr/local/bin/create_allsky_weather_data.sh >/dev/null 2>&1
 */1 * * * * /bin/bash /usr/local/bin/copy_allsky_image_to_belchertown.sh  >/dev/null 2>&1
-*/1 * * * * /bin/bash /usr/local/bin/copy_webcam_image_to_belchertown.sh  >/dev/null 2>&1
+*/1 * * * * /bin/bash /usr/local/bin/copy_webcam_image_to_belchertown.sh  >/dev/null 2>&1 && /bin/bash /usr/local/bin/copy_webcam_image_to_pwsdashboard.sh  >/dev/null 2>&1
 #
 # DWD Forecast and Warnings
 0,15,30,45 * * * * /bin/bash /usr/local/bin/weewx-DWD/wget-dwd >/var/log/weewx/wget-dwd.log 2>&1

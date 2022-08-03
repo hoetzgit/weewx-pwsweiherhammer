@@ -181,7 +181,7 @@
         </div>
         <div class="col-md-12">
             #include raw "dwd/VHDL54_DWMG_LATEST.html"
-            <p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
+            ##<p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
         </div>
     </div>
     #end if
@@ -193,7 +193,7 @@
         </div>
         <div class="col-md-12">
             #include raw "dwd/VHDL50_DWMG_LATEST.html"
-            <p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
+            ##<p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
         </div>
     </div>
     #end if
@@ -205,7 +205,7 @@
         </div>
         <div class="col-md-12">
             #include raw "dwd/VHDL51_DWMG_LATEST.html"
-            <p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
+            ##<p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
         </div>
     </div>
     #end if
@@ -217,7 +217,7 @@
         </div>
         <div class="col-md-12">
             #include raw "dwd/VHDL52_DWMG_LATEST.html"
-            <p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
+            ##<p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
         </div>
     </div>
     #end if
@@ -229,7 +229,7 @@
         </div>
         <div class="col-md-12">
             #include raw "dwd/VHDL53_DWMG_LATEST.html"
-            <p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
+            ##<p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
         </div>
     </div>
     #end if

@@ -1235,6 +1235,12 @@ function update_forecast_data(data) {
     belchertown_log("current_source_toggle_checked: " + current_source_toggle_checked);
     belchertown_log("current_source_selected: " + current_source_selected);
 
+    try {
+        var forecast_issueTime_dwd = tzAdjustedMoment(data["dwd"]["current"][0]["response"]["obTimestamp"]).format('$obs.label.time_forecast_last_updated');
+    } catch (err) {
+        // Returned "current" data does not have this value
+    }
+
     // 20220710,ho dwd | brightsky | weatherbit | owm | AERIS: metar | conditions
     if (current_source_selected == "dwd") {
         data["current"] = data["dwd"]["current"]
@@ -1282,8 +1288,6 @@ function update_forecast_data(data) {
         return;
     } else if (forecast_provider == "aeris") {
         var forecast_subtitle = tzAdjustedMoment(data["timestamp"]).format('$obs.label.time_forecast_last_updated');
-        var forecast_issueTime_dwd = tzAdjustedMoment(data["current"][0]["response"]["obTimestamp"]).format('$obs.label.time_forecast_last_updated');
-
         try {
             var wxicon = get_relative_url() + "/images/" + aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png";
         } catch (err) {

@@ -1,5 +1,15 @@
 /* Temperature */
 
+.weather-obs-top {
+    min-height: 220px!important;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+.current_obs_top_left {
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
 .stn-high-low, .dark .stn-high-low {
 	padding-bottom: 10px;
 }
@@ -24,7 +34,7 @@
     padding-bottom: 0px;
 }
 
-.obs-aqi-divider, .dark .obs-aqi-divider {
+.obs-aqi-divider, .obs-aqi-divider, .aqi-wind-divider {
     height: 1px;
     width: 104%;
     background-color: #D7D7D7;
@@ -81,7 +91,8 @@
 }
 
 /* Wind */
-.obs-wind-divider, .dark .obs-wind-divider {
+
+.obs-wind-divider {
     width: 104%;
 }
 
@@ -227,6 +238,27 @@ sub { top: 0.4em; }
     .toprow-height {
         min-height: 0 !important;
     }
+    .current_obs_top {
+        padding-right: 15px;
+        padding-left: 0px;
+    }
+    .current_obs_top img {
+        float: none;
+        width: 30%;
+        height: auto;
+    }
+    .current_temp {
+        padding-top: 8px!important;
+    }
+    .weather-obs-top {
+        min-height: 160px!important;
+    }
+    .obs-aqi-divider, .obs-aqi-divider, .aqi-wind-divider {
+        height: 1px;
+        width: 104%;
+        background-color: #D7D7D7;
+    }
+
 }
 
 /* Small devices (portrait tablets and large phones, 600px and up) */
