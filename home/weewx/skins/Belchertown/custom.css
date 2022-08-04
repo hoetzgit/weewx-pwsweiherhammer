@@ -1,17 +1,24 @@
-/* Temperature */
+.current_temp .outtemp_outer {
+    font-size: 70px;
+    min-height: 95px;
+}
 
-.weather-obs-top {
-    min-height: 220px!important;
+.current-obs-symbol, .dark .current-obs-symbol {
+    min-width: 113px;
+}
+.weather-obs-top, .dark .weather-obs-top {
+    min-height: 210px!important;
     padding-left: 0px;
     padding-right: 0px;
 }
-.current_obs_top_left {
+
+.current_obs_top_left, .dark .current_obs_top_left {
     padding-left: 0px;
     padding-right: 0px;
 }
 
 .stn-high-low, .dark .stn-high-low {
-	padding-bottom: 10px;
+    padding-bottom: 10px;
 }
 
 /* Test Symbols */
@@ -33,6 +40,12 @@
     padding-top: 0px;
     padding-bottom: 0px;
 }
+
+/* TODO
+.aqi-obs-middle {
+    min-height: 90px;
+}
+*/
 
 .obs-aqi-divider, .obs-aqi-divider, .aqi-wind-divider {
     height: 1px;
@@ -194,12 +207,8 @@ sub { top: 0.4em; }
 }
 
 .forecast-source {
-    font-size: 14px;
+    font-size: 16px;
     text-align: center;
-}
-
-.forecast-issueTime-dwd {
-    font-size: 14px;
 }
 
 .forecast-24hour {
@@ -232,25 +241,28 @@ sub { top: 0.4em; }
 }
 
 @media only screen and (max-width: 800px) {
+    .current_temp .outtemp_outer {
+        padding-top: 15px!important;
+        min-height: auto;
+        font-size: 60px;
+        min-height: 103px;
+    }
     .currentSwitchLabel {
         margin-top: 10px;
     }
-    .toprow-height {
+    .toprow-height, .dark.toprow-height {
         min-height: 0 !important;
     }
-    .current_obs_top {
-        padding-right: 15px;
+    .current_obs_top, .dark .current_obs_top {
+        padding-right: 0px;
         padding-left: 0px;
     }
-    .current_obs_top img {
+    .current_obs_top img, .dark .current_obs_top img {
         float: none;
         width: 30%;
         height: auto;
     }
-    .current_temp {
-        padding-top: 8px!important;
-    }
-    .weather-obs-top {
+    .weather-obs-top, .dark .weather-obs-top {
         min-height: 160px!important;
     }
     .obs-aqi-divider, .obs-aqi-divider, .aqi-wind-divider {

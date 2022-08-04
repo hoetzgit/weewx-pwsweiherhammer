@@ -62,16 +62,16 @@
 
     #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1' and (($Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours != '0') or not ($Extras.has_key("forecast_interval_hours")))
     <div class="row border-bottom" style="margin-top:5px;margin-bottom:5px;">
-        <div class="col-md-12 forecast-source">$obs.label.forecast_issueTime_dwd <span class="forecast-issueTime-dwd"></span><!-- moment.js --></div>
-        <div class="col-md-12 forecast-source">$obs.label.forecast_source_dwd</div>
+        <div class="row col-sm-12 forecast-source">$obs.label.forecast_issueTime_dwd <span class="forecast-issueTime-dwd"></span><!-- moment.js --></div>
+        <div class="rom col-sm-12 forecast-source">$obs.label.forecast_source_dwd</div>
     </div>
 
     <div class="row forecastrow" style="margin-top:15px;">
         <!-- Forecast -->
-        <div class="col-md-8 forecast-title">
+        <div class="col-sm-8 forecast-title">
             $obs.label.forecast_header_dwd <span class="forecast-subtitle"></span><!-- moment.js -->
         </div>
-        <div class="col-md-4 forecast-menu">
+        <div class="col-sm-4 forecast-menu">
             $obs.label.forecast_interval_caption <div class="forecast-button" onclick="forecast_select(1);" id="button1">1</div>
             <div class="forecast-button" onclick="forecast_select(3);" id="button3">3</div>
             <div class="forecast-button" onclick="forecast_select(24);" id="button24">24</div>
