@@ -2228,9 +2228,9 @@ function update_current_wx(data) {
         }
        jQuery(".current-sunshine-symbol").html(sun_output);
     }
-    // avg10m Symbols
+    // debug avg10m Symbols
     var avg10m_output = '';
-    if ((data.hasOwnProperty("radiation")) && (parseFloat(data["radiation"]) > 20.0)) {
+    if ((data.hasOwnProperty("radiation")) && (parseFloat(data["radiation"]) > 50.0)) {
         if (data.hasOwnProperty("sunshine_avg10m")) {
             var sunshine_avg10m = parseFloat(data["sunshine_avg10m"]).toFixed(2);
             if (sunshine_avg10m == 0.0) {

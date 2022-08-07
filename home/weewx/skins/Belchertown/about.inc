@@ -28,7 +28,7 @@
             <h3>Sainlogic WS3500</h3>
             <p>Die Y-f&ouml;rmige Station <a href="https://www.amazon.de/Sainlogic-Profi-WLAN-Wetterstation-Wettervorhersage/dp/B07TVMQ2CK" target="_blank" rel="noreferrer">Sainlogic WS3500</a> 
             ist ein <a href="http://www.foshk.com" target="_blank" rel="noreferrer">Fine Offset</a>/<a href="https://www.ecowitt.com/shop/homePage" target="_blank" rel="noreferrer">Ecowitt</a> Klon. 
-            Sie besteht aus einem Kombinationssensor WH65 und der Konsole WH2910. Im Januar 2022 wurde die Sation mit dem <a href="https://www.ecowitt.com/shop/goodsDetail/107" target="_blank" rel="noreferrer">Ecowitt Funkgateway GW1100</a> 
+            Sie besteht aus einem Kombinationssensor WH65 und der Konsole WH2910. Im Januar 2022 wurde die Station mit dem <a href="https://www.ecowitt.com/shop/goodsDetail/107" target="_blank" rel="noreferrer">Ecowitt Funkgateway GW1100</a> 
             und einem <a href="https://www.ecowitt.com/shop/goodsDetail/64" target="_blank" rel="noreferrer">Ecowitt WH57 Blitzsensor</a> erg&auml;nzt. Der WH57 Sensor befindet sich unterhalb der 
             Wetterstation und wurde in einer <a href="https://www.tfa-dostmann.de/produkt/schutzhuelle-fuer-aussensender-98-1114/" target="_blank" rel="noreferrer">TFA Dostmann Schutzh&uuml;lle</a> untergebracht.</p>
         </div>
@@ -65,8 +65,8 @@
     <div class="row" style="margin-top:15px;">
         <div class="col-sm-12">
             <h3>Solar Station</h3>
-            <p>Im Juni 2020 installierte ich eine kleine Eigenbau Station. Dabei handelt es sich um die sogenannte "Solar Station". In den Sommermonaten kann die Stromversorgung autark mit 
-            Solarstrom erfolgen. Gepuffert wird in einem 18650 Akku. Im Winter muss ich jedoch mit einem Netzteil unterst&uuml;tzen. Basierend auf einem ESP8266 Mikrocontroller (Wemos D1 Mini Pro)
+            <p>Im Juni 2020 installierte ich eine kleine Eigenbau Station, meine "Solar Station". In den Sommermonaten kann die Stromversorgung autark mit Solarstrom erfolgen. Gepuffert wird in 
+            einem 18650 Akku. Im Winter muss ich jedoch mit einem Netzteil unterst&uuml;tzen. Basierend auf einem ESP8266 Mikrocontroller (Wemos D1 Mini Pro)
             und dem <a href="https://www.bosch-sensortec.com/products/environmental-sensors/humidity-sensors-bme280/" target="_blank" rel="noreferrer">BME280 Sensor</a> werden die Messwerte per 
             MQTT alle 30 Sekunden &uuml;ber W-LAN &uuml;bertragen. Als Grundlage zum Bau war die Anleitung "<a href="https://www.instructables.com/Solar-Powered-WiFi-Weather-Station-V20/" target="_blank" rel="noreferrer">Solar Powered WiFi Weather Station V2.0</a>" sehr hilfreich.</p>
         </div>
@@ -94,7 +94,7 @@
     <div class="row" style="margin-top:15px;">
         <div class="col-sm-12">
             <h3>Nova PM Sensor SDS011 - airRohr</h3>
-            <p>Seit M&auml;rz 2022 ist ein Feinstaubsensor - das sog. airRohr - installiert. Dabei habe ich mich an die 
+            <p>Seit M&auml;rz 2022 ist ein Feinstaubsensor - mein airRohr - installiert. Dabei habe ich mich an die 
             <a href="https://sensor.community/de/sensors/airrohr/" target="_blank" rel="noreferrer">Anleitung</a> der 
             <a href="https://sensor.community/de/" target="_blank" rel="noreferrer">Sensor.Community</a> gehalten.</p>
         </div>
@@ -146,7 +146,7 @@
     <!-- AllSky Kamera -->
     <div class="row" style="margin-top:10px;">
         <div class="col-sm-12">
-            <h3>AllSky Kamera 360&deg</h3>
+            <h3>AllSky Kamera mit einer 180&deg Ansicht</h3>
             <p>Meine AllSky Kameras - 
             #if os.path.exists("allsky/allskycam01.up")
             <a href="https://allsky01.ott24.net" target="_blank" rel="noreferrer">Kamera 1</a>
@@ -164,14 +164,23 @@
             Kamera 2 
             #end if
             - wurden im November 2020 installiert.</p>
-            <p>Die Kameras dienen hauts&auml;chlich der Himmelsbeobachtung in der Nacht, um z.B. den Verlauf der Sterne oder Meteoriten zu sehen. Durch die 360&deg Ansicht sind sie ebenfalls  
-            sehr gut zur Beobachtung der aktuellen Wetterbedingungen geeignet. Im Inneren der Kamera 1 arbeitet ein Raspberry Pi 4 mit einer Raspberry HQ Kamera und einem Fischaugenobjektiv. 
-            Es werden nacheinander jeweils 60 Sekunden lang belichtete Fotos aufgenommen. Am Ende der Nacht werden diese zu einem Timelaps Video und zu sogenannten Startrail und Keogram Bildern 
-            zusammengef&uuml;gt. Um eine &Uuml;berhitzung an sehr warmen Tagen zu verhindern, wird die Temperatur im Geh&auml;use mit L&uuml;ftern heruntergek&uuml;hlt. Im Winter hingegen wird 
-            die Kuppel beheizt. Dies habe ich mit einer selbstgebauten Widerstandsheizung (<a href="https://www.dewbuster.com/heater-resistors.html" target="_blank" rel="noreferrer">Anleitung</a>) 
-            umgesetzt. Damit wird Tau innerhalb und Reif au&szlig;erhalb des Kameradomes wirksam verhindert und die Kamera hat eine klare Sicht. Um dies per Software sinnvoll zu steuern, sind 
-            Sensoren verbaut. Die Messwerte der Sensoren werden zus&auml;tzlich an die Station gesendet und visualisiert.</p>
-            <p>Die Kamera 2 ist ein Testsystem und liefert keine Sensordaten.</p>
+            <p>Die Kamera 1 dient hauts&auml;chlich der Himmelsbeobachtung in der Nacht, um z.B. den Verlauf der Sterne oder Meteoriten zu sehen. Durch die 180&deg Ansicht ist sie ebenfalls  
+            sehr gut zur Beobachtung der aktuellen Wetterbedingungen geeignet. Im Inneren der Kamera arbeitet ein Raspberry Pi 4 mit einer Raspberry HQ Kamera und einem Fischaugenobjektiv. 
+            In der Nacht werden - entsprechend den Lichtverh&auml;ltnissen - l&auml;nger belichtete Fotos aufgenommen. Wenn der Tag wieder startet, werden sie zu einem
+            <a href="https://allsky.ott24.net/videos/" target="_blank" rel="noreferrer">Timelaps Video</a> und zu 
+            <a href="https://allsky.ott24.net/startrails/" target="_blank" rel="noreferrer">Startrail</a> und 
+            <a href="https://allsky.ott24.net/keograms/" target="_blank" rel="noreferrer">Keogram</a> Bildern zusammengef&uuml;gt.</p>
+            <p>Um eine &Uuml;berhitzung an sehr warmen Tagen zu verhindern, versuche ich die Temperatur im Geh&auml;use mit zwei L&uuml;ftern zu k&uuml;hlen. Im Winter hingegen wird die Kuppel 
+            beheizt. Dies habe ich mit einer selbstgebauten Widerstandsheizung (<a href="https://www.dewbuster.com/heater-resistors.html" target="_blank" rel="noreferrer">Anleitung</a>) umgesetzt. 
+            Auftretende Tau-Tropfen innerhalb der Kuppel oder Reif- und Schneebel&auml;ge au&szlig;erhalb der Kuppel werden wirksam verhindert, die Kamera hat freie Sicht. Es sind nat&uuml;rlich Sensoren verbaut, 
+            damit dies per Software sinnvoll gesteuert werden kann. Die Messwerte der Sensoren werden zus&auml;tzlich an die Station gesendet und 
+            <a href="https://www.weiherhammer-wetter.de/graphs/?graph=AllSky" target="_blank" rel="noreferrer">visualisiert</a>.</p>
+            <p>Der Raspberry Pi, die L&uuml;fter und die Heizung m&uuml;ssen mit gen&uuml;gend Power versorgt werden. Die Kamera ist mit einem 20m Stromkabel und einem st&auml;rkeren Netzteil verbunden, welches 
+            gen&uuml;gend Leistung liefert kann. Die Bauteile im Inneren sind &uuml;ber diesen 
+            <a href="https://www.amazon.de/dp/B092VRTS7Z/?coliid=I2QFJ21HVTT0U8&colid=2OFTVJIQKSNN1&psc=1&ref_=lv_ov_lig_dp_it" target="_blank" rel="noreferrer">Buck Converter</a> angeschlossen und 
+            erhalten so ihre 5V oder 12V Spannung.</p>
+            <p>Als AllSky Backend und zur Darstellung der AllSky Webseite verwende ich das Projekt von <a href="https://github.com/thomasjacquin/allsky" target="_blank" rel="noreferrer">Thomas Jacquin</a>.</p>
+            <p>Kamera 2 ist ein Testsystem und daher nicht immer online. Sie liefert keine Sensordaten.</p>
         </div>
 
         <div class="col-sm-4">
@@ -196,7 +205,6 @@
                 <li>Temperatur</li>
             </ul>
             <p>Die Messwerte k&ouml;nnen <a href="https://www.weiherhammer-wetter.de/graphs/?graph=AllSky" target="_blank" rel="noreferrer">hier</a> angesehen werden.</p>
-            <p>Als AllSky Backend und zur Darstellung der AllSky Webseite verwende ich das Projekt von <a href="https://github.com/thomasjacquin/allsky" target="_blank" rel="noreferrer">Thomas Jacquin</a>.</p>
         </div>
     </div>
 
@@ -313,9 +321,10 @@
             <ul>
                 <li><a href="https://seasons.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Seasons</a> (Skin bei WeeWX dabei)</li>
                 <li><a href="https://wdc.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WDC</a> (Weather Data Center, Skin <a href="https://github.com/Daveiano/weewx-wdc" target="_blank" rel="noreferrer">Infos</a>)</li>
-                <li><a href="https://pwsd.weiherhammer-wetter.de" target="_blank" rel="noreferrer">PWS Dashboard</a> (PHP Dashboard <a href="https://pwsdashboard.com" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://jas.weiherhammer-wetter.de" target="_blank" rel="noreferrer">JaS</a> (Just another Skin, Skin <a href="https://github.com/bellrichm/weewx-jas" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://fuzzy.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Fuzzy Archer</a> (Skin <a href="https://github.com/brewster76/fuzzy-archer" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://neowx.weiherhammer-wetter.de" target="_blank" rel="noreferrer">NeoWX Material</a> (Skin <a href="https://neoground.com/projects/neowx-material" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://pwsd.weiherhammer-wetter.de" target="_blank" rel="noreferrer">PWS Dashboard</a> (PHP Dashboard <a href="https://pwsdashboard.com" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://sofa.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Sofa Skin</a> (Skin  <a href="https://blauesledersofa.de" target="_blank" rel="noreferrer">Infos</a>)</li>
             </ul>
         </div>
