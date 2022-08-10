@@ -1951,6 +1951,7 @@ class getData(SearchList):
             # 20220803,ho cloudcover debug symbol
             if obs == "cloud_cover":
                 station_obs_html += ' <span class="avg10m-obs-symbols"></span>'
+
             station_obs_html += "</td>"
             station_obs_html += "</tr>"
 

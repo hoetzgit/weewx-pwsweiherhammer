@@ -218,8 +218,7 @@ class JASInstaller(ExtensionInstaller):
                                          'skins/jas/charts/%Y.js.tmpl',
                                          'skins/jas/charts/%Y-%m.js.tmpl'
                                          ]),
-                   ('skins/jas/data', ['skins/jas/data/current.js.tmpl',
-                                       'skins/jas/data/alltime.js.tmpl',
+                   ('skins/jas/data', ['skins/jas/data/index.js.tmpl',
                                        'skins/jas/data/forecast.js.tmpl',
                                        'skins/jas/data/debug.js.tmpl',
                                        'skins/jas/data/day.js.tmpl',
@@ -237,13 +236,11 @@ class JASInstaller(ExtensionInstaller):
                    ('skins/jas/generators', ['skins/jas/generators/charts.gen',
                                             'skins/jas/generators/data.gen',
                                              'skins/jas/generators/js.gen',
-                                             'skins/jas/generators/navbar.gen',
                                              'skins/jas/generators/pages.gen',
                                              'skins/jas/generators/startEndHistorical.gen',
                                              'skins/jas/generators/startEndActive.gen'
                                             ]),
-                   ('skins/jas/javascript', ['skins/jas/javascript/common.js.tmpl',
-                                             'skins/jas/javascript/day.js.tmpl',
+                   ('skins/jas/javascript', ['skins/jas/javascript/day.js.tmpl',
                                              'skins/jas/javascript/debug.js.tmpl',
                                              'skins/jas/javascript/index.js.tmpl',
                                              'skins/jas/javascript/last7days.js.tmpl',
@@ -263,6 +260,7 @@ class JASInstaller(ExtensionInstaller):
                    ('skins/jas/lang', ['skins/jas/lang/en.conf']),
                    ('skins/jas/sections', [
                                            'skins/jas/sections/current.inc',
+                                           'skins/jas/sections/debug.inc',
                                            'skins/jas/sections/forecast.inc',
                                            'skins/jas/sections/minmax.inc',
                                            'skins/jas/sections/radar.inc',

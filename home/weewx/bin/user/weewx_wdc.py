@@ -9,7 +9,8 @@ from weewx.units import (
 from weewx.wxformulas import beaufort
 from datetime import datetime
 from calendar import isleap
-from pprint import pprint
+
+# from pprint import pprint
 
 # Copyright 2022 David Bätge
 # Distributed under the terms of the GNU Public License (GPLv3)
@@ -49,7 +50,11 @@ class WdcGeneralUtil(SearchList):
         elif observation == "outHumidity" or observation == "inHumidity":
             return icon_path + "humidity.svg"
 
-        elif observation == "barometer":
+        elif (
+            observation == "barometer"
+            or observation == "pressure"
+            or observation == "altimeter"
+        ):
             return icon_path + "barometer.svg"
 
         elif observation == "windSpeed":
@@ -58,7 +63,7 @@ class WdcGeneralUtil(SearchList):
         elif observation == "windGust":
             return icon_path + "wind-gust.svg"
 
-        elif observation == "windDir":
+        elif observation == "windDir" or observation == "windGustDir":
             return icon_path + "wind-direction.svg"
 
         elif observation == "rain":
@@ -115,7 +120,11 @@ class WdcGeneralUtil(SearchList):
         if "humidity" in observation.lower():
             return "#0099CC"
 
-        if observation == "barometer":
+        if (
+            observation == "barometer"
+            or observation == "pressure"
+            or observation == "altimeter"
+        ):
             return "#666666"
 
         if observation == "dewpoint":
@@ -356,7 +365,11 @@ class WdcDiagramUtil(SearchList):
         if observation == "windSpeed" or observation == "windGust":
             return "wind"
 
-        if observation == "barometer" or observation == "pressure":
+        if (
+            observation == "barometer"
+            or observation == "pressure"
+            or observation == "altimeter"
+        ):
             return "pressure"
 
         return observation
@@ -516,7 +529,9 @@ class WdcDiagramUtil(SearchList):
             return 2
 
         if (
-            observation == "pressure" or observation == "barometer"
+            observation == "pressure"
+            or observation == "barometer"
+            or observation == "altimeter"
         ) and self.unit.unit_type.pressure == "inHg":
             return 3
 
@@ -552,6 +567,8 @@ class WdcDiagramUtil(SearchList):
         """
         Get delta for $span($week_delta=$delta) call.
 
+        TODO: Remove
+
         Args:
             precision (string): Day, week, month, year, alltime
 
@@ -559,9 +576,6 @@ class WdcDiagramUtil(SearchList):
             float: A delta
         """
         week_delta = 0
-
-        if precision == "alltime":
-            week_delta = 1000  # TODO: This will stop to work after 19 years.
 
         return week_delta
 
@@ -696,7 +710,8 @@ class WdcStatsUtil(SearchList):
             "outTemp",
             "outHumidity",
             "barometer",
-            "windDir",
+            "pressure",
+            "altimeter",
             "snowDepth",
             "heatindex",
             "dewpoint",
@@ -724,7 +739,7 @@ class WdcStatsUtil(SearchList):
         Returns:
             bool: Show or hide sum stat.
         """
-        show_sum = ["rain", "ET"]
+        show_sum = ["rain", "ET", "lightning_strike_count"]
 
         if observation in show_sum:
             return True
@@ -1152,7 +1167,11 @@ class WdcTableUtil(SearchList):
                 )
 
                 for start, stop, data in zip(series.start, series.stop, series.data):
-                    cs_time = datetime.fromtimestamp(stop.raw)
+                    if precision == "alltime":
+                        cs_time = datetime.fromtimestamp(start.raw)
+                    else:
+                        cs_time = datetime.fromtimestamp(stop.raw)
+
                     # The current series item by time.
                     cs_item = list(
                         filter(
