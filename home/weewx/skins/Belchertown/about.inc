@@ -11,8 +11,8 @@
             <p>Wie wird das Wetter in <a href="https://www.weiherhammer.de" target="_blank" rel="noreferrer">Weiherhammer</a> heute? &Uuml;blich war mein Blick aus dem Fenster und auf das analoge Thermometer. Es sollte aber eine smartere L&ouml;sung her. 
             Nach einigen Funkthermometern mit Display und diversen selbstgebastelten und selbst programmierten Wetterstationen entschied ich mich, eine fertige Station zu installieren.</p>
             <p>Seit dem 25. August 2019 betreibe ich eine private Wetterstation (PWS) in Weiherhammer. Durch die Webseite habe ich das aktuelle Wettergeschehen vor Ort jederzeit und 
-            &uuml;berall im Blick. Ich bin aber kein Meteorologe, sondern nur ein technisch interessierter Mensch. Daher &uuml;bernehme ich keine Gewähr für die Richtigkeit der Angaben auf dieser 
-            ausschlie&szlig;lich f&uuml;r meine privaten Zwecke ausgelegten Webseite. Die Webseite soll nur mein Fensterthermometer ersetzen ;-)</p>
+            &uuml;berall im Blick. Ein Kombisensor ist sicher nicht optimal und auch der Aufstellstandort entspricht keiner Vorgabe, daher &uuml;bernehme ich keine Gewähr für die Richtigkeit der Angaben auf dieser 
+            ausschlie&szlig;lich f&uuml;r meine privaten Zwecke ausgelegten Webseite. Die Wetterstation soll nur mein Fensterthermometer ersetzen.</p>
         </div>
     </div>
 
@@ -166,7 +166,7 @@
             - wurden im November 2020 installiert.</p>
             <p>Die Kamera 1 dient hauts&auml;chlich der Himmelsbeobachtung in der Nacht, um z.B. den Verlauf der Sterne oder Meteoriten zu sehen. Durch die 180&deg Ansicht ist sie ebenfalls  
             sehr gut zur Beobachtung der aktuellen Wetterbedingungen geeignet. Im Inneren der Kamera arbeitet ein Raspberry Pi 4 mit einer Raspberry HQ Kamera und einem Fischaugenobjektiv. 
-            In der Nacht werden - entsprechend den Lichtverh&auml;ltnissen - l&auml;nger belichtete Fotos aufgenommen. Wenn der Tag wieder startet, werden sie zu einem
+            In der Nacht werden - entsprechend den Lichtverh&auml;ltnissen - l&auml;nger belichtete Fotos aufgenommen. Wenn der Tag wieder startet, werden diese zu einem
             <a href="https://allsky.ott24.net/videos/" target="_blank" rel="noreferrer">Timelaps Video</a> und zu 
             <a href="https://allsky.ott24.net/startrails/" target="_blank" rel="noreferrer">Startrail</a> und 
             <a href="https://allsky.ott24.net/keograms/" target="_blank" rel="noreferrer">Keogram</a> Bildern zusammengef&uuml;gt.</p>
@@ -263,7 +263,7 @@
         <div class="col-sm-12">
             <h2>Aufbereitung der Daten</h2>
             <p>Um die Sensordaten sowie die externen Daten aufzubereiten, verwende ich die Open Source Software <a href="https://weewx.com" target="_blank" rel="noreferrer">WeeWX</a>. 
-            Der Leistungsumfang von WeeWX wird durch eingebundene Zusatzsoftware noch erheblich erweitert.<p>
+            Der Leistungsumfang von WeeWX wird durch die eingebundene Zusatzsoftware noch erheblich erweitert.<p>
         </div>
     </div>
 
@@ -340,7 +340,7 @@
                 <li>Longitude: $station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]</li>
                 <li>H&ouml;he ca.: $station.altitude</li>
                 <li>Konsole Software EasyWeather Version: 1.6.4</li>
-                <li>Ecowitt GW1100 Gateway Software Version: 2.1.7</li>
+                <li>Ecowitt GW1100 Gateway Software Version: 2.1.8</li>
                 <li>Backend- und WebServer: Diverse virtuelle VMware ESXi basierende Rechner mit Ubuntu 22.04 LTS, Webseite self hosted</li>
                 <li>WeeWX Server uptime: $station.os_uptime</li>
                 <li>WeeWX Service uptime: $station.uptime</li>
@@ -368,6 +368,17 @@
                 <li>Batteriestatus Solar Station: <span style="color:red;">UNBEKANNT</span></li>
                 #end if
             </ul>
+        </div>
+    </div>
+
+    <!-- Tipps -->
+    <div class="row" style="margin-top:10px;">
+        <div class="col-sm-12">
+            <h2>Tipps</h2>
+            <p>Wer eine tolle Wetterseite im deutschprachigen Raum sucht, kann mal die Webseite <a href="https://www.woellsdorf-wetter.de" target="_blank" rel="noreferrer">Wetterstation D&ouml;beln-W&ouml;llsdorf</a> besuchen. 
+            Dort findet man u.a. viele <a href="https://www.woellsdorf-wetter.de/info/" target="_blank" rel="noreferrer">hilfreiche Beitr&auml;ge</a> rund um das Wetter und die Konfiguration von WeeWX. 
+            Die Betreiber*innen erstellen auch WeeWX Extensions und stellen diese auf <a href="https://github.com/roe-dl?tab=repositories" target="_blank" rel="noreferrer">GitHub</a> zur Verf&uuml;gung.</p>
+            <p>Vielen Dank an dieser Stelle f&uuml;r Inspirationen und viele Hilfestellungen bei Fragen und Problemen.</p>
         </div>
     </div>
 

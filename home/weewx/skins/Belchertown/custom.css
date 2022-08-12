@@ -150,6 +150,12 @@
     min-height: 422px !important;
 }
 
+/* Border between rain/rainrate and humidity rel/abs */
+
+.border-left-rain-hum {
+    border-left: 1px solid #D7D7D7 !important;
+}
+
 /* Highcharts */
 span.highcharts-title {
     width: 100% !important;
@@ -270,7 +276,6 @@ sub { top: 0.4em; }
         width: 104%;
         background-color: #D7D7D7;
     }
-
 }
 
 /* Small devices (portrait tablets and large phones, 600px and up) */

@@ -1882,7 +1882,7 @@ class getData(SearchList):
                 obs_rain_output = "<span class='dayRain'>%s</span><!-- AJAX -->" % str(
                     dayRain_sum
                 )
-                obs_rain_output += "&nbsp;<span class='border-left'>&nbsp;</span>"
+                obs_rain_output += "&nbsp;<span class='border-left-rain-hum'>&nbsp;</span>"
                 obs_rain_output += (
                     "<span class='rainRate'>%s</span><!-- AJAX -->"
                     % str(getattr(current, "rainRate"))
@@ -1951,6 +1951,14 @@ class getData(SearchList):
             # 20220803,ho cloudcover debug symbol
             if obs == "cloud_cover":
                 station_obs_html += ' <span class="avg10m-obs-symbols"></span>'
+            # 20220811,ho add absolute humidity to relative humidity
+            # https://github.com/roe-dl/weewx-GTS/discussions/14
+            if obs=='outHumidity':
+                humabs_output = getattr(current,'outHumAbs',None)
+                if humabs_output is not None:
+                    humabs_output = humabs_output.gram_per_meter_cubed
+                    #station_obs_html += '&nbsp;<span class="border-left-rain-hum">&nbsp;</span>'
+                    #station_obs_html += '<span class="outHumAbs">%s</span><!-- AJAX -->' % humabs_output
 
             station_obs_html += "</td>"
             station_obs_html += "</tr>"

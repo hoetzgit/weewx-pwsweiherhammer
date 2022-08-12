@@ -130,8 +130,13 @@ weewx.units.obs_group_dict['uba_no2_category'] = 'group_count'
 weewx.units.obs_group_dict['uba_o3'] = 'group_concentration'
 weewx.units.obs_group_dict['uba_o3_category'] = 'group_count'
 #
-# additional Values, Groups, Units, Formats
+# TODO: additional Values, Groups, Units, Formats ...
 weewx.units.obs_group_dict['airDensity'] = 'group_pressure3'
+weewx.units.obs_group_dict['lightning_strike_count1'] = 'group_count'
+weewx.units.obs_group_dict['rain2'] = 'group_rain'
+weewx.units.obs_group_dict['solarEnergy'] = 'group_radiation_energy'
+weewx.units.obs_group_dict['solarEnergyHes'] = 'group_radiation_energy'
+weewx.units.obs_group_dict['solarEnergyRoedl'] = 'group_radiation_energy'
 weewx.units.obs_group_dict['sunshineDurOriginal'] = 'group_deltatime'
 weewx.units.obs_group_dict['thswIndex'] = 'group_temperature'
 weewx.units.obs_group_dict['thwIndex'] = 'group_temperature'
@@ -139,38 +144,44 @@ weewx.units.obs_group_dict['vaporPressure'] = 'group_pressure2'
 weewx.units.obs_group_dict['vaporPressure2'] = 'group_pressure'
 weewx.units.obs_group_dict['wetBulb'] = 'group_temperature'
 weewx.units.obs_group_dict['windPressure'] = 'group_pressure2'
+#
 weewx.units.USUnits['group_pressure2'] = 'N_per_meter_squared'
 weewx.units.USUnits['group_pressure3'] = 'kg_per_meter_qubic'
-weewx.units.MetricUnits ['group_pressure2'] = 'N_per_meter_squared'
-weewx.units.MetricWXUnits ['group_pressure2'] = 'N_per_meter_squared'
-weewx.units.MetricUnits ['group_pressure3'] = 'kg_per_meter_qubic'
-weewx.units.MetricWXUnits ['group_pressure3'] = 'kg_per_meter_qubic'
-weewx.units.default_unit_format_dict['N_per_meter_squared'] = '%.3f'
-weewx.units.default_unit_format_dict['kg_per_meter_qubic'] = '%.3f'
-weewx.units.default_unit_label_dict['N_per_meter_squared'] = ' N/m²'
-weewx.units.default_unit_label_dict['kg_per_meter_qubic'] = ' kg/m³'
-
-#
-# TEST TEST TEST
-weewx.units.obs_group_dict['rain2'] = 'group_rain'
-weewx.units.obs_group_dict['lightning_strike_count1'] = 'group_count'
-weewx.units.obs_group_dict['solarEnergy'] = 'group_radiation_energy'
-weewx.units.obs_group_dict['solarEnergyRoedl'] = 'group_radiation_energy'
-weewx.units.obs_group_dict['solarEnergyHes'] = 'group_radiation_energy'
-# TEST TEST TEST
-#
 weewx.units.USUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
+#
+weewx.units.MetricUnits['group_pressure2'] = 'N_per_meter_squared'
+weewx.units.MetricUnits['group_pressure3'] = 'kg_per_meter_qubic'
 weewx.units.MetricUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
+#
+weewx.units.MetricWXUnits['group_pressure2'] = 'N_per_meter_squared'
+weewx.units.MetricWXUnits['group_pressure3'] = 'kg_per_meter_qubic'
 weewx.units.MetricWXUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
-weewx.units.default_unit_format_dict['watt_hour_per_meter_squared'] = '%.0f'
-weewx.units.default_unit_label_dict['watt_hour_per_meter_squared'] = ' Wh/m²'
+#
+weewx.units.default_unit_format_dict['count'] = '%.0f'
+weewx.units.default_unit_format_dict['kg_per_meter_qubic'] = '%.3f'
 weewx.units.default_unit_format_dict['kilowatt_hour_per_meter_squared'] = '%.3f'
-weewx.units.default_unit_label_dict['kilowatt_hour_per_meter_squared'] = ' kWh/m²'
-weewx.units.conversionDict['watt_hour_per_meter_squared'] = {'kilowatt_hour_per_meter_squared': lambda x : x / 1000.0}
-weewx.units.conversionDict['kilowatt_hour_per_meter_squared'] = {'watt_hour_per_meter_squared': lambda x : x * 1000.0}
-# 
+weewx.units.default_unit_format_dict['microgram_per_meter_cubed'] = '%.0f'
+weewx.units.default_unit_format_dict['N_per_meter_squared'] = '%.3f'
+weewx.units.default_unit_format_dict['uv_index'] = '%.0f'
+weewx.units.default_unit_format_dict['watt_hour_per_meter_squared'] = '%.0f'
+weewx.units.default_unit_format_dict['gram_per_meter_cubed'] = '%.1f'
+weewx.units.default_unit_format_dict['milligram_per_meter_cubed'] = '%.1f'
 #
 weewx.units.default_unit_label_dict['count'] = ''
-#weewx.units.default_unit_format_dict['microgram_per_meter_cubed'] = '%.1f'
-weewx.units.default_unit_format_dict['count'] = '%.0f'
-weewx.units.default_unit_format_dict['uv_index'] = '%.0f'
+weewx.units.default_unit_label_dict['kg_per_meter_qubic'] = ' kg/m³'
+weewx.units.default_unit_label_dict['kilowatt_hour_per_meter_squared'] = ' kWh/m²'
+weewx.units.default_unit_label_dict['N_per_meter_squared'] = ' N/m²'
+weewx.units.default_unit_label_dict['watt_hour_per_meter_squared'] = ' Wh/m²'
+weewx.units.default_unit_label_dict['gram_per_meter_cubed'] = ' g/m³'
+weewx.units.default_unit_label_dict['milligram_per_meter_cubed'] = ' mg/m³'
+#
+weewx.units.conversionDict['kilowatt_hour_per_meter_squared'] = {'watt_hour_per_meter_squared': lambda x : x * 1000.0}
+weewx.units.conversionDict['watt_hour_per_meter_squared'] = {'kilowatt_hour_per_meter_squared': lambda x : x / 1000.0}
+weewx.units.conversionDict['gram_per_meter_cubed'] = {'microgram_per_meter_cubed': lambda x : x * 1000000}
+weewx.units.conversionDict['milligram_per_meter_cubed'] = {'microgram_per_meter_cubed': lambda x : x * 1000}
+weewx.units.conversionDict['microgram_per_meter_cubed'] = {'gram_per_meter_cubed': lambda x : x * 0.000001}
+weewx.units.conversionDict['microgram_per_meter_cubed'] = {'milligram_per_meter_cubed': lambda x : x * 0.001}
+weewx.units.conversionDict['milligram_per_meter_cubed'] = {'gram_per_meter_cubed': lambda x : x * 0.001}
+weewx.units.conversionDict['gram_per_meter_cubed'] = {'milligram_per_meter_cubed': lambda x : x * 1000}
+#
+# END
