@@ -1957,8 +1957,8 @@ class getData(SearchList):
                 humabs_output = getattr(current,'outHumAbs',None)
                 if humabs_output is not None:
                     humabs_output = humabs_output.gram_per_meter_cubed
-                    #station_obs_html += '&nbsp;<span class="border-left-rain-hum">&nbsp;</span>'
-                    #station_obs_html += '<span class="outHumAbs">%s</span><!-- AJAX -->' % humabs_output
+                    station_obs_html += '&nbsp;<span class="border-left-rain-hum">&nbsp;</span>'
+                    station_obs_html += '<span class="outHumAbs">%s</span><!-- AJAX -->' % humabs_output
 
             station_obs_html += "</td>"
             station_obs_html += "</tr>"
@@ -2005,6 +2005,11 @@ class getData(SearchList):
             else:
                 all_obs_rounding_json["visibility"] = ""
                 all_obs_unit_labels_json["visibility"] = ""
+
+        # 20220811,ho add absolute humidity to relative humidity
+        # https://github.com/roe-dl/weewx-GTS/discussions/14
+        all_obs_rounding_json["outHumAbs"] = 1
+        all_obs_unit_labels_json["outHumAbs"] = " g/m³"
 
         # ==============================================================================
         # Social Share
