@@ -229,7 +229,7 @@
         <div class="col-sm-12">
             <h2>Zus&auml;tzliche Daten externer Datenquellen</h2>
             <p>Nicht alle auf der Webseite angezeigten Daten werden durch die eigene Station gemessen. Um z.B. eine Wettervorhersage anzubieten, werden zus&auml;tzliche Daten von externen
-            Quellen verwendet. Diverse Anbieter stellen - meist kostenfrei - eine API zur Verf&uuml;gung. Auch der Deutsche Wetterdienst (DWD) stellt eine Vielzahl von Daten auf 
+            Quellen verwendet. Diverse Anbieter stellen - oft auch kostenfrei - eine API zur Verf&uuml;gung. Auch der Deutsche Wetterdienst (DWD) stellt eine Vielzahl von Daten auf 
             den <a href="https://opendata.dwd.de" target="_blank" rel="noreferrer">Open Data Servern</a> bereit.</p>
         </div>
     </div>
@@ -241,7 +241,8 @@
             <ul>
                 <li><a href="https://www.windy.com/de/-Widget-auf-Seite-einbetten/widgets?49.676,12.154,5" target="_blank" rel="noreferrer">Windy Widget</a> zur Anzeige von Wetterdaten auf der Startseite</li>
                 <li>Vorhersagen und Warnmeldungen vom <a href="https://www.dwd.de" target="_blank" rel="noreferrer">Deutscher Wetterdienst (DWD)</a>, abgefragt wird die Station Weiden i.d.OPf (10688)</li>
-                <li>Einige Vorhersageelemente basieren auf Daten der <a href="https://www.aerisweather.com" target="_blank" rel="noreferrer">AerisWeather API</a>, abgefragt wird der Flughafen in Grafenw&ouml;hr</li>
+                <li>Einige Vorhersageelemente basieren auf Daten der <a href="https://www.aerisweather.com" target="_blank" rel="noreferrer">AerisWeather API</a>, abgefragt wird 
+		        das <a href="https://metar-taf.com/de/ETIC" target="_blank" rel="noreferrer">Army Air Field</a> (ETIC) in Grafenw&ouml;hr</li>
                 <li>Anzeige von Erdbeben mit Daten der <a href="http://earthquake.usgs.gov/fdsnws/event/1/" target="_blank" rel="noreferrer">USGS.gov Earthquake Catalog Developer API</a></li>
             </ul>
             <h3>Luftqualit&auml;t</h3>

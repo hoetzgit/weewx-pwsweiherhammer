@@ -2987,6 +2987,44 @@ function showChart(json_file, prepend_renderTo = false) {
                     belchertown_debug(yAxis_plotlines);
                 }
 
+                // yAxis PlotLines equivalent temperature "Schwüle"
+                // https://github.com/poblabs/weewx-belchertown/issues/682
+                // equivalent temperature levels, labels and colors
+                // https://www.spektrum.de/lexikon/geographie/aequivalenttemperatur/437
+                if (s.obsType == "outEquiTemp") {
+                    belchertown_debug('yAxis plotLines true');
+
+                    var yAxis_plotlines = [];
+
+                    const stemp = [{
+                        color: "#FF5733",
+                        label: "ab 50 &deg;C wird es als schw&uuml;l empfunden",
+                        level: 50
+                    }];
+
+                    for (i = 0; i < stemp.length; i++) {
+                        yAxis_plotlines.push({
+                            color: stemp[i].color,
+                            value: stemp[i].level,
+                            label: {
+                                text: stemp[i].label,
+                                x: 0,
+                                y: 15,
+                                style: {
+                                    color: stemp[i].color,
+                                    //fontWeight: 'bold'
+                                }
+                            },
+                            width: 1,
+                            dashStyle: 'longdashdot',
+                            zIndex : 3
+                        });
+                    }
+
+                    // Add plotlines to yAxis options
+                    options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
+                    belchertown_debug(yAxis_plotlines);
+                }
 
                 // Some charts may require a defined min/max on the yAxis
                 options.yAxis[this_yAxis].min = s.yAxis_min !== "undefined" ? s.yAxis_min : null;
