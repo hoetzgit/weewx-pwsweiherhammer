@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head itemscope itemtype="https://schema.org/Website">
+    <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta http-equiv="Refresh" Content="180">
+	#if $Extras.has_key('cwop')
+        <meta name="description" content="Weather Summaries and Records for $station.location Weather Station ($Extras.cwop). This web site is powered by WeeWX">
+        #else
+        <meta name="description" content="Weather Summaries and Records for $station.location Weather Station. This web site is powered by WeeWX">
+	#end if
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials">
+        <link rel="profile" href="https://gmpg.org/xfn/11" />
+	#if $Extras.has_key('web_url')
+	<link href="$Extras.web_url/summary.html" itemprop="url"/>
+	#end if
+        
+	<title itemprop="name">$station.location Weather Summaries and Records</title>
+        
+        <!-- Open Graph -->
+	<meta property="og:site_name" content="Weather Summaries and Records for $station.location Weather Station" />
+	<meta property="og:title" content="Summaries and Records"/>
+	#if $Extras.has_key('web_url')
+	<meta property="og:url" content="$Extras.web_url/summary.html"/>
+	#end if
+	<meta property="og:description" content="Weather Summaries and Records for $station.location Weather Station. This web site is powered by WeeWX" />
+	<meta property="og:type" content="website" /> 
+
+        <!-- FavIcons -->
+        <link rel="icon" href="favicon.ico" type="image/png">
+	<link rel="apple-touch-icon" href="touch-icon.png"/>
+        
+        <!-- Styles -->
+        <link href='https://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="css/main.css">
+	
+	<!-- Font Awesome Icon links -->
+   
+	<!-- Free license -->
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.1.1/css/all.css" crossorigin="anonymous">
+
+        <!-- Script -->
+        <script src="js/modernizr-2.6.2.min.js"></script>
+	<script src="js/checkdiff.js"></script>
+        
+  </head>
+
+  <body>
+    <!-- Menu navbar -->
+    <header>
+            <div class="container-fix" >
+                <div class="h-left" >
+                <h1><i class="fa-solid fa-cloud" ></i> $station.location </h1>
+                <p>$station.latitude[0]&deg; $station.latitude[1]' $station.latitude[2] | $station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2] | $station.altitude | <a href="https://www.google.com/maps/?q=$station.latitude[0]&deg;%20$station.latitude[1]%20$station.latitude[2],$station.longitude[0]&deg;%20$station.longitude[1]%20$station.longitude[2]" target="_blank" ><i class="fa-solid fa-location-dot" ></i> Show on map</a></p>
+                <h2>Summaries and Records</h2>
+                <p><i class="fa-solid fa-clock" ></i> $current.dateTime $current.dateTime.format("%Z")</p>
+		<p id="freshweather" class="m-orange"></p>
+		<script>
+                      window.onload = checkDiff("$current.dateTime ($current.dateTime.format('%Z'))");
+                </script>
+                </div>
+                
+                <div class="h-right" >
+                    <table>
+                        <tr><td><b>Station:</b></td><td>$station.hardware</td></tr>
+                        <tr><td><b>Software:</b></td><td><a href="https://weewx.com/" target="_blank" >WeeWX v$station.version</a></td></tr>
+                        <tr><td><b>Weewx uptime:</b></td><td>$station.uptime</td></tr>
+                        <tr><td><b>Server uptime:</b></td><td>$station.os_uptime</td></tr>
+                    </table>
+                </div>
+
+                <nav>
+                    <ul class="topnav" id="myTopnav">
+			<li class="icon"><a href="javascript:void(0);" onclick="myFunction()"><i class="fa-solid fa-bars" ></i></a></li>
+                        <li><a href="index.html" >Current</a></li>
+                        <li><a href="week.html" >Week</a></li>
+                        <li><a href="month.html" >Month</a></li>
+                        <li><a href="year.html" >Year</a></li>
+			<li class="active" ><a href="summary.html" >Summaries</a></li>
+			<li><a href="about.html" >About</a></li>
+                        <li><a href="RSS/weewx_rss.xml" ><i class="fa-solid fa-rss" ></i></a></li>
+	    		#if $Extras.has_key('twitter_url')
+	    		<li><a href=$Extras.twitter_url><i class="fa-brands fa-twitter" ></i></a></li>
+	    		#end if
+                    </ul>
+                </nav>
+            </div>
+     </header>
+    <!-- Main container -->  
+     <div class="main" >
+        <div class="container" >
+	    <div class="left" >
+
+		<div class="card" >
+                    <h1><i class="fa-solid fa-bolt-lightning m-orange" ></i> All Time Records </h1>
+                    <table class="tablespacer">
+			<tr><td colspan="3"><b>Outside Temperatures</b></td></tr>
+			<tr><td>Highest</td><td>$alltime.outTemp.max</td><td>$alltime.outTemp.maxtime</td></tr>
+			<tr><td>Lowest</td><td>$alltime.outTemp.min</td><td>$alltime.outTemp.mintime</td></tr>
+		    	<tr><td>Min Max</td><td>$alltime.outTemp.minmax</td><td>$alltime.outTemp.minmaxtime</td></tr>
+			<tr><td>Max Min</td><td>$alltime.outTemp.maxmin</td><td>$alltime.outTemp.maxmintime</td></tr>
+			<tr><td colspan="3"><br><b>Dewpoint</b></td></tr>
+			<tr><td>Highest</td><td>$alltime.dewpoint.max</td><td>$alltime.dewpoint.maxtime</td></tr>
+			<tr><td>Lowest</td><td>$alltime.dewpoint.min</td><td>$alltime.dewpoint.mintime</td></tr>
+			<tr><td colspan="3"><br><b>Precipitation</b></td></tr>
+			<tr><td>Highest Daily Rainfall</td><td>$alltime.rain.maxsum</td><td>$alltime.rain.maxsumtime.format("%m/%d/%Y")</td></tr>
+			<tr><td>Highest Rain Rate</td><td>$alltime.rainRate.max</td><td>$alltime.rainRate.maxtime</td></tr>
+			<tr><td colspan="3"><br><b>Heat Index</b></td></tr>
+			<tr><td>Highest</td><td>$alltime.heatindex.max</td><td>$alltime.heatindex.maxtime</td></tr>
+			<tr><td colspan="3"><br><b>Barometer</b></td></tr>
+			<tr><td>Highest</td><td>$alltime.barometer.max</td><td>$alltime.barometer.maxtime</td></tr>
+			<tr><td>Lowest</td><td>$alltime.barometer.min</td><td>$alltime.barometer.mintime</td></tr>
+			<tr><td colspan="3"><br><b>Wind</b></td></tr>
+			<tr><td>Highest Sustained</td><td>$alltime.windSpeed.max</td><td>$alltime.windSpeed.maxtime</td></tr>
+			<tr><td>Highest Gust</td><td>$alltime.windGust.max</td><td>$alltime.windGust.maxtime</td></tr>
+			<tr><td colspan="3"><br><b>Wind Chill</b></td></tr>
+			<tr><td>Lowest</td><td>$alltime.windchill.min</td><td>$alltime.windchill.mintime</td></tr>
+			#if $alltime.ET.has_data
+			<tr><td colspan="3"><br><b>Evapotranspiration</b></td></tr>
+			<tr><td>Highest</td><td>$alltime.ET.max.format(format_string="%.5f")</td><td>$alltime.ET.maxtime</td></tr>
+			#end if
+			#if $alltime.radiation.has_data
+			<tr><td colspan="3"><br><b>Solar Radiation</b></td></tr>
+			<tr><td>Highest</td><td>$alltime.radiation.max</td><td>$alltime.radiation.maxtime</td></tr>
+			#end if
+			#if $alltime.illuminance.has_data
+			<tr><td colspan="3"><br><b>Brightness</b></td></tr>
+			<tr><td>Highest</td><td>$alltime.illuminance.max</td><td>$alltime.illuminance.maxtime</td></tr>
+			#end if
+			#if $alltime.lightning_strike_count.has_data
+			<tr><td colspan="3"><br><b>Lightning</b></td></tr>
+			<tr><td>Highest</td><td>$alltime.lightning_strike_count.max</td><td>$alltime.lightning_strike_count.maxtime</td></tr>
+			#end if
+			#if $alltime.inTemp.has_data
+			<tr><td colspan="3"><br><b>House Temperatures</b></td></tr>
+			<tr><td>Highest</td><td>$alltime.inTemp.max</td><td>$alltime.inTemp.maxtime</td></tr>
+			<tr><td>Lowest</td><td>$alltime.inTemp.min</td><td>$alltime.inTemp.mintime</td></tr>
+			#end if
+			#if $alltime.inHumidity.has_data
+			<tr><td colspan="3"><br><b>House Humidity</b></td></tr>
+			<tr><td>Highest</td><td>$alltime.inHumidity.max</td><td>$alltime.inHumidity.maxtime</td></tr>
+			<tr><td>Lowest</td><td>$alltime.inHumidity.min</td><td>$alltime.inHumidity.mintime</td></tr>
+			#end if
+                    </table>
+                </div>
+
+	   </div>
+
+	   <div class="right" >
+		<div class="card">
+                    <h1><i class="fa-solid fa-box-archive"></i> Monthly Reports</h1>
+			<div class="noaatable">
+                   	$NOAA_table
+			</div>
+                </div>
+
+		<div class="card">
+                    <h1><i class="fa-solid fa-thermometer-half" ></i> Average Monthly Temperature</h1>
+			<div class="tablefix">
+                    	$avg_temp_table
+			</div>
+                </div>
+		
+		<div class="card">
+                    <h1><i class="fa-solid fa-cloud-rain m-blau" ></i> Total Monthly Rainfall </h1>
+			<div class="tablefix">
+                    	$rain_table
+			</div>
+                </div>
+
+		<div class="card">
+                    <h1><i class="fa-solid fa-umbrella m-blau" ></i> Number of Days it Rained </h1>
+			<div class="tablefix">
+                    	$rain_count_table
+			</div>
+                </div>
+
+		#if $month.inTemp.has_data
+		<div class="card">
+                    <h1><i class="fa-solid fa-thermometer-half m-rot" ></i> Average House Temperature by Month</h1>
+			<div class="tablefix">
+                    	$avg_htemp_table
+			</div>
+                </div>
+		#end if
+
+		#if $month.lightning_strike_count.has_data
+		<div class="card">
+                    <h1><i class="fa-solid fa-bolt-lightning m-orange" ></i> Total Lightning Strikes </h1>
+			<div class="tablefix">
+                    	$lightning_sum_table
+			</div>
+                </div>
+		#end if
+
+		<div class="card">
+                    <h1><i class="fa-solid fa-table m-grau" ></i> Number of Days with Observations</h1>
+			<div class="tablefix">
+                    	$temp_count_table
+			</div>
+                </div>
+
+	   </div>
+        </div>
+        </div>
+        
+        <footer>
+            <div class="container-fix">
+	      <div style="text-align:center">
+          	#if $Extras.has_key('you')
+          	<i class="fa-solid fa-dragon"> </i><a href=mailto:$Extras.email> $Extras.you</a> 
+          	#end if
+          	&sdot;
+          	Copyright <i class="fa-regular fa-copyright"></i> $latest.dateTime.format("%Y") 
+          	<br>
+          	Sofaskin by <a href="https://neoground.com">Neoground</a>
+          	&sdot;
+          	CW9009 Version by <a href="https://www.centuryfarmweather.com">Century Farm Weather</a>
+          	&sdot;
+          	Powered by<i class="fa-solid fa-cog fa-spin fa-fw" aria-hidden="true"></i><a href="https://weewx.com/" target="_blank">WeeWX</a> 
+              </div>
+	    </div>
+        </footer>
+
+        #if $Extras.has_key('googleAnalyticsId')
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=$Extras.googleAnalyticsId"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+		gtag('config', '$Extras.googleAnalyticsId');
+	</script>
+        #end if
+
+	<!-- Toggle between adding and removing the "responsive" class to topnav when the user clicks on the icon -->
+	<script>
+		function myFunction() {
+    			var x = document.getElementById("myTopnav");
+    			if (x.className === "topnav") {
+    			    x.className += " responsive";
+    			} else {
+    			    x.className = "topnav";
+    			}
+		}	
+	</script>
+    </body>
+</html>
+

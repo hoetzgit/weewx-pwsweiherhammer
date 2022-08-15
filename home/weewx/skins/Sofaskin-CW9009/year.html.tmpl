@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+  <head itemscope itemtype="https://schema.org/Website">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Refresh" content="180">
+    #if $Extras.has_key('cwop')
+    <meta name="description" content="Yearly Weather Summary for $station.location Weather Station ($Extras.cwop). This web site is powered by WeeWX">
+    #else
+    <meta name="description" content="Yearly Weather Summary for $station.location Weather Station. This web site powered by WeeWX">
+    #end if
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials">
+    <link rel="profile" href="https://gmpg.org/xfn/11" />
+    #if $Extras.has_key('web_url')
+    <link href="$Extras.web_url/year.html" itemprop="url" />
+    #end if
+    <title itemprop="name">$station.location Yearly Weather Summary</title>
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="$station.location Yearly Weather Summary" />
+    <meta property="og:title" content="Yearly Weather Summary for $station.location"/>
+    #if $Extras.has_key('web_url')
+    <meta property="og:url" content="$Extras.web_url/year.html"/>
+    #end if
+    <meta property="og:description" content="Yearly Weather Summary for $station.location. This web site is powered by WeeWX" />
+    <meta property="og:type" content="website" />
+    <!-- FavIcons -->
+    <link rel="icon" href="favicon.ico" type="image/png">
+    <link rel="apple-touch-icon" href="touch-icon.png"/>
+        
+    <!-- Styles -->
+    <link href='https://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="css/main.css">
+    
+    <!-- Font Awesome Icon links -->
+   
+    <!-- Free license -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.1.1/css/all.css" crossorigin="anonymous">
+   
+    <!-- Script -->
+    <script src="js/modernizr-2.6.2.min.js"></script>
+    <script src="js/checkdiff.js"></script>
+  </head>
+  <body>
+    <header>
+      <div class="container-fix" >
+        <div class="h-left" >
+          <h1><i class="fa-solid fa-cloud" ></i> $station.location </h1>
+          <p>$station.latitude[0]&deg; $station.latitude[1]' $station.latitude[2] | $station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2] | $station.altitude | <a href="https://www.google.com/maps/?q=$station.latitude[0]&deg;%20$station.latitude[1]%20$station.latitude[2],$station.longitude[0]&deg;%20$station.longitude[1]%20$station.longitude[2]" target="_blank" ><i class="fa-solid fa-location-dot" ></i> Show on map</a></p>
+          <h2>Yearly Weather Summary</h2>
+          <p><i class="fa-solid fa-clock" ></i> $current.dateTime $current.dateTime.format("%Z")</p>
+          <p id="freshweather" class="m-orange"></p>
+          <script>
+            window.onload = checkDiff("$current.dateTime ($current.dateTime.format('%Z'))");
+          </script>
+        </div>
+        <div class="h-right" >
+          <table>
+            <tr>
+              <td><b>Station:</b></td>
+              <td>$station.hardware</td>
+            </tr>
+            <tr>
+              <td><b>Software:</b></td>
+              <td><a href="https://weewx.com/" target="_blank" >WeeWX v$station.version</a></td>
+            </tr>
+            <tr>
+              <td><b>Weewx uptime:</b></td>
+              <td>$station.uptime</td>
+            </tr>
+            <tr>
+              <td><b>Server uptime:</b></td>
+              <td>$station.os_uptime</td>
+            </tr>
+          </table>
+        </div>
+        <nav>
+          <ul class="topnav" id="myTopnav">
+            <li class="icon"><a href="javascript:void(0);" onclick="myFunction()"><i class="fa-solid fa-bars" ></i></a></li>
+            <li><a href="index.html" >Current</a></li>
+            <li><a href="week.html" >Week</a></li>
+            <li><a href="month.html" >Month</a></li>
+            <li class="active" ><a href="year.html" >Year</a></li>
+            <li><a href="summary.html" >Summaries</a></li>
+            <li><a href="about.html" >About</a></li>
+            <li><a href="RSS/weewx_rss.xml" ><i class="fa-solid fa-rss" ></i></a></li>
+            #if $Extras.has_key('twitter_url')
+            <li><a href=$Extras.twitter_url><i class="fa-brands fa-twitter" ></i></a></li>
+            #end if
+            
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <div class="main" >
+      <div class="container" >
+        <div class="left" >
+          <div class="card" >
+            <h1><i class="fa-regular fa-calendar-days m-rot" ></i> Calendar Year</h1>
+            <table class="tablespacer">
+              <tr>
+                <td>High Temperature</td>
+                <td>$year.outTemp.max</td>
+                <td>$year.outTemp.maxtime</td>
+              </tr>
+              <tr>
+                <td>Low Temperature</td>
+                <td>$year.outTemp.min</td>
+                <td>$year.outTemp.mintime</td>
+              </tr>
+              <tr>
+                <td>High Heat Index</td>
+                <td>$year.heatindex.max</td>
+                <td>$year.heatindex.maxtime</td>
+              </tr>
+              <tr>
+                <td>Low Wind Chill</td>
+                <td>$year.windchill.min</td>
+                <td>$year.windchill.mintime</td>
+              </tr>
+              <tr>
+                <td>High Dewpoint</td>
+                <td>$year.dewpoint.max</td>
+                <td>$year.dewpoint.maxtime</td>
+              </tr>
+              <tr>
+                <td>Low Dewpoint</td>
+                <td>$year.dewpoint.min</td>
+                <td>$year.dewpoint.mintime</td>
+              </tr>
+              <tr>
+                <td>High Humidity</td>
+                <td>$year.outHumidity.max</td>
+                <td>$year.outHumidity.maxtime</td>
+              </tr>
+              <tr>
+                <td>Low Humidity</td>
+                <td>$year.outHumidity.min</td>
+                <td>$year.outHumidity.mintime</td>
+              </tr>
+              <tr>
+                <td>High Barometer</td>
+                <td>$year.barometer.max</td>
+                <td>$year.barometer.maxtime</td>
+              </tr>
+              <tr>
+                <td>Low Barometer</td>
+                <td>$year.barometer.min</td>
+                <td>$year.barometer.mintime</td>
+              </tr>
+              <tr>
+                <td>High Wind Speed</td>
+                <td>$year.wind.max <br>$year.wind.gustdir</td>
+                <td>$year.wind.maxtime</td>
+              </tr>
+              <tr>
+                <td>Average Wind</td>
+                <td>$year.wind.avg</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>RMS Wind</td>
+                <td>$year.wind.rms</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>Vector Average Speed</td>
+                <td>$year.wind.vecavg</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>Vector Average Direction</td>
+                <td>$year.wind.vecdir</td>
+                <td></td>
+              </tr>
+              #if $year.inTemp.has_data
+              <tr>
+                <td>High Inside Temperature</td>
+                <td>$year.inTemp.max</td>
+                <td>$year.inTemp.maxtime</td>
+              </tr>
+              <tr>
+                <td>Low Inside Temperature</td>
+                <td>$year.inTemp.min</td>
+                <td>$year.inTemp.mintime</td>
+              </tr>
+              #end if
+              #if $year.extraTemp1.has_data
+              <tr>
+                <td>High Pond Temp</td>
+                <td>$year.extraTemp1.max</td>
+                <td>$year.extraTemp1.maxtime</td>
+              </tr>
+              <tr>
+                <td>Low Pond Temp</td>
+                <td>$year.extraTemp1.min</td>
+                <td>$year.extraTemp1.mintime</td>
+              </tr>
+              #end if
+              #if $year.UV.has_data
+              <tr>
+                <td>High UV Index</td>
+                <td>$year.UV.max</td>
+                <td>$year.UV.maxtime</td>
+              </tr>
+              #end if
+              #if $year.ET.has_data and $year.ET.sum.raw > 0.0
+              <tr>
+                <td>High Evapotranspiration</td>
+                <td>$year.ET.max.format(format_string="%.5f")</td>
+                <td>$year.ET.maxtime</td>
+              </tr>
+              <tr>
+                <td>Evapotranspiration Total</td>
+                <td>$year.ET.sum</td>
+                <td></td>
+              </tr>
+              #end if
+              #if $year.radiation.has_data
+              <tr>
+                <td>High Radiation</td>
+                <td>$year.radiation.max</td>
+                <td>$year.radiation.maxtime</td>
+              </tr>
+              #end if
+              #if $year.illuminance.has_data
+              <tr>
+                <td>High Brightness</td>
+                <td>$year.illuminance.max</td>
+                <td>$year.illuminance.maxtime</td>
+              </tr>
+              #end if
+            </table>
+          </div>
+          <div class="card" >
+            <h1><i class="fa-solid fa-droplet m-blau" ></i> Rain Year (1-$station.rain_year_str start)</h1>
+            <table class="tablespacer">
+              <tr>
+                <td>Rain Year Total</td>
+                <td>$rainyear.rain.sum</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>High Rain Rate</td>
+                <td>$rainyear.rainRate.max</td>
+                <td>$rainyear.rainRate.maxtime</td>
+              </tr>
+              #if $year($years_ago=1).rain.sum.string != "   N/A"
+              <tr>
+                <td>$year($years_ago=1).dateTime.format("%Y") Rain Total</td>
+                <td>$year($years_ago=1).rain.sum</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>$year($years_ago=1).dateTime.format("%Y") High Rain Rate</td>
+                <td>$year($years_ago=1).rainRate.max</td>
+                <td>$year($years_ago=1).rainRate.maxtime</td>
+              </tr>
+              #end if
+            </table>
+          </div>
+          #if $year.lightning_strike_count.has_data
+          <div class="card" >
+            <h1><i class="fa-solid fa-bolt-lightning m-orange" ></i> Total Lightning Strikes</h1>
+            <table class="tablespacer">
+              <tr>
+                <td>Lightning Strikes for $year.dateTime.format("%Y")</td>
+                <td>$year.lightning_strike_count.sum</td>
+              </tr>
+          #if $year($years_ago=1).lightning_strike_count.sum.string != "   N/A"
+              <tr>
+                <td>Lightning Strikes for $year($years_ago=1).dateTime.format("%Y")</td>
+                <td>$year($years_ago=1).lightning_strike_count.sum</td>
+              </tr>
+          #end if
+            </table>
+          </div>
+      #end if
+      #if $year($years_ago=1).outTemp.max.string != "   N/A"
+          <div class="card" >
+            <h1><i class="fa-regular fa-calendar-days m-rot" ></i> Last Calendar Year ($year($years_ago=1).dateTime.format("%Y"))</h1>
+            <table class="tablespacer">
+              <tr>
+                <td>High Temperature</td>
+                <td>$year($years_ago=1).outTemp.max</td>
+                <td>$year($years_ago=1).outTemp.maxtime</td>
+              </tr>
+              <tr>
+                <td>Low Temperature</td>
+                <td>$year($years_ago=1).outTemp.min</td>
+                <td>$year($years_ago=1).outTemp.mintime</td>
+              </tr>
+              <tr>
+                <td>High Heat Index</td>
+                <td>$year($years_ago=1).heatindex.max</td>
+                <td>$year($years_ago=1).heatindex.maxtime</td>
+              </tr>
+              <tr>
+                <td>Low Wind Chill</td>
+                <td>$year($years_ago=1).windchill.min</td>
+                <td>$year($years_ago=1).windchill.mintime</td>
+              </tr>
+              <tr>
+                <td>High Dewpoint</td>
+                <td>$year($years_ago=1).dewpoint.max</td>
+                <td>$year($years_ago=1).dewpoint.maxtime</td>
+              </tr>
+              <tr>
+                <td>Low Dewpoint</td>
+                <td>$year($years_ago=1).dewpoint.min</td>
+                <td>$year($years_ago=1).dewpoint.mintime</td>
+              </tr>
+              <tr>
+                <td>High Humidity</td>
+                <td>$year($years_ago=1).outHumidity.max</td>
+                <td>$year($years_ago=1).outHumidity.maxtime</td>
+              </tr>
+              <tr>
+                <td>Low Humidity</td>
+                <td>$year($years_ago=1).outHumidity.min</td>
+                <td>$year($years_ago=1).outHumidity.mintime</td>
+              </tr>
+              <tr>
+                <td>High Barometer</td>
+                <td>$year($years_ago=1).barometer.max</td>
+                <td>$year($years_ago=1).barometer.maxtime</td>
+              </tr>
+              <tr>
+                <td>Low Barometer</td>
+                <td>$year($years_ago=1).barometer.min</td>
+                <td>$year($years_ago=1).barometer.mintime</td>
+              </tr>
+              <tr>
+                <td>High Wind Speed</td>
+                <td>$year($years_ago=1).wind.max <br>$year($years_ago=1).wind.gustdir</td>
+                <td>$year($years_ago=1).wind.maxtime</td>
+              </tr>
+              <tr>
+                <td>Average Wind</td>
+                <td>$year($years_ago=1).wind.avg</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>RMS Wind</td>
+                <td>$year($years_ago=1).wind.rms</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>Vector Average Speed</td>
+                <td>$year($years_ago=1).wind.vecavg</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>Vector Average Direction</td>
+                <td>$year($years_ago=1).wind.vecdir</td>
+                <td></td>
+              </tr>
+              #if $year($years_ago=1).inTemp.has_data
+              <tr>
+                <td>High Inside Temperature</td>
+                <td>$year($years_ago=1).inTemp.max</td>
+                <td>$year($years_ago=1).inTemp.maxtime</td>
+              </tr>
+              <tr>
+                <td>Low Inside Temperature</td>
+                <td>$year($years_ago=1).inTemp.min</td>
+                <td>$year($years_ago=1).inTemp.mintime</td>
+              </tr>
+              #end if
+              #if $year($years_ago=1).extraTemp1.has_data
+              <tr>
+                <td>High Pond Temp</td>
+                <td>$year($years_ago=1).extraTemp1.max</td>
+                <td>$year($years_ago=1).extraTemp1.maxtime</td>
+              </tr>
+              <tr>
+                <td>Low Pond Temp</td>
+                <td>$year($years_ago=1).extraTemp1.min</td>
+                <td>$year($years_ago=1).extraTemp1.mintime</td>
+              </tr>
+              #end if
+              #if $year($years_ago=1).UV.has_data
+              <tr>
+                <td>High UV</td>
+                <td>$year($years_ago=1).UV.max</td>
+                <td>$year($years_ago=1).UV.maxtime</td>
+              </tr>
+              #end if
+              #if $year($years_ago=1).ET.has_data and $year($years_ago=1).ET.sum.raw >0.0
+              <tr>
+                <td>High Evapotranspiration</td>
+                <td>$year($years_ago=1).ET.max.format(format_string="%.5f")</td>
+                <td>$year($years_ago=1).ET.maxtime</td>
+              </tr>
+              <tr>
+                <td>Total Evapotranspiration</td>
+                <td>$year($years_ago=1).ET.sum</td>
+                <td></td>
+              </tr>
+              #end if
+              #if $year($years_ago=1).radiation.has_data
+              <tr>
+                <td>High Radiation</td>
+                <td>$year($years_ago=1).radiation.max</td>
+                <td>$year($years_ago=1).radiation.maxtime</td>
+              </tr>
+              #end if
+              #if $year($years_ago=1).illuminance.has_data
+              <tr>
+                <td>High Brightness</td>
+                <td>$year($years_ago=1).illuminance.max</td>
+                <td>$year($years_ago=1).illuminance.maxtime</td>
+              </tr>
+              #end if
+            </table>
+          </div>
+        #end if
+        </div>
+        <div class="right" >
+          <div class="card cc graphs" >
+            <h1><i class="fa-solid fa-chart-line m-gruen" ></i> Yearly Statistics and Plots</h1>
+            <img src="yeartempdew.png" alt="temperatures" />
+            <img src="yearhilow.png" alt="Daily highs and lows for the year" title="Daily highs and lows for the year"/>
+            <img src="yearrain.png" alt="rain" />
+            <img src="yearwind.png" alt="wind" />
+            <img src="yearwinddir.png" alt="Hi Wind" /> 
+            <img src="yearwindvec.png" alt="Wind Vector" />
+            <img src="yearbarometer.png" alt="barometer"/>
+            #if $year.inTemp.has_data
+            <img src="yearinside.png" alt="Inside" />
+	          #end if
+            <img src="yearinhumid.png" alt="Inside/Outside Humidity" />
+            #if $year.UV.has_data
+            <img src="yearuv.png" alt="UV Index" />
+            #end if
+            #if $year.radiation.has_data
+            <img src="yearradiation.png" alt="Radiation" />
+            #end if
+            #if $year.lightning_strike_count.has_data
+            <img src="yearlightning.png" alt="lightning" />
+            #end if
+            #if $year.windBatteryStatus.has_data and $year.outTempBatteryStatus.has_data
+            <img src="yearbattery.png" alt="battery"/>
+            #end if
+            #if $year.rxCheckPercent.has_data
+            <img src="yearrx.png" alt="year rx percent"/>
+            #end if
+            #if $year.extraTemp1.has_data
+            <img src="yearpond.png" alt="Pond Temperatures" />
+            #end if
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer>
+      <div class="container-fix">
+        <div style="text-align:center">
+          #if $Extras.has_key('you')
+          <i class="fa-solid fa-dragon"> </i><a href=mailto:$Extras.email> $Extras.you</a> 
+          #end if
+          &sdot;
+          Copyright <i class="fa-regular fa-copyright"></i> $latest.dateTime.format("%Y") 
+          <br>
+          Sofaskin by <a href="https://neoground.com">Neoground</a>
+          &sdot;
+          CW9009 Version by <a href="https://www.centuryfarmweather.com/">Century Farm Weather</a>
+          &sdot;
+          Powered by<i class="fa-solid fa-cog fa-spin fa-fw" aria-hidden="true"></i><a href="https://weewx.com/" target="_blank">WeeWX</a> 
+        </div>
+      </div>
+    </footer>
+    #if $Extras.has_key('googleAnalyticsId')
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=$Extras.googleAnalyticsId"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '$Extras.googleAnalyticsId');
+    </script>
+    #end if
+    <!-- Toggle between adding and removing the "responsive" class to topnav when the user clicks on the icon -->
+    <script>
+      function myFunction() {
+          var x = document.getElementById("myTopnav");
+          if (x.className === "topnav") {
+              x.className += " responsive";
+          } else {
+              x.className = "topnav";
+          }
+      }
+    </script>
+  </body>
+</html>

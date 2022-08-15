@@ -3,7 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""This example shows how to extend the XTypes system with a new type, vaporPressure2, the vapor
+"""This example shows how to extend the XTypes system with a new type, vaporPressure, the vapor
 pressure of water.
 
 REQUIRES WeeWX V4.2 OR LATER!
@@ -47,8 +47,8 @@ class VaporPressure(weewx.xtypes.XType):
         self.algorithm = algorithm.lower()
 
     def get_scalar(self, obs_type, record, db_manager):
-        # We only know how to calculate 'vaporPressure2'. For everything else, raise an exception UnknownType
-        if obs_type != 'vaporPressure2':
+        # We only know how to calculate 'vaporPressure'. For everything else, raise an exception UnknownType
+        if obs_type != 'vaporPressure':
             raise weewx.UnknownType(obs_type)
 
         # We need outTemp in order to do the calculation.
@@ -76,7 +76,7 @@ class VaporPressure(weewx.xtypes.XType):
         elif self.algorithm == 'tetens':
             # Use Teten's algorithm.
             # Use the formula. Results will be in kPa:
-            p_kPa = 0.61078 * math.exp(17.27 * outTemp_C_vt[0] / (outTemp_C_vt[0] + 237.3))
+            p_kPa = 0.61078 * math.exp(17.27 * outTemp_C / (outTemp_C + 237.3))
             # Form a ValueTuple
             p_vt = ValueTuple(p_kPa, 'kPa', 'group_pressure')
         else:
@@ -111,5 +111,5 @@ class VaporPressureService(StdService):
         weewx.xtypes.xtypes.remove(self.vp)
 
 
-# Tell the unit system what group our new observation type, 'vaporPressure2', belongs to:
-weewx.units.obs_group_dict['vaporPressure2'] = "group_pressure"
+# Tell the unit system what group our new observation type, 'vaporPressure', belongs to:
+weewx.units.obs_group_dict['vaporPressure'] = "group_pressure"

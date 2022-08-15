@@ -375,7 +375,7 @@
     <div class="row" style="margin-top:10px;">
         <div class="col-sm-12">
             <h2>Tipps</h2>
-            <p>Wer eine tolle Wetterseite im deutschprachigen Raum sucht, kann mal die Webseite <a href="https://www.woellsdorf-wetter.de" target="_blank" rel="noreferrer">Wetterstation D&ouml;beln-W&ouml;llsdorf</a> besuchen. 
+            <p>Wer eine tolle Wetterseite im deutschsprachigen Raum sucht, kann mal die Webseite <a href="https://www.woellsdorf-wetter.de" target="_blank" rel="noreferrer">Wetterstation D&ouml;beln-W&ouml;llsdorf</a> besuchen. 
             Dort findet man u.a. viele <a href="https://www.woellsdorf-wetter.de/info/" target="_blank" rel="noreferrer">hilfreiche Beitr&auml;ge</a> rund um das Wetter und die Konfiguration von WeeWX. 
             Die Betreiber*innen erstellen auch WeeWX Extensions und stellen diese auf <a href="https://github.com/roe-dl?tab=repositories" target="_blank" rel="noreferrer">GitHub</a> zur Verf&uuml;gung.</p>
             <p>Vielen Dank an dieser Stelle f&uuml;r Inspirationen und viele Hilfestellungen bei Fragen und Problemen.</p>

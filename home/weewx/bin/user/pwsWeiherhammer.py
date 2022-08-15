@@ -341,40 +341,6 @@ def thswIndex_US(t_F, RH, ws_mph, rahes):
     # return round(thsw_F, 1) if thsw_F is not None else None
     return thsw_F if thsw_F is not None else None
 
-def vaporPressure_C(t_C):
-
-    # t_C is outTemp in C
-
-    if t_C is None:
-        return None
-
-    """ ueber Wasser t_C -45 C bis 60 C
-       ddM_C = 6.112 * math.exp(17.62 * t_C / (243.12 + t_C))
-       ueber Eis t_C -65 C bis 0.01 C
-       ddM_C = 6.112 * math.exp(22.46 * t_C / (272.62 + t_C))
-    """
-    if t_C < 0.0:
-
-        dd_C = 6.112 * math.exp(22.46 * t_C / (272.62 + t_C))
-
-    else:
-
-        dd_C = 6.112 * math.exp(17.62 * t_C / (243.12 + t_C))
-
-    return dd_C
-
-def vaporPressure_F(t_F):
-
-    #  t_F = temperatur degree F
-
-    if t_F is None:
-        return None
-
-    t_C = FtoC(t_F)
-    dd_C = vaporPressure_C(t_C)
-
-    return (dd_C * INHG_PER_MBAR) if (dd_C * INHG_PER_MBAR) is not None else None
-
 class pwsWeiherhammer(weewx.xtypes.XType):
 
     def __init__(self, altitude, latitude, longitude,
@@ -596,20 +562,6 @@ class pwsWeiherhammer(weewx.xtypes.XType):
             val = thswIndex_Metric(data['outTemp'], data['outHumidity'], data['windSpeed'], data['radiation'])
             u = 'degree_C'
         return ValueTuple(val, u, 'group_temperature')
-
-    @staticmethod
-    def calc_vaporPressure(key, data, db_manager=None):
-        if 'outTemp' not in data:
-            raise weewx.CannotCalculate(key)
-
-        if data['usUnits'] == weewx.US:
-            val = vaporPressure_F(data['outTemp'])
-            u = 'inHg'
-        else:
-            val = vaporPressure_C(data['outTemp'])
-            u = 'mbar'
-        return ValueTuple(val, u, 'group_pressure')
-
 
 
 class pwsWeiherhammerService(StdService):

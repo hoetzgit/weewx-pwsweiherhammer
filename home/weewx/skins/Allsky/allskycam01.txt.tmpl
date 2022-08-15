@@ -1,0 +1,20 @@
+#errorCatcher Echo
+#encoding UTF-8
+#def get_boolean_status($x)
+#if $x is None
+$gettext('UNKNOWN')
+#elif $x > 0.0
+$gettext('ON')
+#else
+$gettext('OFF')
+#end if
+#end def
+Dome Temp: $current.asky_dome_temperature.toString($localize=False)
+Dome Dewpoint: $current.asky_dome_dewpoint.toString($localize=False)
+Dome Heater: $get_boolean_status($current.asky_dome_heater.raw)
+Box Temp: $current.asky_box_temperature.toString($localize=False)
+Box Dewpoint: $current.asky_box_dewpoint.toString($localize=False)
+Box Humidity: $current.asky_box_humidity.toString($localize=False)
+Box Fan: $get_boolean_status($current.asky_box_fan.raw)
+CPU Temp: $current.asky_cpu_temperature.toString($localize=False)
+CPU Fan: $get_boolean_status($current.asky_cpu_fan.raw)
