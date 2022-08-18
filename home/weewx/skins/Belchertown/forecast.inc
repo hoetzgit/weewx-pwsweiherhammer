@@ -145,7 +145,7 @@
 
     #if os.path.exists("dwd/SchilderMS.jpg")
     <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-        <div class="col-md-12 forecast-title">
+        <div class="col-md-12 forecast-headline">
             Aktuelle Warnlage in Bayern
         </div>
         <div class="col-sm-12">
@@ -156,7 +156,7 @@
 
     #if os.path.exists("dwd/warn-NEW.inc")
     <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-        <div class="col-md-12 forecast-title">
+        <div class="col-md-12 forecast-headline">
             Aktuelle Wetterwarnungen f&uuml;r den Landkreis Neustadt a.d. Waldnaab
         </div>  
         <div class="col-md-12">
@@ -167,7 +167,7 @@
 
     #if os.path.exists("dwd/warn-WEIHERHAMMER.inc")
     <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-        <div class="col-md-12 forecast-title">
+        <div class="col-md-12 forecast-headline">
             Aktuelle Wetterwarnungen f&uuml;r Weiherhammer
         </div>
         <div class="col-md-12">
@@ -178,7 +178,7 @@
 
     #if os.path.exists("dwd/VHDL54_DWMG_LATEST.html")
     <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-        <div class="col-md-12 forecast-title">
+        <div class="col-md-12 forecast-headline">
             Wetterlage in Bayern
         </div>
         <div class="col-md-12">
@@ -190,7 +190,7 @@
 
     #if os.path.exists("dwd/VHDL50_DWMG_LATEST.html")
     <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-        <div class="col-md-12 forecast-title">
+        <div class="col-md-12 forecast-headline">
             Wettervorhersage heute
         </div>
         <div class="col-md-12">
@@ -202,7 +202,7 @@
 
     #if os.path.exists("dwd/VHDL51_DWMG_LATEST.html")
     <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-        <div class="col-md-12 forecast-title">
+        <div class="col-md-12 forecast-headline">
             Wettervorhersage morgen
         </div>
         <div class="col-md-12">
@@ -214,7 +214,7 @@
 
     #if os.path.exists("dwd/VHDL52_DWMG_LATEST.html")
     <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-        <div class="col-md-12 forecast-title">
+        <div class="col-md-12 forecast-headline">
             Wettervorhersage &uuml;bermorgen
         </div>
         <div class="col-md-12">
@@ -226,7 +226,7 @@
 
     #if os.path.exists("dwd/VHDL53_DWMG_LATEST.html")
     <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-        <div class="col-md-12 forecast-title">
+        <div class="col-md-12 forecast-headline">
             Wettervorhersage 4. Tag
         </div>
         <div class="col-md-12">
@@ -238,7 +238,7 @@
 
     #if os.path.exists("dwd/bwk_bodendruck_na_ana.png")
     <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-        <div class="col-md-12 forecast-title">
+        <div class="col-md-12 forecast-headline">
             Aktuelle Wetterkarte (Luftdruck am Boden)
         </div>
         <div class="col-md-12" style="margin-top:10px;>
@@ -252,7 +252,7 @@
     ##<script>new Meteogram('#meteogram', '10688');</script>
 
     ##<div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-    ##    <div class="col-md-12 forecast-title">
+    ##    <div class="col-md-12 forecast-headline">
     ##        $obs.label.forecast_header_dwd_meteo <span class="forecast-subtitle"></span><!-- moment.js -->
     ##    </div>
     ##    <div class="col-md-12 mtg-meteogram" id="meteogram"</div>
