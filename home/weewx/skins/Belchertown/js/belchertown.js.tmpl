@@ -140,6 +140,91 @@ jQuery.ajaxSetup({
     cache: false
 });
 
+#if $Extras.has_key("show_farmers_rules") and $Extras.show_farmers_rules == '1'
+// 20220816,ho Farmers rules
+// TODO error handling
+function farmers_rules() {
+    farmers_rules = {};
+    jQuery.when(
+        // get farmers rules
+        jQuery.getJSON(get_relative_url() + "/json/farmers-rules.json", function(frules) {
+            farmers_rules = frules;
+        })
+    ).then(function() {
+        // show farmers rules
+        show_farmers_rules(farmers_rules);
+    });
+}
+#end if
+
+#if $Extras.has_key("show_farmers_rules") and $Extras.show_farmers_rules == '1'
+// 20220816,ho Farmers rules
+// https://stackoverflow.com/questions/4959975/generate-random-number-between-two-numbers-in-javascript
+function randomIntFromInterval(min, max) { // min and max included 
+    return Math.floor(Math.random() * (max - min + 1) + min)
+}
+#end if
+
+#if $Extras.has_key("show_farmers_rules") and $Extras.show_farmers_rules == '1'
+// 20220816,ho Farmers rules
+// TODO hasOwnProperty
+function show_farmers_rules(data) {
+    var dname = "No data found!";
+    var frule = "No data found!";
+    var grule = false;
+    try {
+        var month = moment().format("M");
+        var day = moment().format("D");
+        var today = moment().format("D. MMMM");
+        //month = "8";
+        //day = "6";
+        belchertown_debug("show_farmers_rules: month: " + month);
+        belchertown_debug("show_farmers_rules: day: " + day);
+        var drcount = data.months[month].days[day].rules.length;
+        belchertown_debug("show_farmers_rules: day rule count: " + drcount);
+        var rkey = -1;
+
+        if (drcount > 1) {
+            rkey = randomIntFromInterval(1, drcount) - 1;
+            belchertown_debug("show_farmers_rules: day rule using random idx: " + rkey);
+        } else if (drcount == 1) {
+            rkey = 0;
+            belchertown_debug("show_farmers_rules: day rule using idx: " + rkey);
+        } else {
+            var grcount = data.months[month].general.rules.length;
+            belchertown_debug("show_farmers_rules: general rule count: " + grcount);
+            if (grcount > 1) {
+                rkey = randomIntFromInterval(1, grcount) - 1;
+                belchertown_debug("show_farmers_rules: general rule using random idx: " + rkey);
+                grule = true;
+            } else if (grcount == 1) {
+                rkey = 0;
+                belchertown_debug("show_farmers_rules: general rule using idx: " + rkey);
+                grule = true;
+            }
+        }
+        if (rkey >= 0) {
+            jQuery(".farmers-rules-title").html('$obs.label.farmers_rules_title');
+            if (grule) {
+                frule = data.months[month].general.rules[rkey];
+                month = moment().format("MMMM");
+                jQuery(".farmers-rules-day").html('$obs.label.farmers_rules_grule&nbsp;' + month);
+            } else {
+                dname = data.months[month].days[day].name;
+                frule = data.months[month].days[day].rules[rkey];
+                jQuery(".farmers-rules-day").html('$obs.label.farmers_rules_drule&nbsp;' + today + (dname == ''?'':'&nbsp;-&nbsp;' + dname));
+            }
+            jQuery(".farmers-rules-rule").html(frule);
+            jQuery(".farmers-rules-source").html('$obs.label.farmers_rules_source:&nbsp;<a href="' + data.datasource_url + '" target="_blank" rel="noreferrer">' + data.datasource + '</a>');
+        }
+    } catch (err) {
+        belchertown_debug("show_farmers_rules: Returned data does not have this value");
+    }
+    belchertown_debug("show_farmers_rules: day: " + dname);
+    belchertown_debug("show_farmers_rules: rule: " + frule);
+}
+#end if
+
 // Get the URL variables. Source: https://stackoverflow.com/a/26744533/1177153
 function getURLvar(k) {
     var p = {};
@@ -2998,7 +3083,7 @@ function showChart(json_file, prepend_renderTo = false) {
 
                     const stemp = [{
                         color: "#FF5733",
-                        label: "ab 50 &deg;C wird es als schw&uuml;l empfunden",
+                        label: "ab 50 &deg;C Schw&uuml;legrenze",
                         level: 50
                     }];
 

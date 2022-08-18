@@ -1,0 +1,3004 @@
+{
+    "title":"Liste von Bauernregeln",
+    "description":"Die Liste von Bauernregeln ist nach dem Jahreslauf von Januar bis Dezember geordnet.",
+    "datasource":"Wikipedia",
+    "datasource_url":"https://de.wikipedia.org/wiki/Liste_von_Bauernregeln",
+    "file_creator":"Henry Ott",
+    "file_version":"1.0.1",
+    "months":{
+        "1":{
+            "general":{
+                "rules":[
+                    "Auf harten Winters Zucht folgt gute Sommerfrucht.",
+                    "Im Januar dickes Eis, im Mai ein üppig Reis.",
+                    "Der Januar muss krachen, soll der Frühling lachen.",
+                    "Gibt’s im Januar Wind von Osten, tut die Erde langsam frosten.",
+                    "Januar trocken und rau, nützt dem Getreideanbau.",
+                    "Ist der Januar hell und weiß, wird der Sommer gerne heiß.",
+                    "Knarrt im Januar Eis und Schnee, gibt’s zur Ernt’ viel Korn und Klee.",
+                    "Kommt der Frost im Januar nicht, zeigt im März er sein Gesicht.",
+                    "Wächst das Gras im Januar, ist’s im Sommer in Gefahr.",
+                    "Wenn im Januar viel Nebel steigt, sich ein schönes Frühjahr zeigt.",
+                    "Anfang und Ende vom Januar zeigen das Wetter fürs ganze Jahr.",
+                    "Hat der Januar viel Regen, bringt’s den Früchten keinen Segen.",
+                    "Im Januar viel Muckentanz verdirbt die Futterernte ganz.",
+                    "Januar ganz ohne Schnee tut Bäumen, Bergen und Tälern weh.",
+                    "So viele Tropfen im Januar, so viel Schnee im Mai.",
+                    "Soll man den Januar loben, muss er frieren und toben.",
+                    "Wirft der Maulwurf im Januar, dauert der Winter bis Mai sogar.",
+                    "Auf trockenen, kalten Januar folgt viel Schnee im Februar.",
+                    "Januar muss vor Kälte knacken, wenn die Ernte soll gut sacken."
+                ]
+            },
+            "days":{
+                "1":{
+                    "name":"Neujahr, Hochfest der Mutter Maria",
+                    "rules":[
+                        "Wie St. Kathrein (25. November) wird’s Neujahr sein.",
+                        "Anfang und Ende vom Januar zeigen das Wetter für ein ganzes Jahr.",
+                        "Die Neujahrsnacht hell und klar deutet auf ein reiches Jahr.",
+                        "Neujahrsnacht still und klar deutet auf ein gutes Jahr.",
+                        "Morgenrot am ersten Tag/Neujahrstag Unwetter bringt und große Plag’.",
+                        "Wenn’s um Neujahr Regen gibt, oft um Ostern Schnee noch stiebt.",
+                        "Am Neujahrstage Sonnenschein lässt das Jahr uns fruchtbar sein."
+                    ]
+                },
+                "2":{
+                    "name":"St. Makarios (Makarius), St. Basilius",
+                    "rules":[
+                        "Makarius das Wetter prophezeit für die ganze Erntezeit.",
+                        "Wie das Wetter an Makarius war, so wird der September: trüb oder klar.",
+                        "Makarius, der weiß bestimmt, was das ganze Jahr so bringt.",
+                        "Wie der Basilius, so der September."
+                    ]
+                },
+                "3":{
+                    "name":"St. Genoveva",
+                    "rules":[
+                        "Bringt Genoveva uns Sturm und Wind, so ist uns Waltraud (9. April) oft gelind."
+                    ]
+                },
+                "4":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "5":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "6":{
+                    "name":"Heilige Drei Könige, Erscheinung des Herrn",
+                    "rules":[
+                        "Von Weihnachten bis zum Dreikönigstag aufs Wetter man wohl achten mag, denn wie das Wetter sich da verhält, so ist es die neuen Monate bestellt.",
+                        "Wie sich das Wetter vom Christfest bis Dreikönig hält, ist es meist auch danach bestellt.",
+                        "Ist bis Dreikönig kein Winter, so kommt keiner mehr dahinter.",
+                        "Ist bis Dreikönig kein Winter geworden, verdient er bis Ostern auch keinen Orden.",
+                        "Kam bis Dreikönig der Winter nicht, kommt er auch bis Ostern nicht.",
+                        "Zeigt der Winter bis Dreikönig selten sein grimmiges Gesicht, zeigt er es auch bis Ostern nicht.",
+                        "Ist Heiligdreikönig sonnig und still, der Winter vor Ostern nicht weichen will.",
+                        "Ist Dreikönig hell und klar, gibt’s viel Wein im neuen Jahr."
+                    ]
+                },
+                "7":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "8":{
+                    "name":"St. Erhard/Severin",
+                    "rules":[
+                        "Sankt Erhard mit der Hack’ steckt die Wintertag/Feiertag in den Sack.",
+                        "Der Erhard mit der Hack’, der steckt Weihnachten in den Sack.",
+                        "Wenn es dem Severin gefällt, bringt er mit die große Kält’."
+                    ]
+                },
+                "9":{
+                    "name":"St. Julian, St. Gregor",
+                    "rules":[
+                        "Sankt Julian bricht das Eis; bricht er es nicht, umarmt er es.",
+                        "Sankt Julian bricht das Eis, oder er bringt’s mit von seiner Reis’.",
+                        "Scheint an Gregor die Sonne, herrscht bei Korn- und Weinbauern Wonne."
+                    ]
+                },
+                "10":{
+                    "name":"Paulus Einsiedel",
+                    "rules":[
+                        "An Sankt Pauli Sonnenschein bringt viel Korn und guten Wein",
+                        "Ist der Paulustag gelinde, gibt’s im Frühjahr raue Winde.",
+                        "Lässt Paulus keine Tropfen fallen, gibt’s zur Heuzeit wenig Ballen."
+                    ]
+                },
+                "11":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "12":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "13":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "14":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "15":{
+                    "name":"St. Habakuk",
+                    "rules":[
+                        "Spielt auch die Muck’ um Habakuk, der Bauer nach dem Futter guck.",
+                        "Die Schnake, die hat leichtes Spiel, bringt der Januar der Wärme viel. Jedoch sticht uns’re Mücke nicht, schwillt auch nicht Habakuks Gesicht."
+                    ]
+                },
+                "16":{
+                    "name":"St. Theobald, St. Marcellus",
+                    "rules":[
+                        "Der Theobald, der Theobald, der macht unsere Häuser kalt.",
+                        "Die Kälte, die kommt angegangen, wenn bei Theobald die Tage langen.",
+                        "Wie das Wetter an Marzellus war, wird’s im September: trüb oder klar."
+                    ]
+                },
+                "17":{
+                    "name":"St. Antonius",
+                    "rules":[
+                        "Wenn zu Antoni die Luft ist klar, gibt’s ein trockenes Jahr.",
+                        "Große Kälte am Antoniustag manchmal nicht lange halten mag.",
+                        "Der Antonius mit dem weißen Bart, wenn’s da nicht regnet, er mit dem Schnee nicht spart.",
+                        "Um Antonius nehmen die Tag zu um eine kleine Mönchesruh’.",
+                        "Große Kält’ am Antonitag, große Hitz’ am Lorenzitag (10. August).",
+                        "Am Schnee nicht spart Sankt Anton mit dem weißen Bart."
+                    ]
+                },
+                "18":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "19":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "20":{
+                    "name":"St. Fabian, St. Sebastian",
+                    "rules":[
+                        "An Fabian und Sebastian fängt Baum und Tag zu wachsen an.",
+                        "An Fabian und Sebastian fängt der rechte Winter an.",
+                        "Um Fabian und Sebastian, da fängt der Baum zu saften an.",
+                        "An Fabian und Sebastian soll der Saft in die Bäume gahn.",
+                        "Sturm und Frost an Fabian ist allen Saaten wohlgetan.",
+                        "Fabian im Nebelhut, der tut den Bäumen/Pflanzen gar nicht gut.",
+                        "Tanzen um Fabian schon die Mücken, muss man später den Kühen das Futter bezwicken.",
+                        "Sebastian je kälter und heller – dann werden Scheuer und Fässer umso völler.",
+                        "Sonnenschein um Fabian und Sebastian, der lässt den Tieren das Futter ausgah’n.",
+                        "Um Fabian und Sebastian, da nimmt auch der Tauber die Taube an."
+                    ]
+                },
+                "21":{
+                    "name":"St. Agnes",
+                    "rules":[
+                        "Wenn Agnes und Vincentus (→ 22. Januar) kommen, wird neuer Saft im Baum vernommen.",
+                        "Die Agnessonne hat weder Kraft noch Wonne.",
+                        "Sonnenschein am Agnestag, die Frucht wurmstichig werden mag.",
+                        "Scheint zu Agnes die Sonne, wird später die Ernte zur Wonne.",
+                        "Ziehen Wolken am Agnestag über den Grund, bleibt die Ernte stets gesund."
+                    ]
+                },
+                "22":{
+                    "name":"St. Vinzenz",
+                    "rules":[
+                        "Beim heiligen Vincentius gibt’s neuen Frost oder Winterschluss.",
+                        "An St. Vinzent, da hat der Winter noch kein End’.",
+                        "Kommt Sankt Vinzenz tief im Schnee, bringt das Jahr viel Heu und Klee.",
+                        "Wenn Agnes und der Vinzenz kommen, wird neuer Saft im Baum vernommen. (→ 21. Januar)",
+                        "An dem Tag Vinzenzius jede Rebe treiben muss.",
+                        "Wie’s Wetter am St. Vinzenz war, so kann’s auch sein das ganze Jahr: Schönes Wetter bringt Gewinn, drum merk’ den Tag in deinem Sinn.",
+                        "An Vinzenzi voller Sonnenschein lässt uns hoffen auf Korn und Wein // … bringt uns reichlich Korn und Wein // … bringt dem Winzer guten Wein,",
+                        "Vinzenzi Schein bringt viel Wein.",
+                        "Scheint die Sonne an Vinzenzi blass, mit gutem Wein füllt sie das Fass.",
+                        "Hat der Vinzenz Wasserflut, ist es für den Wein nicht gut; schüttet es gar in die Wann’ – o weh, wie wird er dann?",
+                        "Geht der Vinzenz im Schnee, gibt es viel Heu und Klee."
+                    ]
+                },
+                "23":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "24":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "25":{
+                    "name":"Pauli Bekehrung",
+                    "rules":[
+                        "Am Tage Pauli Bekehr der halbe Winter hin, der halbe Winter her.",
+                        "St. Paulus kalt mit Sonnenschein, da wird das Jahr wohl fruchtbar sein.",
+                        "Je kälter unser Pauli und auch heller, desto voller werden Scheune und Keller.",
+                        "Scheint die Sonne schön an Pauli Bekehrung, bringt es den Früchten gute Bescherung.",
+                        "Ist an Pauli Bekehr das Wetter schön, werden wir ein warmes Frühjahr seh’n; ist es aber feucht und schlecht, kommt das Frühjahr spät als fauler Knecht.",
+                        "Wenn die Sonne am Paulustage scheint, wird stets ein gutes Jahr gemeint. Wird es aber schneien oder regnen, kann uns ein mäßiges Jahr begegnen.",
+                        "Wenn’s an Pauli regnet oder schneit, folget eine teure Zeit.",
+                        "Pauli Bekehr – kein Winter mehr.",
+                        "Pauli bekehr dich – halber Winter, scher dich.",
+                        "Ist es an Paulus klar, kommt ein gutes Jahr.",
+                        "Hat er Wind, regnet’s geschwind.",
+                        "Wenn’s aber regnet oder auch schneit, wird teuer das Getreid’.",
+                        "Ist der Nebel stark, füllt Krankheit den Sarg.",
+                        "Doch Gott allein, der wendet alle Pein (Schmerz)."
+                    ]
+                },
+                "26":{
+                    "name":"St. Timotheus, Bischof von Ephesus",
+                    "rules":[
+                        "Timotheus bricht das Eis; hat es keins, so macht er eins."
+                    ]
+                },
+                "27":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "28":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "29":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "30":{
+                    "name":"St. Martina von Rom",
+                    "rules":[
+                        "An Martina Sonnenschein verheißt viel Frucht und guten Wein.",
+                        "Scheint an Martina die Sonne mild, ist sie der guten Ernte Bild.",
+                        "Wenn der Jänner viel Regen bringt, werden die Gottesäcker gedüngt.",
+                        "Bringt Martina Sonnenschein, hofft man auf viel Korn und Wein."
+                    ]
+                },
+                "31":{
+                    "name":"Vigilius von Trient (Überführung der Gebeine)",
+                    "rules":[
+                        "Friert es stark um Vigilius, im März viel Kälte kommen muss.",
+                        "Anfang und Ende vom Januar zeigen das Wetter für ein ganzes Jahr."
+                    ]
+                }
+            }
+        },
+        "2":{
+            "general":{
+                "rules":[
+                    "Der Februar muss stürmen und blasen, soll das Vieh im Lenze grasen.",
+                    "Wenn im Februar die Mücken geigen, müssen sie im Märzen schweigen.",
+                    "Spielen die Mücken im Februar, frier’n Schaf’ und Bien’ das ganze Jahr.",
+                    "Ein nasser Februar bringt ein fruchtbar Jahr.",
+                    "Je nasser ist der Februar, desto nasser wird das ganze Jahr.",
+                    "Ist der Februar trocken und kalt, kommt im März die Hitze bald.",
+                    "Ist der Februar trocken und kalt, kommt im Frühjahr Hitze bald.",
+                    "Lässt der Februar Wasser fallen, so lässt’s der März gefrieren.",
+                    "Nebel im Februar – Kälte das ganze Jahr.",
+                    "Heftiger Nordwind im Februar vermelden ein fruchtbar Jahr.",
+                    "Wenn der Nordwind doch nicht will, so kommt er sicher im April.",
+                    "Im Februar müssen die Stürme fackeln, dass dem Ochsen die Hörner wackeln.",
+                    "Ist’s im Februar zu warm, friert man zu Ostern bis in den Darm.",
+                    "Februar mit Frost und Wind macht die Ostertage lind.",
+                    "Im Hornung Schnee und Eis, macht den Sommer lang und heiß.",
+                    "Wenn’s im Februar nicht schneit, schneit’s in der Osterzeit.",
+                    "Kalter Februar gibt ein gutes Roggenjahr.",
+                    "Wenn’s der Hornung gnädig macht, bringt der Lenz den Frost bei Nacht.",
+                    "Alle Monate im Jahr verwünschen einen schönen Februar."
+                ]
+            },
+            "days":{
+                "1":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "2":{
+                    "name":"Mariä Lichtmess, Darstellung des Herrn",
+                    "rules":[
+                        "An Lichtmess fängt der Bauersmann neu mit des Jahres Arbeit an.",
+                        "Lichtmess im Klee, Ostern im Schnee.",
+                        "Auf Lichtmess lasst es Winter sein, kommt der Frühling bald herein.",
+                        "Nach Lichtmess kann’s gern Winter sein, kommt der Frühling früh herein.",
+                        "Gibt’s an Lichtmess Sonnenschein, wird’s ein später Frühling sein.",
+                        "An Lichtmess Sonnenschein, der bringt noch viel Schnee herein; gibt es aber Regen und keinen Sonnenblick, ist der Winter fort und kehrt nicht mehr zurück.",
+                        "Scheint an Lichtmess die Sonne klar, gibt’s noch späten Frost und kein fruchtbar’ Jahr; doch wenn es an Lichtmess stürmt und schneit, ist der Frühling nicht mehr weit.",
+                        "Um Lichtmess hell und schön – da wird der Winter niemals geh’n.",
+                        "Fällt Regen um Lichtmess nieder, kommt auch der Winter kaum wieder.",
+                        "Wenn’s zu Lichtmess stürmt und tobt, der Bauer sich das Wetter lobt; scheint jedoch die Sonne froh – dann Bauer, verwahr’ dein Stroh.",
+                        "Je stürmischer es um Lichtmess ist, desto sicherer ein gutes Frühjahr ist.",
+                        "Um Lichtmess sehr kalt, wird der Winter nicht alt.",
+                        "Es wird gewöhnlich sehr lang kalt, wenn der Nebel zu Lichtmess fallt.",
+                        "Scheint an Lichtmess die Sonne, geraten die Bienen gut.",
+                        "Um Lichtmess Lerchengesang, macht um den Lenz nicht bang.",
+                        "Singt die Lerche jetzt schon hell, geht’s unserm Bauern an das Fell.",
+                        "Sonnt sich der Dachs in der Lichtmess-Woche, geht er auf 4 Wochen wieder zu Loche.",
+                        "Lichtmess – halbes Futter gefress’ (= Wintervorrat ist zur Hälfte verbraucht)",
+                        "Wenn zu Lichtmess die Sonne glost, gibt’s im Februar viel Schnee und Frost",
+                        "Wenn’s zur Lichtmeß stürmt und schneit, ist der Frühling nicht mehr weit. Ist’s zur Lichtmess hell und klar, ist der Winter weder halb noch gar.",
+                        "Ist’s zu Lichtmess klar und hell, kommt der Frühling nicht so schnell.",
+                        "Wenn’s zu Lichtmess stürmt und schneit, so ist der Frühling nicht mehr weit. Doch ist’s zu Lichtmess mild und warm, dann friert’s zu Ostern, dass Gott erbarm.",
+                        "Wenn’s an Lichtmess stürmt und schneit, ist der Frühling nicht mehr weit, ist es aber klar und hell, kommt der Lenz noch nicht so schnell."
+                    ]
+                },
+                "3":{
+                    "name":"St. Blasius von Sebaste",
+                    "rules":[
+                        "Sankt Blasius ist auf Trab und stößt dem Winter die Hörner ab.",
+                        "Sankt Blas’ und Urban (25. Mai) ohne Regen folgt ein guter Erntesegen."
+                    ]
+                },
+                "4":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "5":{
+                    "name":"St. Agatha von Catania",
+                    "rules":[
+                        "Am Fünften, am Agathentag, da rieselt das Wasser den Berg hinab.",
+                        "Agathe, unsere Gottesbraut, die macht, dass Schnee und Eis wegtaut.",
+                        "Den Tag der heiligen Agathe, der war oftmals reich an Schnee.",
+                        "An St. Agathe Sonnenschein, bringt recht viel Korn und guten Wein."
+                    ]
+                },
+                "6":{
+                    "name":"St. Dorothea",
+                    "rules":[
+                        "Manchmal bringt die Dorothee uns den allermeisten Schnee.",
+                        "Die heilige Dorothee watet gerne durch den Schnee.",
+                        "Sankt Dorothee bringt meist Schnee.",
+                        "Nach dem Dorotheentag, kein Schnee mehr gerne kommen mag.",
+                        "Bringt Dorothee recht viel Schnee, bringt der Sommer guten Klee."
+                    ]
+                },
+                "7":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "8":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "9":{
+                    "name":"St. Apollonia",
+                    "rules":[
+                        "Kommt die Jungfrau Apollonia, sind auch bald die Lerchen wieder da.",
+                        "Ist’s an Apollonia feucht, der Winter oft sehr spät entfleucht."
+                    ]
+                },
+                "10":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "11":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "12":{
+                    "name":"St. Eulalia von Barcelona",
+                    "rules":[
+                        "Sankt Eulalia Sonnenschein, bringt viel Obst und guten Wein.",
+                        "Eulalia im Sonnenschein bringt viel Äpfel und Apfelwein."
+                    ]
+                },
+                "13":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "14":{
+                    "name":"St. Valentin von Terni (Valentinstag)",
+                    "rules":[
+                        "Am Tage des St. Valentein, da friert das Rad samt Mühle ein.",
+                        "Hat der Valentin viel Regenwasser, wird der Frühling noch viel nasser.",
+                        "Ist’s am Valentin noch weiß, blüht zu Ostern schon das Reis.(Reis heißt hier nicht das Getreide (der Reis), sondern die jungen Triebe (das Reis, Reisig))",
+                        "Am Tag von Sankt Valentin, gehen Eis und Schnee dahin.",
+                        "Hat’s zu Sankt Valentin gefroren, ist das Wetter lang verloren.",
+                        "Kalter Valentin, früher Lenzbeginn.",
+                        "Vor Valentin friert das Rad samt Mühlbach ein."
+                    ]
+                },
+                "15":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "16":{
+                    "name":"St. Simeon, Bischof von Metz",
+                    "rules":[
+                        "Friert’s an Simeon ganz plötzlich, bleibt der Frost nicht lang gesetzlich.",
+                        "Der Simon zeigt mit seinem Tage, der Frost ist nicht mehr lange Plage."
+                    ]
+                },
+                "17":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "18":{
+                    "name":"St. Simon, Gemeindeleiter",
+                    "rules":[
+                        "Der Simon zeigt mit seinem Tage, der Frost ist nicht mehr lange Plage.",
+                        "Friert es um den Simon plötzlich, bleibt der Frost nicht lang „gesetzlich“.",
+                        "Nach dem Simonstage soll uns der Frost nicht lange plage’."
+                    ]
+                },
+                "19":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "20":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "21":{
+                    "name":"St. Felix I., Bischof von Metz",
+                    "rules":[
+                        "Felix und Petrus (22. Februar) zeigen an, was wir vierzig Tag für Wetter ha’n."
+                    ]
+                },
+                "22":{
+                    "name":"Petri Stuhlfeier",
+                    "rules":[
+                        "Der Klemens (23. November) uns den Winter bringt, St. Petri Stuhl dem Frühling winkt; den Sommer bringt uns St. Urban (25. Mai), der Herbst fängt nach dem Barthel (24. August) an.",
+                        "Wenn’s friert auf Petri Stuhlfeier, friert’s noch vierzehnmal heuer.",
+                        "Weht es sehr kalt um Petri Stuhl, denn bleibt’s noch 14 Tag kuhl.",
+                        "Wie’s Petrus vor Mathias macht, so bleibt’s noch 40 Nacht",
+                        "Die Nacht zu Petri Stuhl zeigt an, was wir noch 40 Tag für Wetter han.",
+                        "Ist Petri Stuhlfeier kalt, hat der Winter noch 40 Tage Gewalt.",
+                        "War’s in der Petersnacht sehr kalt, hat der Winter noch lange Gewalt.",
+                        "Ist St. Petrus kalt, hat die Kält’ noch lang Gewalt.",
+                        "Petri Stuhlfeier kalt, da wird der Winter sehr alt.",
+                        "Gefriert es in der Petersnacht, dann auch noch lang das Eise kracht.",
+                        "Hat Petri Stuhlfeier noch viel Eis und viel Ost (= Wind), bringt der Februar noch starken Frost.",
+                        "Nach der Kälte der Petersnacht, verliert bald der Winter seine Kraft.",
+                        "Ist es an Sankt Peter kalt, hat der Winter noch lange Halt.",
+                        "Ist es mild und nach Petri offen der Bach, kommt auch kein großes Eis mehr nach.",
+                        "Wenn zu St. Petri die Bäche sind offen, wird später kein Eis mehr auf ihnen getroffen.",
+                        "Ist an Petrus das Wetter gar schön, kann man bald Kohl und Erbsen säen.",
+                        "Schließt Petrus die Wärme auf und der Matthias (24. Februar) dann wieder zu, so friert das Kalb noch in der Kuh."
+                    ]
+                },
+                "23":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "24":{
+                    "name":"St. Matthias, Apostel",
+                    "rules":[
+                        "Schließt Petrus (22. Februar) die Wärme auf und der Matthias dann wieder zu, so friert das Kalb noch in der Kuh.",
+                        "Der Matthias bricht’s Eis, doch sacht’, sonst kommt die Kälte im Frühjahr zu Macht.",
+                        "Der Matthias, ja der bricht das Eis, und hat er keins, so macht er eins.",
+                        "War es an Matthias kalt, auch der Frost noch lang anhalt.",
+                        "Ist es an St. Matthias kalt, hat die Kälte noch lang Gewalt.",
+                        "Wenn neues Eis Matthias bringt, so friert es noch 14 Tage; wenn noch so schön die Lerche singt – die Nacht bringt neue Plage.",
+                        "Trat Matthias stürmisch ein, kann’s bis Ostern Winter sein.",
+                        "Hat Mattheis seine Hack’ verloren, wird erst St. Joseph (19. März) das Eis durchbohren.",
+                        "Die Sonne an Matthias, die wirft ’nen heißen Stein ins Eis.",
+                        "Der Matthias hat uns lieb, er gibt dem Baum den ersten Trieb.",
+                        "Nach dem Mattheis, da geht kein Fuchs mehr übers Eis.",
+                        "Nach dem Mattheis, da trinkt die Lerche aus dem Gleis.",
+                        "Wenn der Matthias kommt herbei, legt das Huhn das erste Ei.",
+                        "Bald nach dem Matthiastag, da springen die Frösche in den Bach.",
+                        "Imker, am Matthiastag, deine Biene fliegen mag."
+                    ]
+                },
+                "25":{
+                    "name":"St. Walburga, Äbtissin von Heidenheim",
+                    "rules":[
+                        "Wenn sich Sankt Walburgis zeigt, der Birkensaft nach oben steigt.",
+                        "Walburgaschnee tut immer weh.",
+                        "Sankt Burgel geht dem Winter an die Gurgel."
+                    ]
+                },
+                "26":{
+                    "name":"Alexander von Alexandria",
+                    "rules":[
+                        "Alexander und Leander (27. Februar) riechen Märzenluft miteinander."
+                    ]
+                },
+                "27":{
+                    "name":"St. Leander von Sevilla",
+                    "rules":[
+                        "Alexander (26. Februar) und Leander riechen Märzenluft miteinander."
+                    ]
+                },
+                "28":{
+                    "name":"St. Romanus von Condat",
+                    "rules":[
+                        "Sankt Roman hell und klar bedeutet ein gutes Jahr."
+                    ]
+                },
+                "29":{
+                    "name":"St. Roman",
+                    "rules":[
+                        "Sankt Roman hell und klar, bedeutet ein gutes Jahr.",
+                        "War der Romanus hell und klar, bedeutet es ein gutes Jahr.",
+                        "An Romanus und Lupizinius (21. März) – unsere Sonne scheinen muss."
+                    ]
+                }
+            }
+        },
+        "3":{
+            "general":{
+                "rules":[
+                    "Der März soll wie ein Wolf kommen und wie ein Lamm gehen.",
+                    "Ein fauler, feuchter März ist jedes Bauern Schmerz.",
+                    "Märzgrün ist bald wieder hin.",
+                    "Märzensonne – kurze Wonne.",
+                    "Fürchte nicht den Schnee im März, darunter schlägt ein warmes Herz.",
+                    "Märzenschnee und Jungfernpracht halten oft nur eine Nacht.",
+                    "Wenn im März die Veilchen blühn, an Ludwig (25. August) schon oft die Schwalben ziehn.",
+                    "Schnee, der erst im Märzen weht, abends kommt und gleich vergeht.",
+                    "Siehst du im März gelbe Blumen im Freien, magst du getrost deinen Samen streuen.",
+                    "Säst du im März zu früh, ist’s oft vergeb’ne Müh’.",
+                    "Wie’s im März regnet, wird’s im Juni regnen.",
+                    "Gibt’s im März zu vielen Regen, bringt die Ernte wenig Segen.",
+                    "Märzenstaub bringt Gras und Laub.",
+                    "Lässt der März sich trocken an, bringt er Brot für jedermann.",
+                    "Märzenstaub und Märzenwind guten Sommers Vorboten sind.",
+                    "Auf Märzenregen folgt kein Sonnensegen."
+                ]
+            },
+            "days":{
+                "1":{
+                    "name":"St. Albin, Bischof von Angers",
+                    "rules":[
+                        "Regnet’s stark an Albinus, macht’s dem Bauern viel Verdruss.",
+                        "Sankt Albin im Regen, kein Erntesegen.",
+                        "Wenn’s an Sankt Albin regnet, gibt es weder Heu noch Stroh."
+                    ]
+                },
+                "2":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "3":{
+                    "name":"St. Kunigunde",
+                    "rules":[
+                        "Sankt Kunigund macht warm von unt’.",
+                        "Lachende Kunigunde, die bringt uns frohe Kunde. (Regen an diesem Tag sollte kein gutes Zeichen für die kommende Ernte sein!)",
+                        "War Kunigunde tränenschwer, so bleibt oft die Scheuer leer.",
+                        "Ist die Kunigunde tränenschwer, bleiben Scheuer und Fass oft leer.",
+                        "Wenn’s donnert um die Kunigund, treibt’s der Winter noch lange bunt.",
+                        "Wenn es an Kunigunden friert, der Frost noch 40 Nächte regiert."
+                    ]
+                },
+                "4":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "5":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "6":{
+                    "name":"St. Fridolin",
+                    "rules":[
+                        "Um den Tag des Fridolin, da zieht der letzte Winter hin.",
+                        "Nach Fridolin, da zieht der Winter hin.",
+                        "Mit ihren Schafen wieder hin, so zieh’n die Schäfer an Fridolin.",
+                        "Nach dem Tag des Fridolein, da muss der Pflug auf dem Felde sein."
+                    ]
+                },
+                "7":{
+                    "name":"St. Perpetua und St. Felizitas",
+                    "rules":[
+                        "Perpetua und Felizitas, die bringen uns das erste Gras."
+                    ]
+                },
+                "8":{
+                    "name":"St. Cyprian",
+                    "rules":[
+                        "Wenn’s donnert um St. Cyprian, zieht man noch oft die Handschuh’ an."
+                    ]
+                },
+                "9":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "10":{
+                    "name":"40 Märtyrer / 40 Ritter",
+                    "rules":[
+                        "40 Ritter mit Eis und Schnee, tun dem Ofen noch 40 Tage weh.",
+                        "Die 40 Ritter gar noch mit Eis und Schnee, die tun den Öfen noch lange weh.",
+                        "Regen den die Vierzig senden, wird erst nach 40 Tagen enden.",
+                        "Wie das Wetter auf 40 Märtyrer fällt, 40 Tage dasselbe anhält.",
+                        "Wie es an 40 Ritter wittert, wittert es noch 40 Tage.",
+                        "Friert’s am 40-Ritter-Tag, so kommen noch 40 Fröste nach.",
+                        "Wie unser Wetter auf 40 Ritter fällt, es sich noch 7 Wochen hält."
+                    ]
+                },
+                "11":{
+                    "name":"Rosamunde",
+                    "rules":[
+                        "Sturm und Wind an Rosamunde bringen eine gute Kunde.",
+                        "Bringt Rosamunde Sturm und Wind, so ist Sybilla (19. März) uns gelind."
+                    ]
+                },
+                "12":{
+                    "name":"St. Gregor",
+                    "rules":[
+                        "Weht um Gregori stark der Wind, noch 40 Tage windig sind.",
+                        "Gregor zeigt dem Bauern an, dass im Feld er säen kann.",
+                        "Wenn Gregorius sich stellt, muss der Bauer auf das Feld.",
+                        "Der Gregor zeigt dem Bauern an, ob er die Saat jetzt säen kann, denn so, wie sich Gregori stellt, so muss er mit der Saat aufs Feld.",
+                        "Um den Tag des St. Gregor, da kommen auch die Schwalben vor.",
+                        "An Gregor kommt die Schwalbe über des Meeres Port – und an Bartholomäus (24. August) ist sie dann wieder fort.",
+                        "Nach dem Tag des Gregorei legt auch die wilde Ent’ ihr Ei."
+                    ]
+                },
+                "13":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "14":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "15":{
+                    "name":"St. Lukretia (Leocritia)",
+                    "rules":[
+                        "Lukretia feucht, Kornsäcke leicht."
+                    ]
+                },
+                "16":{
+                    "name":"16. März",
+                    "rules":[
+                        
+                    ]
+                },
+                "17":{
+                    "name":"St. Gertrud",
+                    "rules":[
+                        "Sonniger Gertrudentag, Freud’ dem Bauer bringen mag.",
+                        "Ist Gertrud sonnig, wird’s dem Gärtner wonnig.",
+                        "Die Gertrud mit dem frommen Sinn, sie ist die erste Gärtnerin.",
+                        "Gertraude nützt dem Gärtner fein, wenn sie kommt mit Sonnenschein.",
+                        "Friert’s an Gertrud der Winter noch vierzig Tage nicht ruht.",
+                        "Sieht Sankt Gertrud Eis, wird das ganze Jahr nicht heiß."
+                    ]
+                },
+                "18":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "19":{
+                    "name":"St. Josef, St. Sibylle",
+                    "rules":[
+                        "Josephi klar, ein gutes Jahr.",
+                        "Hat der Matthias (24. Februar) endlich seine Hack’ verloren, wird der Joseph schon das Eis durchbohren.",
+                        "Ist es an Josephus klar, wird es ein gesegnet’ Jahr.",
+                        "Ist’s am Josephstag klar, folgt ein fruchtbar Jahr.",
+                        "Wenn einmal Josephi is(t), endet der Winter ganz gewiss.",
+                        "Ist es am Josephstage schön, kann es nur gut weitergeh’n.",
+                        "Bringt Rosamunde (11. März) Sturm und Wind, so ist Sibylla uns gelind."
+                    ]
+                },
+                "20":{
+                    "name":"Frühlingsanfang (20. oder 21. März)",
+                    "rules":[
+                        "Wie das Wetter am Frühlingsanfang, so ist es den ganzen Sommer lang.",
+                        "Wie das Wetter um den Frühlingsanfang, so hält es sich meist den Sommer lang.",
+                        "Wie sich die Sonne zum Frühling wendet, so auch unser Sommer endet."
+                    ]
+                },
+                "21":{
+                    "name":"St. Benedikt / St. Lupicinius",
+                    "rules":[
+                        "Wie das Wetter sich zeigt nach Benedikt eine Woche lang, so zeigt’s sich auch den ganzen Sommer lang.",
+                        "Der Benedikt leitet deine Hand, säest du mit ihm die Frucht ins Land.",
+                        "Soll das Korn gar üppig stehen, so soll man es an St. Benedikt säen.",
+                        "Willst du Gerste, Erbsen, Zwiebeln dick, so säe sie nach St. Benedikt.",
+                        "St. Benedikt, der macht die Möhren dick.",
+                        "Nach Benedikt, da achte wohl, dass man den Hafer säen soll.",
+                        "Nach Benedikt, da achte wohl, dass man jetzt alles säen soll.",
+                        "Nach des Benedikten Tag, man Erbsen und Zwiebeln legen mag.",
+                        "An Romanus (29. Februar) und Lupizinius, die Sonne scheinen muss."
+                    ]
+                },
+                "22":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "23":{
+                    "name":"St. Otto",
+                    "rules":[
+                        "Weht kalter Wind am Ottotag, das Wild noch vier Wochen Eicheln mag."
+                    ]
+                },
+                "24":{
+                    "name":"Erzengel Gabriel (Die katholische Liturgiereform von 1969 verlegte den Gedenktag auf den 29. September.)",
+                    "rules":[
+                        "Scheint auf Sankt Gabriel die Sonn’, hat der Bauer viel Freud’ und Wonn’."
+                    ]
+                },
+                "25":{
+                    "name":"Mariä Verkündigung",
+                    "rules":[
+                        "An Mariä Verkündigung kommen die Schwalben wiederum.",
+                        "An Mariä Verkündung hell und klar ist ein Segen für das ganze Jahr.",
+                        "Die Maria bindet die Reben auf und nimmt auch noch leichten Frost in Kauf.",
+                        "Hat’s nach der Mariennacht gefroren, werden noch 40 Fröste geboren.",
+                        "Ist Mariä schön und hell, kommt viel Obst auf alle Fäll’.",
+                        "Kommen noch Nebel nach diesem Tag – den Reben kein Frost mehr schaden mag.",
+                        "Schöner Verkündungsmorgen befreit von vielen Sorgen.",
+                        "Sternenmengen am Verkündungsmorgen befreit den Landmann von vielen Sorgen.",
+                        "War vor Mariä Verkündung der Nachthimmel hell und klar, bedeutet es ein gutes Wetterjahr.",
+                        "Wenn Maria sich verkündet, Storch und Schwalbe heimwärts findet.",
+                        "Ist Marien schön und klar, naht die ganze Schwalbenschar."
+                    ]
+                },
+                "26":{
+                    "name":"St. Ludger",
+                    "rules":[
+                        "Ist es um Ludger draußen feucht, bleiben auch die Kornböden leicht."
+                    ]
+                },
+                "27":{
+                    "name":"St. Rupert",
+                    "rules":[
+                        "Ist an Rupert der Himmel wieder rein, so wird er’s auch im Juli sein."
+                    ]
+                },
+                "28":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "29":{
+                    "name":"St. Berthold",
+                    "rules":[
+                        "Wie St. Berthold gesonnen, so der Frühling wird kommen.",
+                        "Wie der 29. März, so der Frühling."
+                    ]
+                },
+                "30":{
+                    "name":"",
+                    "rules":[
+                        "Wie der 30. März, so der Sommer."
+                    ]
+                },
+                "31":{
+                    "name":"",
+                    "rules":[
+                        "Wie der 31. März, so der Herbst."
+                    ]
+                }
+            }
+        },
+        "4":{
+            "general":{
+                "rules":[
+                    "Der April tut, was er will.",
+                    "Der April kann rasen. Nur der Mai hält Maßen.",
+                    "Wenn der April bläst in sein Horn, so steht es gut um Heu und Korn.",
+                    "Wenn der April Spektakel macht, gibt’s Korn und Heu in voller Pracht.",
+                    "Je eher im April der Schlehdorn blüht, je früher der Bauer zur Ernte zieht.",
+                    "Heller Mondschein im April schadet den Blüten nicht.",
+                    "Aprilschnee ist der Grasbrüter.",
+                    "Aprilschnee bringt Gras und Klee.",
+                    "Aprilwetter und Kartenglück wechseln jeden Augenblick.",
+                    "April und Weiberwill ändern sich schnell und viel.",
+                    "Blüht die Esche vor der Eiche, gibt es eine große Bleiche (= trockener Sommer),",
+                    "blüht die Eiche vor der Esche, gibt es eine große Wäsche (= verregneter Sommer)."
+                ]
+            },
+            "days":{
+                "1":{
+                    "name":"",
+                    "rules":[
+                        "Scherz verscheut Unheil.",
+                        "Den 1. April musst du gut übersteh’n, dann kann dir nichts Böses mehr gescheh’n.",
+                        "Säen am 1. April verdirbt den Bauern mit Stumpf und Stiel."
+                    ]
+                },
+                "2":{
+                    "name":"St. Rosamunde",
+                    "rules":[
+                        "Bringt die Rosamunde viel Sturm und auch Wind, ist er viel später uns gelind. oder: Bringt Rosamunde Sturm und Wind, so ist Sybille (29. April) uns gelind.",
+                        "Sturm und Wind an Rosamunde bringt dem Bauern gute Kunde."
+                    ]
+                },
+                "3":{
+                    "name":"St. Chrestus und St. Pappus",
+                    "rules":[
+                        "Wer an Christian säet Lein’, bringt schönen Flachs in seinen Schrein."
+                    ]
+                },
+                "4":{
+                    "name":"St. Ambrosius",
+                    "rules":[
+                        "War’s an Ambrosius schön und rein, wird’s an Florian (4. Mai) umso wilder sein.",
+                        "Der heilige Ambrosius schneit oft dem Bauern auf den Fuß.",
+                        "Erbsen säe an Ambrosius, so tragen sie reich und geben Mus.",
+                        "Ist Ambrosius schön und rein, wird Sankt Florian (5. Mai) ein Wilder sein."
+                    ]
+                },
+                "5":{
+                    "name":"St. Vinzenz",
+                    "rules":[
+                        "Ist Sankt Vinzenz Sonnenschein, bringt es viele Körner ein.",
+                        "Tritt St. Vinzenz in die Hall’, bringt er uns die Nachtigall.",
+                        "Ist Sankt Vinzenz Sonnenschein, gibt es viel und guten Wein."
+                    ]
+                },
+                "6":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "7":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "8":{
+                    "name":"St. Amantius/Amandus",
+                    "rules":[
+                        "Wenn es viel regnet um den Amantiustag, ein dürrer Sommer folgen mag.",
+                        "Ist’s um Amandus schön, wird der Sommer keine Dürre seh’n."
+                    ]
+                },
+                "9":{
+                    "name":"St. Waltraud",
+                    "rules":[
+                        "Hört Waltraud nicht den Kuckuck schrein, dann muss er wohl erfroren sein.",
+                        "Bringt Genoveva (3. Januar) uns Sturm und Wind, so ist uns Waltraud oft gelind."
+                    ]
+                },
+                "10":{
+                    "name":"St. Ezechiel/Hesekiel",
+                    "rules":[
+                        "An Ezechiel, dem 100. Tag nach Neujahr, da säe Leinsamen, dann gedeiht er wunderbar.",
+                        "Ezechiel, mach schnell, mach’s fein, tu deinen Lein’ ins Geld hinein."
+                    ]
+                },
+                "11":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "12":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "13":{
+                    "name":"St. Martin",
+                    "rules":[
+                        "So wie Martin es will, so zeigt sich dann der ganze April."
+                    ]
+                },
+                "14":{
+                    "name":"St. Tiburtius",
+                    "rules":[
+                        "Tiburtius kommt mit Sang und Schall, er bringt den Kuckuck und die Nachtigall.",
+                        "Wenn der Tiburtius schellt, grünt der Garten und das Feld.",
+                        "Am Tiberiustag die Natur nun endlich grünen mag.",
+                        "Grüne Felder am Tiburtiustag, die ziehen viel Getreide nach.",
+                        "Tiburtius kommt uns sehr gelegen, mit seinem grünen Blättersegen.",
+                        "Nach dem Tiburtiustag alles, alles grünen mag."
+                    ]
+                },
+                "15":{
+                    "name":"Kuckuckstag",
+                    "rules":[
+                        "Der 15. April der Kuckuckstag heißen will.",
+                        "Am 15. April der Kuckuck rufen soll, und müsste er rufen aus einem Baum, der hohl.",
+                        "Tiburtius ist des Bauern Freund, doch nur, wenn auch der Kuckuck schreit."
+                    ]
+                },
+                "16":{
+                    "name":"16. April",
+                    "rules":[
+                        
+                    ]
+                },
+                "17":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "18":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "19":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "20":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "21":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "22":{
+                    "name":"",
+                    "rules":[
+                        "Gewitter vorm Georgiustag (23. April), folgt gewiss noch Kälte nach.",
+                        "Wenn vor Georgi Regen fehlt, wird man hernach damit gequält."
+                    ]
+                },
+                "23":{
+                    "name":"St. Georg",
+                    "rules":[
+                        "Sankt Georg kommt nach alten Sitten zumeist auf einem Schimmel angeritten. (Schimmel = die letzten Schneeflocken des Frühlings)",
+                        "Kommt der Georg auf einem Schimmel, kommt ein gutes Frühjahr vom Himmel.",
+                        "Ist’s an Georgi warm und schön, wird man noch rauhe Wetter seh’n.",
+                        "Ist’s an Georgi hell und warm, gibt’s noch ein Wetter, dass Gott erbarm.",
+                        "Georg und Markus (25. April) ganz ohne Trost, erschrecken uns sehr oft mit Frost.",
+                        "Gab es Gewitter am Georgitag, so folgt gewiss noch Kälte nach.",
+                        "Auf St. Georgs Güte stehen alle Bäum’ in Blüte.",
+                        "Was bis Georgi die Reben treiben, wird ihnen nicht bis zum Gallus (16. Oktober) bleiben.",
+                        "Zu Georgi „blinde“ Reben, volle Trauben später geben.",
+                        "Sind die Reben an Georg noch „blutt“ und blind, freut sich der Winzer mit Frau und Kind.",
+                        "Am Georgstag zeigt sich schon die Schwalbe einen Augenblick und zieht sich nochmal zurück.",
+                        "Kann der Georg im Korn die Krähe verstecken, wird sich das Mehl häufen zu prallen Säcken.",
+                        "Am Georgstag soll sich das neue Korn schon so recken, dass sich die Krähe drin kann verstecken.",
+                        "Es deutet eine gute Ernte an, wenn sich zu Georg schon die Krähe im Korn verstecken kann.",
+                        "Des St. Georgs Pferd, das tritt den Hafer in die Erd.",
+                        "Der Georgstag, der ist der Pferde Ehrentag.",
+                        "Georgi bringt grüne Schuh. (Früher mussten die Kinder ab diesem Tag auf ihre Winterschuhe verzichten.)",
+                        "Zu Georgi blinde Reben, volle Trauben wird es später geben."
+                    ]
+                },
+                "24":{
+                    "name":"St. Fidelis",
+                    "rules":[
+                        "Wenn’s friert an Sankt Fidel, bleibt’s 15 Tag noch kalt und hell."
+                    ]
+                },
+                "25":{
+                    "name":"St. Markus",
+                    "rules":[
+                        "Georg (23. April) und Markus ganz ohne Trost, erschrecken uns sehr oft mit Frost.",
+                        "Georgus (23. April) und Marks, die bringen oftmals was Arg’s",
+                        "Philippi und Jakobi (1. Mai), sind dann noch zwei Grobi",
+                        "Pankraz, Servaz, Bonifazi (12., 13., 14. Mai), das sind erst drei Lumpazi.",
+                        "Oft der Urban gar (25. Mai), ist streng fürwahr, und Peter und Paul (29. Juni), die sind meist nur faul.",
+                        "Wie jetzt an Markus sich das Wetter hält, so ist es auch oft im Herbst zur Ernte bestellt.",
+                        "Vor dem Markustag, sich der Bauer hüten mag.",
+                        "Gibt’s an Markus Sonnenschein, hat der Winzer guten Wein.",
+                        "Ist’s jetzt um den Markus warm, friert man danach bis in den Darm.",
+                        "Wer erst zu Markus legt die Bohnen, dem wird er’s reichlich lohnen; doch Gerste, die sei längst gesät, denn nach dem Markus ist’s zu spät.",
+                        "An Markus, da versteckt die Socken, unsere Krähe im Roggen.",
+                        "Bauen um Markus schon die Schwalben, so gibt’s viel Futter, Korn und Kalben.",
+                        "Leg erst nach Sankt Markus Bohnen, er wird’s dir lohnen."
+                    ]
+                },
+                "26":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "27":{
+                    "name":"St. Petrus Canisius (Kanisius), Zita",
+                    "rules":[
+                        "Hat Sankt Peter das Wetter schön, kannst du Kohl und Erbsen sä’n.",
+                        "Auf des heiligen Peters Fest sucht der Storch sein Nest."
+                    ]
+                },
+                "28":{
+                    "name":"St. Vital/Vitalis",
+                    "rules":[
+                        "Ist es noch kalt auf St. Vital, friert es uns noch fünfzehnmal.",
+                        "Friert’s an Sankt Vidal, friert es wohl noch fünfzehnmal."
+                    ]
+                },
+                "29":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "30":{
+                    "name":"Walpurgisnacht",
+                    "rules":[
+                        "Regen in der Walpurgisnacht hat stets ein gutes Jahr gebracht.",
+                        "In der Walpurgisnacht Regen bringt uns reichen Erntesegen.",
+                        "Walpurgisfrost ist schlechte Kost.",
+                        "Walpurgisnacht Regen oder Tau – auf ein gutes Jahr bau.",
+                        "Sturm und Wind in der Walpurgisnacht hat Scheune und Keller vollgemacht.",
+                        "Auf ihren Besen mit bösem Sinn reiten die Hexen zum Blocksberg hin. (Angeblich treffen sich an diesem Tag die Hexen auf dem Blocksberg = Brocken im Harz.)",
+                        "Ist die Hexennacht voll Regen, wird’s ein Jahr mit reichlich Segen."
+                    ]
+                }
+            }
+        },
+        "5":{
+            "general":{
+                "rules":[
+                    "Donner und Fröste im Wonnemond, Müh’ und Arbeit wenig lohnt.",
+                    "Das Jahr fruchtbar sei, wenn’s viel donnert im Mai.",
+                    "Ist der Mai recht heiß und trocken, kriegt der Bauer kleine Brocken.",
+                    "Ist der Mai kühl und nass, füllt’s dem Bauern Scheun’ und Fass.",
+                    "Wenn im Mai die Wichteln schlagen, läuten sie von Regentagen.",
+                    "Regen im Mai bringt fürs ganze Jahr Brot und Heu.",
+                    "Gewitter im Mai bringen Früchte herbei.",
+                    "Ein Bienenschwarm im Mai ist wert ein Fuder Heu.",
+                    "Mairegen bringt Segen.",
+                    "Ein nasser Mai schafft Milch herbei.",
+                    "Ein kühler Mai wird hochgeacht’, hat stets ein gutes Jahr gebracht.",
+                    "Grünt die Eiche vor der Esche, gibt’s im Sommer große Wäsche. Treibt die Esche vor der Eiche, bringt der Sommer große Bleiche."
+                ]
+            },
+            "days":{
+                "1":{
+                    "name":"Philippus und Jakobus, Walburga",
+                    "rules":[
+                        "Am 1. Mai Reif oder nass, macht den Bauern immer Spaß.",
+                        "So viele Fröste vor Wenzeslaus (28. September) fallen, so viele nach Philippi folgen.",
+                        "Wenn die Sonne gut ist am 1. Mai, gibt es viel Korn und ein gutes Heu.",
+                        "Wenn es regnet am 1. Mai, regnet es auch weiter glei’.",
+                        "Regnet’s am ersten Maientag, viele Früchte man erwarten mag.",
+                        "Wenn’s Wetter gut am 1. Mai, gibt es viel und gutes Heu.",
+                        "Wenn der 1. Mai schellt, grünt das ganze Feld.",
+                        "Fällt am 1. Mai Reif, so hofft man auf ein gutes Jahr.",
+                        "Fällt Reif am 1. Mai, bringt er im Feld viel Segen herbei.",
+                        "Kommt der 1. Mai mit Schall, bringt er Kuckuck und Nachtigall.",
+                        "Sind Philippus und Jakobus nass, hat der Bauer großen Spaß.",
+                        "Philippi und Jakobi – viel fress’ i, wenig hab’ i. (Die Bauern warteten auf die nächste Ernte; sie mussten mit ihren Vorräten auskommen.)"
+                    ]
+                },
+                "2":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "3":{
+                    "name":"Kreuzauffindung, St. Jakobus, St. Philippus",
+                    "rules":[
+                        "Wie’s Wetter am Kreuzauffindungstag, bis Himmelfahrt es bleiben mag.",
+                        "Wenn es am Kreuztag heftig regnet, werden alle Nüsse leer und sind nicht gesegnet.",
+                        "Zu Philipp und Jakobi Regen bedeutet viel Erntesegen.",
+                        "Am Sankt Philips Tag die Linsen zum Felde trag."
+                    ]
+                },
+                "4":{
+                    "name":"St. Florian",
+                    "rules":[
+                        "War’s an Ambrosius (4. April) schön und rein, wird’s an Florian umso wilder sein.",
+                        "Der Florian, der Florian, noch einen Schneemann/hut setzen (tragen) kann."
+                    ]
+                },
+                "5":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "6":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "7":{
+                    "name":"St. Stanislaus",
+                    "rules":[
+                        "Wenn sich naht Sankt Stanislaus, schlagen alle Bäume aus.",
+                        "Wenn sich naht Sankt Stanislaus, rollen die Kartoffel heraus.",
+                        "Wenn Tränen weint der Stanislaus, das tut uns gar nicht leid, es werden blanke Heller draus, in ganz kurzer Zeit."
+                    ]
+                },
+                "8":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "9":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "10":{
+                    "name":"St. Gordian",
+                    "rules":[
+                        "Der Gordian, der Gordian, der richtet oft noch Schaden an.",
+                        "Florian (4. Mai) und Gordian richten oft noch Schaden an.",
+                        "Dem kleinen Gordian man nicht trauen kann.",
+                        "Bohnen leg dir erst an, ist vorbei St. Gordian.",
+                        "Dem Gordian, dem Gordian, man besser niemals trauen kann."
+                    ]
+                },
+                "11":{
+                    "name":"St. Mamertus (Eisheiliger)",
+                    "rules":[
+                        "Georgus und Marks (23. und 25. April), die bringen oftmals was Arg’s",
+                        "Philippi und Jakobi (1. Mai), sind dann noch zwei Grobi",
+                        "Pankraz, Servaz, Bonifazi (12., 13., 14. Mai), das sind erst drei Lumpazi.",
+                        "Oft der Urban gar (25. Mai), ist streng fürwahr, und Peter und Paul (29. Juni), die sind meist nur faul.",
+                        "Der heilige Mamerz, der hat von Eis ein Herz",
+                        "Pankratius hält den Nacken steif, sein Harnisch klirrt von Frost und Reif",
+                        "Servatius’ Hund der Ostwind ist – hat schon manch’ Blümlein totgeküsst",
+                        "Und zum Schluss, da fehlet nie, die eisigkalte Sophie.",
+                        "Pankrazi, Bonifazi, Servazi sind drei frostige Lumpazi. Und zum Schluss fehlt nie die kalte Sophie.",
+                        "Mamertus, Pankratius und hinterher Servatius, sind gar gestrenge Herrn, die ärgern die Bauern und auch die Winzer gern.",
+                        "Mamertus, Pankratius, Servatius, die bringen oft Kälte und Verdruss, doch auch der Bonifazi, das ist erst ein Lumpazi.",
+                        "Pankratius, Servatius, Bonifatius, der Winzer sie beachten muss: Geh’n sie vorüber ohne Regen, bringt’s dem Weine großen Segen.",
+                        "Gehen die Eisheiligen ohne Frost vorbei, schreien die Bauern und Winzer juchhei."
+                    ]
+                },
+                "12":{
+                    "name":"St. Pankratius (Eisheiliger)",
+                    "rules":[
+                        "Georgus und Marks (23. und 25. April), die bringen oftmals was Arg’s",
+                        "Philippi und Jakobi (1. Mai), sind dann noch zwei Grobi",
+                        "Pankraz, Servaz, Bonifazi (12., 13., 14. Mai), das sind erst drei Lumpazi.",
+                        "Oft der Urban gar (25. Mai), ist streng fürwahr, und Peter und Paul (29. Juni), die sind meist nur faul.",
+                        "Wenn’s an Pankratius gefriert, so wird im Garten viel ruiniert.",
+                        "Pankratius hält den Nacken steif, sein Harnisch klirrt von Frost und Reif.",
+                        "Ist Sankt Pankratius schön, wird guten Wein man sehn.",
+                        "Wenn es am Pankratiustag schön ist, so ist das gutes Zeichen zu einem schönen und reichen Herbst.",
+                        "Pankraz und Servaz, zwei böse Brüder, was der Frühling gemacht, zerstören sie wieder.",
+                        "Pankraz muss vorüber sein, will man vor Nachtfrost sicher sein."
+                    ]
+                },
+                "13":{
+                    "name":"St. Servatius (Eisheiliger)",
+                    "rules":[
+                        "Georgus und Marks (23. und 25. April), die bringen oftmals was Arg’s",
+                        "Philippi und Jakobi (1. Mai), sind dann noch zwei Grobi",
+                        "Pankraz, Servaz, Bonifazi (12., 13., 14. Mai), das sind erst drei Lumpazi.",
+                        "Oft der Urban gar (25. Mai), ist streng fürwahr, und Peter und Paul (29. Juni), die sind meist nur faul.",
+                        "Servaz muss vorüber sein, will man vor Nachtfrost sicher sein.",
+                        "Nach Servaz kommt kein Frost mehr her, der dem Rebstock gefährlich wär’.",
+                        "Servatius’ Hund (Mund) der Ostwind ist – hat manches Blümlein totgeküsst."
+                    ]
+                },
+                "14":{
+                    "name":"St. Bonifaz (Eisheiliger)",
+                    "rules":[
+                        "Georgus und Marks (23. und 25. April), die bringen oftmals was Arg’s",
+                        "Philippi und Jakobi (1. Mai), sind dann noch zwei Grobi",
+                        "Pankraz, Servaz, Bonifazi (12., 13., 14. Mai), das sind erst drei Lumpazi.",
+                        "Oft der Urban gar (25. Mai), ist streng fürwahr, und Peter und Paul (29. Juni), die sind meist nur faul.",
+                        "Vor Bonifaz kein Sommer, nach der Sophie (15. Mai) kein Frost",
+                        "Wer seine Schafe schert vor Bonifaz, dem ist die Woll’ lieber als das Schaf."
+                    ]
+                },
+                "15":{
+                    "name":"Kalte Sophie (Eisheilige)",
+                    "rules":[
+                        "Die kalt’ Sophie, die bringt zum Schluss ganz gern noch einen Regenguss.",
+                        "Vor Nachtfrost bist du sicher nicht, bevor Sophie vorüber ist.",
+                        "Gehen die Eisheiligen ohne Frost vorbei, schreien die Bauern und Winzer Juchei."
+                    ]
+                },
+                "16":{
+                    "name":"St. Nepomuk",
+                    "rules":[
+                        "Der Nepomuk uns das Wasser macht, dass uns ein gutes Frühjahr lacht.",
+                        "Heiliger Sankt Nepomuk treib uns die Wassergüsse z’ruck.",
+                        "Lacht zu Nepomuk die Sonne, dann gerät der Wein zur Wonne.",
+                        "Heiliger Nepomuk bring’ uns die Wassergüss’ zuruck. (= Umkehrung des vorherigen Spruches, wenn es an diesem Tag zu starken Sonnenschein gab und die Hitze auf den Feldern brannte.)"
+                    ]
+                },
+                "17":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "18":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "19":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "20":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "21":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "22":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "23":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "24":{
+                    "name":"St. Esther",
+                    "rules":[
+                        "Lein, gesät an Esthern, wächst am allerbesten."
+                    ]
+                },
+                "25":{
+                    "name":"St. Urban",
+                    "rules":[
+                        "Georgus und Marks (23. und 25. April), die bringen oftmals was Arg’s",
+                        "Philippi und Jakobi (1. Mai), sind dann noch zwei Grobi",
+                        "Pankraz, Servaz, Bonifazi (12., 13., 14. Mai), das sind erst drei Lumpazi.",
+                        "Oft der Urban gar, ist streng fürwahr, und Peter und Paul (29. Juni), die sind meist nur faul.",
+                        "Der Klemens (23. November) uns den Winter bringt, St. Petri Stuhl (22. Februar) dem Frühling winkt.",
+                        "Den Sommer bringt uns St. Urban, der Herbst fängt nach dem Barthel (24. August) an.",
+                        "Wie sich das Wetter an Urban verhält, so ist’s noch 20 Tage bestellt.",
+                        "Das Wetter um den St. Urban zeigt auch des Herbstes Wetter an.",
+                        "Scheint die Sonne hell am Urbanitag, wächst guter Wein nach alter Sag’; wenn es aber regnet, ist nichts gesegnet.",
+                        "Viel Sonne bringen muss St. Orben, sonst die Trauben leicht verdorben.",
+                        "Wenn der Urban kein gut’ Wetter hält, das Weinfass in die Pfütze fällt.",
+                        "Urban, lass’ die Sonne scheinen, damit wir nicht beim Weine weinen.",
+                        "Wie der Urban sein Wetter hat, so findet’s auch in der Lese statt.",
+                        "Der Urban mit viel Sonnenschein, der segnet unsere Fässer ein.",
+                        "Sankt Blas’ (3. Februar) und Urban ohne Regen, folgt ein guter Erntesegen.",
+                        "Sankt Urban hell und rein, gibt viel Korn und guten Wein."
+                    ]
+                },
+                "26":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "27":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "28":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "29":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "30":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "31":{
+                    "name":"St. Petronella / Maria Königin",
+                    "rules":[
+                        "Gibt es an Petronella Regen, wird sich auch das Getreide/der Hafer legen.",
+                        "Wer erst Hafer sät an Petronell, dem wächst er gerne, gut und schnell.",
+                        "Ist es klar an Petronell, messt den Flachs ihr mit der Ell’.",
+                        "Nach schönem Wetter bei Petronell, da messt den Flachs ihr mit der Ell’."
+                    ]
+                }
+            }
+        },
+        "6":{
+            "general":{
+                "rules":[
+                    "Menschensinn und Juniwind ändern sich oft sehr geschwind.",
+                    "Ohne Tau kein Regen heißts im Juni allerwegen.",
+                    "Im Juni kühl und trocken, gibt’s was in die Milch zu brocken.",
+                    "Was im Juni nicht wächst, gehört in den Ofen.",
+                    "Wenn im Juni der Nordwind weht, das Korn zur Ernte trefflich steht.",
+                    "Gibt’s im Juni Donnerwetter, wird gewiss das Getreide fetter.",
+                    "Im Juni ein Gewitterschauer macht das Herz gar froh den Bauer.",
+                    "Wenn kalt und nass der Juni war, verdirbt er das ganze Jahr.",
+                    "Ist der Juni warm und nass, gibt’s viel Korn und noch mehr Gras.",
+                    "Im Juni viel Donner bringt einen trüben Sommer."
+                ]
+            },
+            "days":{
+                "1":{
+                    "name":"St. Fortunatus, St. Justin",
+                    "rules":[
+                        "War’s an Fortunatus klar, gibt’s ein gutes Erntejahr.",
+                        "Schönes Wetter auf Fortunat, ein gutes Jahr zu bedeuten hat.",
+                        "Justin klar, gutes Jahr."
+                    ]
+                },
+                "2":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "3":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "4":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "5":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "6":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "7":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "8":{
+                    "name":"St. Medardus",
+                    "rules":[
+                        "An Sankt Medardus wird ausgemacht, ob 40 Tag die Sonne lacht.",
+                        "Wie jetzt der Medardus wettert, solch Wetter 30 Tage zittert.",
+                        "Wie’s Wetter auf St. Medardi fällt, es bis zu Mondes Schlusses anhält.",
+                        "Was der Medardus für ein Wetter hält, solch Wetter auch in die Ernte fällt.",
+                        "Ein sonniger Medardustag, der stillt aller Bauern Klag’.",
+                        "Ist’s an Medardus feucht und nass, regnet’s weiter ohne Unterlass.",
+                        "Regen am Medardustag verdirbt den ganzen Heuertrag.",
+                        "Wer auf Medardus baut, der kriegt viel Flachs und Kraut."
+                    ]
+                },
+                "9":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "10":{
+                    "name":"St. Margarete",
+                    "rules":[
+                        "Regnet’s am Margaret(h)entage, dauert der Regen noch vierzig (auch: vierzehn) Tage.",
+                        "Hat die Margaret keinen Sonnenschein, bringt man das Heu nicht trocken rein."
+                    ]
+                },
+                "11":{
+                    "name":"St. Barnabas",
+                    "rules":[
+                        "Nach Barnabas die Sonne weicht, auf Luzia (13. Dezember) sie wieder zu uns schleicht.",
+                        "St. Barnabas niemals die Sichel vergaß, er hat den längsten Tag (stimmt nicht!) und das längste Gras.",
+                        "Sankt Barnabas schneidet das Gras.",
+                        "Mit seiner Sens’ der Barnabas kommt her und schneidet ab das Gras.",
+                        "Wenn St. Barnabas bringt Regen, gibt’s reichen Traubensegen.",
+                        "Regnet es an Barnabas, schwimmen die Trauben bis ins Fass.",
+                        "Der Barnabas macht, wenn er günstig ist, wieder gut, was vielleicht schon verdorben ist."
+                    ]
+                },
+                "12":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "13":{
+                    "name":"St. Antonius",
+                    "rules":[
+                        "Wenn Sankt Anton gut Wetter lacht, St. Peter (29. Juni) viel in Wasser macht.",
+                        "Regnet’s am Antoniustag, wird’s Wetter später wie es mag.",
+                        "Hat Antonius starken Regen, geht’s mit der Gerste wohl daneben."
+                    ]
+                },
+                "14":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "15":{
+                    "name":"St. Veit/Vitus",
+                    "rules":[
+                        "Ist zu Sankt Veit der Himmel klar, dann gibt’s gewiss ein gutes Jahr.",
+                        "St. Veit, der hat den längsten Tag, die Luzia (13. Dezember) die längste Nacht vermag. Hinweis: Diese Regel galt bis zur Gregorianischen Kalenderreform im Jahr 1582. Dadurch verschob sich Sommersonnenwende auf den 21. Juni und die Wintersonnwende auf den 21. Dezember.",
+                        "Nach dem St. Veit, da ändert sich bald die Jahreszeit.",
+                        "Der alte Vit, der bringt nur Regen mit.",
+                        "Das Wasser an St. Vit verträgt die späte Gerste nit.",
+                        "Regen am St. Vitustag die Gerste nicht vertragen mag.",
+                        "Regnet’s an St. Veit, Gerste nicht leid’t.",
+                        "O heiliger Vitus, regne nicht, damit es uns nicht am Korn gebricht, denn Regen an dem Vitustag, die Gerste nicht vertragen mag.",
+                        "Ist der Wein abgeblüht auf St. Vit, so bringt er ein schönes Weinjahr mit.",
+                        "Nach St. Veit, da ändert sich die Zeit, dann fängt das Laub zu stehen an, dann haben die Vögel das Legen getan.",
+                        "Der Wind, dreht sich um St. Veit, da legt sich’s Laub auf die andere Seit’.",
+                        "Nach St. Veit, da legen sich die Blätter auf die andere Seit’.",
+                        "Hat Sankt Veit starken Regen, bringt er unermesslichen Segen.",
+                        "Wenn es an Vitus regnet, dann regnet es Pilze."
+                    ]
+                },
+                "16":{
+                    "name":"St. Benno",
+                    "rules":[
+                        "Wer auf Sankt Benno baut, kriegt viel Flachs und Kraut."
+                    ]
+                },
+                "17":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "18":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "19":{
+                    "name":"St. Gervasius",
+                    "rules":[
+                        "Wenn’s regnet auf St. Gervasius, es 40 Tage regnen muss."
+                    ]
+                },
+                "20":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "21":{
+                    "name":"Sommeranfang, Sommersonnenwende (= der längste Tag des Jahres: 16 Std. 36 Min.)",
+                    "rules":[
+                        "Ist die Milchstraße klar zu seh’n, bleibt das Wetter schön.",
+                        "Funkeln heut’ die Stern’, spielt der Wind bald den Herrn."
+                    ]
+                },
+                "22":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "23":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "24":{
+                    "name":"Johannistag / Geburt Johannes des Täufers",
+                    "rules":[
+                        "Bis Johannis wird gepflanzt, ein Datum, das du dir merken kannst.",
+                        "Stich den Spargel nie mehr nach Johanni.",
+                        "Am Johannistag die ersten Kirch’ nach Hause trag.",
+                        "Vor Johanni bitt um Regen, nachher kommt er ungelegen.",
+                        "Das Jahr, das nimmt ein gutes End’, wenn das Emd trocken in der Scheune ist.",
+                        "Regnet’s am Johannistag, so regnet es noch vierzehn Tag.",
+                        "Reif in der Johannisnacht den Bauern Beschwerde macht.",
+                        "Sankt Johannis Regengüsse verderben die besten Nüsse.",
+                        "Wenn es am Johannistag regnet, dann regnet es Pilze.",
+                        "Bis Johanni nicht vergessen: sieben Wochen Spargel essen."
+                    ]
+                },
+                "25":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "26":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "27":{
+                    "name":"Siebenschläfertag",
+                    "rules":[
+                        "Wie das Wetter sich am Siebenschläfer verhält, ist es sieben Wochen lang bestellt.",
+                        "Wenn’s am Siebenschläfer regnet, sind wir sieben Wochen mit Regen gesegnet.",
+                        "Ist der Siebenschläfer nass, regnet’s ohne Unterlass."
+                    ]
+                },
+                "28":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "29":{
+                    "name":"Peter und Paul",
+                    "rules":[
+                        "Regnet’s an Peter und Paul, wird des Winzers Ernte faul.",
+                        "Peter und Paul hell und klar bringt ein gutes Jahr."
+                    ]
+                },
+                "30":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                }
+            }
+        },
+        "7":{
+            "general":{
+                "rules":[
+                    "Trübe Aussicht an den Hundstagen, trübe Aussicht das restliche Jahr.",
+                    "Fällt kein Tau im Julius, Regen man erwarten muss.",
+                    "Im Juli muss vor Hitze braten, was im September soll geraten.",
+                    "Juli schön und klar, gibt ein gutes Bauernjahr",
+                    "Bringt der Juli heiße Glut, so gerät der September gut.",
+                    "Ein tüchtig Juligewitter ist gut für Winzer und Schnitter.",
+                    "Im Juli will der Bauer schwitzen, als untätig hinterm Ofen sitzen."
+                ]
+            },
+            "days":{
+                "1":{
+                    "name":"",
+                    "rules":[
+                        "Fängt der Juli mit Tröpfeln an, wird man lange Regen ha’n."
+                    ]
+                },
+                "2":{
+                    "name":"Mariä Heimsuchung, Hinweis: Der Festtag wurde nach dem Zweiten Vatikanischen Konzil Mitte der 1960er Jahre auf den 31. Mai verlegt.",
+                    "rules":[
+                        "Mariä Heimsuch wird’s bestellt, wie’s Wetter sich 40 Tage hält.",
+                        "Geht Maria übes Gebirge nass, bleibt leer Scheune und Fass."
+                    ]
+                },
+                "3":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "4":{
+                    "name":"St. Ulrich",
+                    "rules":[
+                        "Regen am Sankt Ulrich Tag macht die Birnen stichig mad."
+                    ]
+                },
+                "5":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "6":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "7":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "8":{
+                    "name":"St. Kilian",
+                    "rules":[
+                        "Kilian, der heilige Mann, stellt die ersten Schnitter an.",
+                        "Ist’s zu Sankt Kilian schön, werden viele gute Tage vergehn.",
+                        "An Sankt Kilian säe Wicken und Rüben an."
+                    ]
+                },
+                "9":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "10":{
+                    "name":"Siebenbrüder",
+                    "rules":[
+                        "Ist Siebenbrüder ein Regentag, so regnet’s noch sieben Wochen danach.",
+                        "Wie es die sieben Brüder treiben, soll es noch sieben Wochen lang bleiben.",
+                        "Wenn sich die sieben Brüder sonnen, kommt sieben Wochen Wonnen.",
+                        "An Siebenbrüder Regen, der bringt dem Bauern keinen Segen."
+                    ]
+                },
+                "11":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "12":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "13":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "14":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "15":{
+                    "name":"Apostelteilung",
+                    "rules":[
+                        "Ist Apostelteilung schön, so kann das Wetter der sieben Brüder (10. Juli) gehn."
+                    ]
+                },
+                "16":{
+                    "name":"16. Juli",
+                    "rules":[
+                        
+                    ]
+                },
+                "17":{
+                    "name":"St. Alexius",
+                    "rules":[
+                        "Wenn Alexius verregnet heuer, werden Korn und Früchte teuer.",
+                        "Wenn’s an Alexius regnet, ist die Ernt’ und Frucht gesegnet."
+                    ]
+                },
+                "18":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "19":{
+                    "name":"St. Vinzenz",
+                    "rules":[
+                        "Vinzenz Sonnenschein füllt die Fässer mit Wein."
+                    ]
+                },
+                "20":{
+                    "name":"St. Margarete, St. Apollinaris",
+                    "rules":[
+                        "Wie’s Wetter an St. Margaret, dasselbe noch vier Wochen steht.",
+                        "Margaretenregen wird erst nach Monatsfrist sich legen.",
+                        "Margaretens Regen bringt keinen Segen.",
+                        "Regen am Margaretentag sagt dem Hunger „Guten Tag“.",
+                        "Gegen Margareten und Jakoben, die stärksten Gewitter toben.",
+                        "An Margareten Regen, bringt Heu und Nüssen keine Segen.",
+                        "Klar muss Apollinaris sein, dann bringt man gute Ernte heim."
+                    ]
+                },
+                "21":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "22":{
+                    "name":"St. Maria Magdalena (Marlene)",
+                    "rules":[
+                        "An Magdalena regnet’s gern, weil sie weinte um den Herrn. (Ähnlich: Magdalene weint um ihren Herrn, drum regnet’s an diesem Tage gern.)",
+                        "Regnet’s am St. Magdalentag, folgt gewiss mehr Regen nach."
+                    ]
+                },
+                "23":{
+                    "name":"St. Apollinaris",
+                    "rules":[
+                        "Klar muss Apollinaris sein, soll sich der Bauer freun.",
+                        "Klar muss Apollinaris sein, dann bringt man gute Ernte heim."
+                    ]
+                },
+                "24":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "25":{
+                    "name":"St. Jakobus",
+                    "rules":[
+                        "Bläst Jakobus weiße Wölkchen in die Höh, sind’s Winterblüten zu vielem Schnee.",
+                        "Sind an Jakobi die Tage warm, gibt’s im Winter viel Kält’ und Harm.",
+                        "Jakobi ohne Regen deutet auf strengen Winter.",
+                        "Um Jakobi heiß und trocken, kann der Bauersmann frohlocken.",
+                        "Sankt Jakob nimmt hinweg die Not, bringt erste Frucht und frisches Brot.",
+                        "Jakobi klar und rein, wird das Christfest frostig sein.",
+                        "Gegen Margareten und Jakoben, die stärksten Gewitter toben.",
+                        "Wenn Jacobi tagt, werden die jungen Störche vom Nest gejagt.",
+                        "Wenn Jakobi kommt heran, man den Roggen schneiden kann.",
+                        "Ist Jacobus am Ort, ziehn die Störche bald fort."
+                    ]
+                },
+                "26":{
+                    "name":"St. Anna",
+                    "rules":[
+                        "Sankt Anna klar und rein, wird bald das Korn geborgen sein.",
+                        "Ist Sankt Anna erst vorbei, kommt der Morgen kühl herbei.",
+                        "Anna warm und trocken macht den Bauern frohlocken."
+                    ]
+                },
+                "27":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "28":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "29":{
+                    "name":"St. Olav, St. Beate, St. Lucilla und St. Ladislaus, St. Flora",
+                    "rules":[
+                        "Olaf, Beate, Lucilla, Ladislaus verbrennen dem Bauern Scheun’ und Haus.",
+                        "Ist Florentine trocken ’blieben, schickt sie Raupen in Korn und Rüben."
+                    ]
+                },
+                "30":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "31":{
+                    "name":"St. Ignatius",
+                    "rules":[
+                        "So wie Ignaz stellte sich ein, wird der nächste Januar sein."
+                    ]
+                }
+            }
+        },
+        "8":{
+            "general":{
+                "rules":[
+                    "Augustregen wirkt wie Gift, wenn er die reifenden Trauben trifft.",
+                    "Stellt im August sich Regen ein, so regnet’s Honig und guten Wein.",
+                    "Trübe Aussicht an den Hundstagen, trübe Aussicht das restliche Jahr.",
+                    "Je dicker die Regentropfen im August, je dicker wird auch der Most.",
+                    "Im August blüht der Schnee für den nächsten Winter, wenn weiße Wolken ziehen.",
+                    "Der Tau tut dem August so not, wie jedermann das täglich Brot.",
+                    "Nasser August macht teure Kost.",
+                    "Ist’s in der ersten Augustwoche heiß, bleibt der Winter lange weiß.",
+                    "Bringt der August viel Gewitter, wird der Winter kalt und bitter.",
+                    "Was der August nicht vermocht, kein September mehr kocht."
+                ]
+            },
+            "days":{
+                "1":{
+                    "name":"Petri Kettenfeier",
+                    "rules":[
+                        "Ist’s von Petri bis Lorenzi (10. August) heiß, dann bleibt der Winter lange weiß.",
+                        "An Petri Kettenfeier von diesem Ort ziehen die Störche fort."
+                    ]
+                },
+                "2":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "3":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "4":{
+                    "name":"St. Ulrich",
+                    "rules":[
+                        "Regen am Sankt Ulrich Tag macht die Birnen stichig mad."
+                    ]
+                },
+                "5":{
+                    "name":"St. Oswald (Maria Schnee)",
+                    "rules":[
+                        "Oswaldtag muss trocken sein, sonst werden teuer Korn und Wein.",
+                        "Regen an Maria Schnee tut dem Korn empfindlich weh."
+                    ]
+                },
+                "6":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "7":{
+                    "name":"St. Afra, (Maria Schnee)",
+                    "rules":[
+                        "An Sankt Afra Regen kommt für den Bauer ungelegen.",
+                        "An Sankt Afra Regen fällt, den Bauern es noch lange quält.",
+                        "Regen an Mariä Schnee tut dem Korn empfindlich weh."
+                    ]
+                },
+                "8":{
+                    "name":"St. Dominikus",
+                    "rules":[
+                        "Ist’s an Domini sehr heiß, wird der Winter lang und weiß.",
+                        "Ist’s heiß an Sankt Dominikus, der Winter mit strenger Kälte kommen muss.",
+                        "Auf Hitze an Sankt Dominikus ein strenger Winter folgen muss.",
+                        "Je mehr Dominikus schürt, je länger man im Winter friert.",
+                        "Bei Hitze an Sankt Dominikus ein strenger Winter kommen muss."
+                    ]
+                },
+                "9":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "10":{
+                    "name":"St. Laurentius",
+                    "rules":[
+                        "Sankt Laurenz mit heißem Hauch, füllt dem Bauern Fass und Schlauch.",
+                        "Sankt Lorenz kommt in finstrer Nacht ganz sicher mit Sternschnuppenpracht.",
+                        "Sollen Obst und Trauben sich mehren, dürfen mit Laurenz die Wetter aufhören.",
+                        "Laurentius heiter und gut, einen schönen Herbst verheißen tut.",
+                        "Laurenz im Sonnenschein, wird der Herbst gesegnet sein.",
+                        "Ist’s von Petri (1. August) bis Lorenzi heiß, dann bleibt der Winter lange weiß.",
+                        "Kommt Laurentius daher, wächst das Holz nicht mehr.",
+                        "Laurenzi hol’s Wämsi, hol Schuh und Strümpf."
+                    ]
+                },
+                "11":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "12":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "13":{
+                    "name":"St. Hippolyt / St. Kassian (Cassianus)",
+                    "rules":[
+                        "Wie das Wetter an Hippolyt, so es mehrere Tage geschieht.",
+                        "Wie das Wetter zu Kassian, hält es viele Tage lang."
+                    ]
+                },
+                "14":{
+                    "name":"",
+                    "rules":[
+                        "Leuchten vor Mariä Himmelfahrt die Sterne, dann hält sich das Wetter gerne."
+                    ]
+                },
+                "15":{
+                    "name":"Maria Himmelfahrt",
+                    "rules":[
+                        "Wie das Wetter am Himmelfahrtstag, so der ganze Herbst sein mag.",
+                        "Scheint die Sonne hell und zart an Mariä Himmelfahrt, wird es schönen Herbst bedeuten. Sagt das Sprüchlein allen Leuten.",
+                        "Um Maria Himmelfahrt, das wisse, gibt es schon die ersten Nüsse.",
+                        "Wer Rüben will recht gut und zart, sä’ sie an Mariä Himmelfahrt.",
+                        "Mariä Himmelfahrt im Sonnenschein, bringt viel und guten Wein.",
+                        "Wie das Wetter am Himmelfahrtstag, so es noch zwei Wochen bleiben mag."
+                    ]
+                },
+                "16":{
+                    "name":"St. Rochus",
+                    "rules":[
+                        "Wenn Sankt Rochus trübe schaut, kommen die Raupen in das Kraut."
+                    ]
+                },
+                "17":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "18":{
+                    "name":"St. Agapitus",
+                    "rules":[
+                        "Holz, an Agapitustag geschlagen, fault nicht bis zum „Jüngsten Tag“."
+                    ]
+                },
+                "19":{
+                    "name":"St. Sebaldus",
+                    "rules":[
+                        "Regnet’s an Sankt Sebald, nahet teuere Zeit sehr bald."
+                    ]
+                },
+                "20":{
+                    "name":"St. Bernhard",
+                    "rules":[
+                        "Wie der Sankt Bernhard ist, man auch den September misst."
+                    ]
+                },
+                "21":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "22":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "23":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "24":{
+                    "name":"St. Bartholomäus (Bartheltag)",
+                    "rules":[
+                        "Wie sich das Wetter am Bartheltag stellt ein, so soll’s den ganzen September sein.",
+                        "Wie Bartholomäus sich hält, so ist der ganze Herbst bestellt.",
+                        "Liegt Reif um den Barthelmtag offen, so ist ein warmer Herbst zu hoffen.",
+                        "Bleibt St. Barthol im Regen steh’n, ist ein guter Herbst vorherzuseh’n.",
+                        "Sind Lorenz (10. August) und Bartel schön, bleiben die Kräuter noch lange stehn.",
+                        "Bartholomä voll Sonnenglut macht Wein und Reben stark und gut.",
+                        "Bartholomä-Mann werden d'Nuss'n braun"
+                    ]
+                },
+                "25":{
+                    "name":"St. Ludwig",
+                    "rules":[
+                        "Wenn im März die Veilchen blühn, an Ludwig oft die Schwalben ziehn."
+                    ]
+                },
+                "26":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "27":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "28":{
+                    "name":"St. Augustin",
+                    "rules":[
+                        "An Augustin gehen die warmen Tage dahin.",
+                        "Um Augustin ziehn die Wetter hin.",
+                        "Um die Zeit von Augustin gehn die warmen Tage hin."
+                    ]
+                },
+                "29":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "30":{
+                    "name":"St. Felix",
+                    "rules":[
+                        "Bischof Felix zeigt an, was wir 40 Tag’ für Wetter han."
+                    ]
+                },
+                "31":{
+                    "name":"St. Raimund",
+                    "rules":[
+                        "Sankt Raimund treibt die Wetter aus."
+                    ]
+                }
+            }
+        },
+        "9":{
+            "general":{
+                "rules":[
+                    "Wie der Basilius (2. Januar), so der September.",
+                    "September warm und klar, verheißt ein gutes nächstes Jahr.",
+                    "Am Septemberregen ist dem Bauer viel gelegen.",
+                    "Donnert’s im September noch, wird der Schnee um Weihnacht hoch.",
+                    "Im September die Birnen fest am Stiel, bringt der Winter Kälte viel.",
+                    "Wenn im September viele Spinnen kriechen, sie einen harten Winter riechen.",
+                    "Viel Nebel im September über Tal und Höh’, bringt im Winter tiefen Schnee.",
+                    "Viel Eicheln im September, viel Schnee im Dezember.",
+                    "Wenn Bucheckern geraten wohl, Nuss- und Eichbaum hängen voll, so folgt ein harter Winter drauf, und es fällt der Schnee zuhauf."
+                ]
+            },
+            "days":{
+                "1":{
+                    "name":"St. Ägidius",
+                    "rules":[
+                        "Wie das Wetter an Ägidius so es vier Wochen bleiben muss.",
+                        "Ist Ägidi ein heller Tag, ich dir schönen Herbst ansag.",
+                        "Ägidius Regen kommt ungelegen.",
+                        "Gib auf Ägidius wohl Acht, er sagt dir, was der Monat macht.",
+                        "Wer Korn schon um Ägidi sät, nächstes Jahr viel Frucht abmäht."
+                    ]
+                },
+                "2":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "3":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "4":{
+                    "name":"St. Rosalia",
+                    "rules":[
+                        "Zu Sankt Veit (15. Juni) geht’s auf die Weid, Sankt Rosal treibt’s Vieh ins Tal."
+                    ]
+                },
+                "5":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "6":{
+                    "name":"St. Magnus",
+                    "rules":[
+                        "Wie das Wetter am Magnustag so es vier Wochen bleiben mag."
+                    ]
+                },
+                "7":{
+                    "name":"St. Regine",
+                    "rules":[
+                        "Ist Regine warm und sonnig, bleibt das Wetter lange wonnig.",
+                        "Regina warm und wonnig, bleibt das Wetter lange sonnig."
+                    ]
+                },
+                "8":{
+                    "name":"Mariä Geburt",
+                    "rules":[
+                        "Wie sich das Wetter an Maria Geburt verhält, so ist’s noch vier Wochen bestellt.",
+                        "Wird Mariä Geburt gesät, ist’s nicht zu früh und nicht zu spät.",
+                        "Zu Mariä Geburt fliegen die Schwalben furt. Bleiben sie noch da, ist der Winter nicht nah."
+                    ]
+                },
+                "9":{
+                    "name":"St. Gorgon",
+                    "rules":[
+                        "Ist Gorgon schön, bleibt’s noch sechs Wochen schön.",
+                        "Bringt St. Gorgon Regen, folgt ein Herbst mit bösen Wegen.",
+                        "Regnet es am Sankt Gorgons Tag, geht dir Ernte verloren bis auf den Sack."
+                    ]
+                },
+                "10":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "11":{
+                    "name":"St. Protus",
+                    "rules":[
+                        "Wenn’s an Protus nicht nässt, ein dürrer Herbst sich sehen lässt."
+                    ]
+                },
+                "12":{
+                    "name":"Mariä Namen",
+                    "rules":[
+                        "An Mariä Namen, sagt der Sommer Amen.",
+                        "An Mariä Namen kommen die Schwalben zusammen."
+                    ]
+                },
+                "13":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "14":{
+                    "name":"Kreuzerhöhungstag",
+                    "rules":[
+                        "Ist’s hell am Kreuzerhöhungstag, so folgt ein strenger Winter nach."
+                    ]
+                },
+                "15":{
+                    "name":"St. Ludmilla",
+                    "rules":[
+                        "St. Ludmilla, das fromme Kind, bringt gern Regen und Wind.",
+                        "Ludmilla will nicht artig sein, bringt viel Wind und Regen rein."
+                    ]
+                },
+                "16":{
+                    "name":"St. Cyrianus",
+                    "rules":[
+                        "An Sankt Cyprian zieht man oft schon Handschuh’ an."
+                    ]
+                },
+                "17":{
+                    "name":"St. Lambert von Lüttich",
+                    "rules":[
+                        "Auf Lambert hell und klar, folgt ein trocken Jahr."
+                    ]
+                },
+                "18":{
+                    "name":"St. Lampert von Freising",
+                    "rules":[
+                        "Trocken wird das Frühjahr sein, ist St. Lampert klar und rein."
+                    ]
+                },
+                "19":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "20":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "21":{
+                    "name":"St. Matthäus",
+                    "rules":[
+                        "Hat Matthäus schön’ Wetter im Haus, so hält es noch vier Wochen aus.",
+                        "Tritt Matthäus stürmisch ein, wird’s bis Ostern Winter sein.",
+                        "Wenn Matthäus weint statt lacht, Essig aus dem Wein er macht.",
+                        "Wenn Matthäus freundlich schaut, man auf gutes Wetter baut."
+                    ]
+                },
+                "22":{
+                    "name":"St. Mauritius",
+                    "rules":[
+                        "Klares Wetter an Mauritius, im nächsten Jahr viel Wind kommen muss.",
+                        "Ist Sankt Martin hell und klar, stürmt der Winter, das ist wahr.",
+                        "Zeigt sich klar Mauritius, viele Stürm’ er bringen muss."
+                    ]
+                },
+                "23":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "24":{
+                    "name":"St. Virgilius",
+                    "rules":[
+                        "Friert es auf Virgilius, im Märzen Kälte kommen muss."
+                    ]
+                },
+                "25":{
+                    "name":"St. Kleophas",
+                    "rules":[
+                        "Nebelt’s an St. Kleophas, wird der ganze Winter nass."
+                    ]
+                },
+                "26":{
+                    "name":"St. Damian und St. Kosmas",
+                    "rules":[
+                        "Sankt Kosmas und Sankt Damian fängt das Laub zu färben an."
+                    ]
+                },
+                "27":{
+                    "name":"St. Hiltrud / Helmtrud",
+                    "rules":[
+                        "Wenn Hiltrud im Kalender steht, wird noch einmal das Gras gemäht.",
+                        "Fallen die Eicheln vor Michael (29. September) ab, so steigt der Sommer früh in’s Grab."
+                    ]
+                },
+                "28":{
+                    "name":"St. Wenzeslaus (Wenzel, Vaclav)",
+                    "rules":[
+                        "Kommt Wenzeslaus mit Regen an, werden wir Nüsse bis Weihnachten ha’n."
+                    ]
+                },
+                "29":{
+                    "name":"Die Erzengel Michael, Gabriel und Raphael",
+                    "rules":[
+                        "Der Michel zündt’s Licht an.",
+                        "Regnet’s am Michaelistag, folgt milder Winter nach. Wenn aber Michael der Wind kalt weht, ein harter Winter zu erwarten steht.",
+                        "Auf nassen Michaeltag, nasser Herbst folgen mag.",
+                        "Gibt Michaeli Sonnenschein, wird in zwei Wochen Winter sein.",
+                        "Sind Zugvögel an Michaeli noch hier, haben bis Weihnachten lind Wetter hier.",
+                        "Fallen die Eicheln vor Michaeli ab, so steigt der Sommer früh ins Grab.",
+                        "Um Michaelis in der Tat gedeiht die beste Wintersaat."
+                    ]
+                },
+                "30":{
+                    "name":"St. Hieronymus",
+                    "rules":[
+                        "Von Michel und Hieronymus mach aufs Weihnachtswetter Schluss."
+                    ]
+                }
+            }
+        },
+        "10":{
+            "general":{
+                "rules":[
+                    "Oktoberschnee tut Mensch’ und Tieren weh.",
+                    "Ist der Oktober warm und fein, kommt ein scharfer Winter drein. Ist er aber nass und kühl, mild der Winter werden will.",
+                    "Oktober rau, Januar flau.",
+                    "Im Oktober der Nebel viel, bringt im Winter der Flocken Spiel.",
+                    "Bringt der Oktober viel Regen, ist’s für die Felder ein Segen.",
+                    "Warmer Oktober bringt fürwahr, stets einen kalten Februar.",
+                    "Wenn’s im Oktober friert und schneit, bringt der Jänner milde Zeit.",
+                    "Schneit’s im Oktober gleich, wird der Winter weich.",
+                    "Hilft der Oktober nicht mit Sonne, hat der Winzer keine Wonne.",
+                    "Viel Nebel im Oktober, viel Schnee im Winter.",
+                    "Im Oktober Sturm und Wind, uns den frühen Winter kündt."
+                ]
+            },
+            "days":{
+                "1":{
+                    "name":"St. Remigius",
+                    "rules":[
+                        "Regen an Sankt Remigius bringt den ganzen Monat Verdruss."
+                    ]
+                },
+                "2":{
+                    "name":"St. Leodegar",
+                    "rules":[
+                        "Laubfall an Sankt Leodegar kündigt an ein fruchtbar Jahr.",
+                        "Fällt das Laub auf Leodegar, so ist das nächste ein fruchtbares Jahr."
+                    ]
+                },
+                "3":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "4":{
+                    "name":"St. Franziskus",
+                    "rules":[
+                        "Sonne an Sankt Franz gibt dem Wein den Glanz."
+                    ]
+                },
+                "5":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "6":{
+                    "name":"St. Bruno",
+                    "rules":[
+                        "Sankt Bruno, der Kartäuser, lässt die Fliegen in die Häuser."
+                    ]
+                },
+                "7":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "8":{
+                    "name":"St. Pelagia von Antiochia, Märtyrerin",
+                    "rules":[
+                        "St. Pelei führt Donner und Hagel herbei."
+                    ]
+                },
+                "9":{
+                    "name":"St. Dionysius (Denis)",
+                    "rules":[
+                        "Regnet’s an Sankt Dionys, wird der Winter nass gewiss."
+                    ]
+                },
+                "10":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "11":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "12":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "13":{
+                    "name":"St. Koloman",
+                    "rules":[
+                        "Heiliger Koloman schick mir einen braven Mann."
+                    ]
+                },
+                "14":{
+                    "name":"St. Burkhard (Burkard) (Erhebung der Gebeine)",
+                    "rules":[
+                        "Sankt Burkhard Sonnenschein schüttet Zucker in den Wein."
+                    ]
+                },
+                "15":{
+                    "name":"St. Theresa",
+                    "rules":[
+                        "Zu Theres’ beginnt die Weinles’."
+                    ]
+                },
+                "16":{
+                    "name":"St. Hedwig und St. Gallus",
+                    "rules":[
+                        "Sankt Hedwig und Sankt Gall’ machen das Schneewetter all’.",
+                        "Gießt Sankt Gallus wie ein Fass, wird der nächste Sommer nass; ist der trocken folgt vom Sommer noch ein Brocken.",
+                        "Sankt Gallen lässt den Schnee fallen, treibt die Kuh in den Stall und die Äpfel in den Sack.",
+                        "An Sankt Hedwig und Sankt Gall schweigt der Vögel Sang und Schall.",
+                        "An Hedwig bricht der Wetterlauf und hört das schöne Wetter auf.",
+                        "An Galles schaff heim alles (aus dem Nassauischen)"
+                    ]
+                },
+                "17":{
+                    "name":"",
+                    "rules":[
+                        "Nach dem Sankt Gallus-Tag (16. Oktober) nichts mehr im Garten bleiben mag.",
+                        "Nach Sankt Gall (16. Oktober) bleibt die Kuh im Stall."
+                    ]
+                },
+                "18":{
+                    "name":"St. Lukas",
+                    "rules":[
+                        "Wer an Lukas Roggen streut, es im Jahr darauf nicht bereut.",
+                        "Ist Sankt Lukas mild und warm, folgt ein Winter, dass Gott erbarm.",
+                        "Sankt Lukas Evangelist bringt Spätroggen ohne Mist."
+                    ]
+                },
+                "19":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "20":{
+                    "name":"St. Wendelin",
+                    "rules":[
+                        "Sankt Wendelin, verlass uns nie, schirm unsern Stall, schütz unser Vieh."
+                    ]
+                },
+                "21":{
+                    "name":"St. Ursula",
+                    "rules":[
+                        "Zu Ursula muss das Kraut herein, sonst wird’s noch lange draußen sein.",
+                        "Lacht Ursula mit Sonnenschein, wird wenig Schnee vorm Christfest sein.",
+                        "An Ursula muss das Kraut herein, sonst schneien Simon und Judas (28. Oktober) drein.",
+                        "Sankt Ursula will uns sagen, bald könnt das Feld Schnee tragen."
+                    ]
+                },
+                "22":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "23":{
+                    "name":"St. Severin",
+                    "rules":[
+                        "Wenn’s Sankt Severin gefällt, so bringt er mit die erste Kält’."
+                    ]
+                },
+                "24":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "25":{
+                    "name":"St. Crispinus und Crispinianus, Krispin",
+                    "rules":[
+                        "Mit Krispin sind alle Fliegen hin."
+                    ]
+                },
+                "26":{
+                    "name":"St. Albin",
+                    "rules":[
+                        "Warmer Sankt Albin bringt fürwahr stets einen kalten Januar."
+                    ]
+                },
+                "27":{
+                    "name":"",
+                    "rules":[
+                        "Wer Weizen sät vorm Simonstage (28. Oktober), dem trägt er goldene Ähren ohne Frage.",
+                        "Bevor du Simon (und) Judas (28. Oktober) schaust, pflanze Bäume, schneide Kraut."
+                    ]
+                },
+                "28":{
+                    "name":"Apostel Simon und Apostel Judas",
+                    "rules":[
+                        "Ist’s an Judas hell und klar, gibt’s Regen erst an Cäcilia (22. November).",
+                        "Simon und Juda, ja die zwei, führen oft den Schnee herbei.",
+                        "Bevor du Simon und auch Judas schaust, pflanze Bäume, schneide Kraut.",
+                        "Simon und Judä hängen an die Stauden Schnee."
+                    ]
+                },
+                "29":{
+                    "name":"",
+                    "rules":[
+                        "Wenn Simon und Judas (28. Oktober) vorbei, rückt der Winter schnell herbei."
+                    ]
+                },
+                "30":{
+                    "name":"",
+                    "rules":[
+                        "Zu Ende Oktober Regen bringt ein fruchtbar Jahr zuwegen."
+                    ]
+                },
+                "31":{
+                    "name":"St. Wolfgang",
+                    "rules":[
+                        "Regen am Sankt-Wolfgangs-Tag, gut für das nächste Jahr sein mag.",
+                        "Sankt Wolfgang Regen verspricht ein Jahr voll Segen.",
+                        "Am Wolfgang Regen ist viel gelegen."
+                    ]
+                }
+            }
+        },
+        "11":{
+            "general":{
+                "rules":[
+                    "Wer nicht im November die Äcker gestürzt, der wird im nächsten Jahr verkürzt.",
+                    "November hell und klar, ist übel fürs nächste Jahr.",
+                    "November warm und klar, keine Sorge fürs nächste Jahr.",
+                    "Hängt das Laub bis November hinein, wird der Winter lange sein.",
+                    "Hält der Baum die Blätter lang’, macht ein später Winter bang’.",
+                    "Bringt der November Morgenrot, der Aussaat dann viel Schaden droht.",
+                    "Viel Nebel im November, viel Schnee im Winter.",
+                    "Wenn der November blitzt und kracht, im nächsten Jahr der Bauer lacht.",
+                    "Gefriert im November schon das Wasser, wird der Januar umso nasser.",
+                    "Donnert’s im November gar, so folgt ein gesegnetes Jahr.",
+                    "Baumblüt’ im November gar, noch nie ein gutes Zeichen war.",
+                    "Blühn im November die Bäume auf’s Neu’, dann währet der Winter bis zum Mai.",
+                    "Trägt der Berg einen Hut so wird das Wetter gut, trägt er keinen, wird es bald weinen."
+                ]
+            },
+            "days":{
+                "1":{
+                    "name":"Allerheiligen",
+                    "rules":[
+                        "Bringt Allerheiligen einen Winter, so bringt Martini (11. November) einen Sommer.",
+                        "Allerheiligen bringt Sommer für alte Weiber, der ist des Sommers letzter Vertreiber.",
+                        "Ist’s zu Allerheiligen rein, tritt Altweibersommer ein.",
+                        "Hat Allerheiligen Sonnenschein, wird’s um Martini (11. November) umso kälter sein.",
+                        "Allerheiligenreif macht zur Weihnacht alles steif.",
+                        "Bricht vor Allerheiligen der Winter ein, so herrscht um Martini (11. November) Sonnenschein."
+                    ]
+                },
+                "2":{
+                    "name":"Allerseelen",
+                    "rules":[
+                        "Der Allerseelentag drei Tropfen Regen mag.",
+                        "Um Allerseelen kalt und klar, macht auf Weihnacht alles starr."
+                    ]
+                },
+                "3":{
+                    "name":"St. Hubertus",
+                    "rules":[
+                        "Bringt Hubertus Schnee und Eis, bleibt’s den ganzen November weiß."
+                    ]
+                },
+                "4":{
+                    "name":"St. Karl",
+                    "rules":[
+                        "Wenn’s an Karolus stürmt und schneit, dann lege deinen Pelz bereit."
+                    ]
+                },
+                "5":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "6":{
+                    "name":"St. Leonhard",
+                    "rules":[
+                        "Wenn auf Leonhardi Regen fällt, ist’s mit dem Weizen schlecht bestellt.",
+                        "Wie’s Wetter an Lenardi ist, bleibt’s bis Weihnachten gewiss.",
+                        "Nach der vielen Arbeit Schwere, an Leonhardi die Rösser ehre."
+                    ]
+                },
+                "7":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "8":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "9":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "10":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "11":{
+                    "name":"St. Martin",
+                    "rules":[
+                        "Wenn an/nach Martini Nebel sind, wird der Winter meist gelind.",
+                        "Wenn um Martini Regen fällt, ist’s um den Weizen schlecht bestellt.",
+                        "Ist Martini klar und rein, bricht der Winter bald herein.",
+                        "Wolken am Martinitag, der Winter unbeständig werden mag.",
+                        "Hat Martini einen weißen Bart, wird der Winter lang und hart.",
+                        "Wenn die Martinsgänse auf dem Eise geh’n, muss das Christkind im Schmutze steh’n.",
+                        "Wenn’s Laub nicht vor Martini fällt, kommt eine große Winterkält’.",
+                        "Sankt Martin Sonnenschein, tritt ein kalter Winter ein.",
+                        "Sankt Martin setzt sich schon mit Dank am warmen Ofen auf die Bank.",
+                        "Sankt Martin kommt nach alten Sitten zumeist auf einem Schimmel geritten.",
+                        "Schon nach der Allerheiligenmiss ist der Bauer des Winters gewiss; wenn er dann noch nicht kommen mag, dauert es nur bis Martinitag.",
+                        "Michel mahnt, Martin zahlt. (Sankt Martin als Steuerheiliger)[3]",
+                        "Martini enter 'n I[nn] wirft der Winter hin (liegt am St. Martins Tag Schnee am Ostufer des Inns bei Rosenheim wird der Winter mild)"
+                    ]
+                },
+                "12":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "13":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "14":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "15":{
+                    "name":"St. Leopold",
+                    "rules":[
+                        "Der heilige Leopold ist oft noch dem Altweibersommer hold."
+                    ]
+                },
+                "16":{
+                    "name":"16. November",
+                    "rules":[
+                        
+                    ]
+                },
+                "17":{
+                    "name":"St. Gertrud",
+                    "rules":[
+                        "Tummeln sich an Gertrud die Haselmäuse, ist es weit mit des Winters Eise."
+                    ]
+                },
+                "18":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "19":{
+                    "name":"St. Elisabeth",
+                    "rules":[
+                        "Sankt Elisabeth zeigt an, was der Winter für ein Mann.",
+                        "Es kündigt die Elisabeth, was für ein Winter vor uns steht."
+                    ]
+                },
+                "20":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "21":{
+                    "name":"Mariä Tempelgang (Mariä Opferung)",
+                    "rules":[
+                        "Mariä Opferung hell und rein, bringt einen harten Winter rein.",
+                        "Mariä Opferung klar und hell, naht ein strenger Winter schnell.",
+                        "Mariä Opferung klar und hell, macht den Winter streng und ohne Fehl."
+                    ]
+                },
+                "22":{
+                    "name":"St. Cäcilia",
+                    "rules":[
+                        "Die heilige Cäcilie mit Dank setzt sich auf die Ofenbank.",
+                        "Wenn es an Cäcilia schneit, ist der Winter nimmer weit.",
+                        "Cäcilia im weißen Kleid, erinnert an die Winterzeit."
+                    ]
+                },
+                "23":{
+                    "name":"St. Clemens / Klemens",
+                    "rules":[
+                        "Dem heiligen Klemens traue nicht, denn selten zeigt er ein mild’ Gesicht.",
+                        "Sankt Klemens uns den Winter bringt."
+                    ]
+                },
+                "24":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "25":{
+                    "name":"St. Katharina",
+                    "rules":[
+                        "Wenn kein Schneefall auf Kathrein is’, auf Sankt Andreas (30. November) kommt er g’wiss.",
+                        "Ist an Kathrein das Wetter matt, kommt im Frühjahr spät das Blatt.",
+                        "Wie das Wetter um Kathrein, wird’s den ganzen Winter sein.",
+                        "Kathrein stellt den Tanz ein. (siehe: Kathreintanz)",
+                        "Wer eine Gans zum Essen mag, beginn’ sie zu mästen am Katarinentag.",
+                        "Kathrein wirft den Stein in den Rhein, die kalte Sophie holt ihn wieder raus",
+                        "Kathrein stellt 'n Tanz ein (Beginn der Winterfastenzeit ohne Tanz und Kapellenmusik)"
+                    ]
+                },
+                "26":{
+                    "name":"St. Konrad",
+                    "rules":[
+                        "An Konrad steht kein Mühlenrad, weil der ja immer Wasser hat.",
+                        "Der Konrad und die Kathrein (25. November), die knien sich in den Dreck hinein."
+                    ]
+                },
+                "27":{
+                    "name":"St. Virgilius (Fergal)",
+                    "rules":[
+                        "Friert es auf Virgilius, im Märzen Kälte kommen muss."
+                    ]
+                },
+                "28":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "29":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "30":{
+                    "name":"St. Andreas",
+                    "rules":[
+                        "Andreas, hell und klar, verspricht ein gutes Jahr.",
+                        "Wirft herab Andreas Schnee, tut’s den Korn und Weizen weh.",
+                        "Andreasschnee tut Korn und Weizen weh.",
+                        "Wenn kein Schneefall auf Kathrein (25. November) ist, auf Sankt Andreas kommt er g’wiss.",
+                        "Hält Sankt Andrä den Schnee zurück, so schenkt er reiches Saatenglück.",
+                        "Es verrät dir die Andreasnacht, was das Wetter wohl so macht."
+                    ]
+                }
+            }
+        },
+        "12":{
+            "general":{
+                "rules":[
+                    "Dezember lind, der Winter ein Kind.",
+                    "Im Dezember Schnee und Frost, das verheißt viel Korn und Most.",
+                    "Kalter Dezember und fruchtbar Jahr sind vereinigt immerdar.",
+                    "Auf kalten Dezember mit tüchtigem Schnee folgt ein fruchtbar Jahr mit reichlich Klee.",
+                    "Dezember, kalt mit Schnee tut dem Ungeziefer weh.",
+                    "Ist der Dezember wild mit Regen, dann hat das nächste Jahr wenig Segen.",
+                    "Donnert’s im Dezember gar, kommt viel Wind im nächsten Jahr.",
+                    "Herrscht im Dezember recht strenge Kält’, sie volle 18 Wochen hält.",
+                    "Dezember, veränderlich und lind, ist der ganze Winter ein Kind.",
+                    "So kalt wie im Dezember, so heiß wird’s im Juni."
+                ]
+            },
+            "days":{
+                "1":{
+                    "name":"St. Eligius",
+                    "rules":[
+                        "Fällt auf Eligius ein starker Wintertag, die Kälte wohl vier Monate dauern mag."
+                    ]
+                },
+                "2":{
+                    "name":"St. Bibiana",
+                    "rules":[
+                        "Gibt’s Regen am Bibianatag, es noch vierzig Tage regnen mag.",
+                        "Wenn’s regnet am Bibianatag, regnet’s 40 Tag und eine Woche danach."
+                    ]
+                },
+                "3":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "4":{
+                    "name":"t. Barbara",
+                    "rules":[
+                        "Geht Barbara im Klee, kommt das Christkind im Schnee.",
+                        "Knospen an Sankt Barbara, sind zum Christfest Blüten da."
+                    ]
+                },
+                "5":{
+                    "name":"",
+                    "rules":[
+                        "Nach Barbara (4. Dezember) geht’s Frosten an, kommt’s früher, ist nicht wohlgetan."
+                    ]
+                },
+                "6":{
+                    "name":"St. Nikolaus",
+                    "rules":[
+                        "Regnet’s an Sankt Nikolaus, wird der Winter streng und graus.",
+                        "Trockener Nikolaus, milder Winter rund um’s Haus."
+                    ]
+                },
+                "7":{
+                    "name":"St. Ambrosius",
+                    "rules":[
+                        "Ist Ambrosius schön und rein, wird Sankt Florian (4. Mai) ein Wilder sein.",
+                        "Ambrosius schneit oft dem Bauern auf den Fuß."
+                    ]
+                },
+                "8":{
+                    "name":"Mariä Empfängnis",
+                    "rules":[
+                        "Zu Mariä Empfängnis Regen bringt dem Heu keinen Segen."
+                    ]
+                },
+                "9":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "10":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "11":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "12":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "13":{
+                    "name":"St. Lucia",
+                    "rules":[
+                        "An Sankt Lucia ist der Abend dem Morgen nah.",
+                        "Sankt Luzia stutzt den Tag und macht die längste Nacht. Erklärung: Bis zur Gregorianischen Kalenderreform war der 13. Dezember der kürzeste Tag des Jahres, es galt bis dahin der Julianische Kalender."
+                    ]
+                },
+                "14":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "15":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "16":{
+                    "name":"St. Adelheid",
+                    "rules":[
+                        "Die Adelheid liebt weiße Flocken, so bleibt die Erde selten trocken.",
+                        "Um die Zeit von Adelheid, da macht sich gern der Winter breit.",
+                        "Um Adelheid, da kommt der Schnee, der tut der Wintersaat nicht weh."
+                    ]
+                },
+                "17":{
+                    "name":"St. Lazarus",
+                    "rules":[
+                        "Ist Sankt Lazar nackt und bar, gibt’s ein schönes neues Jahr.",
+                        "Sankt Lazarus nackt und bar macht einen linden Februar."
+                    ]
+                },
+                "18":{
+                    "name":"St. Wunibald",
+                    "rules":[
+                        "Um den Tag des Wunibald, da wird es meistens richtig kalt."
+                    ]
+                },
+                "19":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "20":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "21":{
+                    "name":"St. Thomas",
+                    "rules":[
+                        "Wenn Sankt Thomas dunkel war, gibt’s ein schönes neues Jahr.",
+                        "Sankt Thomas bringt die längste Nacht, weil er den kürzesten Tag gebracht.",
+                        "Am Thomastag wächst der Tag nur einen Hahneschritt."
+                    ]
+                },
+                "22":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "23":{
+                    "name":"",
+                    "rules":[
+                        "Vor Weihnacht viel Wasser, nach Johannis (24. Juli) kein Brot."
+                    ]
+                },
+                "24":{
+                    "name":"Heiliger Abend",
+                    "rules":[
+                        "Wie die Witterung an Adam und Eva (24.12.), so bleibt sie bis Ende des Monats.",
+                        "Wenn es Weihnachten flockt auf allen Wegen, das bringt den Feldern Segen.",
+                        "Ist es Grün zur Weihnachtszeit, fällt der Schnee auf Ostereier.",
+                        "Hängt zu Weihnacht Eis von den Weiden, kannst du zu Ostern Palmen schneiden.",
+                        "Ist es Weihnachten kalt, ist kurz der Winter, das Frühjahr kommt bald.",
+                        "Wer sein Holz nach Weihnachten fällt, dessen Gebäude zehnfach hält.",
+                        "Weihnachten im Schnee, Ostern im Klee.",
+                        "Bis Weihnacht gibt es Speck und Brot, danach kommt Kält’ und Not.",
+                        "Je dicker das Eis um Weihnacht liegt, je zeitiger der Bauer Frühling kriegt.",
+                        "Bringt das Christkind Kält’ und Schnee, drängt das Winterkorn in die Höh’.",
+                        "Wenn’s Christkindlein Tränen weint, vier Wochen keine Sonne scheint.",
+                        "Weihnacht, die im grünen Kleid, hält für Ostern Schnee bereit.",
+                        "Viel Wind in den Weihnachtstagen, reichlich Obst die Bäume tragen."
+                    ]
+                },
+                "25":{
+                    "name":"Weihnachten",
+                    "rules":[
+                        "Wie die Witterung an Adam und Eva (24.12.), so bleibt sie bis Ende des Monats.",
+                        "Wenn es Weihnachten flockt auf allen Wegen, das bringt den Feldern Segen.",
+                        "Ist es Grün zur Weihnachtszeit, fällt der Schnee auf Ostereier.",
+                        "Hängt zu Weihnacht Eis von den Weiden, kannst du zu Ostern Palmen schneiden.",
+                        "Ist es Weihnachten kalt, ist kurz der Winter, das Frühjahr kommt bald.",
+                        "Wer sein Holz nach Weihnachten fällt, dessen Gebäude zehnfach hält.",
+                        "Weihnachten im Schnee, Ostern im Klee.",
+                        "Bis Weihnacht gibt es Speck und Brot, danach kommt Kält’ und Not.",
+                        "Je dicker das Eis um Weihnacht liegt, je zeitiger der Bauer Frühling kriegt.",
+                        "Bringt das Christkind Kält’ und Schnee, drängt das Winterkorn in die Höh’.",
+                        "Wenn’s Christkindlein Tränen weint, vier Wochen keine Sonne scheint.",
+                        "Weihnacht, die im grünen Kleid, hält für Ostern Schnee bereit.",
+                        "Viel Wind in den Weihnachtstagen, reichlich Obst die Bäume tragen."
+                    ]
+                },
+                "26":{
+                    "name":"St. Stefan, 2. Weihnachtsfeiertag",
+                    "rules":[
+                        "Bringt Sankt Stephan Wind, die Winzer nicht erfreuet sind.",
+                        "Scheint am Stephanstag die Sonne, so gerät der Flachs zur Wonne.",
+                        "Windstill soll Sankt Stephan sein, soll der nächste Wein gedeihn.",
+                        "Stefani einen Ha[hnen]tritt, Neujahr einen Hirschsprung, Hl. Dreikönig eine 1/4 Stunde, Sebastian eine 1/2 Stunde, Lichtmess eine ganze Stunde (Tageslängenzuwachs)"
+                    ]
+                },
+                "27":{
+                    "name":"St. Johannes",
+                    "rules":[
+                        "Hat der Evangelist Johannes Eis, dann macht es der Täufer (24. Juni) heiß."
+                    ]
+                },
+                "28":{
+                    "name":"Unschuldige Kinder",
+                    "rules":[
+                        "Schneit’s an unschuldige Kindl, fährt der Januar in die Schindel.",
+                        "Haben’s die unschuldigen Kindlein kalt, so weicht der Frost nicht so bald.",
+                        "Sitzen die unschuldigen Kindlein in der Kälte, vergeht der Frost nicht in Bälde."
+                    ]
+                },
+                "29":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "30":{
+                    "name":"",
+                    "rules":[
+                        
+                    ]
+                },
+                "31":{
+                    "name":"St. Silvester",
+                    "rules":[
+                        "Silvesternacht düster oder klar sagt an ein gutes Jahr.",
+                        "Wenn’s Silvester stürmt und schneit, ist Neujahr nicht mehr weit.",
+                        "Ist’s an Silvester hell und klar, ist am nächsten Tag Neujahr.",
+                        "Silvester wenig Wind und Morgensonn’ gibt viel Hoffnung auf Wein und Korn.",
+                        "Silvesterwind und warme Sonn’ verdirbt die Hoffnung auf Wein und Korn."
+                    ]
+                }
+            }
+        }
+    }
+}

@@ -151,9 +151,14 @@
                 updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
                 updated_text = "$obs.label.header_last_updated " + updated;
                 jQuery(".updated").html( updated_text );
-            
+
                 #end if
-            
+
+                // 20220816,ho Farmers rules
+                #if $Extras.has_key("show_farmers_rules") and $Extras.show_farmers_rules == '1'
+                farmers_rules();
+                #end if
+
                 //  display the relevant forecast; a new session will display the default forecast, a reloaded session the currently displayed forecast
                 if ( sessionStorage.getItem ("forecastInterval")  ) {
                     interval = sessionStorage.getItem("forecastInterval");
@@ -208,93 +213,91 @@
                     <div class="col-lg-4 toprow-height">
                         <!-- Temperature and Current -->
                         <div class="row obs-row">
-                            <div class="row col-sm-12 weather-obs-top">
-                                ##<div class="row col-sm-12">
-                                    <!-- current conditions -->
-                                    <div class="col-xs-6 current_obs_top current_obs_top_left">
-                                        <div class="row">
-                                            #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1' and $current_obs_icon != ""
-                                            <img class="current-obs-symbol" id="wxicon" src="$relative_url/images/$current_obs_icon" alt="Aktuelles Wettersymbol $current_obs_icon">
-                                            #end if
-                                        </div>
-                                        <div class="row current-obs-text">
-                                            $current_obs_summary
-                                        </div>
-                                        ##<div class="row avg10m-obs-symbols"></div>
-                                        #if $Extras.has_key('current_source_toggle') and $Extras.current_source_toggle == '1'
-                                        <div class="row currentSourceToggle">
-                                            <label class="currentSwitchLabel">
-                                                <input type="checkbox" id="current_source_toggle" $current_source_toggle_checked>
-                                                <span class="slider round"></span>
-                                            </label>
-                                        </div>
-                                        <div class="row currentSourceSelected"></div><!-- AJAX -->
-                                        ##TODO Debug Window
-                                        ###if $Extras.has_key("current_source_debug") and $Extras.current_source_debug == '1'
-                                        ##<!-- Current Source Debug Modal -->
-                                        ##<div class="sun-moon-modal"><a href="#current-source-debug" data-toggle="modal" data-target="#current-source-debug">Vergleich</a></div>
-                                        ##<!-- Current Source Debug -->
-                                        ##<div class="modal fade" id="current-source-debug" tabindex="-1" role="dialog" aria-labelledby="current-source-debug" aria-hidden="true">
-                                        ##    <div class="modal-dialog modal-lg" role="document">
-                                        ##        <div class="modal-content">
-                                        ##            <div class="modal-header">
-                                        ##                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                        ##                    <span aria-hidden="true">&times;</span>
-                                        ##                </button>
-                                        ##                <h4 class="modal-title" id="current-source-debug">Vergleich Anbieter aktuelle Wetterbedingungen</h4>
-                                        ##            </div>
-                                        ##            <div class="current-source-debug-extras-modal-body modal-body">
-                                        ##                <div class="row col-sm-12">
-                                        ##                    <div class="col-sm-4">
-                                        ##                        <div>DWD</div>
-                                        ##                        <img id="wxicon-dwd" src="$relative_url/images/$current_obs_icon">
-                                        ##                        <div class="current-obs-text-dwd">$current_obs_summary</div>
-                                        ##                    </div>
-                                        ##                    <div class="col-sm-4">
-                                        ##                        <div>Brightsky API</div>
-                                        ##                        <img id="wxicon-brightsky" src="$relative_url/images/$current_obs_icon">
-                                        ##                        <div class="current-obs-text-brightsky">$current_obs_summary</div>
-                                        ##                    </div>
-                                        ##                    <div class="col-sm-4">
-                                        ##                        <div>OWM API</div>
-                                        ##                        <img id="wxicon-owm" src="$relative_url/images/$current_obs_icon">
-                                        ##                        <div class="current-obs-text-owm">$current_obs_summary</div>
-                                        ##                    </div>
-                                        ##               </div>
-                                        ##            </div><!-- AJAX -->
-                                        ##            <div class="modal-footer">
-                                        ##                <button type="button" class="btn btn-primary" data-dismiss="modal">$obs.label.close</button>
-                                        ##            </div>
-                                        ##        </div>
-                                        ##    </div>
-                                        ##</div>
-                                        ###end if
+                            <div class="col-sm-12 weather-obs-top">
+                                <!-- current conditions -->
+                                <div class="col-xs-6 current_obs_top current_obs_top_left">
+                                    <div class="row">
+                                        #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1' and $current_obs_icon != ""
+                                        <img class="current-obs-symbol" id="wxicon" src="$relative_url/images/$current_obs_icon" alt="Aktuelles Wettersymbol $current_obs_icon">
                                         #end if
                                     </div>
-                                    <!-- current temperature and feelslike -->
-                                    <div class="row col-xs-6 current_temp">
-                                        <div class="row outtemp_outer"><span class="outtemp">$current.outTemp.formatted</span><sup class="outtempunitlabelsuper">$unit.label.outTemp</sup></div><!-- AJAX -->
-                                        #if $current.thswIndex.has_data
-                                        <div class="row feelslike">$obs.label.feels_like: $current.thswIndex</div><!-- AJAX -->
-                                        #elif $current.appTemp.has_data
-                                        <div class="row feelslike">$obs.label.feels_like: $current.appTemp</div><!-- AJAX -->
-                                        #end if
-                                        <div class="stn-high-low">
-                                            <table class="stn-high-low-table">
-                                                <tbody>
-                                                    <tr>
-                                                        <td class="stn-high-low-table-title">$obs.label.lowest_temperature</td>
-                                                        <td class="stn-high-low-table-title border-left">$obs.label.highest_temperature</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="low">$day.outTemp.min</td>
-                                                        <td class="border-left high">$day.outTemp.max</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                    <div class="row current-obs-text">
+                                        $current_obs_summary
                                     </div>
-                                ##</div>
+                                    ##<div class="row avg10m-obs-symbols"></div>
+                                    #if $Extras.has_key('current_source_toggle') and $Extras.current_source_toggle == '1'
+                                    <div class="row currentSourceToggle">
+                                        <label class="currentSwitchLabel">
+                                            <input type="checkbox" id="current_source_toggle" $current_source_toggle_checked>
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
+                                    <div class="row currentSourceSelected"></div><!-- AJAX -->
+                                    ##TODO Debug Window
+                                    ###if $Extras.has_key("current_source_debug") and $Extras.current_source_debug == '1'
+                                    ##<!-- Current Source Debug Modal -->
+                                    ##<div class="sun-moon-modal"><a href="#current-source-debug" data-toggle="modal" data-target="#current-source-debug">Vergleich</a></div>
+                                    ##<!-- Current Source Debug -->
+                                    ##<div class="modal fade" id="current-source-debug" tabindex="-1" role="dialog" aria-labelledby="current-source-debug" aria-hidden="true">
+                                    ##    <div class="modal-dialog modal-lg" role="document">
+                                    ##        <div class="modal-content">
+                                    ##            <div class="modal-header">
+                                    ##                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    ##                    <span aria-hidden="true">&times;</span>
+                                    ##                </button>
+                                    ##                <h4 class="modal-title" id="current-source-debug">Vergleich Anbieter aktuelle Wetterbedingungen</h4>
+                                    ##            </div>
+                                    ##            <div class="current-source-debug-extras-modal-body modal-body">
+                                    ##                <div class="row col-sm-12">
+                                    ##                    <div class="col-sm-4">
+                                    ##                        <div>DWD</div>
+                                    ##                        <img id="wxicon-dwd" src="$relative_url/images/$current_obs_icon">
+                                    ##                        <div class="current-obs-text-dwd">$current_obs_summary</div>
+                                    ##                    </div>
+                                    ##                    <div class="col-sm-4">
+                                    ##                        <div>Brightsky API</div>
+                                    ##                        <img id="wxicon-brightsky" src="$relative_url/images/$current_obs_icon">
+                                    ##                        <div class="current-obs-text-brightsky">$current_obs_summary</div>
+                                    ##                    </div>
+                                    ##                    <div class="col-sm-4">
+                                    ##                        <div>OWM API</div>
+                                    ##                        <img id="wxicon-owm" src="$relative_url/images/$current_obs_icon">
+                                    ##                        <div class="current-obs-text-owm">$current_obs_summary</div>
+                                    ##                    </div>
+                                    ##               </div>
+                                    ##            </div><!-- AJAX -->
+                                    ##            <div class="modal-footer">
+                                    ##                <button type="button" class="btn btn-primary" data-dismiss="modal">$obs.label.close</button>
+                                    ##            </div>
+                                    ##        </div>
+                                    ##    </div>
+                                    ##</div>
+                                    ###end if
+                                    #end if
+                                </div>
+                                <!-- current temperature and feelslike -->
+                                <div class="col-xs-6 current_temp">
+                                    <div class="row outtemp_outer"><span class="outtemp">$current.outTemp.formatted</span><sup class="outtempunitlabelsuper">$unit.label.outTemp</sup></div><!-- AJAX -->
+                                    #if $current.thswIndex.has_data
+                                    <div class="row feelslike">$obs.label.feels_like: $current.thswIndex</div><!-- AJAX -->
+                                    #elif $current.appTemp.has_data
+                                    <div class="row feelslike">$obs.label.feels_like: $current.appTemp</div><!-- AJAX -->
+                                    #end if
+                                    <div class="stn-high-low">
+                                        <table class="stn-high-low-table">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="stn-high-low-table-title">$obs.label.lowest_temperature</td>
+                                                    <td class="stn-high-low-table-title border-left">$obs.label.highest_temperature</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="low">$day.outTemp.min</td>
+                                                    <td class="border-left high">$day.outTemp.max</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                                 <!-- Temperature Hook -->
                                 #if os.path.exists("index_hook_after_temp_table.inc")
                                 <!-- Start of index_hook_after_temp_table -->
@@ -310,55 +313,54 @@
                         <!-- AQI -->
                         <div class="obs-aqi-divider"></div>
                         <div class="row aqi-row">
-                            <div class="aqi-obs-middle">
-                                <div class="row col-sm-12 pws_aqi_outer">
-                                     #if $current.pws_aqi_category.has_data
-                                     #if $current.pws_aqi_category.raw == 0.0
-                                     $obs.label.pws_aqi_long: <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_very_good">$obs.label.pws_aqi_very_good</span>
-                                     #else if $current.pws_aqi_category.raw == 1.0
-                                     $obs.label.pws_aqi_long: <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_good">$obs.label.pws_aqi_good</span>
-                                     #else if $current.pws_aqi_category.raw == 2.0
-                                     $obs.label.pws_aqi_long: <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_moderate">$obs.label.pws_aqi_moderate</span>
-                                     #else if $current.pws_aqi_category.raw == 3.0
-                                     $obs.label.pws_aqi_long: <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_poor">$obs.label.pws_aqi_poor</span>
-                                     #else if $current.pws_aqi_category.raw == 4.0
-                                     $obs.label.pws_aqi_long: <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_very_poor">$obs.label.pws_aqi_very_poor</span>
-                                     #else
-                                     $obs.label.pws_aqi_long: <span class="pws-aqi-category">$obs.label.pws_aqi_unknown</span>
-                                     #end if
-                                     #else
-                                     $obs.label.pws_aqi_long: <span class="pws-aqi-category">$obs.label.pws_aqi_unknown</span>
-                                     #end if
+                            <!-- current conditions -->
+                            <div class="row col-sm-12 obs-aqi-index">
+                                 #if $current.pws_aqi_category.has_data
+                                 #if $current.pws_aqi_category.raw == 0.0
+                                 $obs.label.pws_aqi_long: <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_very_good">$obs.label.pws_aqi_very_good</span>
+                                 #else if $current.pws_aqi_category.raw == 1.0
+                                 $obs.label.pws_aqi_long: <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_good">$obs.label.pws_aqi_good</span>
+                                 #else if $current.pws_aqi_category.raw == 2.0
+                                 $obs.label.pws_aqi_long: <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_moderate">$obs.label.pws_aqi_moderate</span>
+                                 #else if $current.pws_aqi_category.raw == 3.0
+                                 $obs.label.pws_aqi_long: <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_poor">$obs.label.pws_aqi_poor</span>
+                                 #else if $current.pws_aqi_category.raw == 4.0
+                                 $obs.label.pws_aqi_long: <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_very_poor">$obs.label.pws_aqi_very_poor</span>
+                                 #else
+                                 $obs.label.pws_aqi_long: <span class="pws-aqi-category">$obs.label.pws_aqi_unknown</span>
+                                 #end if
+                                 #else
+                                 $obs.label.pws_aqi_long: <span class="pws-aqi-category">$obs.label.pws_aqi_unknown</span>
+                                 #end if
+                            </div>
+                            <div class="row col-sm-12 obs-aqi-values">
+                                <div class="col-sm-6 obs-aqi-table-values">
+                                    <table class="obs-aqi-table">
+                                        <tbody>
+                                            <tr>
+                                                <td class="obs-aqi-table-title" title="$obs.label.ttt_pm2_5_short"><span class="pws_aqi_pm2_5_dot"></span>&nbsp;$obs.label.sds011_pm2_5_short</td>
+                                                <td class="obs-aqi-table-title border-left" title="$obs.label.ttt_pm10_0_short"><span class="pws_aqi_pm10_0_dot"></span>&nbsp;$obs.label.sds011_pm10_0_short</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="obs-aqi-table-value sds011-pm2_5" title="$obs.label.ttt_pm2_5_short">$current.sds011_pm2_5</td>
+                                                <td class="obs-aqi-table-value border-left sds011-pm10_0" title="$obs.label.ttt_pm10_0_short">$current.sds011_pm10_0</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
-                                <div class="row col-sm-12 obs-aqi-container">
-                                    <div class="col-sm-6 obs-aqi-table-container">
-                                        <table class="obs-aqi-table">
-                                            <tbody>
-                                                <tr>
-                                                    <td class="obs-aqi-table-title" title="$obs.label.ttt_pm2_5_short"><span class="pws_aqi_pm2_5_dot"></span> $obs.label.sds011_pm2_5_short</td>
-                                                    <td class="obs-aqi-table-title border-left" title="$obs.label.ttt_pm10_0_short"><span class="pws_aqi_pm10_0_dot"></span> $obs.label.sds011_pm10_0_short</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="obs-aqi-table-value sds011-pm2_5" title="$obs.label.ttt_pm2_5_short">$current.sds011_pm2_5</td>
-                                                    <td class="obs-aqi-table-value border-left sds011-pm10_0" title="$obs.label.ttt_pm10_0_short">$current.sds011_pm10_0</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <div class="col-sm-6 obs-aqi-table-container">
-                                        <table class="obs-aqi-table">
-                                            <tbody>
-                                                <tr>
-                                                    <td class="obs-aqi-table-title border-left" title="$obs.label.ttt_o3_short"><span class="pws_aqi_o3_dot"></span> $obs.label.uba_o3_short</td>
-                                                    <td class="obs-aqi-table-title border-left" title="$obs.label.ttt_no2_short"><span class="pws_aqi_no2_dot"></span> $obs.label.uba_no2_short</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="obs-aqi-table-value border-left uba-o3" title="$obs.label.ttt_o3_short">$current.uba_o3</td>
-                                                    <td class="obs-aqi-table-value border-left uba-no2" title="$obs.label.ttt_no2_short">$current.uba_no2</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                <div class="col-sm-6 obs-aqi-table-values">
+                                    <table class="obs-aqi-table">
+                                        <tbody>
+                                            <tr>
+                                                <td class="obs-aqi-table-title border-left" title="$obs.label.ttt_o3_short"><span class="pws_aqi_o3_dot"></span>&nbsp;$obs.label.uba_o3_short</td>
+                                                <td class="obs-aqi-table-title border-left" title="$obs.label.ttt_no2_short"><span class="pws_aqi_no2_dot"></span>&nbsp;$obs.label.uba_no2_short</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="obs-aqi-table-value border-left uba-o3" title="$obs.label.ttt_o3_short">$current.uba_o3</td>
+                                                <td class="obs-aqi-table-value border-left uba-no2" title="$obs.label.ttt_no2_short">$current.uba_no2</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -367,9 +369,10 @@
                         <!-- Wind -->
                         <div class="aqi-wind-divider"></div>
                         <div class="row windrow">
-                            <div class="wind-obs-bottom weather-obs-bottom">
-                                <div class="row col-sm-12 current_wind">
-                                    <div class="col-sm-6">
+                            <div class="weather-obs-bottom">
+                                <div class="col-sm-12 current_wind" style="overflow:hidden;">
+                                    <!-- compass -->
+                                    <div class="col-sm-6 compassbox">
                                         <div class="compass">
                                             <div class="direction">
                                                 <span class="curwinddir">
@@ -390,42 +393,42 @@
                                             <div class="arrow"></div>
                                         </div>
                                     </div>
+                                    <!-- wind values -->
                                     <div class="col-sm-6 windspeedtable">
-                                        <table class="wind-table">
-                                            <tbody>
-                                                <tr>
-                                                    <td class="windtext">$obs.label.wind_speed</td>
-                                                    <td class="windtext border-left gust">$obs.label.wind_gust</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        <span class="curwindspeed">
-                                                            $current.windSpeed.toString(addLabel=False, NONE_string="--")
-                                                        </span>
-                                                    </td>
-                                                    <td class="border-left gust">&nbsp;
-                                                        <span class="curwindgust">
-                                                            $current.windGust.toString(addLabel=False, NONE_string="--")
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="mph" colspan="3">$unit.label.windSpeed</td>
-                                                </tr>
-                                                #if $Extras.has_key("beaufort_category") and $Extras.beaufort_category == '1'
-                                                <tr>
-                                                    <td class="beaufort" colspan="4"></td>
-                                                </tr>
-                                                #end if
-                                                #if $day.windrun.has_data
-                                                <tr>
-                                                   <td class="dailywindrun" colspan="3" style="padding-top:8px">$obs.label.windrun: $day.windrun.sum</td>
-                                                </tr>
-                                                #end if
-                                            </tbody>
-                                        </table>
+                                        <div class="row wind-high-low">
+                                            <table class="wind-table">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="windtext wind-table-title">$obs.label.wind_speed</td>
+                                                        <td class="windtext border-left gust wind-table-title">$obs.label.wind_gust</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="wind-table-values">
+                                                            <span class="curwindspeed">$current.windSpeed.toString(addLabel=False, NONE_string="--")</span>
+                                                        </td>
+                                                        <td class="border-left gust wind-table-values">
+                                                            <span class="curwindgust">$current.windGust.toString(addLabel=False, NONE_string="--")</span>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="row mph wind-speed-unit">
+                                            $unit.label.windSpeed
+                                        </div>
+                                        ##TODO
+                                        #if $Extras.has_key("beaufort_category") and $Extras.beaufort_category == '1'
+                                        <div class="row beaufort wind-speed-beaufort">
+                                        </div>
+                                        #end if
+                                        #if $day.windrun.has_data
+                                        <div class="row wind-run">
+                                            $obs.label.windrun:&nbsp;$day.windrun.sum
+                                        </div>
+                                        #end if
                                     </div>
                                 </div>
+
                                 <!-- Wind Hook -->
                                 #if os.path.exists("index_hook_after_wind_table.inc")
                                 <!-- Start of index_hook_after_wind_table -->
@@ -535,9 +538,9 @@
                 #end if
 
                 #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1' and (($Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours != '0') or not ($Extras.has_key("forecast_interval_hours")))
+                #if $Extras.has_key("forecast_show_homepage") and $Extras.forecast_show_homepage == '1'
                 <!-- Start of second row -->
                 <div class="row forecastrow">
-                    #if $Extras.has_key("forecast_show_homepage") and $Extras.forecast_show_homepage == '1'
                     <!-- Forecast -->
                     <div class="col-lg-8 forecast-title">
                         $obs.label.forecast_header <span class="forecast-subtitle"></span><!-- moment.js -->
@@ -547,7 +550,6 @@
                         <div class="forecast-button" onclick="forecast_select(3);" id="button3">3</div>
                         <div class="forecast-button" onclick="forecast_select(24);" id="button24">24</div>
                     </div>
-                    #end if
                     
                     #if $Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours != '0'
                     #if $Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours == '1'
@@ -581,11 +583,9 @@
                     </div>
                     #end if
                 </div>
-
-                                          
-                #end if
-                
                 <!-- End of second row -->
+                #end if
+                #end if
                 
                 #if os.path.exists("index_hook_after_forecast.inc")
                 <!-- Start of index_hook_after_forecast row -->
@@ -682,7 +682,7 @@
                     #include "index_hook_after_snapshot.inc"
                 </div>
                 <!-- End of index_hook_after_snapshot row -->
-                #end if                          
+                #end if
                 
                 #if $Extras.has_key('highcharts_enabled') and $Extras.highcharts_enabled == '1'
                 <!-- Begin of fourth row - dynamic charts -->
