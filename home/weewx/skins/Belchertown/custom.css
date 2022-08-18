@@ -266,8 +266,12 @@ sub { top: 0.4em; }
 .forecast-headline {
     text-align: left;
     font-size: 25px;
-    margin-bottom: 12px;
+    margin-bottom: 0px;
     padding-right: 0 !important;
+}
+
+.forecast-content {
+    margin-bottom: 10px;
 }
 
 .forecast-menu {

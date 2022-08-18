@@ -15,6 +15,7 @@ DWD_MAP2="https://www.dwd.de/DWD/wetter/wv_spez/hobbymet/wetterkarten/bwk_bodend
 #DWD_WARN="https://www.dwd.de/DWD/warnungen/warnstatus/SchilderLZ.jpg"
 DWD_WARN="https://www.dwd.de/DWD/warnungen/warnstatus/SchilderMS.jpg"
 DWD_WARNJ="https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json"
+DWD_WBX="https://www.dwd.de/DWD/warnungen/agrar/wbx/wbx_tab_alle_BY.html"
 
 # Log-Datei
 LOG_FN="/var/log/weewx/wget-dwd.log"
@@ -55,3 +56,4 @@ $WGET -a "$LOG_FN" -O "$PTH/${DWD_MAP##*/}" $DWD_MAP
 $WGET -a "$LOG_FN" -O "$PTH/${DWD_MAP2##*/}" $DWD_MAP2
 $WGET -a "$LOG_FN" -O "$PTH/${DWD_WARN##*/}" $DWD_WARN
 $WGET -a "$LOG_FN" -O "$PTH/${DWD_WARNJ##*/}" $DWD_WARNJ
+$WGET -a "$LOG_FN" -O "$PTH/${DWD_WBX##*/}" $DWD_WBX

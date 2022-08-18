@@ -144,18 +144,18 @@
     #end if
 
     #if os.path.exists("dwd/SchilderMS.jpg")
-    <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
             Aktuelle Warnlage in Bayern
         </div>
-        <div class="col-sm-12">
+        <div class="col-sm-12 forecast-content">
             <a id="warnlage_bay" name="warnlage_bay" href="https://www.dwd.de/DE/wetter/warnungen_gemeinden/warnWetter_node.html?ort=Weiherhammer&bundesland=bay" target="_blank"><img itemprop="image" src="$relative_url/dwd/SchilderMS.jpg" alt="Die Warnlage in Bayern"></a>
         </div>
     </div>
     #end if
 
     #if os.path.exists("dwd/warn-NEW.inc")
-    <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
             Aktuelle Wetterwarnungen f&uuml;r den Landkreis Neustadt a.d. Waldnaab
         </div>  
@@ -177,49 +177,45 @@
     #end if
 
     #if os.path.exists("dwd/VHDL54_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
             Wetterlage in Bayern
         </div>
-        <div class="col-md-12">
+        <div class="col-md-12 forecast-content">
             #include raw "dwd/VHDL54_DWMG_LATEST.html"
-            ##<p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
         </div>
     </div>
     #end if
 
     #if os.path.exists("dwd/VHDL50_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
             Wettervorhersage heute
         </div>
-        <div class="col-md-12">
+        <div class="col-md-12 forecast-content">
             #include raw "dwd/VHDL50_DWMG_LATEST.html"
-            ##<p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
         </div>
     </div>
     #end if
 
     #if os.path.exists("dwd/VHDL51_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
             Wettervorhersage morgen
         </div>
-        <div class="col-md-12">
+        <div class="col-md-12 forecast-content">
             #include raw "dwd/VHDL51_DWMG_LATEST.html"
-            ##<p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
         </div>
     </div>
     #end if
 
     #if os.path.exists("dwd/VHDL52_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
             Wettervorhersage &uuml;bermorgen
         </div>
-        <div class="col-md-12">
+        <div class="col-md-12 forecast-content">
             #include raw "dwd/VHDL52_DWMG_LATEST.html"
-            ##<p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
         </div>
     </div>
     #end if
@@ -229,9 +225,8 @@
         <div class="col-md-12 forecast-headline">
             Wettervorhersage 4. Tag
         </div>
-        <div class="col-md-12">
+        <div class="col-md-12 forecast-content">
             #include raw "dwd/VHDL53_DWMG_LATEST.html"
-            ##<p>Quelle: <a href="https://www.dwd.de/DE/wetter/wetterundklima_vorort/bayern/bayern_node.html" target="_blank" rel="noreferrer">DWD</a><p>
         </div>
     </div>
     #end if
@@ -241,11 +236,22 @@
         <div class="col-md-12 forecast-headline">
             Aktuelle Wetterkarte (Luftdruck am Boden)
         </div>
-        <div class="col-md-12" style="margin-top:10px;>
+        <div class="col-md-12 forecast-content">
             <a id="wetterkarte_nae" name="wetterkarte_nae" href="https://www.dwd.de/DE/leistungen/hobbymet_wk_europa/hobbyeuropakarten.html" target="_blank"><img itemprop="image" src="$relative_url/dwd/bwk_bodendruck_na_ana.png" alt="Wetterkarte (Luftdruck am Boden)"></a>
         </div>
     </div>
     #end if
+
+##    #if os.path.exists("dwd/wbx_tab_alle_BY.html")
+##    <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
+##        <div class="col-md-12 forecast-headline">
+##            Waldbrangefahrenindex in Bayern
+##        </div>
+##        <div class="col-md-12 forecast-content">
+##            #include raw "dwd/wbx_tab_alle_BY.html"
+##        </div>
+##    </div>
+##    #end if
 
     ##<!-- DWD Meteogramm wettersoftware.de -->
     ##<script src="$relative_url/meteogram.v2.0.min.js"></script>
