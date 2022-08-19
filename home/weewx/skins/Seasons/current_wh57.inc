@@ -41,6 +41,10 @@
         <td class="label">$gettext("Lightning distance max")</td>
         <td class="data">$day.lightning_distance.max</td>
       </tr>
+      <tr>
+        <td class="label">$gettext("Lightning distance last")</td>
+        <td class="data">$latest.lightning_distance</td>
+      </tr>
     #else
       <tr>
         <td class="label">$obs.label[$x]</td>

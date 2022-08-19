@@ -1,7 +1,10 @@
 #!/usr/bin/python3
 # Wettervorhersage
-# Copyright (C) 2022 Johanna Roedenbeck
-# licensed under the terms of the General Public License (GPL) v3
+# Henry Ott
+# based on scripts by Johanna Roedenbeck
+# https://github.com/roe-dl
+
+# TODO seperate forecast for each provider
 
 from __future__ import absolute_import
 from __future__ import print_function

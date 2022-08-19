@@ -1,0 +1,264 @@
+[Config]
+LOX_IP = none
+LOX_PORT = none
+LB_IP = 192.168.0.182
+LBU_PORT = 12340
+LBH_PORT = 8081
+LOX_TIME = False
+USE_METRIC = False
+IGNORE_EMPTY = False
+UDP_ENABLE = False
+UDP_IGNORE = 
+UDP_MAXLEN = 
+UDP_STATRESEND = 0
+LANGUAGE = EN
+AUTH_PWD = 
+DEF_SID = 
+REBOOT_ENABLE = False
+RESTART_ENABLE = False
+SVC_NAME = foshkplugin
+HIDDEN_FEATURES = True
+
+[Weatherstation]
+WS_IP = 192.168.0.116
+WS_PORT = 45000
+WS_INTERVAL = 16
+WS90_CONVERT = True
+
+[Export]
+EVAL_VALUES = True
+ADD_ITEMS = 
+OUT_TEMP = 
+OUT_HUM = 
+OUT_TIME = False
+FIX_LIGHTNING = True
+UDP_MINMAX = True
+
+[Forward]
+FWD_ENABLE = True
+FWD_CMT = This is a permanent comment field for notes on this forward
+FWD_URL = 
+FWD_INTERVAL = 
+FWD_IGNORE = 
+FWD_TYPE = 
+FWD_SID = 
+FWD_PWD = 
+FWD_REMAP = 
+FWD_STATUS = False
+FWD_MQTTCYCLE = 0
+FWD_EXEC = 
+
+[Forward-1]
+FWD_ENABLE = True
+FWD_CMT = PWS Weiherhammer Ecowitt Protokoll an WeeWX Prod
+FWD_URL = http://weewx.fritz.box:8080/data/report/
+FWD_INTERVAL = 
+FWD_IGNORE = 
+FWD_TYPE = EW
+FWD_SID = 
+FWD_PWD = 
+FWD_REMAP = 
+FWD_STATUS = False
+FWD_MQTTCYCLE = 0
+FWD_EXEC = 
+
+[Forward-2]
+FWD_ENABLE = True
+FWD_CMT = PWS Weiherhammer Ecowitt Protokoll an WeeWX 02 Test
+FWD_URL = http://weewx02.fritz.box:8080/data/report/
+FWD_INTERVAL = 
+FWD_IGNORE = 
+FWD_TYPE = EW
+FWD_SID = 
+FWD_PWD = 
+FWD_REMAP = 
+FWD_STATUS = False
+FWD_MQTTCYCLE = 0
+FWD_EXEC = 
+
+[Forward-3]
+FWD_ENABLE = False
+FWD_CMT = PWS Weiherhammer Ecowitt Protokoll an WeeWX 03 Entwicklung
+FWD_URL = http://weewx03.fritz.box:8080/data/report/
+FWD_INTERVAL = 
+FWD_IGNORE = 
+FWD_TYPE = EW
+FWD_SID = 
+FWD_PWD = 
+FWD_REMAP = 
+FWD_STATUS = False
+FWD_MQTTCYCLE = 0
+FWD_EXEC = 
+
+[Forward-4]
+FWD_ENABLE = True
+FWD_CMT = PWS Weiherhammer Ecowitt Protokoll an WeeWX 04 Raspberry
+FWD_URL = http://weewx04.fritz.box:8080/data/report/
+FWD_INTERVAL = 
+FWD_IGNORE = 
+FWD_TYPE = EW
+FWD_SID = 
+FWD_PWD = 
+FWD_REMAP = 
+FWD_STATUS = False
+FWD_MQTTCYCLE = 0
+FWD_EXEC = 
+
+[Forward-5]
+FWD_ENABLE = True
+FWD_CMT = send the Ecowitt stream via UDP broadcast to multiple PWT instances
+FWD_URL = 192.168.0.255:12345
+FWD_INTERVAL = 
+FWD_IGNORE = 
+FWD_TYPE = RAWUDP
+FWD_SID = 
+FWD_PWD = 
+FWD_REMAP = 
+FWD_STATUS = False
+FWD_MQTTCYCLE = 0
+FWD_EXEC = 
+
+[Forward-6]
+FWD_ENABLE = True
+FWD_CMT = PWS Weiherhammer Ecowitt Protokoll an PWS Dashboard
+FWD_URL = http://weewx01.fritz.box:80/ecowitt/
+FWD_INTERVAL = 
+FWD_IGNORE = 
+FWD_TYPE = EW
+FWD_SID = 
+FWD_PWD = 
+FWD_REMAP = 
+FWD_STATUS = False
+FWD_MQTTCYCLE = 0
+FWD_EXEC = 
+
+[Forward-10]
+FWD_ENABLE = False
+FWD_CMT = Export realtime.txt to filesystem
+FWD_URL = /home/weewx/public_html/file/
+FWD_INTERVAL = 
+FWD_IGNORE = 
+FWD_TYPE = REALTIMETXT
+FWD_SID = 
+FWD_PWD = 
+FWD_REMAP = 
+FWD_STATUS = False
+FWD_MQTTCYCLE = 0
+FWD_EXEC = 
+
+[Forward-11]
+FWD_ENABLE = False
+FWD_CMT = Export clientraw.txt to filesystem
+FWD_URL = /home/weewx/public_html/file/
+FWD_INTERVAL = 
+FWD_IGNORE = 
+FWD_TYPE = CLIENTRAWTXT
+FWD_SID = 
+FWD_PWD = 
+FWD_REMAP = 
+FWD_STATUS = False
+FWD_MQTTCYCLE = 0
+FWD_EXEC = 
+
+[Forward-12]
+FWD_ENABLE = True
+FWD_CMT = Export realtime.txt to belchertown skin
+FWD_URL = /home/weewx/public_html/belchertown/
+FWD_INTERVAL = 
+FWD_IGNORE = 
+FWD_TYPE = REALTIMETXT
+FWD_SID = 
+FWD_PWD = 
+FWD_REMAP = 
+FWD_STATUS = False
+FWD_MQTTCYCLE = 0
+FWD_EXEC = 
+
+[Forward-13]
+FWD_ENABLE = True
+FWD_CMT = Export clientraw.txt to belchertown skin
+FWD_URL = /home/weewx/public_html/belchertown/
+FWD_INTERVAL = 
+FWD_IGNORE = 
+FWD_TYPE = CLIENTRAWTXT
+FWD_SID = 
+FWD_PWD = 
+FWD_REMAP = 
+FWD_STATUS = False
+FWD_MQTTCYCLE = 0
+FWD_EXEC = 
+
+[Forward-20]
+FWD_ENABLE = False
+FWD_CMT = export via MQTT (metric)
+FWD_URL = 192.168.0.182:1883@foshk
+FWD_INTERVAL = 
+FWD_IGNORE = 
+FWD_TYPE = MQTTMET
+FWD_SID = dummy
+FWD_PWD = 4711
+FWD_REMAP = 
+FWD_STATUS = False
+FWD_MQTTCYCLE = 0
+FWD_EXEC = 
+
+[CSV]
+CSV_NAME = 
+CSV_FIELDS = 
+CSV_INTERVAL = 
+CSV_DAYFILE = 
+
+[Warning]
+WSDOG_WARNING = True
+WSDOG_INTERVAL = 3
+WSDOG_RESTART = 0
+SENSOR_WARNING = False
+SENSOR_MANDATORY = wh65batt
+BATTERY_WARNING = True
+STORM_WARNING = True
+STORM_WARNDIFF = 1.75
+STORM_WARNDIFF3H = 3.75
+STORM_EXPIRE = 60
+TSTORM_WARNING = True
+TSTORM_WARNCOUNT = 1
+TSTORM_WARNDIST = 30
+TSTORM_EXPIRE = 15
+LEAKAGE_WARNING = False
+CO2_WARNING = False
+CO2_WARNLEVEL = 1000
+INTVL_WARNING = False
+INTVL_PCT = 10
+
+[Logging]
+logfile = /opt/FOSHKplugin/log-foshkplugin.log
+rawfile = /opt/FOSHKplugin/raw-foshkplugin.log
+sndfile = /opt/FOSHKplugin/snd-foshkplugin.log
+IGNORE_LOG = 
+BUT_PRINT = True
+LOG_LEVEL = ALL
+
+[Update]
+UPD_CHECK = True
+UPD_INTERVAL = 86400
+
+[Pushover]
+PO_ENABLE = False
+PO_URL = 
+PO_TOKEN = 
+PO_USER = 
+
+[Coordinates]
+ALT = 394
+LAT = 49.632270
+LON = 12.056186
+
+[Sunduration]
+SUN_CALC = True
+SUN_MIN = 20
+SUN_COEF = 0.79
+
+[Status]
+StopTime = 1658931908
+last_lightning_time = 1658784682
+last_lightning = 27
+

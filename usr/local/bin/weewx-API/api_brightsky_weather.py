@@ -1,6 +1,7 @@
-#!/usr/bin/python
-# Copyright (c) 2021 Henry Ott
-# Author: Henry Ott hoetz@gmx.net
+#!/usr/bin/python3
+# Henry Ott
+# based on scripts by Johanna Roedenbeck
+# https://github.com/roe-dl
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -388,8 +389,6 @@ To:
             loginf('what to output: %s' % output)
 
         try:
-            # Determine if the file exists and get it's modified time, enhanced
-            # for 1 hr forecast to load close to the hour
             fn = os.path.join(self.target_path,self.filename)
             if os.path.exists(fn):
                 if self.verbose:
@@ -443,6 +442,7 @@ To:
 if __name__ == "__main__":
 
     usage = None
+
     epilog = """"""
 
     # Create a command line parser:
@@ -469,6 +469,9 @@ if __name__ == "__main__":
     parser.add_option_group(group)
 
     (options, args) = parser.parse_args()
+
+    if options.verbose is None:
+       options.verbose = False
 
     if options.weewx:
         config_path = "/home/weewx/weewx.conf"

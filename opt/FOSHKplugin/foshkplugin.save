@@ -1,0 +1,122 @@
+[Config]
+LOX_IP = 
+LOX_PORT = 12340
+LB_IP = 
+LBU_PORT = 12341
+LBH_PORT = 
+LOX_TIME = False
+USE_METRIC = True
+IGNORE_EMPTY = True
+UDP_ENABLE = True
+UDP_IGNORE = 
+UDP_MAXLEN = 
+UDP_STATRESEND = 0
+LANGUAGE = DE
+AUTH_PWD = 
+DEF_SID = 
+REBOOT_ENABLE = False
+RESTART_ENABLE = False
+
+[Weatherstation]
+WS_IP = 
+WS_PORT = 
+WS_INTERVAL = 60
+WS90_CONVERT = True
+
+[Export]
+EVAL_VALUES = True
+ADD_ITEMS = 
+OUT_TEMP = 
+OUT_HUM = 
+OUT_TIME = False
+FIX_LIGHTNING = True
+UDP_MINMAX = True
+URL_REPAIR = True
+
+[Forward]
+FWD_ENABLE = True
+FWD_CMT = This is a permanent comment field for notes on this forward
+FWD_URL = 
+FWD_INTERVAL = 
+FWD_IGNORE = 
+FWD_TYPE = 
+FWD_SID = 
+FWD_PWD = 
+FWD_REMAP = 
+FWD_STATUS = False
+FWD_MQTTCYCLE = 0
+FWD_EXEC = 
+
+[Forward-1]
+FWD_ENABLE = True
+FWD_CMT = This is a permanent comment field for notes on this forward
+FWD_URL = 
+FWD_INTERVAL = 
+FWD_IGNORE = 
+FWD_TYPE = 
+FWD_SID = 
+FWD_PWD = 
+FWD_REMAP = 
+FWD_STATUS = False
+FWD_MQTTCYCLE = 0
+FWD_EXEC = 
+
+[CSV]
+CSV_NAME = 
+CSV_FIELDS = 
+CSV_INTERVAL = 
+CSV_DAYFILE = 
+
+[Warning]
+WSDOG_WARNING = True
+WSDOG_INTERVAL = 3
+WSDOG_RESTART = 0
+SENSOR_WARNING = False
+SENSOR_MANDATORY = wh65batt
+BATTERY_WARNING = True
+STORM_WARNING = True
+STORM_WARNDIFF = 1.75
+STORM_WARNDIFF3H = 3.75
+STORM_EXPIRE = 60
+TSTORM_WARNING = True
+TSTORM_WARNCOUNT = 1
+TSTORM_WARNDIST = 30
+TSTORM_EXPIRE = 15
+LEAKAGE_WARNING = False
+CO2_WARNING = False
+CO2_WARNLEVEL = 1000
+INTVL_WARNING = False
+INTVL_PCT = 10
+
+[Logging]
+logfile = REPLACEFOSHKPLUGINLOGDIR/log-foshkplugin.log
+rawfile = REPLACEFOSHKPLUGINLOGDIR/raw-foshkplugin.log
+sndfile = REPLACEFOSHKPLUGINLOGDIR/snd-foshkplugin.log
+IGNORE_LOG = 
+BUT_PRINT = True
+LOG_LEVEL = ALL
+
+[Update]
+UPD_CHECK = True
+UPD_INTERVAL = 86400
+
+[Pushover]
+PO_ENABLE = False
+PO_URL = 
+PO_TOKEN = 
+PO_USER = 
+
+[Coordinates]
+ALT = 
+LAT = 
+LON = 
+
+[Sunduration]
+SUN_CALC = False
+SUN_MIN = 0
+SUN_COEF = 0.8
+
+[Status]
+last_lightning_time = 1649015055
+last_lightning = 6
+
