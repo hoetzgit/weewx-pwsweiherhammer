@@ -33,6 +33,10 @@
 */1 * * * * /bin/bash /usr/local/bin/copy_allsky_image_to_belchertown.sh  >/dev/null 2>&1
 */1 * * * * /bin/bash /usr/local/bin/copy_webcam_image_to_belchertown.sh  >/dev/null 2>&1 && /bin/bash /usr/local/bin/copy_webcam_image_to_pwsdashboard.sh  >/dev/null 2>&1
 #
+# DWD Forecast Waldbrandgefahrenindex
+15 6  * * * /bin/bash /usr/local/bin/weewx-DWD/wget-dwd-wbx >/var/log/weewx/wget-dwd-wbx.log 2>&1
+20 6  * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --wbx-only >/var/log/weewx/forecast-pwsWeiherhammer-wbx.log
+#
 # DWD Forecast and Warnings
 0,15,30,45 * * * * /bin/bash /usr/local/bin/weewx-DWD/wget-dwd >/var/log/weewx/wget-dwd.log 2>&1
 0,15,30,45 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-cap-warnings --config=/home/weewx/weewx.conf --resolution=county --verbose >/var/log/weewx/dwd-cap-warnings-county.log 2>&1
@@ -44,9 +48,9 @@
 #1,16,31,46       * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx.conf --verbose --html --hourly --hide-placemark 10688 >/var/log/weewx/dwd-mosmix-html-hourly-10688.log 2>&1
 #
 # DWD dwd-pwsWeiherhammer
-2,12,22,32,42,52 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --database --belchertown  10688 >/var/log/weewx/dwd-pwsWeiherhammer-belchertown-10688.log 2>&1
-#2,12,22,32,42,52 * * * * sleep 5; /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --html --daily --hide-placemark 10688 >/var/log/weewx/dwd-pwsWeiherhammer-html-daily-10688.log 2>&1
-#2,12,22,32,42,52 * * * * sleep 10; /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --html --hourly --hide-placemark 10688 >/var/log/weewx/dwd-pwsWeiherhammer-html-hourly-10688.log 2>&1
+2,12,22,32,42,52 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --database --belchertown  10688 >/var/log/weewx/forecast-pwsWeiherhammer-belchertown-10688.log 2>&1
+#2,12,22,32,42,52 * * * * sleep 5; /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --html --daily --hide-placemark 10688 >/var/log/weewx/forecast-pwsWeiherhammer-html-daily-10688.log 2>&1
+#2,12,22,32,42,52 * * * * sleep 10; /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --html --hourly --hide-placemark 10688 >/var/log/weewx/forecast-pwsWeiherhammer-html-hourly-10688.log 2>&1
 #
 # API to MQTT
 */1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_aeris_airquality.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_aeris_airquality.log 2>&1

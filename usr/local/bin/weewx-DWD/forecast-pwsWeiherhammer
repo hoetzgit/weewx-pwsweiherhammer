@@ -624,15 +624,20 @@ class ForecastPWS(object):
 
     def __init__(self, config_dict, verbose=False):
         # target path
-        self.target_path = config_dict['ForecastWeiherhammer']['path']
+        self.target_path = config_dict['forecast-pwsWeiherhammer']['path']
         # forecast config data
-        forecast_dict = config_dict['ForecastWeiherhammer']['forecast']
+        forecast_dict = config_dict['forecast-pwsWeiherhammer']['forecast']
         # database config data
-        database_dict = config_dict['ForecastWeiherhammer']['database']
+        database_dict = config_dict['forecast-pwsWeiherhammer']['database']
         # weather icons
         self.icon_pth = forecast_dict['icons']
         # station-specific configuration
         self.stations_dict = forecast_dict.get('stations',{})
+        # forecast Waldbrandgefahrenindex
+        wbx_dict = config_dict['forecast-pwsWeiherhammer']['forecast-wbx']
+        self.wbx_stations = wbx_dict.get('stations',None)
+        self.wbx_input_file = wbx_dict.get('input','forecast-wbx-input-not-defined.json')
+        self.wbx_output_file = wbx_dict.get('output','forecast-wbx-onput-not-defined.inc')
         # HTML config
         self.show_obs_symbols = tobool(forecast_dict.get('show_obs_symbols',True))
         self.show_obs_description = tobool(forecast_dict.get('show_obs_description',False))
@@ -667,8 +672,8 @@ class ForecastPWS(object):
         if forecast_dict.get('icon_set','').lower()=='aeris': self.iconset = 6
         # logging
         self.verbose = verbose
-        self.log_success = tobool(forecast_dict.get('log_success',config_dict['ForecastWeiherhammer'].get('log_success',config_dict.get('log_success',False))))
-        self.log_failure = tobool(forecast_dict.get('log_failure',config_dict['ForecastWeiherhammer'].get('log_failure',config_dict.get('log_failure',False))))
+        self.log_success = tobool(forecast_dict.get('log_success',config_dict['forecast-pwsWeiherhammer'].get('log_success',config_dict.get('log_success',False))))
+        self.log_failure = tobool(forecast_dict.get('log_failure',config_dict['forecast-pwsWeiherhammer'].get('log_failure',config_dict.get('log_failure',False))))
         if (int(config_dict.get('debug',0))>0) or verbose:
             self.log_success = True
             self.log_failure = True
@@ -689,7 +694,7 @@ class ForecastPWS(object):
             self.sun = ephem.Sun()
         # Belchertown
         try:
-            belchertown_dict = config_dict['ForecastWeiherhammer'].get('Belchertown',{})
+            belchertown_dict = config_dict['forecast-pwsWeiherhammer'].get('Belchertown',{})
             belchertown_section = config_dict['StdReport'][belchertown_dict['section']]
             if 'HTML_ROOT' in belchertown_section:
                 self.belchertown_html_root = os.path.join(
@@ -744,20 +749,21 @@ class ForecastPWS(object):
         # Log config
         if __name__ == "__main__" and verbose:
             print('-- configuration data ----------------------------------')
-            print('log success:      ',self.log_success)
-            print('log failure:      ',self.log_failure)
-            print('target path:      ',self.target_path)
-            print('horiz. tab:       ',self.horizontal_table)
-            print('vertical tab:     ',self.vertical_table)
-            print('icon set:         ',self.iconset)
-            print('station location: ','lat',self.latitude,'lon',self.longitude,'alt',self.altitude)
-            print('aeris api id:     ',self.forecast_api_id)
-            print('aeris api secret: ',self.forecast_api_secret)
-            print('SQLITE_ROOT:      ',self.SQLITE_ROOT)
-            print('current source default     :',self.current_source_default)
-            print('current source alternative :',self.current_source_alternative)
-            print('weatherbit api key         :',self.weatherbit_api_key)
-            print('owm api key                :',self.owm_api_key)
+            print('log success                : ',self.log_success)
+            print('log failure                : ',self.log_failure)
+            print('target path                : ',self.target_path)
+            print('horiz. tab                 : ',self.horizontal_table)
+            print('vertical tab               : ',self.vertical_table)
+            print('icon set                   : ',self.iconset)
+            print('station location           : ','lat',self.latitude,'lon',self.longitude,'alt',self.altitude)
+            print('aeris api id               : ',self.forecast_api_id)
+            print('aeris api secret           : ',self.forecast_api_secret)
+            print('SQLITE_ROOT                : ',self.SQLITE_ROOT)
+            print('current source default     : ',self.current_source_default)
+            print('current source alternative : ',self.current_source_alternative)
+            print('weatherbit api key         : ',self.weatherbit_api_key)
+            print('owm api key                : ',self.owm_api_key)
+            print('forecast wbx stations      : ',self.wbx_stations)
             print('--------------------------------------------------------')
 
     @staticmethod
@@ -2856,7 +2862,133 @@ class ForecastPWS(object):
         if self.verbose:
             loginf('placemark id "%s" processed' % placemark.get('id'))
 
+    # TODO css, error handling
+    def forecast_wbx_html(self, keymapping_dict, tabheader_list, tabcontent_dict, htmlsource, output, dryrun, lang='de'):
+        if self.verbose:
+            loginf('forecast_wbx_html: started.')
+        html = ''
+        html += '<table style="border:1px solid #000000; border-collapse:collapse;">\n'
+        html += '    <thead>\n' 
+        html += '        <tr>\n'
+        for col, cellcontent in enumerate(tabheader_list):
+            if (col == 0):
+                html += '            <th style="padding:3px;border:1px solid #000000;text-align:left;vertical-align:bottom;padding-top:5px;">'
+            else:
+                html += '            <th style="padding:3px;border:1px solid #000000;text-align:center;vertical-align:bottom;padding-top:5px;">'
+            html += str(cellcontent)
+            html += '</th>\n'
+        html += '        </tr>\n'
+        html += '    </thead>\n' 
+        html += '    <tbody>\n'
+        html += '        <tr>\n'
+        for station, content_list in tabcontent_dict.items():
+            for col, cellcontent in enumerate(content_list):
+                if (col == 0):
+                    html += '            <td style="padding:3px;border:1px solid #000000;text-align:left;">'
+                    html += cellcontent
+                else:
+                    html += '            <td style="padding:3px;border:1px solid #000000;text-align:center;font-weight:bold'
+                    html += (';background-color:' + keymapping_dict[cellcontent]['background-color'])
+                    html += (';color:' + keymapping_dict[cellcontent]['color'])
+                    html += ';">'
+                    html += keymapping_dict[cellcontent]['description']
+                html += '</td>\n'
+        html += '        </tr>\n'
+        html += '    </tbody>\n'
+        html += '</table>\n'
+        html += '<p><span>' + htmlsource + '</span></p>\n'
+        if dryrun:
+            print(html)
+        else:
+            try:
+                with open("%s/%s" % (self.target_path,self.wbx_output_file),"w") as file:
+                    file.write(html)
+            except Exception as e:
+                logerr("error writing file %s/%s: %s" % (self.target_path,self.wbx_output_file,e))
 
+        if self.verbose:
+            loginf('forecast_wbx_html: finished.')
+    
+    # TODO error handling, opts
+    def forecast_wbx_read(self, data, output, dryrun, lang='de'):
+        if self.verbose:
+            loginf('forecast_wbx_read: started.')
+        tabheader_list = []
+        tabcontent_dict = dict()
+        keymapping_dict = dict()
+        htmlcontent_dict = dict()
+        htmlsource = ''
+        wbx_found = False
+        try:
+            # Mapping index to color and description
+            for key, row in enumerate(data['data']['tables'][0]['rows']):
+                if (key > 0):
+                    keymapping_dict[row['cols'][0]['nodeValue']] = dict()
+                    keymapping_dict[row['cols'][0]['nodeValue']]['description'] = row['cols'][1]['nodeValue']
+                    styles = row['cols'][0]['attr']['style'].split(';')
+                    for elem in styles:
+                        if (elem != ''):
+                            tmplist = elem.split(':')
+                            if (tmplist[0] == 'color') or (tmplist[0] == 'background-color'):
+                                keymapping_dict[row['cols'][0]['nodeValue']][tmplist[0]] = tmplist[1]
+            # Tab Header
+            for key, col in enumerate(data['data']['tables'][1]['rows'][0]['cols']):
+                tabheader_list.append(col['nodeValue'])
+            # Tab content wbx stations
+            if not isinstance(self.wbx_stations,list):
+                # self.wbx_stations = list(self.wbx_stations) hat irgendwie nicht funktioniert
+                tmplist = []
+                tmplist.append(self.wbx_stations)
+                self.wbx_stations = tmplist
+            if self.verbose:
+                print("forecast_wbx_read: Searching Stations '%s'" % str(self.wbx_stations))
+            # stations to lower
+            wbx_stations = [element.lower() for element in self.wbx_stations]
+            stationidx = 0
+            for row in data['data']['tables'][1]['rows']:
+                station_found = False
+                for key, cols in enumerate(row['cols']):
+                    if (cols['nodeValue'].lower() in wbx_stations):
+                        if self.verbose:
+                            print("forecast_wbx_read: Station '%s' found" % cols['nodeValue'])
+                        wbx_found = True
+                        station_found = True
+                        tabcontent_dict[stationidx] = []
+                    if station_found:
+                        tabcontent_dict[stationidx].append(cols['nodeValue'])
+                if station_found:
+                    stationidx += 1
+
+            # DWD copyright and issued time
+            if wbx_found:
+                htmlcontent_dict = (data['data']['content'][(len(data['data']['content']) - 80):]).split('\n')
+                htmlsource = htmlcontent_dict[len(htmlcontent_dict) - 1];
+                if self.verbose:
+                    loginf('forecast_wbx_read: keymapping_dict: %s' % str(keymapping_dict))
+                    loginf('forecast_wbx_read: tabheader_list:  %s' % str(tabheader_list))
+                    loginf('forecast_wbx_read: tabcontent_dict: %s' % str(tabcontent_dict))
+                    loginf('forecast_wbx_read: htmlsource:      %s' % str(htmlsource))
+                self.forecast_wbx_html(keymapping_dict, tabheader_list, tabcontent_dict, htmlsource, output, dryrun, lang)
+            elif self.log_failure:
+                logerr("forecast_wbx_read: No data for stations '%s' found!" % str(self.wbx_stations))
+        except Exception as e:
+            logerr("forecast_wbx_read: Exception '%s'" % (e))
+        if self.verbose:
+            loginf('forecast_wbx_read: finished.')
+    
+    def forecast_wbx(self, output, dryrun, lang='de'):
+        if self.verbose:
+            loginf('forecast_wbx: started.')
+        fn = os.path.join(self.target_path,self.wbx_input_file)
+        try:
+            with open(fn, 'r') as file:
+                data = json.load(file)
+                self.forecast_wbx_read(data, output, dryrun, lang='de')
+        except Exception as e:
+            logerr("error opening file '%s': %s" % (fn,e))
+        if self.verbose:
+            loginf('forecast_wbx: finished.')
+    
     def forecast_all(self, mos, output, dryrun, lang='de'):
         """ create forecast for all placemarks found """
         if self.verbose:
@@ -3000,6 +3132,10 @@ https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg
                      metavar="CMD",
                      default=None,
                      help="download data from UBA")
+    group.add_option("--wbx", action="store_true", dest="wbx",
+                     help="Create Waldbrandgefahrenindex HTML inc file")
+    group.add_option("--wbx-only", action="store_true", dest="wbxonly",
+                     help="Create ONLY Waldbrandgefahrenindex HTML inc file")
     parser.add_option_group(group)
     
     # intervals
@@ -3014,6 +3150,9 @@ https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg
 
     (options, args) = parser.parse_args()
 
+    if options.verbose is None:
+       options.verbose = False
+
     if options.iconsww:
         ForecastPWS.print_icons_ww(options.iconset)
         sys.exit(0)
@@ -3024,7 +3163,8 @@ https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg
         config_path = options.config_path
 
     if config_path:
-        print("Using configuration file %s" % config_path)
+        if options.verbose:
+            print("Using configuration file %s" % config_path)
         config = configobj.ConfigObj(config_path)
     else:
         # test only
@@ -3034,7 +3174,7 @@ https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg
                 'latitude':49.632270,
                 'longitude':12.056186,
                 'altitude':[394,'meter']},
-            'ForecastWeiherhammer': {
+            'forecast-pwsWeiherhammer': {
                 'path':'/home/weewx/skins/Belchertown/dwd',
                 'forecast':{
                     'icons':'../images'}}}
@@ -3046,30 +3186,18 @@ https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg
         location = 'Weiden'
         
     if options.orientation:
-        config['ForecastWeiherhammer']['forecast']['orientation'] = options.orientation
+        config['forecast-pwsWeiherhammer']['forecast']['orientation'] = options.orientation
     if options.iconset:
-        config['ForecastWeiherhammer']['forecast']['icon_set'] = options.iconset
+        config['forecast-pwsWeiherhammer']['forecast']['icon_set'] = options.iconset
     if options.aqisource:
-        if 'Belchertown' not in config['ForecastWeiherhammer']:
-            config['ForecastWeiherhammer']['Belchertown'] = dict()
-        config['ForecastWeiherhammer']['Belchertown']['aqi_source'] = options.aqisource
+        if 'Belchertown' not in config['forecast-pwsWeiherhammer']:
+            config['forecast-pwsWeiherhammer']['Belchertown'] = dict()
+        config['forecast-pwsWeiherhammer']['Belchertown']['aqi_source'] = options.aqisource
     if options.hideplacemark is not None:
-        config['ForecastWeiherhammer']['forecast']['show_placemark'] = not options.hideplacemark
-
-    if options.verbose is None:
-       options.verbose = False
+        config['forecast-pwsWeiherhammer']['forecast']['show_placemark'] = not options.hideplacemark
 
     forecastPws = ForecastPWS(config,options.verbose)
 
-    if options.uba:
-        zz = forecastPws.download_uba(options.uba,location,lang=options.lang)
-        print(json.dumps(zz,indent=4,ensure_ascii=False))
-        exit()
-
-    zz = forecastPws.download_kml(location,'l')
-    mmos = forecastPws.process_kml(zz,options.log_tags)
-    # print(json.dumps(mmos,indent=4,ensure_ascii=False))
-    
     output = []
     if options.all: output.append('all')
     if options.hourly: output.append('hourly')
@@ -3079,11 +3207,24 @@ https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg
     if options.html: output.append('html')
     if options.json: output.append('json')
     if options.database: output.append('database')
+    if options.wbx: output.append('wbx')
+    if options.wbxonly: output.append('wbx-only')
     if not options.html and not options.json and not options.belchertown:
         output.append('html')
         if options.daily:
             output.append('json')
-    
-    forecastPws.forecast_all(mmos,output,options.dry_run,lang=options.lang)
-    
-    
+
+    if not ('wbx-only' in output):
+        if options.uba:
+            zz = forecastPws.download_uba(options.uba,location,lang=options.lang)
+            print(json.dumps(zz,indent=4,ensure_ascii=False))
+            exit()
+
+        zz = forecastPws.download_kml(location,'l')
+        mmos = forecastPws.process_kml(zz,options.log_tags)
+        # print(json.dumps(mmos,indent=4,ensure_ascii=False))
+        forecastPws.forecast_all(mmos,output,options.dry_run,lang=options.lang)
+
+    if ('wbx' in output) or ('wbx-only' in output):
+        forecastPws.forecast_wbx(output, options.dry_run, lang=options.lang)
+

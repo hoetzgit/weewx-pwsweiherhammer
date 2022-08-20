@@ -163,7 +163,7 @@ if __x is not None:
                 s+="<p>%s</p>\n" % __i['instruction']
             
             wwarn[__ww][idx]["level_text"] = dwd_level_text(__i['level'])
-            s+='<p style="font-size:40%%">%s &ndash; %s &emsp;&ndash;&emsp; %s &ndash; %s</p>' % (__i['type'],__i['event'],__i['level'],dwd_level_text(__i['level']))
+            #s+='<p style="font-size:40%%">%s &ndash; %s &emsp;&ndash;&emsp; %s &ndash; %s</p>' % (__i['type'],__i['event'],__i['level'],dwd_level_text(__i['level']))
         
         if s:
             s+='<p style="font-size:80%%">Quelle: <a href="%s" target="_blank">DWD</a></p>\n' % dwd_copy[wwarn[__ww][0]['stateShort']]

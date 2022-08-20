@@ -176,8 +176,6 @@ function show_farmers_rules(data) {
         var month = moment().format("M");
         var day = moment().format("D");
         var today = moment().format("D. MMMM");
-        //month = "8";
-        //day = "6";
         belchertown_debug("show_farmers_rules: month: " + month);
         belchertown_debug("show_farmers_rules: day: " + day);
         var drcount = data.months[month].days[day].rules.length;
@@ -205,17 +203,20 @@ function show_farmers_rules(data) {
         }
         if (rkey >= 0) {
             jQuery(".farmers-rules-title").html('$obs.label.farmers_rules_title');
+            var datasource_url = data.datasource_url;
             if (grule) {
                 frule = data.months[month].general.rules[rkey];
                 month = moment().format("MMMM");
                 jQuery(".farmers-rules-day").html('$obs.label.farmers_rules_grule&nbsp;' + month);
+                datasource_url += ('#' + month);
             } else {
                 dname = data.months[month].days[day].name;
                 frule = data.months[month].days[day].rules[rkey];
                 jQuery(".farmers-rules-day").html('$obs.label.farmers_rules_drule&nbsp;' + today + (dname == ''?'':'&nbsp;-&nbsp;' + dname));
+                datasource_url += ('#' + today.replace(" ","_") + (dname == ''?'':':_' + dname.replace(" ","_")));
             }
             jQuery(".farmers-rules-rule").html(frule);
-            jQuery(".farmers-rules-source").html('$obs.label.farmers_rules_source:&nbsp;<a href="' + data.datasource_url + '" target="_blank" rel="noreferrer">' + data.datasource + '</a>');
+            jQuery(".farmers-rules-source").html('$obs.label.farmers_rules_source:&nbsp;<a href="' + datasource_url + '" target="_blank" rel="noreferrer">' + data.datasource + '</a>');
         }
     } catch (err) {
         belchertown_debug("show_farmers_rules: Returned data does not have this value");

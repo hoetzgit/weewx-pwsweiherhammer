@@ -41,7 +41,7 @@
                 updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
                 updated_text = "$obs.label.header_last_updated " + updated;
                 jQuery(".updated").html( updated_text );
-            
+
                 //  display the relevant forecast; a new session will display the default forecast, a reloaded session the currently displayed forecast
                 if ( sessionStorage.getItem ("forecastInterval")  ) {
                     interval = sessionStorage.getItem("forecastInterval");
@@ -166,12 +166,24 @@
     #end if
 
     #if os.path.exists("dwd/warn-WEIHERHAMMER.inc")
-    <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
+    ##<div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
             Aktuelle Wetterwarnungen f&uuml;r Weiherhammer
         </div>
         <div class="col-md-12">
             #include raw "dwd/warn-WEIHERHAMMER.inc"
+        </div>
+    </div>
+    #end if
+
+    #if os.path.exists("dwd/wbx_tab_BY.inc")
+    <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
+        <div class="col-md-12 forecast-headline">
+            Vorhersage des Waldbrangefahrenindexes
+        </div>
+        <div class="col-md-12 forecast-content" style="margin-top:15px;">
+            #include raw "dwd/wbx_tab_BY.inc"
         </div>
     </div>
     #end if
@@ -241,17 +253,6 @@
         </div>
     </div>
     #end if
-
-##    #if os.path.exists("dwd/wbx_tab_alle_BY.html")
-##    <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-##        <div class="col-md-12 forecast-headline">
-##            Waldbrangefahrenindex in Bayern
-##        </div>
-##        <div class="col-md-12 forecast-content">
-##            #include raw "dwd/wbx_tab_alle_BY.html"
-##        </div>
-##    </div>
-##    #end if
 
     ##<!-- DWD Meteogramm wettersoftware.de -->
     ##<script src="$relative_url/meteogram.v2.0.min.js"></script>

@@ -1,0 +1,31 @@
+#!/bin/bash
+# Herunterladen von Dateien beim Deutschen Wetterdienst
+# Copyright (C) 2021 Johanna Roedenbeck
+# licensed under the terms of the General Public License (GPL) v3
+# 20220819,ho DWD Waldbrandgefahrenindex Bayern
+
+# vom Benutzer anzupassen
+
+# Zielpfad zum Speichern der Dateien
+# (Das Verzeichnis muss vorher vom Benutzer angelegt werden.)
+# PTH="/etc/weewx/skins/Belchertown/dwd"
+PTH="/home/weewx/skins/Belchertown/dwd"
+
+# URLs der herunterzuladenden Dateien beim DWD
+DWD_WBX="https://www.dwd.de/DWD/warnungen/agrar/wbx/wbx_tab_alle_BY.html"
+DWD_WBXJ="$PTH"/$(basename "/PTH/${DWD_WBX##*/}" .html).json
+
+# Log-Datei
+LOG_FN="/var/log/weewx/wget-dwd-wbx.log"
+
+# Ende des vom Benutzer anzupassenden Bereichs
+
+# DWD Datei laden und in JSON konvertieren
+echo -e "\nLade DWD Datei $DWD_WBX"
+echo "Konvertiere zu JSON Datei $DWD_WBXJ"
+/usr/bin/curl -s -o $DWD_WBXJ -X POST https://html2json.com/api/v1 -d "$(/usr/bin/curl -s -L $DWD_WBX)" >/dev/null
+if test $? -eq 0; then
+  echo -e "finished successful.\n"
+else
+  echo -e "finished with error(s)!\n"
+fi
