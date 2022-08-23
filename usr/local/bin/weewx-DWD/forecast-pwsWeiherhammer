@@ -46,6 +46,7 @@ import urllib.parse
 from email.utils import formatdate
 import html.parser
 import zipfile
+from dateutil import tz
 
 # pyephem is used to determine night and day time for choosing the
 # appropriate weather icon
@@ -638,6 +639,11 @@ class ForecastPWS(object):
         self.wbx_stations = wbx_dict.get('stations',None)
         self.wbx_input_file = wbx_dict.get('input','forecast-wbx-input-not-defined.json')
         self.wbx_output_file = wbx_dict.get('output','forecast-wbx-onput-not-defined.inc')
+        self.wbx_distance = wbx_dict.get('distance_max', None)
+        if self.wbx_distance == '':
+            self.wbx_distance = None
+        if self.wbx_distance is not None:
+            self.wbx_distance = int(self.wbx_distance)
         # HTML config
         self.show_obs_symbols = tobool(forecast_dict.get('show_obs_symbols',True))
         self.show_obs_description = tobool(forecast_dict.get('show_obs_description',False))
@@ -2862,41 +2868,89 @@ class ForecastPWS(object):
         if self.verbose:
             loginf('placemark id "%s" processed' % placemark.get('id'))
 
-    # TODO css, error handling
+    def forecast_wbx_location(self, dest):
+        """ get the longitude and latitude of a city """
+        data = None
+        if has_geopy:
+            try:
+                locator = Nominatim(user_agent="forecast-pwsWeiherhammer")
+                dest = dest.replace('/',',')
+                dest = dest.replace('-',',')
+                dest = dest.replace('.',',')
+                dest = dest.replace(' ',',')
+                dest = dest.split(',')
+                dest = dest[0] + ', Germany, Bavaria'
+                location = locator.geocode(dest)
+                if location is not None:
+                    data = {
+                        'name':location.address,
+                        'lat':location.latitude,
+                        'lon':location.longitude,
+                    }
+                elif self.verbose:
+                    loginf("forecast_wbx_location: longitude and latitude '%s' not found!" % (dest))
+            except Exception as e:
+                logerr("forecast_wbx_location: getting longitude and latitude '%s' failed: %s" % (dest,e))
+        return data
+
+    # TODO Write once in json file and if it exists then read this one. (wbx_distance_<self.wbx_distance>.json)
+    def forecast_wbx_distance(self, dest):
+        if self.verbose:
+            loginf("forecast_wbx_distance: get distance to '%s'" % (dest))
+        dist_km = None
+        geodata = self.forecast_wbx_location(dest)
+        if has_geopy and geodata:
+            try:
+                dist_km = distance.distance((geodata['lat'],geodata['lon']),(self.latitude,self.longitude)).km
+            except Exception:
+                logerr("forecast_wbx_distance: getting distance to '%s' failed: %s" % (dest,e))
+        elif self.verbose:
+            loginf("forecast_wbx_distance: get distance to '%s' not possible!" % (dest))
+        return dist_km
+
+    # TODO css, error handling, opt issued time, change table to divs
     def forecast_wbx_html(self, keymapping_dict, tabheader_list, tabcontent_dict, htmlsource, output, dryrun, lang='de'):
         if self.verbose:
             loginf('forecast_wbx_html: started.')
         html = ''
-        html += '<table style="border:1px solid #000000; border-collapse:collapse;">\n'
-        html += '    <thead>\n' 
+        html += '<div class="col-sm-12 forecast-headline">\n'
+        html += '$obs.label.forecast_header_wbx <span class="forecast-wbx-subtitle">$obs.label.forecast_issueTime_wbx ' + htmlsource + '</span>\n'
+        html += '</div>\n'
+        html += '<div class="col-md-12 forecast-content table-responsive" style="margin-top:5px">\n'
+        html += '<table class="table table-striped table-bordered">\n'
+        html += '    <tbody>\n'
+        #html += '    <thead>\n'
         html += '        <tr>\n'
         for col, cellcontent in enumerate(tabheader_list):
             if (col == 0):
-                html += '            <th style="padding:3px;border:1px solid #000000;text-align:left;vertical-align:bottom;padding-top:5px;">'
+                html += '            <th scope="col">'
             else:
-                html += '            <th style="padding:3px;border:1px solid #000000;text-align:center;vertical-align:bottom;padding-top:5px;">'
+                html += '            <th scope="col" style="text-align:center;vertical-align:bottom;padding-top:3px;">'
             html += str(cellcontent)
             html += '</th>\n'
         html += '        </tr>\n'
-        html += '    </thead>\n' 
-        html += '    <tbody>\n'
-        html += '        <tr>\n'
+        #html += '    </thead>\n'
+        #html += '    <tbody>\n'
         for station, content_list in tabcontent_dict.items():
+            html += '        <tr>\n'
             for col, cellcontent in enumerate(content_list):
                 if (col == 0):
-                    html += '            <td style="padding:3px;border:1px solid #000000;text-align:left;">'
+                    html += '            <th scope="row">'
                     html += cellcontent
+                    html += '</th>\n'
                 else:
-                    html += '            <td style="padding:3px;border:1px solid #000000;text-align:center;font-weight:bold'
+                    html += '            <td scope="row" style="text-align:center'
                     html += (';background-color:' + keymapping_dict[cellcontent]['background-color'])
                     html += (';color:' + keymapping_dict[cellcontent]['color'])
                     html += ';">'
+                    html += (cellcontent + ' - ')
                     html += keymapping_dict[cellcontent]['description']
-                html += '</td>\n'
+                    html += '</td>\n'
         html += '        </tr>\n'
         html += '    </tbody>\n'
         html += '</table>\n'
-        html += '<p><span>' + htmlsource + '</span></p>\n'
+        html += '</div>\n'
+        #html += '<p><span>' + htmlsource + '</span></p>\n'
         if dryrun:
             print(html)
         else:
@@ -2942,32 +2996,52 @@ class ForecastPWS(object):
                 self.wbx_stations = tmplist
             if self.verbose:
                 print("forecast_wbx_read: Searching Stations '%s'" % str(self.wbx_stations))
-            # stations to lower
+                if self.wbx_distance is not None:
+                    print("forecast_wbx_read: and cities with distance < '%f'km" % self.wbx_distance)
+            # load stations
             wbx_stations = [element.lower() for element in self.wbx_stations]
             stationidx = 0
             for row in data['data']['tables'][1]['rows']:
                 station_found = False
+                distkm = None
                 for key, cols in enumerate(row['cols']):
-                    if (cols['nodeValue'].lower() in wbx_stations):
-                        if self.verbose:
-                            print("forecast_wbx_read: Station '%s' found" % cols['nodeValue'])
-                        wbx_found = True
-                        station_found = True
-                        tabcontent_dict[stationidx] = []
+                    if (key == 0) and (cols['nodeValue'] != 'Stationsname'):
+                        if self.wbx_distance is not None:
+                            distkm = self.forecast_wbx_distance(cols['nodeValue'])
+                            if distkm is not None:
+                                if (distkm > self.wbx_distance):
+                                    distkm = None
+                                else:
+                                    print(">>> Station: '%s', Entfernung: '%f'km" % (cols['nodeValue'], distkm))
+                        if (distkm is not None) or (cols['nodeValue'].lower() in wbx_stations):
+                            if self.verbose:
+                                print("forecast_wbx_read: Station '%s' found" % cols['nodeValue'])
+                            wbx_found = True
+                            station_found = True
+                            tabcontent_dict[stationidx] = []
                     if station_found:
                         tabcontent_dict[stationidx].append(cols['nodeValue'])
                 if station_found:
                     stationidx += 1
 
-            # DWD copyright and issued time
+            # DWD issued time. I can't do better so far
             if wbx_found:
                 htmlcontent_dict = (data['data']['content'][(len(data['data']['content']) - 80):]).split('\n')
                 htmlsource = htmlcontent_dict[len(htmlcontent_dict) - 1];
+                htmlcontent_dict = htmlsource.split('erstellt')
+                htmlsource = htmlcontent_dict[1];
+                htmlsource = htmlsource.replace('UTC.','').strip();
+                is_zone = tz.gettz('UTC')
+                to_zone = tz.gettz('Europe/Berlin')
+                utc = datetime.datetime.strptime(htmlsource, '%d.%m.%Y %H:%M')
+                utc = utc.replace(tzinfo=is_zone)
+                central = utc.astimezone(to_zone)
+                htmlsource = central.strftime('%d.%m.%Y %H:%M')
                 if self.verbose:
                     loginf('forecast_wbx_read: keymapping_dict: %s' % str(keymapping_dict))
                     loginf('forecast_wbx_read: tabheader_list:  %s' % str(tabheader_list))
                     loginf('forecast_wbx_read: tabcontent_dict: %s' % str(tabcontent_dict))
-                    loginf('forecast_wbx_read: htmlsource:      %s' % str(htmlsource))
+                    loginf("forecast_wbx_read: htmlsource:      '%s'" % str(htmlsource))
                 self.forecast_wbx_html(keymapping_dict, tabheader_list, tabcontent_dict, htmlsource, output, dryrun, lang)
             elif self.log_failure:
                 logerr("forecast_wbx_read: No data for stations '%s' found!" % str(self.wbx_stations))

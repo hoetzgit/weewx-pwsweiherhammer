@@ -537,9 +537,19 @@
                 <!-- End of index_hook_after_station_info row -->
                 #end if
 
+                <!-- Start of second row (forecast if enabled) -->
                 #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1' and (($Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours != '0') or not ($Extras.has_key("forecast_interval_hours")))
+                ## init forecast
+                #if $Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours == '1'
+                <script>forecast_default(1);</script>
+                #end if
+                #if $Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours == '3'
+                <script>forecast_default(3);</script>
+                #end if
+                #if ($Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours == '24') or not ($Extras.has_key("forecast_interval_hours"))
+                <script>forecast_default(24);</script>
+                #end if
                 #if $Extras.has_key("forecast_show_homepage") and $Extras.forecast_show_homepage == '1'
-                <!-- Start of second row -->
                 <div class="row forecastrow">
                     <!-- Forecast -->
                     <div class="col-lg-8 forecast-title">
@@ -552,40 +562,24 @@
                     </div>
                     
                     #if $Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours != '0'
-                    #if $Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours == '1'
-                    <script>forecast_default(1);</script>
-                    #end if
-                    #if $Extras.has_key("forecast_show_homepage") and $Extras.forecast_show_homepage == '1'
                     <div id="1hour-selected-forecast" style="display: none;">
                         <!-- 1hour Forecast -->
                         <div class="col-lg-12 row 1hr_forecasts row-no-padding"></div><!-- JS -->
                     </div>
-                    #end if
-                    #end if
-                
-                    #if $Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours == '3'
-                    <script>forecast_default(3);</script>
-                    #end if
-                    #if $Extras.has_key("forecast_show_homepage") and $Extras.forecast_show_homepage == '1'
                     <div id="3hour-selected-forecast" style="display: none;">
                         <!-- 3hour-Forecast -->
                         <div class="col-lg-12 row 3hr_forecasts row-no-padding"></div><!-- JS -->
                     </div>        
-                    #end if
                     
-                    #if ($Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours == '24') or not ($Extras.has_key("forecast_interval_hours"))
-                    <script>forecast_default(24);</script>
-                    #end if
-                    #if $Extras.has_key("forecast_show_homepage") and $Extras.forecast_show_homepage == '1'
                     <div id="24hour-selected-forecast" style="display: none;">
                         <!-- 24hour-Forecast -->
                         <div class="col-lg-12 row 24hr_forecasts row-no-padding"></div><!-- JS -->
                     </div>
                     #end if
                 </div>
+                #end if
+                #end if
                 <!-- End of second row -->
-                #end if
-                #end if
                 
                 #if os.path.exists("index_hook_after_forecast.inc")
                 <!-- Start of index_hook_after_forecast row -->
@@ -593,7 +587,7 @@
                     #include "index_hook_after_forecast.inc"
                 </div>
                 <!-- End of index_hook_after_forecast row -->
-                #end if                        
+                #end if
                 
                 <!-- Start of third row -->
                 <div class="row eq-stats-row">            

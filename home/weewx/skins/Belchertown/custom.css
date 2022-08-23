@@ -360,6 +360,12 @@ sub { top: 0.4em; }
     font-size: 12px;
 }
 
+/* Waldbrandgefahrenindex */
+
+.forecast-wbx-subtitle {
+	font-size: 14px;
+}
+
 /* graphs */
 
 .wx-graph-front {

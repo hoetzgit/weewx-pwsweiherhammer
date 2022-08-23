@@ -1780,29 +1780,29 @@ function update_forecast_data(data) {
 #end if
 //  function to display selected forecast according to value of interval (1, 3 or 24); 0 hides all forecasts
 function forecast_select(interval) {
-        if (interval == 0) {
-            jQuery(".forecastrow").hide();
-        } else {
-            oldinterval = sessionStorage.getItem("forecastInterval");
-            if (interval != oldinterval) {
-                //  hide the old forecast
-                var forecast = document.getElementById((oldinterval + "hour-selected-forecast"));
-                var button = document.getElementById(("button" + oldinterval));
-                if (forecast != null) forecast.style.display = "none";
-                if (button != null) button.style.borderStyle = "hidden";
-                //  display the new forecast and store its interval value
-                forecast = document.getElementById((interval + "hour-selected-forecast"));
-                button = document.getElementById(("button" + interval));
-                if (forecast != null) forecast.style.display = "block";
-                if (button != null) button.style.borderStyle = "solid";
-                sessionStorage.setItem("forecastInterval", interval);
-            }
+    if (interval == 0) {
+        jQuery(".forecastrow").hide();
+    } else {
+        oldinterval = sessionStorage.getItem("forecastInterval");
+        if (interval != oldinterval) {
+            //  hide the old forecast
+            var forecast = document.getElementById((oldinterval + "hour-selected-forecast"));
+            var button = document.getElementById(("button" + oldinterval));
+            if (forecast != null) forecast.style.display = "none";
+            if (button != null) button.style.borderStyle = "hidden";
+            //  display the new forecast and store its interval value
+            forecast = document.getElementById((interval + "hour-selected-forecast"));
+            button = document.getElementById(("button" + interval));
+            if (forecast != null) forecast.style.display = "block";
+            if (button != null) button.style.borderStyle = "solid";
+            sessionStorage.setItem("forecastInterval", interval);
         }
     }
+}
 
 function forecast_default(interval) {
-        sessionStorage.setItem("defaultInterval", interval);
-    }
+    sessionStorage.setItem("defaultInterval", interval);
+}
 
 //  function adjusts daytime format for forecast_1hr & _3hr; assumes "ddd LT" format for daytime
 function forecast_time(i, interval, daytime) {

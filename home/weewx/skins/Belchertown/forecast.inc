@@ -79,32 +79,20 @@
             </div>
         </div>
 
-        #if $Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours != '0'
-        #if $Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours == '1'
-        <script>forecast_default(1);</script>
-        #end if
         <div id="1hour-selected-forecast" style="display: none;">
             <!-- 1hour Forecast -->
             <div class="col-lg-12 row 1hr_forecasts row-no-padding"></div><!-- JS -->
         </div>
-        #end if
-
-        #if $Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours == '3'
-        <script>forecast_default(3);</script>
-        #end if
         <div id="3hour-selected-forecast" style="display: none;">
             <!-- 3hour-Forecast -->
             <div class="col-lg-12 row 3hr_forecasts row-no-padding"></div><!-- JS -->
         </div>        
-
-        #if ($Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours == '24') or not ($Extras.has_key("forecast_interval_hours"))
-        <script>forecast_default(24);</script>
-        #end if
         <div id="24hour-selected-forecast" style="display: none;">
             <!-- 24hour-Forecast -->
             <div class="col-lg-12 row 24hr_forecasts row-no-padding"></div><!-- JS -->
         </div>
     </div>
+    #end if
 
     ###if os.path.exists("dwd/forecast-10688.inc")
     ##<div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
@@ -146,9 +134,9 @@
     #if os.path.exists("dwd/SchilderMS.jpg")
     <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
-            Aktuelle Warnlage in Bayern
+            $obs.label.forecast_header_warnings_by
         </div>
-        <div class="col-sm-12 forecast-content">
+        <div class="col-sm-12 forecast-content" style="margin-top:5px;">
             <a id="warnlage_bay" name="warnlage_bay" href="https://www.dwd.de/DE/wetter/warnungen_gemeinden/warnWetter_node.html?ort=Weiherhammer&bundesland=bay" target="_blank"><img itemprop="image" src="$relative_url/dwd/SchilderMS.jpg" alt="Die Warnlage in Bayern"></a>
         </div>
     </div>
@@ -157,7 +145,7 @@
     #if os.path.exists("dwd/warn-NEW.inc")
     <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
-            Aktuelle Wetterwarnungen f&uuml;r den Landkreis Neustadt a.d. Waldnaab
+            $obs.label.forecast_header_warnings_new
         </div>  
         <div class="col-md-12">
             #include "dwd/warn-NEW.inc"
@@ -169,7 +157,7 @@
     ##<div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
     <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
-            Aktuelle Wetterwarnungen f&uuml;r Weiherhammer
+            $obs.label.forecast_header_warnings_whm
         </div>
         <div class="col-md-12">
             #include raw "dwd/warn-WEIHERHAMMER.inc"
@@ -178,20 +166,15 @@
     #end if
 
     #if os.path.exists("dwd/wbx_tab_BY.inc")
-    <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-        <div class="col-md-12 forecast-headline">
-            Vorhersage des Waldbrangefahrenindexes
-        </div>
-        <div class="col-md-12 forecast-content" style="margin-top:15px;">
-            #include raw "dwd/wbx_tab_BY.inc"
-        </div>
+    <div class="row index-hook-after-forecast" style="margin-top:15px;">
+        #include "dwd/wbx_tab_BY.inc"
     </div>
     #end if
 
     #if os.path.exists("dwd/VHDL54_DWMG_LATEST.html")
     <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
-            Wetterlage in Bayern
+            $obs.label.forecast_header_bavaria
         </div>
         <div class="col-md-12 forecast-content">
             #include raw "dwd/VHDL54_DWMG_LATEST.html"
@@ -202,7 +185,7 @@
     #if os.path.exists("dwd/VHDL50_DWMG_LATEST.html")
     <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
-            Wettervorhersage heute
+            $obs.label.forecast_header_today
         </div>
         <div class="col-md-12 forecast-content">
             #include raw "dwd/VHDL50_DWMG_LATEST.html"
@@ -213,7 +196,7 @@
     #if os.path.exists("dwd/VHDL51_DWMG_LATEST.html")
     <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
-            Wettervorhersage morgen
+            $obs.label.forecast_header_tomorrow
         </div>
         <div class="col-md-12 forecast-content">
             #include raw "dwd/VHDL51_DWMG_LATEST.html"
@@ -224,7 +207,7 @@
     #if os.path.exists("dwd/VHDL52_DWMG_LATEST.html")
     <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
-            Wettervorhersage &uuml;bermorgen
+            $obs.label.forecast_header_da_tomorrow
         </div>
         <div class="col-md-12 forecast-content">
             #include raw "dwd/VHDL52_DWMG_LATEST.html"
@@ -233,9 +216,9 @@
     #end if
 
     #if os.path.exists("dwd/VHDL53_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
-            Wettervorhersage 4. Tag
+            $obs.label.forecast_header_fourth_day
         </div>
         <div class="col-md-12 forecast-content">
             #include raw "dwd/VHDL53_DWMG_LATEST.html"
@@ -244,11 +227,11 @@
     #end if
 
     #if os.path.exists("dwd/bwk_bodendruck_na_ana.png")
-    <div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast" style="margin-top:15px;">
         <div class="col-md-12 forecast-headline">
-            Aktuelle Wetterkarte (Luftdruck am Boden)
+            $obs.label.forecast_header_current_map
         </div>
-        <div class="col-md-12 forecast-content">
+        <div class="col-md-12 forecast-content" style="margin-top:5px;>
             <a id="wetterkarte_nae" name="wetterkarte_nae" href="https://www.dwd.de/DE/leistungen/hobbymet_wk_europa/hobbyeuropakarten.html" target="_blank"><img itemprop="image" src="$relative_url/dwd/bwk_bodendruck_na_ana.png" alt="Wetterkarte (Luftdruck am Boden)"></a>
         </div>
     </div>
