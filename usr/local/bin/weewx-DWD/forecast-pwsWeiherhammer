@@ -639,11 +639,11 @@ class ForecastPWS(object):
         self.wbx_stations = wbx_dict.get('stations',None)
         self.wbx_input_file = wbx_dict.get('input','forecast-wbx-input-not-defined.json')
         self.wbx_output_file = wbx_dict.get('output','forecast-wbx-onput-not-defined.inc')
-        self.wbx_distance = wbx_dict.get('distance_max', None)
-        if self.wbx_distance == '':
-            self.wbx_distance = None
-        if self.wbx_distance is not None:
-            self.wbx_distance = int(self.wbx_distance)
+        self.wbx_radius_km = wbx_dict.get('radius_km', None)
+        if self.wbx_radius_km == '':
+            self.wbx_radius_km = None
+        if self.wbx_radius_km is not None:
+            self.wbx_radius_km = int(self.wbx_radius_km)
         # HTML config
         self.show_obs_symbols = tobool(forecast_dict.get('show_obs_symbols',True))
         self.show_obs_description = tobool(forecast_dict.get('show_obs_description',False))
@@ -2893,19 +2893,19 @@ class ForecastPWS(object):
                 logerr("forecast_wbx_location: getting longitude and latitude '%s' failed: %s" % (dest,e))
         return data
 
-    # TODO Write once in json file and if it exists then read this one. (wbx_distance_<self.wbx_distance>.json)
-    def forecast_wbx_distance(self, dest):
+    # TODO Write once in json file and if it exists then read this one. (wbx_radius_km_<self.wbx_radius_km>.json)
+    def forecast_wbx_radius_km(self, dest):
         if self.verbose:
-            loginf("forecast_wbx_distance: get distance to '%s'" % (dest))
+            loginf("forecast_wbx_radius_km: get distance to '%s'" % (dest))
         dist_km = None
         geodata = self.forecast_wbx_location(dest)
         if has_geopy and geodata:
             try:
                 dist_km = distance.distance((geodata['lat'],geodata['lon']),(self.latitude,self.longitude)).km
             except Exception:
-                logerr("forecast_wbx_distance: getting distance to '%s' failed: %s" % (dest,e))
+                logerr("forecast_wbx_radius_km: getting distance to '%s' failed: %s" % (dest,e))
         elif self.verbose:
-            loginf("forecast_wbx_distance: get distance to '%s' not possible!" % (dest))
+            loginf("forecast_wbx_radius_km: get distance to '%s' not possible!" % (dest))
         return dist_km
 
     # TODO css, error handling, opt issued time, change table to divs
@@ -2996,8 +2996,8 @@ class ForecastPWS(object):
                 self.wbx_stations = tmplist
             if self.verbose:
                 print("forecast_wbx_read: Searching Stations '%s'" % str(self.wbx_stations))
-                if self.wbx_distance is not None:
-                    print("forecast_wbx_read: and cities with distance < '%f'km" % self.wbx_distance)
+                if self.wbx_radius_km is not None:
+                    print("forecast_wbx_read: and cities with distance < '%f'km" % self.wbx_radius_km)
             # load stations
             wbx_stations = [element.lower() for element in self.wbx_stations]
             stationidx = 0
@@ -3006,10 +3006,10 @@ class ForecastPWS(object):
                 distkm = None
                 for key, cols in enumerate(row['cols']):
                     if (key == 0) and (cols['nodeValue'] != 'Stationsname'):
-                        if self.wbx_distance is not None:
-                            distkm = self.forecast_wbx_distance(cols['nodeValue'])
+                        if self.wbx_radius_km is not None:
+                            distkm = self.forecast_wbx_radius_km(cols['nodeValue'])
                             if distkm is not None:
-                                if (distkm > self.wbx_distance):
+                                if (distkm > self.wbx_radius_km):
                                     distkm = None
                                 else:
                                     print(">>> Station: '%s', Entfernung: '%f'km" % (cols['nodeValue'], distkm))
