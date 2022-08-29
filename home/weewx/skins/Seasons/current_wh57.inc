@@ -28,11 +28,12 @@
         <td class="label">$gettext("Lightning strike sum")</td>
         <td class="data">$day.lightning_strike_count.sum</td>
       </tr>
-    #elif $x == 'lightning_distance'
+    #elif $x == 'lightning'
       <tr>
         <td class="label">$gettext("Lightning distance")</td>
-        <td class="data">$current.lightning_distance</td>
+        <td class="data">$current.lightning</td>
       </tr>
+    #elif $x == 'lightning_distance'
       <tr>
         <td class="label">$gettext("Lightning distance min")</td>
         <td class="data">$day.lightning_distance.min</td>

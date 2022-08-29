@@ -2671,6 +2671,7 @@ class EcowittClient(Consumer):
                     lightdistkm = pkt['lightning_distance']
                     #direct conversion
                     pkt['lightning_distance'] = 0.62137119 * lightdistkm
+                    pkt['lightning'] = pkt['lightning_distance']
 
                 # get the rain this period from total
                 if 'rain_total' in pkt:

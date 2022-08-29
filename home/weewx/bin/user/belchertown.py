@@ -1260,6 +1260,9 @@ class getData(SearchList):
                 # File doesn't exist, download a new copy
                 forecast_is_stale = True
 
+            # forecast file created from forecast-pwsWeiherhammer
+            forecast_is_stale = False
+
             # File is stale, download a new copy
             if forecast_is_stale:
                 try:

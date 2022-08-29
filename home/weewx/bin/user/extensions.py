@@ -66,6 +66,7 @@ weewx.units.obs_group_dict['gw1100_monthlyrain'] = 'group_rain'
 weewx.units.obs_group_dict['gw1100_weeklyrain'] = 'group_rain'
 weewx.units.obs_group_dict['gw1100_yearlyrain'] = 'group_rain'
 weewx.units.obs_group_dict['lightning_last_time'] = 'group_time'
+weewx.units.obs_group_dict['lightning'] = 'group_distance'
 weewx.units.obs_group_dict['wh57_batt'] = 'group_count'
 weewx.units.obs_group_dict['wh65_batt'] = 'group_count'
 #

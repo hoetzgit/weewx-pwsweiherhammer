@@ -146,7 +146,7 @@
     <!-- AllSky Kamera -->
     <div class="row" style="margin-top:10px;">
         <div class="col-sm-12">
-            <h3>AllSky Kamera mit einer 180&deg Ansicht</h3>
+            <h3>AllSky Kamera mit einer 360&deg Ansicht</h3>
             <p>Meine AllSky Kameras - 
             #if os.path.exists("allsky/allskycam01.up")
             <a href="https://allsky01.ott24.net" target="_blank" rel="noreferrer">Kamera 1</a>
@@ -164,7 +164,7 @@
             Kamera 2 
             #end if
             - wurden im November 2020 installiert.</p>
-            <p>Die Kamera 1 dient hauts&auml;chlich der Himmelsbeobachtung in der Nacht, um z.B. den Verlauf der Sterne oder Meteoriten zu sehen. Durch die 180&deg Ansicht ist sie ebenfalls  
+            <p>Die Kamera 1 dient hauts&auml;chlich der Himmelsbeobachtung in der Nacht, um z.B. den Verlauf der Sterne oder Meteoriten zu sehen. Durch die 360&deg Ansicht ist sie ebenfalls  
             sehr gut zur Beobachtung der aktuellen Wetterbedingungen geeignet. Im Inneren der Kamera arbeitet ein Raspberry Pi 4 mit einer Raspberry HQ Kamera und einem Fischaugenobjektiv. 
             In der Nacht werden - entsprechend den Lichtverh&auml;ltnissen - l&auml;nger belichtete Fotos aufgenommen. Wenn der Tag wieder startet, werden diese zu einem
             <a href="https://allsky.ott24.net/videos/" target="_blank" rel="noreferrer">Timelaps Video</a> und zu 
@@ -281,7 +281,7 @@
                 <li>WeeWX Treiber <a href="https://github.com/matthewwall/weewx-interceptor" target="_blank" rel="noreferrer">WeeWX-Interceptor</a> (ecowitt-client) zum Empfang der Daten von FOSHKplugin per HTTP, Version: 0.53, an eigene Sensoren angepasst</li>
                 <li>WeeWX Service <a href="https://github.com/bellrichm/WeeWX-MQTTSubscribe" target="_blank" rel="noreferrer">WeeWX-MQTTSubscribe</a> zum Empfang von zusätzlichen Daten (Solar Station, Wetter API's u.s.w.) per MQTT, Version: 2.1.0</li>
                 <li>Erweiterungen <a href="https://github.com/roe-dl/weewx-DWD" target="_blank" rel="noreferrer">weewx-DWD</a>, um Daten des Deutschen Wetterdienstes und des Umweltbundesamtes herunterzuladen und aufzubereiten (zum Experimentieren mit anderen Anbietern f&uuml;r die aktuellen Bedingungen angepasst)</li>
-                <li>Erweiterung <a href="https://github.com/roe-dl/weewx-GTS" target="_blank" rel="noreferrer">weewx-GTS</a>, generiert Grünlandtemperatursumme und viele weitere Daten, Version: 0.8a3</li>
+                <li>Erweiterung <a href="https://github.com/roe-dl/weewx-GTS" target="_blank" rel="noreferrer">weewx-GTS</a>, generiert die Grünlandtemperatursumme und viele weitere Daten, Version: 0.8a3</li>
                 ##<li>Die Meteogramm-Visualisierung der DWD Vorhersage erfolgt mit dem Meteogramm von <a href="http://tools.wettersoftware.de" target="_blank" rel="noreferrer">wettersoftware.de</a></li>
                 <li>Erweiterung <a href="https://github.com/jonathankoren/weewx-aqi" target="_blank" rel="noreferrer">weewx-aqi</a>, angepasste <a href="https://github.com/hoetzgit/weewx-aqi/tree/CustomAirQualityIndex" target="_blank" rel="noreferrer">Version</a>, verwendet die Klassifizierung Luftqualit&auml;t Umweltbundesamt</li>
                 <li>Erweiterung <a href="https://github.com/Jterrettaz/sunduration" target="_blank" rel="noreferrer">sunduration</a>, angepasste <a href="https://github.com/hoetzgit/sunduration/tree/sunshineDur_seconds" target="_blank" rel="noreferrer">Version</a>, berechnet die Sonnenscheindauer in Sekunden pro Archiv Intervall</li>
@@ -342,7 +342,7 @@
                 <li>H&ouml;he ca.: $station.altitude</li>
                 <li>Konsole Software EasyWeather Version: 1.6.4</li>
                 <li>Ecowitt GW1100 Gateway Software Version: 2.1.8</li>
-                <li>Backend- und WebServer: Diverse virtuelle VMware ESXi basierende Rechner mit Ubuntu 22.04 LTS, Webseite self hosted</li>
+                <li>Backend- und WebServer: Diverse virtuelle VMware ESXi basierende Rechner mit Ubuntu 22.04.1 LTS, Webseite self hosted</li>
                 <li>WeeWX Server uptime: $station.os_uptime</li>
                 <li>WeeWX Service uptime: $station.uptime</li>
                 #if $current.wh65_batt.has_data and $current.wh65_batt.raw < 1.0
@@ -378,8 +378,8 @@
             <h2>Tipps</h2>
             <p>Wer eine tolle Wetterseite im deutschsprachigen Raum sucht, kann mal die Webseite <a href="https://www.woellsdorf-wetter.de" target="_blank" rel="noreferrer">Wetterstation D&ouml;beln-W&ouml;llsdorf</a> besuchen. 
             Dort findet man u.a. viele <a href="https://www.woellsdorf-wetter.de/info/" target="_blank" rel="noreferrer">hilfreiche Beitr&auml;ge</a> rund um das Wetter und die Konfiguration von WeeWX. 
-            Die Betreiber*innen erstellen auch WeeWX Extensions und stellen diese auf <a href="https://github.com/roe-dl?tab=repositories" target="_blank" rel="noreferrer">GitHub</a> zur Verf&uuml;gung.</p>
-            <p>Vielen Dank an dieser Stelle f&uuml;r Inspirationen und viele Hilfestellungen bei Fragen und Problemen.</p>
+            Die Betreiberinnen erstellen auch WeeWX Extensions und stellen diese auf <a href="https://github.com/roe-dl?tab=repositories" target="_blank" rel="noreferrer">GitHub</a> zur Verf&uuml;gung.</p>
+            <p>Vielen Dank an dieser Stelle f&uuml;r Inspirationen und Hilfestellungen bei Fragen und Problemen.</p>
         </div>
     </div>
 
