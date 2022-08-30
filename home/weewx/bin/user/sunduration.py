@@ -95,7 +95,7 @@ class SunshineDuration(StdService):
         if threshold is None:
             logdbg("Calculation LOOP sunshineDurOriginal not possible, sunshineThresholdOriginal not present!")
             return None
-        if threshold > 0 and radiation > threshold and radiation > self.radiation_min:
+        if threshold > 0 and radiation > threshold:
             loopSunshineDurOriginal = int(loopInterval)
         self.sunshineDurOriginal += loopSunshineDurOriginal
         if self.debug:
