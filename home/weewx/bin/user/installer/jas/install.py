@@ -58,7 +58,7 @@ EXTENSION_CONFIG = """
             # The '$current' value of these observations will be displayed.
             # If MQTT is enabled, these will be updated when a message is received.
             # https://github.com/bellrichm/weewx-jas/wiki/Sections#the-current-section
-            [[[[current]]]]
+            [[[[current]]]] 
                 # The header observation is outTemp
                 observation = outTemp
                 [[[[[observations]]]]]
@@ -105,11 +105,13 @@ EXTENSION_CONFIG = """
                     [[[[[[barometer]]]]]]
                     [[[[[[windSpeed]]]]]]
                     [[[[[[rain]]]]]]
+                        mqtt= false
                         type = sum
                     [[[[[[rainRate]]]]]]
-                    [[[[[[ET]]]]]]
-                        type = sum
                     [[[[[[UV]]]]]]
+                    [[[[[[ET]]]]]]
+                        mqtt = false
+                        type = sum
                     [[[[[[radiation]]]]]]
 
             # The pages and the content on the pages to display.

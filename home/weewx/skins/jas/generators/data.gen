@@ -100,11 +100,13 @@ This data is stored in a javascript object named 'current'.
 
         var observation = {};
         observation.name = "$observation";
+        observation.mqtt = $getVar('$Extras.current.observations.' + $observation + '.mqtt', 'true');
         observation.value = "#include source=$observation_value#";
         observation.unit = "#include source=$observation_unit#";
         #if $suffix
             observation.suffix = "$observation" + "_suffix";
             var suffix = {};
+            suffix.mqtt = $getVar('$Extras.current.observations.' + $observation + '.mqtt', 'true');
             suffix.value = "#include source=$suffix#";
             current.suffixes.set(observation.suffix, suffix);
         #end if
@@ -118,6 +120,15 @@ fieldMap = new Map()
     #for $field in $getVar('$Extras.mqtt.fields', [])
         #set $fieldname = $getVar('$Extras.mqtt.fields.' + $field + '.name')
         fieldMap.set('$fieldname', '$field')
+    #end for
+#end if
+
+var thisDateObservation = {};
+#if $getVar('$Extras.thisdate', False)
+    #for observation in $Extras.thisdate.observations
+        #set source = "thisDateObservation." + $observation + ".unitLabel = '$unit.label." + $observation + "';\n"
+        thisDateObservation.$observation = {};
+        #include source=$source
     #end for
 #end if
 

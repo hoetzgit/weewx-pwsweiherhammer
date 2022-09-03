@@ -64,7 +64,7 @@
     <!-- Font Awesome Icon links -->
    
     <!-- Free license -->
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.1.1/css/all.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.1.2/css/all.css" crossorigin="anonymous">
     
     <!-- Script -->
     <script src="js/modernizr-2.6.2.min.js"></script>
@@ -236,7 +236,7 @@
               </tr>
 	            <tr>
                 <td>Average Strike Distance</td>
-                <td>$current.lightning_avg_distance</td>
+                <td>$current.lightning_distance</td>
               </tr>
               #end if
             </table>
@@ -406,7 +406,7 @@
               </tr>
               <tr>
                 <td>Average Strike Distance</td>
-                <td>$day.lightning_avg_distance.avg</td>
+                <td>$day.lightning_distance.avg</td>
                 <td></td>
               </tr>
               #end if
@@ -456,7 +456,7 @@
             #end if
 	  #if $days_ago($days_ago=$n).outTemp.max.string != "   N/A"
 	  <div class="card" >
-            <h1><i class="fa-regular fa-clock-rotate-left" ></i> Last $days_ago($days_ago=$n).dateTime.format("%d-%b (%Y)") </h1>
+            <h1><i class="fa-solid fa-clock-rotate-left" ></i> Last $days_ago($days_ago=$n).dateTime.format("%d-%b (%Y)") </h1>
             <table class="tablespacer">
               <tr>
                 <td>High Temperature</td>

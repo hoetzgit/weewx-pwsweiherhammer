@@ -185,14 +185,14 @@
                 </div>
 		#end if
 
-		#if $month.lightning_strike_count.has_data
-		<div class="card">
-                    <h1><i class="fa-solid fa-bolt-lightning m-orange" ></i> Total Lightning Strikes </h1>
-			<div class="tablefix">
-                    	$lightning_sum_table
-			</div>
-                </div>
-		#end if
+		###if $month.lightning_strike_count.has_data
+		##<div class="card">
+        ##            <h1><i class="fa-solid fa-bolt-lightning m-orange" ></i> Total Lightning Strikes </h1>
+		##	<div class="tablefix">
+        ##            	$lightning_sum_table
+		##	</div>
+        ##        </div>
+		###end if
 
 		<div class="card">
                     <h1><i class="fa-solid fa-table m-grau" ></i> Number of Days with Observations</h1>

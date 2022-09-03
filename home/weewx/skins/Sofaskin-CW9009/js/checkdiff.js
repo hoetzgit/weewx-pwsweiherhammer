@@ -6,7 +6,7 @@
 function checkDiff(datestr) {
     var newdate = new Date();
     var refreshed = new Date(datestr);
-    var dtz = date.geTtimezoneOffset()/60;
+    var dtz = newdate.getTimezoneOffset()/60;
     var sdtz = refreshed.getTimezoneOffset()/60;
 
     if (dtz == sdtz ) {

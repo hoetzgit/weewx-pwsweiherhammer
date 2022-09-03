@@ -12,21 +12,21 @@
         <div class="col-sm-6">
             <div class="wx-stn-name">
         #if $page == "forecast"
-                <h1>$obs.label.forecast_page_header</h1>
+                <h1>$obs.label.page_header_forecast</h1>
         #else if $page == "graphs"
-                <h1>$obs.label.graphs_page_header</h1>
+                <h1>$obs.label.page_header_graphs</h1>
         #else if $page == "records"
-                <h1>$obs.label.records_page_header</h1>
+                <h1>$obs.label.page_header_records</h1>
         #else if $page == "reports"
-                <h1>$obs.label.reports_page_header</h1>
+                <h1>$obs.label.page_header_reports</h1>
         #else if $page == "about"
-                <h1>$obs.label.about_page_header</h1>
+                <h1>$obs.label.page_header_about</h1>
         #else if $page == "webcam"
-                <h1>$obs.label.webcam_page_header</h1>
-        #else if $page == "impressum"
-                <h1>$obs.label.impressum_page_header</h1>
-        #else if $page == "datenschutz"
-                <h1>$obs.label.datenschutz_page_header</h1>
+                <h1>$obs.label.page_header_webcam</h1>
+        #else if $page == "imprint"
+                <h1>$obs.label.page_header_imprint</h1>
+        #else if $page == "privacy"
+                <h1>$obs.label.page_header_privacy</h1>
         #end if
         </div>
         </div>
