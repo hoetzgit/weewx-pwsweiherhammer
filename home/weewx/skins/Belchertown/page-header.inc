@@ -9,7 +9,7 @@
             </div>
             <div class="obs-header-outtemp">$current.outTemp</div>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-8">
             <div class="wx-stn-name">
         #if $page == "forecast"
                 <h1>$obs.label.page_header_forecast</h1>
@@ -30,7 +30,7 @@
         #end if
         </div>
         </div>
-        <div class="col-sm-4" style="float:right;">
+        <div class="col-sm-3" style="float:right;">
             <div class="wx-stn-info">
                 $obs.label.powered_by
             </div>
