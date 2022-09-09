@@ -363,9 +363,9 @@ function handleMQTT(message) {
             observationId = 'forecastObservation' + i;
             document.getElementById('forecastDate' + i).innerHTML = forecast['day']  + ' ' + forecast['date'];
             document.getElementById('forecastObservation' + i).innerHTML = forecast['observation'];
-            document.getElementById('forecastTemp' + i).innerHTML = forecast['min_temp'] + ' | ' + forecast['max_temp'];
+            document.getElementById('forecastTemp' + i).innerHTML = forecast['temp_min'] + ' | ' + forecast['temp_max'];
             document.getElementById('forecastRain' + i).innerHTML = '<i class="wi wi-raindrop"></i>' + ' ' + forecast['rain'] + '%';
-            document.getElementById('forecastWind' + i).innerHTML = '<i class="wi wi-strong-wind"></i>' + ' ' + forecast['min_wind'] + ' | ' + forecast['max_wind'] + ' mph';
+            document.getElementById('forecastWind' + i).innerHTML = '<i class="wi wi-strong-wind"></i>' + ' ' + forecast['wind_min'] + ' | ' + forecast['wind_max'] + ' ' + forecast['wind_unit'];
             i += 1;
         });
     }
@@ -394,9 +394,9 @@ window.addEventListener("load", function (event) {
         // Set up the date/time picker
         #set $startDate = $interval_long_name_global + "startDate"
         #set $endDate = $interval_long_name_global + "endDate"
-        #set datepicker_format = $gettext('datepicker_date')
-        #if datepicker_format == 'datepicker_date'
-            #set datepicker_format = 'MM/DD/YYYY'
+        #set datepicker_date_format = $gettext('datepicker_date_format')
+        #if datepicker_date_format == 'datepicker_date_format'
+            #set datepicker_date_format = 'MM/DD/YYYY'
         #end if    
         dateRangePicker2 = new DateRangePicker('datetimerange-input2',
                             {
@@ -405,7 +405,9 @@ window.addEventListener("load", function (event) {
                                 startDate: $startDate,
                                 endDate: $endDate,
                                 locale: {
-                                    format: '$datepicker_format',
+                                    format: '$datepicker_date_format',
+                                    applyLabel: '$gettext("datepicker_apply_label")',
+                                    cancelLabel: '$gettext("datepicker_cancel_label")',
                                 },    
                             },                                
                             function(start, end, label) {
@@ -437,16 +439,18 @@ window.addEventListener("load", function (event) {
     #if 'thisdate' in $getVar('$Extras.pages.' + $page)
         #set $startDate = $interval_long_name_global + "startDate"
         #set $endDate = $interval_long_name_global + "endDate"
-        #set datepicker_format = $gettext('datepicker_date')
-        #if datepicker_format == 'datepicker_date'
-            #set datepicker_format = 'MM/DD/YYYY'
+        #set datepicker_date_format = $gettext('datepicker_date_format')
+        #if datepicker_date_format == 'datepicker_date_format'
+            #set datepicker_date_format = 'MM/DD/YYYY'
         #end if    
         var dateRangePicker = new DateRangePicker('datetimerange-input1',
                             {singleDatePicker: true,
                                 minDate: $startDate,
                                 maxDate: $endDate,
                                 locale: {
-                                    format: '$datepicker_format',
+                                    format: '$datepicker_date_format',
+                                    applyLabel: '$gettext("datepicker_apply_label")',
+                                    cancelLabel: '$gettext("datepicker_cancel_label")',                                    
                                 },
                             },
                                 function(start, end, label) {

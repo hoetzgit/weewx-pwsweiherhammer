@@ -104,7 +104,7 @@ except ImportError:
 from weewx.cheetahgenerator import SearchList
 from weewx.units import get_label_string
 from weewx.tags import TimespanBinder
-from weeutil.weeutil import to_bool, TimeSpan
+from weeutil.weeutil import to_bool, to_int, TimeSpan
 
 try:
     import weeutil.logger # pylint: disable=unused-import
@@ -173,6 +173,7 @@ class JAS(SearchList):
 
         self.skin_debug = to_bool(self.skin_dict['Extras'].get('debug', False))
         self.data_binding = self.skin_dict['data_binding']
+        self.unit_system = self.skin_dict['unit_system'].upper()
 
         self.chart_defaults = self.skin_dict['Extras']['chart_defaults'].get('global', {})
         self.chart_series_defaults = self.skin_dict['Extras']['chart_defaults'].get('chart_type', {}).get('series', {})
@@ -461,6 +462,38 @@ class JAS(SearchList):
         return forecast_data['forecasts']
 
     def _retrieve_forecasts(self, current_hour):
+        forecast_observations = {
+            'US' : {
+                'temp_max': 'maxTempF',
+                'temp_min': 'minTempF',
+                'temp_unit': 'F',
+                'wind_conversion': 1,
+                'wind_max': 'windSpeedMaxMPH',
+                'wind_min': 'windSpeedMinMPH',
+                'wind_unit': 'mph',
+            },
+            'METRIC' : {
+                'temp_max': 'maxTempC',
+                'temp_min': 'minTempC',
+                'temp_unit': 'C',
+                'wind_conversion': 1,
+                'wind_max': 'windSpeedMaxKPH',
+                'wind_min': 'windSpeedMinKPH',
+                'wind_unit': 'km/h',
+            },
+            'METRICWX' : {
+                'temp_max': 'maxTempC',
+                'temp_min': 'minTempC',
+                'temp_unit': 'C',
+                'wind_conversion': 1000/3600,
+                'wind_max': 'windSpeedMaxKPH',
+                'wind_min': 'windSpeedMinKPH',
+                'wind_unit': 'm/s',
+            },
+
+        }
+
+        wind_decimals = to_int(self.skin_dict['Extras'].get('forecast_wind_decimals', 2))
         data = self._call_api(self.forecast_url)
         with open(self.raw_forecast_data_file, "w", encoding="utf-8") as raw_forecast_fp:
             json.dump(data, raw_forecast_fp, indent=2)
@@ -478,11 +511,15 @@ class JAS(SearchList):
                 forecast['observation'] = self._get_observation_text(period['weatherPrimaryCoded'])
                 forecast['day'] = datetime.datetime.fromtimestamp(period['timestamp']).strftime("%a")
                 forecast['date'] = datetime.datetime.fromtimestamp(period['timestamp']).strftime("%m/%d")
-                forecast['min_temp'] = period['minTempF']
-                forecast['max_temp'] = period['maxTempF']
+                forecast['temp_min'] = period[forecast_observations[self.unit_system]['temp_min']]
+                forecast['temp_max'] = period[forecast_observations[self.unit_system]['temp_max']]
+                forecast['temp_unit'] = forecast_observations[self.unit_system]['temp_unit']
                 forecast['rain'] = period['pop']
-                forecast['min_wind'] = period['windSpeedMinMPH']
-                forecast['max_wind'] = period['windSpeedMaxMPH']
+                forecast['wind_min'] = round(period[forecast_observations[self.unit_system]['wind_min']] \
+                                        * forecast_observations[self.unit_system]['wind_conversion'], wind_decimals)
+                forecast['wind_max'] = round(period[forecast_observations[self.unit_system]['wind_max']] \
+                                        * forecast_observations[self.unit_system]['wind_conversion'], wind_decimals)
+                forecast['wind_unit'] = forecast_observations[self.unit_system]['wind_unit']
                 forecasts.append(forecast)
 
             forecast_data['forecasts'] = forecasts
