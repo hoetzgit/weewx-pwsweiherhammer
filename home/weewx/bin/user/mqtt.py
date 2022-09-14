@@ -53,6 +53,13 @@ either will be accepted.
             [[[[windSpeed]]]]
                 unit = knot  # convert the wind speed to knots
 
+To change the data binding:
+
+[StdRestful]
+    [[MQTT]]
+        ...
+        data_binding = wx_binding # or any other valid data binding
+
 Use TLS to encrypt connection to broker.  The TLS options will be passed to
 Paho client tls_set method.  Refer to Paho client documentation for details:
 
@@ -87,15 +94,15 @@ Paho client tls_set method.  Refer to Paho client documentation for details:
             #   To specify multiple cyphers, delimit with commas and enclose
             #   in quotes.
             #ciphers =
-            
+
 To send aggregated values, define them in section 
 
 [StdRestful]
     [[MQTT]]
         ...
-        [[[calculations]]]
+        [[[augmentations]]]
             aggobs = period.obstype.aggtype
-            
+
 aggobs: the name you give the aggregated value
 period: one of 'day', 'yesterday', 'week', 'month', 'year'
 obstype: an observation type in the packet
@@ -116,6 +123,7 @@ except ImportError:
 
 import paho.mqtt.client as mqtt
 import random
+import socket
 import sys
 import time
 
@@ -288,9 +296,9 @@ class MQTT(weewx.restx.StdRESTbase):
             # In the 'inputs' section, option 'units' is now 'unit'.
             for obs_type in site_dict['inputs']:
                 _compat(site_dict['inputs'][obs_type], 'units', 'unit')
-        
-        if 'calculations' in config_dict['StdRESTful']['MQTT']:
-            site_dict['calculations'] = config_dict['StdRESTful']['MQTT']['calculations']
+
+        if 'augmentations' in config_dict['StdRESTful']['MQTT']:
+            site_dict['augmentations'] = config_dict['StdRESTful']['MQTT']['augmentations']
 
         site_dict['append_units_label'] = to_bool(site_dict.get('append_units_label'))
         site_dict['augment_record'] = to_bool(site_dict.get('augment_record'))
@@ -298,6 +306,8 @@ class MQTT(weewx.restx.StdRESTbase):
         site_dict['qos'] = to_int(site_dict.get('qos'))
         binding = site_dict.pop('binding', 'archive')
         loginf("binding to %s" % binding)
+        data_binding = site_dict.pop('data_binding', 'wx_binding')
+        loginf("data_binding is %s" % data_binding)
 
         # if we are supposed to augment the record with data from weather
         # tables, then get the manager dict to do it.  there may be no weather
@@ -305,7 +315,7 @@ class MQTT(weewx.restx.StdRESTbase):
         try:
             if site_dict.get('augment_record'):
                 _manager_dict = weewx.manager.get_manager_dict_from_config(
-                    config_dict, 'wx_binding')
+                    config_dict, data_binding)
                 site_dict['manager_dict'] = _manager_dict
         except weewx.UnknownBinding:
             pass
@@ -401,7 +411,7 @@ class MQTTThread(weewx.restx.RESTThread):
                  log_success=True, log_failure=True,
                  timeout=60, max_tries=3, retry_wait=5,
                  max_backlog=sys.maxsize,
-                 calculations={'dayRain':'day.rain.sum'}):
+                 augmentations={'dayRain':'day.rain.sum'}):
         super(MQTTThread, self).__init__(queue,
                                          protocol_name='MQTT',
                                          manager_dict=manager_dict,
@@ -433,7 +443,6 @@ class MQTTThread(weewx.restx.RESTThread):
                     self.tls_dict[opt] = tls[opt]
             logdbg("TLS parameters: %s" % self.tls_dict)
         self.inputs = inputs
-        self.calculations = calculations
         self.unit_system = unit_system
         self.augment_record = augment_record
         self.retain = retain
@@ -441,6 +450,56 @@ class MQTTThread(weewx.restx.RESTThread):
         self.aggregation = aggregation
         self.templates = dict()
         self.skip_upload = skip_upload
+        self.mc = None
+        self.mc_try_time = 0
+        
+        self.augmentations = dict()
+        for agg_obs in augmentations:
+            # split definition into its parts timespan, observation type, and 
+            # aggregation type
+            tag = augmentations[agg_obs].split('.')
+            # see whether all 3 parts are present
+            if len(tag)==3:
+                # example: day.rain.sum
+                # '$' at the beginning is possible but not necessary
+                if tag[0][0]=='$': tag[0] = tag[0][1:]
+                # timespan (day, yesterday, week, month, year)
+                if tag[0] not in MQTTThread.PERIODS: 
+                    logerr("unknown time period '%s' for '%s'" % (tag[0],agg_obs))
+                else:
+                    self.augmentations[agg_obs] = tag
+            else:
+                logerr("syntax error in %s: timespan.obstype.aggregation required" % augmentations[agg_obs])
+        
+
+    def get_mqtt_client(self):
+        if self.mc:
+            return
+        if time.time() - self.mc_try_time < self.retry_wait:
+            return
+        client_id = self.client_id
+        if not client_id:
+            pad = "%032x" % random.getrandbits(128)
+            client_id = 'weewx_%s' % pad[:8]
+        mc = mqtt.Client(client_id=client_id)
+        url = urlparse(self.server_url)
+        if url.username is not None and url.password is not None:
+            mc.username_pw_set(url.username, url.password)
+        # if we have TLS opts configure TLS on our broker connection
+        if len(self.tls_dict) > 0:
+            mc.tls_set(**self.tls_dict)
+        try:
+            self.mc_try_time = time.time()
+            mc.connect(url.hostname, url.port)
+        except (socket.error, socket.timeout, socket.herror) as e:
+            logerr('Failed to connect to MQTT server (%s): %s' %
+                    (_obfuscate_password(self.server_url), str(e)))
+            self.mc = None
+            return
+        mc.loop_start()
+        loginf('client established for %s' %
+               _obfuscate_password(self.server_url))
+        self.mc = mc
 
     def filter_data(self, record):
         # if uploading everything, we must check the upload variables list
@@ -490,7 +549,6 @@ class MQTTThread(weewx.restx.RESTThread):
         return data
 
     def process_record(self, record, dbm):
-        import socket
         if self.augment_record and dbm is not None:
             record = self.get_record(record, dbm)
         if self.unit_system is not None:
@@ -501,43 +559,24 @@ class MQTTThread(weewx.restx.RESTThread):
         if self.skip_upload:
             loginf("skipping upload")
             return
-        url = urlparse(self.server_url)
-        for _count in range(self.max_tries):
-            try:
-                client_id = self.client_id
-                if not client_id:
-                    pad = "%032x" % random.getrandbits(128)
-                    client_id = 'weewx_%s' % pad[:8]
-                mc = mqtt.Client(client_id=client_id)
-                if url.username is not None and url.password is not None:
-                    mc.username_pw_set(url.username, url.password)
-                # if we have TLS opts configure TLS on our broker connection
-                if len(self.tls_dict) > 0:
-                    mc.tls_set(**self.tls_dict)
-                mc.connect(url.hostname, url.port)
-                mc.loop_start()
-                if self.aggregation.find('aggregate') >= 0:
-                    tpc = self.topic + '/loop'
-                    (res, mid) = mc.publish(tpc, json.dumps(data),
-                                            retain=self.retain, qos=self.qos)
-                    if res != mqtt.MQTT_ERR_SUCCESS:
-                        logerr("publish failed for %s: %s" % (tpc, res))
-                if self.aggregation.find('individual') >= 0:
-                    for key in data:
-                        tpc = self.topic + '/' + key
-                        (res, mid) = mc.publish(tpc, data[key],
-                                                retain=self.retain)
-                        if res != mqtt.MQTT_ERR_SUCCESS:
-                            logerr("publish failed for %s: %s" % (tpc, res))
-                mc.loop_stop()
-                mc.disconnect()
-                return
-            except (socket.error, socket.timeout, socket.herror) as e:
-                logdbg("Failed upload attempt %d: %s" % (_count+1, e))
-            time.sleep(self.retry_wait)
-        else:
-            raise weewx.restx.FailedPost("Failed upload after %d tries" %
-                                         (self.max_tries,))
+        self.get_mqtt_client()
+        if not self.mc:
+            raise weewx.restx.FailedPost('MQTT client not available')
+        if self.aggregation.find('aggregate') >= 0:
+            tpc = self.topic + '/loop'
+            (res, mid) = self.mc.publish(tpc, json.dumps(data),
+                                         retain=self.retain, qos=self.qos)
+            if res != mqtt.MQTT_ERR_SUCCESS:
+                logerr("publish failed for %s: %s" %
+                       (tpc, mqtt.error_string(res)))
+        if self.aggregation.find('individual') >= 0:
+            for key in data:
+                tpc = self.topic + '/' + key
+                (res, mid) = self.mc.publish(tpc, data[key],
+                                             retain=self.retain)
+                if res != mqtt.MQTT_ERR_SUCCESS:
+                    logerr("publish failed for %s: %s" %
+                           (tpc, mqtt.error_string(res)))
 
     PERIODS = {
         'day':lambda _time_ts:weeutil.weeutil.archiveDaySpan(_time_ts),
@@ -549,41 +588,38 @@ class MQTTThread(weewx.restx.RESTThread):
     def get_record(self, record, dbmanager):
         """Augment record data with additional data from the archive.
         Should return results in the same units as the record and the database.
-        
+
         returns: A dictionary of weather values"""
-    
+
         # run parent class
         _datadict = super(MQTTThread,self).get_record(record,dbmanager)
 
         # actual time stamp
         _time_ts = _datadict['dateTime']
-        
-        # go through all calculations
-        for agg_obs in self.calculations:
-            try:
-                tag = self.calculations[agg_obs].split('.')
-                if len(tag)==3:
-                    # example: day.rain.sum
-                    # '$' at the beginning is possible but not necessary
-                    if tag[0][0]=='$': tag[0] = tag[0][1:]
-                    # time period (day, yesterday, week, month, year)
-                    if tag[0] not in MQTTThread.PERIODS: 
-                        raise ValueError("unknown time period '%s'" % tag[0])
-                    ts = MQTTThread.PERIODS[tag[0]](_time_ts)
-                    # If the observation type is in _datadict, calculate
-                    # the aggregation.
-                    # Note: It is no error, if the observation type is not
-                    #       in _datadict, as _datadict can be a LOOP packet
-                    #       that does not contain all the observation
-                    #       types.
-                    if tag[1] in _datadict:
-                        # get aggregate value
-                        __result = weewx.xtypes.get_aggregate(tag[1],ts,tag[2],dbmanager)
-                        # convert to unit system of _datadict
-                        _datadict[agg_obs] = weewx.units.convertStd(__result,_datadict['usUnits'])[0]
-                        # register name with unit group if necessary
-                        weewx.units.obs_group_dict.setdefault(agg_obs,__result[2])
-            except (LookupError,ValueError,TypeError,weewx.UnknownType,weewx.UnknownAggregation,weewx.CannotCalculate) as e:
-                logerr('%s = %s: error %s' % (obs,tag,e))
+
+        # go through all augmentations
+        for agg_obs in self.augmentations:
+            tag = self.augmentations[agg_obs]
+            # If the observation type is in _datadict, calculate
+            # the aggregation.
+            # Note: It is no error, if the observation type is not
+            #       in _datadict, as _datadict can be a LOOP packet
+            #       that does not contain all the observation
+            #       types. 
+            if tag[1] in _datadict:
+                # get timespan
+                # (There is no need for error handling regarding  the 
+                # presence of tag[0] in PERIODS here, as this is already
+                # done in initialization.)
+                ts = MQTTThread.PERIODS[tag[0]](_time_ts)
+                try:
+                    # get aggregate value
+                    __result = weewx.xtypes.get_aggregate(tag[1],ts,tag[2],dbmanager)
+                    # convert to unit system of _datadict
+                    _datadict[agg_obs] = weewx.units.convertStd(__result,_datadict['usUnits'])[0]
+                    # register name with unit group if necessary
+                    weewx.units.obs_group_dict.setdefault(agg_obs,__result[2])
+                except (LookupError,ValueError,TypeError,weewx.UnknownType,weewx.UnknownAggregation,weewx.CannotCalculate) as e:
+                    logerr('%s = %s: error %s' % (agg_obs,tag,e))
         
         return _datadict

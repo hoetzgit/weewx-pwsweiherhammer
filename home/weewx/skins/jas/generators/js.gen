@@ -360,8 +360,15 @@ function handleMQTT(message) {
         i = 0;
         forecasts.forEach(function(forecast)
         {
+            // TODO: only temporary!!!
+            var tmpdate = new Date(forecast['date']);
+            var datec = (parseInt(tmpdate.getDate()) < 10)?('0' + tmpdate.getDate()):tmpdate.getDate();
+            datec += '.';
+            datec += (parseInt(tmpdate.getMonth()) < 10)?('0' + tmpdate.getMonth()):tmpdate.getMonth();
+            datec += '.';
             observationId = 'forecastObservation' + i;
-            document.getElementById('forecastDate' + i).innerHTML = forecast['day']  + ' ' + forecast['date'];
+            //document.getElementById('forecastDate' + i).innerHTML = forecast['day']  + ' ' + forecast['date'];
+            document.getElementById('forecastDate' + i).innerHTML = forecast['day']  + ' ' + datec;
             document.getElementById('forecastObservation' + i).innerHTML = forecast['observation'];
             document.getElementById('forecastTemp' + i).innerHTML = forecast['temp_min'] + ' | ' + forecast['temp_max'];
             document.getElementById('forecastRain' + i).innerHTML = '<i class="wi wi-raindrop"></i>' + ' ' + forecast['rain'] + '%';

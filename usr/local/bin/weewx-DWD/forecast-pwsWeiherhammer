@@ -2680,12 +2680,14 @@ class ForecastPWS(object):
                     continue
                 if self.verbose:
                     print('calculate_daily_forecast: insert forecast %s' % time.strftime('%d.%m.%Y %H:%M',time.localtime(val*0.001)))
-            day = time.strftime('%d.%m.',time.localtime(val*0.001-1))
+            #day = time.strftime('%d.%m.',time.localtime(val*0.001-1))
+            day = time.strftime('%d.%m.',time.localtime(val*0.001))
             # get the values for the actual timestep
             vals = {ii:placemark['Forecast'][ii][idx] for ii in placemark['Forecast']}
             # check if first timestamp of a new day
             if day not in days: 
-                _wday = time.localtime(val*0.001-1).tm_wday
+                #_wday = time.localtime(val*0.001-1).tm_wday
+                _wday = time.localtime(val*0.001).tm_wday
                 days[day] = { 
                     'timestamp':int(val*0.001),
                     'day':day,
