@@ -213,7 +213,8 @@ function show_farmers_rules(data) {
                 dname = data.months[month].days[day].name;
                 frule = data.months[month].days[day].rules[rkey];
                 jQuery(".farmers-rules-day").html('$obs.label.farmers_rules_drule&nbsp;' + today + (dname == ''?'':'&nbsp;-&nbsp;' + dname));
-                datasource_url += ('#' + today.replace(" ","_") + (dname == ''?'':':_' + dname.replace(" ","_")));
+                // https://stackoverflow.com/questions/1983648/replace-spaces-with-dashes-and-make-all-letters-lower-case
+                datasource_url += ('#' + today.replace(/\s+/g,"_") + (dname == ''?'':':_' + dname.replace(/\s+/g,"_")));
             }
             jQuery(".farmers-rules-rule").html(frule);
             jQuery(".farmers-rules-source").html('$obs.label.farmers_rules_source:&nbsp;<a href="' + datasource_url + '" target="_blank" rel="noreferrer">' + data.datasource + '</a>');
