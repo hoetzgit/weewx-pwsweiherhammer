@@ -133,6 +133,9 @@ weewx.units.obs_group_dict['uba_o3_category'] = 'group_count'
 #
 # TODO: additional Values, Groups, Units, Formats ...
 weewx.units.obs_group_dict['airDensity'] = 'group_pressure3'
+weewx.units.obs_group_dict['dayET'] = 'group_rain'
+weewx.units.obs_group_dict['dayRain'] = 'group_rain'
+weewx.units.obs_group_dict['dayRain2'] = 'group_rain'
 weewx.units.obs_group_dict['lightning_strike_count1'] = 'group_count'
 weewx.units.obs_group_dict['rain2'] = 'group_rain'
 weewx.units.obs_group_dict['solarEnergy'] = 'group_radiation_energy'
