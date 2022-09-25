@@ -7,6 +7,14 @@
 #set $start_time = time.time()
  /* jshint esversion: 6 */
 
+#def evaluate(data)
+    #include source=$data
+    #if $getVar('Extras.debug_includes', False)
+    /* $data */
+    ##$logdbg($data)
+    #end if
+#end def
+
 #set $skin_data_binding = $getVar("$Extras.data_binding", $data_binding)
 
 var pageCharts = [];
@@ -168,7 +176,7 @@ function handleMQTT(message) {
                         #set name =  $getVar('$Extras.chart_definitions.' + $chart + '.series.' + $observation + '.name')
                     #else
                         #set source = '#set global label_global = $obs.label.' + $observation
-                        #include source=$source
+                        $evaluate($source)
                         #set name = "'" + $label_global + "'"
                         #set global label_global = None
                     #end if
@@ -275,9 +283,9 @@ function handleMQTT(message) {
         ## ToDo: optimize to only get index once for all observations?
         #for $observation in $getVar('Extras.minmax.observations')
             #set $data_binding = $getVar("$Extras.minmax.observations." + $observation + ".data_binding", minmax_data_binding)
-            #set min_datetime_array = $interval_name_global + "_min_" + $observation + "_dateTime";
+            #set min_datetime_array = $interval_name_global + "_min_" + $observation + "_" + $data_binding + "_dateTime";
             #set min_data_array = $interval_name_global + "_min_" + $observation + "_" + $data_binding + "_data";
-            #set max_datetime_array = $interval_name_global + "_max_" + $observation + "_dateTime";
+            #set max_datetime_array = $interval_name_global + "_max_" + $observation + "_" + $data_binding + "_dateTime";
             #set max_data_array = $interval_name_global + "_max_" + $observation + "_" + $data_binding + "_data";
             #set min_id = $observation + "_minmax_min";
             #set max_id = $observation + "_minmax_max";
@@ -360,15 +368,8 @@ function handleMQTT(message) {
         i = 0;
         forecasts.forEach(function(forecast)
         {
-            // TODO: only temporary!!!
-            var tmpdate = new Date(forecast['date']);
-            var datec = (parseInt(tmpdate.getDate()) < 10)?('0' + tmpdate.getDate()):tmpdate.getDate();
-            datec += '.';
-            datec += (parseInt(tmpdate.getMonth()) < 10)?('0' + tmpdate.getMonth()):tmpdate.getMonth();
-            datec += '.';
             observationId = 'forecastObservation' + i;
-            //document.getElementById('forecastDate' + i).innerHTML = forecast['day']  + ' ' + forecast['date'];
-            document.getElementById('forecastDate' + i).innerHTML = forecast['day']  + ' ' + datec;
+            document.getElementById('forecastDate' + i).innerHTML = forecast['day']  + ' ' + forecast['date'];
             document.getElementById('forecastObservation' + i).innerHTML = forecast['observation'];
             document.getElementById('forecastTemp' + i).innerHTML = forecast['temp_min'] + ' | ' + forecast['temp_max'];
             document.getElementById('forecastRain' + i).innerHTML = '<i class="wi wi-raindrop"></i>' + ' ' + forecast['rain'] + '%';

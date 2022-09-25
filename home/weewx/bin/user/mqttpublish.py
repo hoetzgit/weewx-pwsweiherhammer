@@ -362,8 +362,8 @@ class MQTTPublish(object):
         if self.lwt_dict:
             self.client.will_set(topic=self.lwt_dict.get('topic', 'status'),
                                  payload=self.lwt_dict.get('offline_payload', 'offline'),
-                                 qos=self.lwt_dict.get('qos', 0),
-                                 retain=self.lwt_dict.get('retain', True))
+                                 qos=to_int(self.lwt_dict.get('qos', 0)),
+                                 retain=to_bool(self.lwt_dict.get('retain', True)))
 
         self._connect()
 
@@ -489,8 +489,8 @@ class MQTTPublish(object):
         if self.lwt_dict:
             self.client.publish(topic=self.lwt_dict.get('topic', 'ststus'),
                                  payload=self.lwt_dict.get('online_payload', 'online'),
-                                 qos=self.lwt_dict.get('qos', 0),
-                                 retain=self.lwt_dict.get('retain', True))
+                                 qos=to_int(self.lwt_dict.get('qos', 0)),
+                                 retain=to_bool(self.lwt_dict.get('retain', True)))
         self.connected = True
 
     def on_disconnect(self, client, userdata, rc):  # (match callback signature) pylint: disable=unused-argument
@@ -771,7 +771,7 @@ class AbstractPublishThread(threading.Thread):
             fields[field]['conversion_type'] = field_dict.get('conversion_type', conversion_type)
             fields[field]['format_string'] = field_dict.get('format_string', format_string)
 
-        logdbg(self.publish_type, "Configured fields: %s" % fields)
+        #logdbg(self.publish_type, "Configured fields: %s" % fields)
         return fields
 
     def configure_topics(self, service_dict):
@@ -824,7 +824,7 @@ class AbstractPublishThread(threading.Thread):
                                                                               conversion_type,
                                                                               format_string))
 
-            logdbg(self.publish_type, "Configured aggregates: %s" % aggregates)
+            #logdbg(self.publish_type, "Configured aggregates: %s" % aggregates)
 
             if 'loop' in binding:
                 if not publish:
