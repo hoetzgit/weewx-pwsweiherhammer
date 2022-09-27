@@ -1,0 +1,128 @@
+#errorCatcher Echo
+## $Id: index.html.tmpl 2608 2014-11-14 12:37:17Z mwall $
+##
+## Specifying an encoding of UTF-8 is usually safe, but if your text is 
+## actually in Latin-1, then you should replace the string "UTF-8" with "latin-1"
+#encoding UTF-8
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head profile="http://www.w3.org/2005/10/profile">
+    #if $encoding == 'utf8'
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    #end if    
+    <title>$station.location Weewx Memory Usage</title>
+    <link rel="stylesheet" type="text/css" href="weewx.css"/>
+    <link rel="icon" type="image/png" href="favicon.ico" />
+    <script type="text/javascript">
+      function openURL(urlname)
+      {
+        window.location=urlname;
+      }
+      function openNoaaFile(date)
+      {
+        var url = "NOAA/NOAA-";
+        url = url + date;
+        url = url + ".txt";
+        window.location=url;
+      }
+    </script>
+  </head>
+
+  <body>
+    <div id="container">
+      <div id="masthead">
+        <h1>$station.location</h1>
+        <h2>Weewx Memory Usage</h2>
+          <h2>$latest.dateTime</h2>
+      </div>
+
+      <div id="stats_group">
+
+        <div class="stats">
+          <div class="stats_header">
+            Current Weewx Memory Usage
+          </div>
+
+          <table>
+            <tbody>
+              <tr>
+                <td class="stats_label">Total Memory</td>
+                <td class="stats_data">$latest.mem_size.format("%4.3f")</td>
+              </tr>
+              <tr>
+                <td class="stats_label">RSS</td>
+                <td class="stats_data">$latest.mem_rss.format("%4.3f")</td>
+              </tr>
+              <tr>
+                <td class="stats_label">Shared</td>
+                <td class="stats_data">$latest.mem_share.format("%4.3f")</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>&nbsp;</p>
+
+        <div class="stats">
+          <div class="stats_header">
+            Current Uptime
+          </div>
+          <table>
+            <tbody>
+              <tr>
+                <td class="stats_label">
+                  System
+                </td>
+                <td class="stats_data">
+                  $station.os_uptime
+                </td>
+              </tr>
+              <tr>
+                <td class="stats_label">
+                  Weewx Application
+                </td>
+                <td class="stats_data">
+                  $station.uptime
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div> <!--End class "stats" -->
+
+        <p>&nbsp;</p>
+
+        <div class="stats">
+          <div class="stats_header">
+            Weewx version
+          </div>
+          <table>
+            <tbody>
+              <tr>
+                <td class="stats_label">
+                  Version
+                </td>
+                <td class="stats_data">
+                  v$station.version
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div> <!--End class "stats" -->
+
+      </div> <!--End class "stats_group" -->
+
+      <div id="content">
+        
+        <div id="plots">
+          <img src="dayMemoryUsage.png"  alt="day" />
+          <img src="weekMemoryUsage.png"  alt="week" />
+          <img src="monthMemoryUsage.png"  alt="month" />
+          <img src="yearMemoryUsage.png"  alt="year" />
+        </div> <!-- End id "plots" -->
+      </div> <!-- End id "content" -->
+
+    </div>
+
+</body>
+
+</html>

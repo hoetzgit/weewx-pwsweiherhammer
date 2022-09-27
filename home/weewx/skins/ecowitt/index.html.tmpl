@@ -1,0 +1,211 @@
+<!--
+
+Minimal EcoWitt skin based on the gw1000 driver
+===============================================
+
+This example also shows battery status for the external
+sensor via mapping the detected sensor's battery status
+to a known parameter in weewx's schema.   Displaying
+the value has some cheeatah-fu below to only show the
+status if there is current data.
+
+For the WH32/WH26 battery=0 is ok, battery=1 is low
+
+     # Options for extension 'GW1000'
+     [GW1000]
+         driver = user.gw1000
+         ip_address = 192.168.2.20
+         port = 45000
+         poll_interval = 20
+
+    # when running as a driver, the default mappings automatically
+    # handle inTemp, inHumidity, outTemp, outHumidity
+    # and the extraTemp1-8 and soilMoistN items automagically
+    # but we need to add the battery status mappings
+     [[field_map_extensions]]
+         outTempBatteryStatus = wh26_batt
+         # extraTemp1-8
+         batteryStatus1 = wh31_ch1_batt
+         batteryStatus2 = wh31_ch2_batt
+         batteryStatus3 = wh31_ch3_batt
+         batteryStatus4 = wh31_ch4_batt
+         batteryStatus5 = wh31_ch5_batt
+         # soilMoist1 = channel autoselects on first use
+         batteryStatus8 = wh51_ch1_batt
+
+    # when running as a service presumably the inTemp/inHumidity
+    # items and perhaps a few more would need overriding
+
+    # we use field_map_extensions to supersede a subset of mappings
+    # rather than using field_map to map them all specifically
+
+-->
+
+<html>
+<head>
+<link rel="stylesheet" href="mystyle.css">
+</head>
+
+<body>
+
+<h1>$station.location current Weather</h1>
+
+#if $current.outTemp.has_data
+<h2> Outside readings: </h2>
+<h3>
+<dl>
+<dd>
+  <dl>
+     <dd>
+     <table>
+
+     <tr> <td><b>Outside </b></td> <td>$current.outTemp</td> <td> $current.outHumidity humidity</td>
+        <td>
+       #if $current.batteryStatus1.has_data and $current.outTempBatteryStatus.format("%s") != "0.0"
+          (battery LOW) $current.batteryStatus1.format("%.1f")
+       #else
+          (battery OK)
+       #end if
+        </td>
+
+     </tr>
+     </table>
+     </dd>
+</dd>
+</dl>
+#end if
+
+#if $current.inTemp.has_data
+<h2> Inside readings: </h2>
+<h3>
+<dl>
+<dd>
+  <dl>
+     <dd>
+     <table>
+     <tr> <td><b>Office  </b></td> <td width=100>$current.inTemp</td> <td>$current.inHumidity humidity</td> </tr>
+
+     #if $current.extraTemp1.has_data
+     <tr> <td><b>1 MBR</b></td>
+     <td>$current.extraTemp1</td> <td> $current.extraHumid1 humidity</td>
+        <td>
+       #if $current.batteryStatus1.has_data and $current.batteryStatus1.format("%s") != "0.0"
+          (battery LOW) $current.batteryStatus1.format("%.1f")
+       #else
+          (battery OK)
+       #end if
+        </td>
+     </tr>
+     #end if
+
+     #if $current.extraTemp2.has_data
+     <tr> <td><b>2 BR2</b></td>
+     <td>$current.extraTemp2</td> <td> $current.extraHumid2 humidity</td>
+        <td>
+       #if $current.batteryStatus2.has_data and $current.batteryStatus2.format("%s") != "0.0"
+          (battery LOW) $current.batteryStatus2.format("%.1f")
+       #else
+          (battery OK)
+       #end if
+        </td>
+     </tr>
+     #end if
+
+     #if $current.extraTemp3.has_data
+     <tr> <td><b>3 BR3</b></td>
+     <td>$current.extraTemp3</td> <td> $current.extraHumid3 humidity</td>
+        <td>
+       #if $current.batteryStatus3.has_data and $current.batteryStatus3.format("%s") != "0.0"
+          (battery LOW) $current.batteryStatus3.format("%.1f")
+       #else
+          (battery OK)
+       #end if
+        </td>
+     </tr>
+     #end if
+
+     #if $current.extraTemp4.has_data
+     <tr> <td><b>4 FR</b></td>
+     <td>$current.extraTemp4</td> <td> $current.extraHumid4 humidity</td>
+        <td>
+       #if $current.batteryStatus4.has_data and $current.batteryStatus4.format("%s") != "0.0"
+          (battery LOW) $current.batteryStatus4.format("%.1f")
+       #else
+          (battery OK)
+       #end if
+        </td>
+     </tr>
+     #end if
+
+     #if $current.extraTemp5.has_data
+     <tr> <td><b>5 Baseball</b></td>
+     <td>$current.extraTemp5</td> <td> $current.extraHumid5 humidity</td>
+        <td>
+       #if $current.batteryStatus5.has_data and $current.batteryStatus5.format("%s") != "0.0"
+          (battery LOW) $current.batteryStatus5.format("%.1f")
+       #else
+          (battery OK)
+       #end if
+        </td>
+     </tr>
+     #end if
+
+     </table>
+     </dd>
+</dd>
+</dl>
+#end if
+
+#if $current.soilMoist1.has_data
+<h2> Soil sensors: </h2>
+<h3>
+<dl>
+<dd>
+  <dl>
+     <dd>
+     <table>
+
+     <tr> <td><b>Soil1 </b></td>
+    <td>$current.soilMoist1.format(add_label=False) % </td>
+    <td>
+       #if $current.batteryStatus8.has_data and $current.batteryStatus8.format("%s") != "0.0"
+          (battery LOW) $current.batteryStatus8.format("%.1f")
+       #else
+          (battery OK)
+       #end if
+        </td>
+
+     </tr>
+     </table>
+     </dd>
+</dd>
+</dl>
+</h3>
+#end if
+
+<p>
+<dl>
+<em>
+<!-- this is more probably when weewx generated the html last -->
+<dd> Last measurement:
+  <dl>
+  <dd> $current.dateTime.format(format_string="%c") </dd>
+  </dl>
+</dd>
+
+<p>
+<dd>Readings courtesy of EcoWitt sensors:
+  <dl>
+  <dd><a href="https://www.ecowitt.com/shop/goodsDetail/16">GW-1000</a> - wifi gateway</dd>
+  <dd><a href="https://www.ecowitt.com/shop/goodsDetail/52">WH32</a> - outside sensor </dd>
+  <dd><a href="https://www.ecowitt.com/shop/goodsDetail/19">WH31</a> - extra indoor Temp/Hum sensors</dd>
+  <dd><a href="https://www.ecowitt.com/shop/goodsDetail/16">WH51</a> - soil moisture sensor</dd>
+  </dl>
+</dd>
+</em>
+</dl>
+
+</body>
+
+</html>
+

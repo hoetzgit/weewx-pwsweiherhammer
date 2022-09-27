@@ -2112,7 +2112,7 @@ class getData(SearchList):
 
 
         # Include custom.css if it exists in the HTML_ROOT folder
-        custom_css_file = html_root + "/custom.css"
+        custom_css_file = html_root + "/css/custom.css"
         # Determine if the file exists
         custom_css_exists = os.path.isfile(custom_css_file)
 

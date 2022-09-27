@@ -166,9 +166,11 @@
     #end if
 
     #if os.path.exists("dwd/wbx_tab_BY.inc")
-    <div class="row index-hook-after-forecast" style="margin-top:15px;">
-        #include "dwd/wbx_tab_BY.inc"
-    </div>
+    ##<div class="container-fluid">
+        <div class="row index-hook-after-forecast" style="margin-top:15px;">
+            #include "dwd/wbx_tab_BY.inc"
+        </div>
+    ##</div>
     #end if
 
     #if os.path.exists("dwd/VHDL54_DWMG_LATEST.html")
@@ -247,7 +249,6 @@
     ##    </div>
     ##    <div class="col-md-12 mtg-meteogram" id="meteogram"</div>
     ##</div>
-
 </div>
 
 <!-- End forecast.inc -->

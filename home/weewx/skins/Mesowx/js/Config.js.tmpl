@@ -1,0 +1,818 @@
+var mesowx = mesowx || {};
+
+mesowx.Config = (function() {
+    var Config = {};
+
+    /************************************************************
+      Basic configuration parameters
+     ************************************************************/
+
+    // the Meso entity ID for raw data configured in the Meso config.json
+    Config.rawEntityId = '$weewx_raw';
+
+    // the Meso entity ID for archive data configured in the Meso config.json
+    Config.archiveEntityId = '$weewx_archive';
+
+    // the polling interval in milliseconds for the raw real-time data provider
+    // this controls how frequently to fetch new data, it should be
+    // set to the frequency that your station generates "LOOP" packets
+    Config.realTimePollingInterval = $poll_ms;
+
+    // These define the field defaults and are referred to in other places in this configuration
+    // Properties:
+    //    fieldID = the Meso-defined field ID from the Meso config.json
+    //    unit = the unit to display including the label (value will be converted, if necessary)
+    //    decimals = the number of decimals to display (rounding, if necessary)
+    //    agg = how to aggregate the field (used when charting)
+    //    label = the label to use when referencing the field in the UI
+    Config.fieldDefaults = {
+        'dateTime':         new meso.FieldDef('dateTime',       meso.Unit.ms,           0,      meso.Agg.avg),
+        'outTemp':          new meso.FieldDef('outTemp',        mesowx.Unit.$disp_degr,          1,      meso.Agg.avg,   '$legend_outtemp'),
+        'dewpoint':         new meso.FieldDef('dewpoint',       mesowx.Unit.$disp_degr,          1,      meso.Agg.avg,   '$legend_dewp'),
+        'rain':             new meso.FieldDef('rain',           mesowx.Unit.$disp_meas,         $disp_m_f,      meso.Agg.sum,   '$legend_arain'),
+        'rainRate':         new meso.FieldDef('rainRate',       mesowx.Unit.$disp_rainR,       $disp_rr_f,      meso.Agg.max,   '$legend_rainr'),
+        'dayRain':          new meso.FieldDef('dayRain',        mesowx.Unit.$disp_meas,         $disp_m_f,      meso.Agg.max,   '$legend_raint'),
+        'windSpeed':        new meso.FieldDef('windSpeed',      mesowx.Unit.$disp_speed,        0,      meso.Agg.avg,   '$legend_winds'),
+        'windDir':          new meso.FieldDef('windDir',        mesowx.Unit.deg,        0,      meso.Agg.avg,   '$legend_windd'),
+        'windGust':         new meso.FieldDef('windGust',       mesowx.Unit.$disp_speed,        0,      meso.Agg.avg,   '$legend_windgu'),
+        'windGustDir':      new meso.FieldDef('windGustDir',    mesowx.Unit.deg,        0,      meso.Agg.avg,   '$legend_windgd'),
+        'outHumidity':      new meso.FieldDef('outHumidity',    mesowx.Unit.perc,       1,      meso.Agg.avg,   '$legend_ohumid'),
+        'barometer':        new meso.FieldDef('barometer',      mesowx.Unit.$disp_press,       $disp_p_f,      meso.Agg.avg,   '$legend_pressb'),
+        'windchill':        new meso.FieldDef('windchill',      mesowx.Unit.$disp_degr,          1,      meso.Agg.avg,   '$legend_windc'),
+        'heatindex':        new meso.FieldDef('heatindex',      mesowx.Unit.$disp_degr,          1,      meso.Agg.avg,   '$legend_heati'),
+        'inTemp':           new meso.FieldDef('inTemp',         mesowx.Unit.$disp_degr,          1,      meso.Agg.avg,   '$legend_intemp'),
+        'inHumidity':       new meso.FieldDef('inHumidity',     mesowx.Unit.perc,       1,      meso.Agg.avg,   '$legend_ihumid')
+    };
+
+    // the cardinal direction labels to use (typically used for charts)
+    Config.degreeOrdinalLabels = {
+        "0"   : "N",
+        "90"  : "E",
+        "180" : "S",
+        "270" : "W",
+    };
+
+    // The cardinal direction labels in order starting at 0 degrees, assumes equal separation between ordinals
+    // the granularity can be changed (e.g. ["N", "E", "S", "W"] will yeild the label "N" for values between 315-45 degrees, 
+    // "E" for 45-135 degrees, etc.)
+    Config.windDirOrdinalText = ["N","NNE", "NE","ENE",
+                                "E","ESE","SE","SSE",
+                                "S","SSW","SW","WSW",
+                                "W","WNW","NW","NNW"];
+
+    // global highcharts options
+    Config.highchartsOptions = {
+        // see http://api.highcharts.com/highstock#global
+        global: {
+            useUTC: false
+        },
+        // see http://api.highcharts.com/highstock#lang
+        lang: {
+        }
+        // theme, see http://api.highcharts.com/highcharts#Highcharts.setOptions
+    };
+
+
+    /************************************************************
+      Advanced Configuration parameters
+     ************************************************************/
+
+    // Data provider instances
+    // raw data provider
+    Config.rawDataProvider = new meso.AggregateDataProvider({
+        baseUrl: "meso/data.php?entity_id=" + Config.rawEntityId
+    });
+    // real-time raw data provider
+    Config.realTimeDataProvider = new meso.PollingRealTimeRawDataProvider({
+        pollingInterval : Config.realTimePollingInterval,
+        aggregateDataProvider : Config.rawDataProvider
+    });
+    // archive data provider
+    Config.archiveDataProvider = new meso.AggregateDataProvider({
+        baseUrl: "meso/data.php?entity_id=" + Config.archiveEntityId
+    });
+    // raw stats data provider
+    Config.rawStatsDataProvider = new meso.StatsDataProvider({
+        url: "meso/stats.php",
+        entityId: Config.rawEntityId
+    });
+    // archive stats data provider
+    Config.archiveStatsDataProvider = new meso.StatsDataProvider({
+        url: "meso/stats.php",
+        entityId: Config.archiveEntityId
+    });
+
+
+    // function to use for determining direction labels
+    Config.defaultDegreeToCardinalTextConverter =
+            mesowx.Util.createDegreeToCardinalTextConverter(Config.windDirOrdinalText);
+
+    // defaults for chart components (axes, series definitions, chart options, etc)
+    Config.chartDefaults = {};
+
+    // The common "bucket" of x-axis definitions, referred to by chart configurations.
+    // Refer to http://api.highcharts.com/highstock#xAxis for highStockAxisOptions parameters
+    Config.chartDefaults.xAxes = {
+        "dateTime" : {
+            field: 'dateTime', // the dateTime entity field ID
+            highstockAxisOptions : {
+                minRange : null //2*60*1000; // 2 minutes
+            }
+        }
+    };
+
+    // The common "bucket" of y-axis definitions, referred to by chart configurations.
+    // Refer to http://api.highcharts.com/highstock#yAxis for highStockAxisOptions parameters
+    Config.chartDefaults.yAxes = {
+        // temp axis
+        "temp" : {
+            axisId : "tempAxis",
+            unit : Config.fieldDefaults.outTemp.unit,
+            highstockAxisOptions : {
+                title: {
+                    text: '$chart_atemp',
+                    style: {
+                           color: '$out_temp',
+                           fontWeight: 'bold'
+                    }
+                },
+                opposite: false,
+                offset: 10,
+                height : 50+'%',
+                minorTickInterval: 'auto',
+                minorGridLineColor: '#F0F0F0',
+            }
+        },
+        // barometer axis
+        "barometer" : {
+            axisId : "barometerAxis",
+            unit : Config.fieldDefaults.barometer.unit,
+            highstockAxisOptions : {
+                title: {
+                    text: '$chart_press',
+                    style: {
+                           color: '$bar_ometer',
+                           fontWeight: 'bold'
+                    }
+                },
+                offset: 0,
+                height : 50+'%',
+            },
+        },
+        // wind speed axis
+        "windspeed" : {
+            axisId : "windSpeedAxis",
+            unit : Config.fieldDefaults.windSpeed.unit,
+            highstockAxisOptions : {
+                title: {
+                    text: '$chart_awind',
+                    style: {
+                           color: '$wind_speed',
+                           fontWeight: 'bold'
+                    }
+                },
+                offset: 40,
+                height : 23+'%',
+                top : 51+'%',
+                minorTickInterval: 'auto',
+                minorGridLineColor: '#F0F0F0',
+                min: 0,
+                maxPadding: 0,
+            },
+        },
+        // wind dir axis
+        "winddir" : {
+            axisId : "windDirAxis",
+            unit : Config.fieldDefaults.windDir.unit,
+            highstockAxisOptions : {
+                title: {
+                    text: '$chart_windd',
+                    style: {
+                           color: '$wind_dir',
+                           fontWeight: 'bold'
+                    }
+                },
+                offset: 20,
+                opposite: false,
+                height : 23+'%',
+                top : 51+'%',
+                min: 0,
+                labels: {
+                    formatter: function() {
+                        return Config.degreeOrdinalLabels[this.value.toString()];
+                    }
+                }
+            },
+        },
+        // humidity axis
+        "humidity" : {
+            axisId : "humidityAxis",
+            unit : Config.fieldDefaults.outHumidity.unit,
+            highstockAxisOptions : {
+                title: {
+                    text: '$chart_humid',
+                    style: {
+                           color: '$out_humidity',
+                           fontWeight: 'bold'
+                    }
+                },
+                offset: 10,
+                opposite: false,
+                height : 25+'%',
+                top : 75+'%',
+                min: 0,
+                max: 100,
+                tickInterval: 25,
+            },
+        },
+        // rain axis
+        "rain" : {
+            axisId : "rainAxis",
+            unit : Config.fieldDefaults.rain.unit,
+            highstockAxisOptions : {
+                title: {
+                    text: '$chart_arain',
+                    style: {
+                           color: '$r_ain',
+                           fontWeight: 'bold'
+                    }
+                },
+                offset: 50,
+                height : 25+'%',
+                top : 75+'%',
+                minorTickInterval: 'auto',
+                minorGridLineColor: '#F0F0F0',
+                min: 0,
+            },
+        },
+        // rain rate axis
+        "rainrate" : {
+            axisId : "rainRateAxis",
+            unit : Config.fieldDefaults.rainRate.unit,
+            highstockAxisOptions : {
+                title: { // skip the title as it crowds the axis
+                    //text: '$chart_rainr',
+                    text: '',
+                    style: {
+                           color: '$rain_rate',
+                           fontWeight: 'bold'
+                    }
+                },
+                //offset: -100,
+                offset: -80,
+                height : 25+'%',
+                top : 75+'%',
+                minorTickInterval: 'auto',
+                minorGridLineColor: '#F0F0F0',
+                min: 0,
+            },
+        },
+    };
+
+    // The common "bucket" of chart data series definitions, referred to by chart configurations.
+    // This is the data that will be displayed on the chart, and is always associated with an
+    // axis. Obviously that axis must also be configured on the chart in order to be used.
+    // Refer to http://api.highcharts.com/highstock#plotOptions for highStockSeriesOptions parameters
+    Config.chartDefaults.series = {
+        // out temp
+        "outTemp" : {
+            fieldDef : Config.fieldDefaults.outTemp,
+            axis : 'tempAxis',
+            stats : [meso.Stat.min, meso.Stat.max],
+            highstockSeriesOptions : {
+                color: '$out_temp',
+                lineWidth: 1,
+                visible: $out_bool, // false is the default, the hidden state
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$out_temp',
+                clip: false, // allow flags to display on chart boundaries
+                visible: $out_bool,
+            }
+        },
+        // in temp
+        "inTemp" : {
+            fieldDef : Config.fieldDefaults.inTemp,
+            axis : 'tempAxis',
+            stats : [meso.Stat.min, meso.Stat.max],
+            highstockSeriesOptions : {
+                color: '$in_temp',
+                visible: $int_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$in_temp',
+                clip: false,
+                //zIndex: 2, // display above the windchill and heat index flags
+                visible: $int_bool,
+            }
+        },
+        // out dewpoint
+        "dewpoint" : {
+            fieldDef : Config.fieldDefaults.dewpoint,
+            axis : 'tempAxis',
+            stats : [meso.Stat.min, meso.Stat.max],
+            highstockSeriesOptions : {
+                color: '$dew_point',
+                visible: $dp_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$dew_point',
+                clip: false,
+                stackDistance: 30,
+                visible: $dp_bool,
+            }
+        },
+        // wind chill
+        "windchill" : {
+            fieldDef : Config.fieldDefaults.windchill,
+            axis : 'tempAxis',
+            stats : [meso.Stat.min],
+            highstockSeriesOptions : {
+                color: '$wind_chill',
+                dashStyle: 'ShortDashDot',
+                zIndex: 1, // so it's underneath out temp
+                visible: $wc_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$wind_chill',
+                clip: false,
+                //zIndex: 1, // display above the windchill and heat index flags
+                visible: $wc_bool,
+            }
+        },
+        // heat index
+        "heatindex" : {
+            fieldDef : Config.fieldDefaults.heatindex,
+            axis : 'tempAxis',
+            stats : [meso.Stat.max],
+            highstockSeriesOptions : {
+                color: '$heat_index',
+                dashStyle: 'ShortDashDot',
+                zIndex: 0, // so it's underneath out temp
+                visible: $hi_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$heat_index',
+                clip: false,
+                //zIndex: 0 // display above the windchill and heat index flags
+                stackDistance: 30,
+                visible: $hi_bool,
+            }
+        },
+        // barometer
+        "barometer" : {
+            fieldDef : Config.fieldDefaults.barometer,
+            axis : 'barometerAxis',
+            stats : [meso.Stat.min, meso.Stat.max],
+            highstockSeriesOptions : {
+                color: '$bar_ometer',
+                dashStyle: 'ShortDot',
+                visible: $bar_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$bar_ometer',
+                clip: false,
+                visible: $bar_bool,
+            }
+        },
+        // wind speed
+        "windSpeed" : {
+            fieldDef : Config.fieldDefaults.windSpeed,
+            axis : 'windSpeedAxis',
+            stats : [meso.Stat.max],
+            highstockSeriesOptions : {
+                color: '$wind_speed',
+                visible: $ws_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$wind_speed',
+                clip: false,
+                visible: $ws_bool,
+            }
+        },
+        // wind dir
+        "windDir" : {
+            fieldDef : Config.fieldDefaults.windDir,
+            axis : 'windDirAxis',
+            highstockSeriesOptions : {
+                color: '$wind_dir',
+                visible: $wd_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$wind_dir',
+                visible: $wd_bool,
+            }
+        },
+        // wind gust speed
+        "windGust" : {
+            fieldDef : Config.fieldDefaults.windGust,
+            axis : 'windSpeedAxis',
+            stats : [meso.Stat.max],
+            highstockSeriesOptions : {
+                color: '$wind_gust',
+                //lineWidth: 0, // will appear on mouse hover
+                visible: $wg_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$wind_gust',
+                clip: false,
+                visible: $wg_bool,
+            }
+        },
+        // wind gust dir
+        "windGustDir" : {
+            fieldDef : Config.fieldDefaults.windGustDir,
+            axis : 'windDirAxis',
+            highstockSeriesOptions : {
+                color: '$wind_gustdir',
+                dashStyle: 'ShortDashDot',
+                lineWidth: 0, // will appear on mouse hover
+                visible: $wgd_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$wind_gustdir',
+                visible: $wgd_bool,
+            }
+        },
+        #if $davis_dayrain
+        // day rain // disabled as it screws with the flag display when 'visible: false' on everything else
+        "dayRain" : {
+            fieldDef : Config.fieldDefaults.dayRain,
+            axis : 'rainAxis',
+            highstockSeriesOptions : {
+                color: '$day_rain',
+                visible: $drn_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$day_rain',
+                visible: $drn_bool,
+            }
+        },
+        #end if
+        // rain
+        "rain" : {
+            fieldDef : Config.fieldDefaults.rain,
+            axis : 'rainAxis',
+            highstockSeriesOptions : {
+                type : 'column',
+                width: '1',
+                color: '$r_ain',
+                visible: $rn_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$r_ain',
+                visible: $rn_bool,
+            }
+        },
+        // rain rate
+        "rainRate" : {
+            fieldDef : Config.fieldDefaults.rainRate,
+            axis : 'rainRateAxis',
+            stats : [meso.Stat.max],
+            highstockSeriesOptions : {
+                color: '$rain_rate',
+                visible: $rnr_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$rain_rate',
+                clip: false,
+                visible: $rnr_bool,
+            }
+        },
+        // out humidity
+        "outHumidity" : {
+            fieldDef : Config.fieldDefaults.outHumidity,
+            axis : 'humidityAxis',
+            stats : [meso.Stat.min, meso.Stat.max],
+            highstockSeriesOptions : {
+                color: '$out_humidity',
+                visible: $outh_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$out_humidity',
+                clip: false,
+                visible: $outh_bool,
+            }
+        },
+        // in humidity
+        "inHumidity" : {
+            fieldDef : Config.fieldDefaults.inHumidity,
+            axis : 'humidityAxis',
+            stats : [meso.Stat.min, meso.Stat.max],
+            highstockSeriesOptions : {
+                color: '$in_humidity',
+                visible: $inh_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$in_humidity',
+                clip: false,
+                visible: $inh_bool,
+            }
+        }
+    };
+
+    // RawChart configuration
+    // Displays "raw"/LOOP data.
+    Config.rawChartOptions = {
+        aggregateDataProvider : Config.rawDataProvider,
+        statsDataProvider: Config.rawStatsDataProvider,
+        // the x-axis to use
+        xAxis : meso.Util.applyDefaults( {
+            highstockAxisOptions : {
+                // have to set this otherwise the range selector buttons won't be enabled initially
+                minRange : 2*1000 // 2 seconds
+            }
+        }, Config.chartDefaults.xAxes.dateTime ),
+        // the y-axis to display
+        yAxes : [
+            Config.chartDefaults.yAxes.temp,
+            Config.chartDefaults.yAxes.barometer,
+            Config.chartDefaults.yAxes.windspeed,
+            Config.chartDefaults.yAxes.winddir,
+            Config.chartDefaults.yAxes.rain,
+            Config.chartDefaults.yAxes.rainrate,
+            Config.chartDefaults.yAxes.humidity,
+        ],
+        // the data to display (note: the axis of any series listed here must also be included as a y-axis)
+        series : [
+            Config.chartDefaults.series.outTemp,
+            Config.chartDefaults.series.inTemp,
+            Config.chartDefaults.series.heatindex,
+            Config.chartDefaults.series.windchill,
+            Config.chartDefaults.series.dewpoint,
+            Config.chartDefaults.series.barometer,
+            Config.chartDefaults.series.windSpeed,
+            Config.chartDefaults.series.windDir,
+            // The following line is applicable to a Davis station. If you have one you set to true in skin.conf.
+          #if $davis_dayrain
+            Config.chartDefaults.series.dayRain,
+          #end if
+            Config.chartDefaults.series.rain,
+            Config.chartDefaults.series.rainRate,
+            Config.chartDefaults.series.outHumidity,
+            Config.chartDefaults.series.inHumidity,
+        ],
+        // see http://api.highcharts.com/highstock
+        highstockChartOptions : {
+            chart : {
+                renderTo: 'charts-container',
+            },
+            legend : {
+                enabled: true,
+                borderWidth: 0
+            },
+            rangeSelector : {
+                enabled: true,
+                selected : 6,
+                buttons: [{
+                    type: 'minute',
+                    count: 15,
+                    text: '15m'
+                }, {
+                    type: 'hour',
+                    count: 1,
+                    text: '1h'
+                }, {
+                    type: 'hour',
+                    count: 3,
+                    text: '3h'
+                }, {
+                    type: 'hour',
+                    count: 6,
+                    text: '6h'
+                }, {
+                    type: 'hour',
+                    count: 12,
+                    text: '12h'
+                }, {
+                    type: 'day',
+                    count: 1,
+                    text: '24h'
+                }, {
+                    type: 'all',
+                    text: 'All'
+                }],
+                inputDateFormat : "%l:%M:%S%P",
+                inputEditDateFormat : "%l:%M:%S%P",
+            }
+        }
+    };
+
+    // RealTimeChart configuration
+    // Displays "raw"/LOOP data updated in real-time.
+    Config.realTimeChartOptions = {
+        aggregateDataProvider : Config.rawDataProvider,
+        realTimeDataProvider: Config.realTimeDataProvider,
+        statsDataProvider: Config.rawStatsDataProvider,
+        // the x-axis to use
+        xAxis : Config.chartDefaults.xAxes.dateTime,
+        // the y-axis to display
+        yAxes : [
+            Config.chartDefaults.yAxes.temp,
+            Config.chartDefaults.yAxes.barometer,
+            Config.chartDefaults.yAxes.windspeed,
+            Config.chartDefaults.yAxes.winddir,
+            Config.chartDefaults.yAxes.rain,
+            Config.chartDefaults.yAxes.rainrate,
+            Config.chartDefaults.yAxes.humidity,
+        ],
+        // the data to display (note: the axis of any series listed here must also be included as a y-axis)
+        series : [
+            Config.chartDefaults.series.outTemp,
+            Config.chartDefaults.series.inTemp,
+            Config.chartDefaults.series.heatindex,
+            Config.chartDefaults.series.windchill,
+            Config.chartDefaults.series.dewpoint,
+            Config.chartDefaults.series.barometer,
+            Config.chartDefaults.series.windSpeed,
+            Config.chartDefaults.series.windDir,
+            // The following line is applicable to a Davis station. If you have one you set to true in skin.conf.
+          #if $davis_dayrain
+            Config.chartDefaults.series.dayRain,
+          #end if
+            Config.chartDefaults.series.rain,
+            Config.chartDefaults.series.rainRate,
+            Config.chartDefaults.series.outHumidity,
+            Config.chartDefaults.series.inHumidity,
+        ],
+        // see http://api.highcharts.com/highstock
+        highstockChartOptions : {
+            chart : {
+                renderTo: 'charts-container',
+                minRange: 120000 // 2 minutes
+            },
+            legend : {
+                enabled: true,
+                borderWidth: 0
+            },
+            rangeSelector : {
+                enabled: true,
+                selected : 3,
+                buttons: [{
+                    type: 'minute',
+                    count: 2,
+                    text: '2m'
+                }, {
+                    type: 'minute',
+                    count: 5,
+                    text: '5m'
+                }, {
+                    type: 'minute',
+                    count: 10,
+                    text: '10m'
+                }, {
+                    type: 'all',
+                    text: '20m'
+                }],
+                inputDateFormat : "%l:%M:%S%P",
+                inputEditDateFormat : "%l:%M:%S%P"
+            }
+        }
+    };
+
+    // ArchiveChart configuration
+    // Displays archive data.
+    Config.archiveChartOptions = {
+        aggregateDataProvider: Config.archiveDataProvider,
+        statsDataProvider: Config.archiveStatsDataProvider,
+        // the max range to fetch stats for, tweak as needed, or remove for no limit
+        maxStatRange: 120 * 86400000, // 120 days
+        xAxis : meso.Util.applyDefaults( {
+            highstockAxisOptions : {
+                // have to set this otherwise the range selector buttons won't be enabled initially
+                minRange : 5*60*1000 // 5 minutes
+            }
+        }, Config.chartDefaults.xAxes.dateTime ),
+        yAxes : [
+            Config.chartDefaults.yAxes.temp,
+            Config.chartDefaults.yAxes.barometer,
+            Config.chartDefaults.yAxes.windspeed,
+            Config.chartDefaults.yAxes.winddir,
+            Config.chartDefaults.yAxes.rain,
+            Config.chartDefaults.yAxes.rainrate,
+            Config.chartDefaults.yAxes.humidity,
+        ],
+        // the data to display (note: the axis of any series listed here must also be included as a y-axis)
+        series : [
+            Config.chartDefaults.series.outTemp,
+            Config.chartDefaults.series.inTemp,
+            Config.chartDefaults.series.heatindex,
+            Config.chartDefaults.series.windchill,
+            Config.chartDefaults.series.dewpoint,
+            Config.chartDefaults.series.barometer,
+            Config.chartDefaults.series.windSpeed,
+            Config.chartDefaults.series.windDir,
+            Config.chartDefaults.series.windGust,
+            Config.chartDefaults.series.windGustDir,
+            Config.chartDefaults.series.rain,
+            Config.chartDefaults.series.rainRate,
+            Config.chartDefaults.series.outHumidity,
+            Config.chartDefaults.series.inHumidity,
+        ],
+        // see http://api.highcharts.com/highstock
+        highstockChartOptions : {
+            chart : {
+                renderTo: 'charts-container',
+            },
+            legend : {
+                enabled: true,
+                borderWidth: 0
+            },
+            rangeSelector : {
+                enabled: true,
+                //selected : 5, // defaults to All
+                selected : 2, // defaults to 1 month for faster initial load
+                buttons: [{
+                    type: 'day',
+                    count: 1,
+                    text: '1d'
+                }, {
+                    type: 'week',
+                    count: 1,
+                    text: '1w'
+                }, {
+                    type: 'month',
+                    count: 1,
+                    text: '1m'
+                }, {
+                    type: 'ytd',
+                    text: 'ytd'
+                }, {
+                    type: 'year',
+                    count: 1,
+                    text: '1y'
+                }, {
+                    type: 'all',
+                    text: 'all'
+                }]
+            }
+        }
+    };
+
+    // console
+    // Displays the latest "raw"/LOOP data fresh off of your station, updated in real-time.
+    Config.consoleOptions = {
+        containerId : "mesowx-console",
+        realTimeDataProvider : Config.realTimeDataProvider,
+        // the fields to display
+        // The 'id' property is used to alias the field so that it can be referenced elsewhere by it, it defaults to the fieldId
+        // By default, the data value is rendered into the HTML element with the class name convention: '<id>-value' (e.g. 'outTemp-value') and
+        // will visually indicate whether the value went up or down since the last update. This can be changed or disabled by specifying a
+        // different 'valueDisplayManagerFactory' such as the meso.MesoConsole.SimpleValueDisplayManagerFactory which will only update the
+        // value without any other change indication. If present, the field's unit suffix label will be rendered into the HTML element with
+        // the class name convetion: '<id>-unit' (eg. 'outTemp-unit'). A function to format the value can be optionally specified as seen below.
+        fields: [
+            { fieldDef: Config.fieldDefaults.outTemp, id: 'outTemp' },
+            { fieldDef: Config.fieldDefaults.dewpoint },
+          #if $console_intemp
+            { fieldDef: Config.fieldDefaults.inTemp, },
+          #end if
+          #if $console_inhum
+            { fieldDef: Config.fieldDefaults.inHumidity },
+          #end if
+          #if $davis_dayrain
+            { fieldDef: Config.fieldDefaults.dayRain },
+          #end if
+            { fieldDef: Config.fieldDefaults.rainRate, id: 'rainRate' },
+            { fieldDef: Config.fieldDefaults.outHumidity },
+            { fieldDef: Config.fieldDefaults.heatindex, id: 'heatindex' },
+            { fieldDef: Config.fieldDefaults.windchill, id: 'windchill' },
+            { fieldDef: Config.fieldDefaults.barometer },
+            /*{ fieldDef: Config.fieldDefaults.windSpeed },
+            {
+                fieldDef: Config.fieldDefaults.windDir,
+                valueFormatter : Config.defaultDegreeToCardinalTextConverter,
+                valueDisplayManagerFactory: meso.MesoConsole.SimpleValueDisplayManagerFactory
+            },*/
+            {
+                fieldDef: Config.fieldDefaults.dateTime,
+                valueFormatter : function(value) {
+                    // see http://api.highcharts.com/highstock#Highcharts.dateFormat
+                    return Highcharts.dateFormat('%I:%M:%S %P', value);
+                },
+                valueDisplayManagerFactory: meso.MesoConsole.SimpleValueDisplayManagerFactory
+            }
+        ],
+        // the IDs of specific fields for custom functionality (e.g. rainRate will only show when it's raining)
+        // the ID value should reference a field by the 'id' property (or fieldId) defined in the 'fields' list above.
+        rainRateFieldId: 'rainRate',
+        outTempFieldId: 'outTemp',
+        heatIndexFieldId: 'heatindex',
+        windChillFieldId: 'windchill'
+    };
+    // wind compass
+    // Displays a compass to display wind direction along with the wind speed updated in real-time.
+    Config.windCompassOptions = {
+        windCompassConfig : {
+            containerId: 'compass',
+            maxPrevDirs : 6,
+            windDirToCardinalLabelConverterFunction : Config.defaultDegreeToCardinalTextConverter
+        },
+        realTimeDataProvider : Config.realTimeDataProvider,
+        windSpeedFieldDef : Config.fieldDefaults.windSpeed,
+        windDirFieldDef : Config.fieldDefaults.windDir,
+        dateTimeFieldDef : Config.fieldDefaults.dateTime
+    }
+
+    return Config;
+})();

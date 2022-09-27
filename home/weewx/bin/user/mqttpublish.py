@@ -204,7 +204,7 @@ import weedb
 import weewx
 from weewx.engine import StdService
 
-VERSION = "0.2.0-rc01a"
+VERSION = "0.2.0-rc01"
 
 try:
     # Test for new-style weewx logging by trying to import weeutil.logger
@@ -280,6 +280,10 @@ period_timespan = {
     'week': lambda time_stamp: weeutil.weeutil.archiveWeekSpan(time_stamp),
     'month': lambda time_stamp: weeutil.weeutil.archiveMonthSpan(time_stamp),
     'year': lambda time_stamp: weeutil.weeutil.archiveYearSpan(time_stamp),
+    'last10Minutes': lambda time_stamp: TimeSpan(time_stamp, time_stamp - 600),
+    'last20Minutes': lambda time_stamp: TimeSpan(time_stamp, time_stamp - 1200),
+    'last30Minutes': lambda time_stamp: TimeSpan(time_stamp, time_stamp - 1800),
+    'last60Minutes': lambda time_stamp: TimeSpan(time_stamp, time_stamp - 3600),
     'last24hours': lambda time_stamp: TimeSpan(time_stamp, time_stamp - 86400),
     'last7days': lambda time_stamp: TimeSpan(time_stamp,
                                                 time.mktime((datetime.date.fromtimestamp(time_stamp) - \
