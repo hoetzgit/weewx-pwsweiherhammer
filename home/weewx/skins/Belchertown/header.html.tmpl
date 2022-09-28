@@ -148,14 +148,16 @@
         #if $page == "reports" and os.path.exists("history.inc")
         <link rel="stylesheet" href="$relative_url/libs/historygenerator/css/live.css" type="text/css" media="all"/>
         #end if
-        #if $custom_css_exists
+        #if $custom_css_min_exists
+        <link rel="stylesheet" href="$relative_url/css/custom.min.css?ver=#echo int( time.time() ) #" type="text/css" media="all" id="belchertownCustomStyle"/>
+        #else if $custom_css_exists
         <link rel="stylesheet" href="$relative_url/css/custom.css?ver=#echo int( time.time() ) #" type="text/css" media="all" id="belchertownCustomStyle"/>
         #end if
         #if $page == "kiosk"
-        <link rel="stylesheet" href="$relative_url/css/kiosk.css?ver=#echo int( time.time() ) #" type="text/css" media="all" id="belchertownKioskStyle"/>
+        <link rel="stylesheet" href="$relative_url/css/kiosk.min.css?ver=#echo int( time.time() ) #" type="text/css" media="all" id="belchertownKioskStyle"/>
         #end if
         #if $page == "console"
-        <link rel="stylesheet" href="$relative_url/css/console.css?ver=#echo int( time.time() ) #" type="text/css" media="all" id="belchertownConsoleStyle"/>
+        <link rel="stylesheet" href="$relative_url/css/console.min.css?ver=#echo int( time.time() ) #" type="text/css" media="all" id="belchertownConsoleStyle"/>
         #end if
         
         <script type="text/javascript" src="$relative_url/libs/jquery/3.6.1/jquery.min.js"></script>

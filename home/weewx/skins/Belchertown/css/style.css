@@ -2295,11 +2295,13 @@ input:checked + .slider:before {
 	}
 	
 	/* Hide table headers (but not display: none;, for accessibility) */
+/*
 	thead tr { 
 		position: absolute;
 		top: -9999px;
 		left: -9999px;
 	}
+*/
 	
 	tr { 
 		border: 0px;

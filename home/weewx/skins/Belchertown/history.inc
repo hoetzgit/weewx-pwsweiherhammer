@@ -9,7 +9,7 @@
         $min_temp_table
     </div>
 </div>
-<div class="row" style="margin-top:15px;">
+<div class="row" style="margin-top:20px;">
     <div class="col-md-12 history-headline">
         $obs.label.history_avg_temp_title
     </div>  
@@ -17,7 +17,7 @@
         $avg_temp_table
     </div>
 </div>
-<div class="row" style="margin-top:15px;">
+<div class="row" style="margin-top:20px;">
     <div class="col-md-12 history-headline">
         $obs.label.history_max_temp_title
     </div>  
@@ -25,7 +25,7 @@
         $max_temp_table
     </div>
 </div>
-<div class="row" style="margin-top:15px;">
+<div class="row" style="margin-top:20px;">
     <div class="col-md-12 history-headline">
         $obs.label.history_rain_title
     </div>  
@@ -33,7 +33,7 @@
         $rain_table
     </div>
 </div>
-<div class="row" style="margin-top:15px;">
+<div class="row" style="margin-top:20px;">
     <div class="col-md-12 history-headline">
         $obs.label.history_rain_days_title
     </div>  
@@ -41,7 +41,7 @@
         $rain_days_table
     </div>
 </div>
-<div class="row" style="margin-top:15px;">
+<div class="row" style="margin-top:20px;">
     <div class="col-md-12 history-headline">
         $obs.label.history_lightning_days_title
     </div>  

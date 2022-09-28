@@ -78,6 +78,34 @@ Adding the section below to your skins.conf file will create these new tags:
         maxvalues = 25, 50, 75, 100, 150, 1000
         colours = "#E0F8E0", "#A9F5A9", "#58FA58", "#2EFE2E", "#01DF01", "#01DF01"
         fontColours = "#000000", "#000000", "#000000", "#000000", "#000000", "#000000"
+
+############################################################################################
+#
+# Modifications:
+#
+# 2022-09-28 Henry Ott NOAA Table, set Head cells css class to 'month'
+# 2022-09-28 Henry Ott NOAA Table, new options
+
+    [[NOAA]]
+        new:
+        # option "year_cell_format"
+        # Uses Python datetime convention (docs.python.org/2/library/datetime.html):
+        # %Y = YYYY, %y = YY etc.
+        # default is %Y
+        year_cell_format = %Y
+        # option "month_cell_format"
+        # Uses Python datetime convention (docs.python.org/2/library/datetime.html):
+        # %Y = YYYY, %y = YY, %m = MM, etc. etc.
+        # special value 'monthname', to use monthnames instead of Python datetime convention formats
+        # ex: month_cell_format = monthnames
+        #     2022 Jan Feb Mar Apr May Jun Jul - - -
+        # default is %m-%y
+        month_cell_format = %m-%y
+        # option "table_header"
+        # True or False
+        # if you are using "month_cell_format = monthnames", set it to False
+        # default is True
+        table_header = True
 """
 
 from datetime import datetime
@@ -243,6 +271,8 @@ class MyXSearch(SearchList):
         cellColours = self._parseTableOptions(table_options, table_name)
 
         summary_column = weeutil.weeutil.to_bool(table_options.get("summary_column", False))
+        # 2022-09-28 Henry Ott add table_header
+        table_header = weeutil.weeutil.to_bool(table_options.get("table_header", True))
 
         if None is cellColours:
             # Give up
@@ -312,24 +342,28 @@ class MyXSearch(SearchList):
                 format_string = reading.formatter.unit_format_dict[unit_type]
 
         htmlText = '<table class="table historyTable text-center">\n'
-        htmlText += '    <thead><tr>\n'
-        htmlText += '        <th class="head">'
-        #if NOAA is False:
-        #    htmlText += " border-right "
-        htmlText += '%s</th>\n' % unit_formatted
+        if table_header:
+            htmlText += '    <thead><tr>\n'
+            htmlText += '        <th class="head">'
+            #if NOAA is False:
+            #    htmlText += " border-right "
+            htmlText += '%s</th>\n' % unit_formatted
 
-        for mon in table_options.get('monthnames', ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']):
-            htmlText += '        <th class="'
-            if NOAA is False:
+            for mon in table_options.get('monthnames', ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']):
+                htmlText += '        <th class="'
+                # 2022-09-28 Henry Ott the next two lines commented out
+                #if NOAA is False:
+                #    htmlText += "month"
                 htmlText += "month"
-            htmlText += '">%s</th>\n' % mon
+                htmlText += '">%s</th>\n' % mon
 
+            if summary_column:
+                if 'summary_heading' in table_options:
+                    htmlText += '        <th class="year">%s</th>\n' % table_options['summary_heading']
 
-        if summary_column:
-            if 'summary_heading' in table_options:
-                htmlText += '        <th class="year">%s</th>\n' % table_options['summary_heading']
+            htmlText += "    </tr></thead>\n"
 
-        htmlText += "    </tr></thead><tbody>\n"
+        htmlText += "    <tbody>\n"
 
         for year in table_stats.years():
             year_number = datetime.fromtimestamp(year.timespan[0]).year
@@ -419,13 +453,31 @@ class MyXSearch(SearchList):
         return cellText
 
     def _NoaaCell(self, dt, table_options):
+        # 2022-09-28 Henry Ott using option 'month_cell_format'
+        if 'month_cell_format' in table_options:
+            month_format = table_options['month_cell_format']
+        else:
+            month_format = '%m-%y'
+
+        if month_format.lower() == 'monthnames':
+            cell_content = table_options['monthnames'][int(dt.strftime('%m')) - 1]
+        else:
+            cell_content = dt.strftime(month_format)
+
         cellText = '<td class="noaa"><a href="%s" class="btn btn-sm btn-light primaryLight btnNOAA">%s</a> </td>\n' % \
-                   (dt.strftime(table_options['month_filename']), dt.strftime("%m-%y"))
+                   (dt.strftime(table_options['month_filename']), cell_content)
 
         return cellText
 
     def _NoaaYear(self, dt, table_options):
+        # 2022-09-28 Henry Ott using option 'year_cell_format'
+        if 'year_cell_format' in table_options:
+
+            year_format = table_options['year_cell_format']
+        else:
+            year_format = '%Y'
+
         cellText = '<th class="noaa"><a href="%s" class="btn btn-sm btn-primary primaryLive btnNOAA">%s</a></th>\n' % \
-                   (dt.strftime(table_options['year_filename']), dt.strftime("%Y"))
+                   (dt.strftime(table_options['year_filename']), dt.strftime(year_format))
 
         return cellText

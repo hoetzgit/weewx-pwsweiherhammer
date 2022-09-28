@@ -2113,8 +2113,10 @@ class getData(SearchList):
 
         # Include custom.css if it exists in the HTML_ROOT folder
         custom_css_file = html_root + "/css/custom.css"
+        custom_css_min_file = html_root + "/css/custom.min.css"
         # Determine if the file exists
         custom_css_exists = os.path.isfile(custom_css_file)
+        custom_css_min_exists = os.path.isfile(custom_css_min_file)
 
         # Build the search list with the new values
         search_list_extension = {
@@ -2181,6 +2183,7 @@ class getData(SearchList):
             "earthquake_bearing_raw": eqbearing_raw,
             "social_html": social_html,
             "custom_css_exists": custom_css_exists,
+            "custom_css_min_exists": custom_css_min_exists,
             "aqi": aqi,
             "aqi_category": aqi_category,
             "aqi_location": aqi_location,
