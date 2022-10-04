@@ -1,7 +1,4 @@
 #encoding UTF-8
-
-<!-- Start about.inc -->
-
 <div class="entry-content about-outer" itemprop="text">
 
     <!-- Einleitung -->
@@ -279,7 +276,7 @@
                 <li>Erweiterung <a href="https://www.highcharts.com" target="_blank" rel="noreferrer">HighCharts</a> zur Erstellung von Charts auf dieser Webseite</li>
                 <li>generic <a href="https://loxwiki.atlassian.net/wiki/spaces/LOXBERRY/pages/1252524456/FOSHKplugin+-+generic+version" target="_blank" rel="noreferrer">FOSHKplugin</a> zum Empfang der GW1100 Daten und deren Weiterleitung per HTTP zu WeeWX und anderen Rechnern, Version: 0.0.9</li>
                 <li>WeeWX Treiber <a href="https://github.com/matthewwall/weewx-interceptor" target="_blank" rel="noreferrer">WeeWX-Interceptor</a> (ecowitt-client) zum Empfang der Daten von FOSHKplugin per HTTP, Version: 0.53, an eigene Sensoren angepasst</li>
-                <li>WeeWX Service <a href="https://github.com/bellrichm/WeeWX-MQTTSubscribe" target="_blank" rel="noreferrer">WeeWX-MQTTSubscribe</a> zum Empfang von zusätzlichen Daten (Solar Station, Wetter API's u.s.w.) per MQTT, Version: 2.1.0</li>
+                <li>WeeWX Service <a href="https://github.com/bellrichm/WeeWX-MQTTSubscribe" target="_blank" rel="noreferrer">WeeWX-MQTTSubscribe</a> zum Empfang von zusätzlichen Daten (Solar Station, Wetter API's u.s.w.) per MQTT, Version: 2.2.2</li>
                 <li>WeeWX Service <a href="https://github.com/bellrichm/weewx-mqttpublish" target="_blank" rel="noreferrer">weewx-mqttpublish</a> zum Upload der WeeWX Daten per MQTT in den MQTT Broker, Version: 0.2.0-rc01</li>
                 <li>Erweiterungen <a href="https://github.com/roe-dl/weewx-DWD" target="_blank" rel="noreferrer">weewx-DWD</a>, um Daten vom DWD und dem UBA zu laden und aufzubereiten (zum Experimentieren mit anderen Wetter-Anbietern angepasst)</li>
                 <li>Erweiterung <a href="https://github.com/roe-dl/weewx-GTS" target="_blank" rel="noreferrer">weewx-GTS</a>, generiert die <a href="https://de.wikipedia.org/wiki/Gr%C3%BCnlandtemperatursumme" target="_blank" rel="noreferrer">Grünlandtemperatursumme</a> und viele weitere Daten, Version: 0.8a4</li>
@@ -344,7 +341,7 @@
                 <li>Longitude: $station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]</li>
                 <li>H&ouml;he ca.: $station.altitude</li>
                 <li>Konsole Software EasyWeather Version: 1.6.4</li>
-                <li>Ecowitt GW1100 Gateway Software Version: 2.1.8</li>
+                <li>Ecowitt GW1100 Gateway Software Version: 2.1.9</li>
                 <li>Backend- und WebServer: Diverse virtuelle VMware ESXi basierende Rechner mit Ubuntu 22.04.1 LTS, Webseite self hosted</li>
                 <li>WeeWX Server uptime: $station.os_uptime</li>
                 <li>WeeWX Service uptime: $station.uptime</li>
@@ -396,7 +393,4 @@
             </ul>
         </div>
     </div>
-
 </div>
-
-<!-- Ende about.inc -->

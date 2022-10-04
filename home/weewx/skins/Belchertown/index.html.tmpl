@@ -317,20 +317,20 @@
                             <div class="row col-sm-12 obs-aqi-index">
                                  #if $current.pws_aqi_category.has_data
                                  #if $current.pws_aqi_category.raw == 0.0
-                                 $obs.label.pws_aqi_long<span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_very_good">$obs.label.pws_aqi_very_good</span>
+                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_very_good">$obs.label.pws_aqi_very_good</span>
                                  #else if $current.pws_aqi_category.raw == 1.0
-                                 $obs.label.pws_aqi_long<span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_good">$obs.label.pws_aqi_good</span>
+                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_good">$obs.label.pws_aqi_good</span>
                                  #else if $current.pws_aqi_category.raw == 2.0
-                                 $obs.label.pws_aqi_long<span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_moderate">$obs.label.pws_aqi_moderate</span>
+                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_moderate">$obs.label.pws_aqi_moderate</span>
                                  #else if $current.pws_aqi_category.raw == 3.0
-                                 $obs.label.pws_aqi_long<span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_poor">$obs.label.pws_aqi_poor</span>
+                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_poor">$obs.label.pws_aqi_poor</span>
                                  #else if $current.pws_aqi_category.raw == 4.0
-                                 $obs.label.pws_aqi_long<span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_very_poor">$obs.label.pws_aqi_very_poor</span>
+                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_very_poor">$obs.label.pws_aqi_very_poor</span>
                                  #else
-                                 $obs.label.pws_aqi_long<span class="pws-aqi-category">$obs.label.pws_aqi_unknown</span>
+                                 $obs.label.pws_aqi_long <span class="pws-aqi-category">$obs.label.pws_aqi_unknown</span>
                                  #end if
                                  #else
-                                 $obs.label.pws_aqi_long<span class="pws-aqi-category">$obs.label.pws_aqi_unknown</span>
+                                 $obs.label.pws_aqi_long <span class="pws-aqi-category">$obs.label.pws_aqi_unknown</span>
                                  #end if
                             </div>
                             <div class="row col-sm-12 obs-aqi-values">
@@ -600,7 +600,7 @@
                         <!-- Today Snapshot Stats -->
                         <div class="row">
                             <div class="snapshot-records-text">
-                                $obs.label.weather_snapshots <a href="$relative_url/records">$obs.label.weather_snapshots_link</a>
+                                $obs.label.weather_snapshots <a href="$relative_url/extreme">$obs.label.weather_snapshots_link</a>
                             </div>
                             
                             <div class="col-sm-6 stn-quick-stats">

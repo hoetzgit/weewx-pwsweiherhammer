@@ -1,4 +1,6 @@
+#errorCatcher Echo
 #encoding UTF-8
+<!-- Begin noaa.inc -->
 ##
 ##    <script>        
 ##        jQuery(document).ready(function() {
@@ -35,23 +37,20 @@
 ##        }
 ##    </script>
 ##
-<!-- Start noaa.inc -->
-<div class="row" style="margin-top:25px;">
-    <div class="col-md-12 history-headline">
-        $obs.label.history_NOAA_title
-    </div>  
-    <div class="col-md-12 table-responsive" style="margin-top:10px;">
+<div class="row" style="margin-top:30px;">
+    <div class="col-sm-12 noaa-headline">$obs.label.history_NOAA_title</div>
+    <div class="col-xs-12 history-table-noaa-container" style="margin-top:10px;">
         $NOAA_table
     </div>
 </div>
 ##<div class="row">
-##    <div class="col-md-12" style="margin-top:10px;">
+##    <div class="col-sm-12" style="margin-top:10px;">
 ##        <a href="#" class="noaa_direct_link">$obs.label.reports_click_here_link</a> $obs.label.reports_view_more
 ##    </div>
 ##</div>
 ##<div class="row">
-##    <div class="col-md-12 noaa_report_container">
+##    <div class="col-xs-12 noaa_report_container">
 ##        <pre id="noaa_contents"></pre>
 ##    </div>
 ##</div>
-<!-- Ende noaa_reports -->
+<!-- End noaa.inc -->

@@ -1,7 +1,5 @@
 #encoding UTF-8
-<!-- Start imprint.inc -->
 <div class="entry-content about-outer" itemprop="text">
-
     <!-- Impressum -->
     <div class="row"  style="padding-top:15px;">
         <div class="col-sm-12">
@@ -26,6 +24,4 @@
             <p>Quelle: <a href="https://www.e-recht24.de">e-recht24.de</a></p>
         </div>
     </div>
-
 </div>
-<!-- Ende imprint.inc -->

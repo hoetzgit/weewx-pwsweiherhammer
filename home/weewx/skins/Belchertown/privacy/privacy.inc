@@ -1,7 +1,5 @@
 #encoding UTF-8
-<!-- Start privacy.inc -->
 <div class="entry-content about-outer" itemprop="text">
-
     <!-- Datenschutz -->
     <div class="row"  style="padding-top:15px;">
         <div class="col-sm-12">
@@ -73,6 +71,4 @@
             <p>Quelle: <a href="https://www.e-recht24.de">https://www.e-recht24.de</a></p>
         </div>
     </div>
-
 </div>
-<!-- Ende privacy.inc -->

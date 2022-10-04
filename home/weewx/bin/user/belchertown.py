@@ -758,6 +758,222 @@ class getData(SearchList):
                 locale.format("%.1f", 0),
             ]
 
+        # Lightning Strike Count lookups
+        # Find the group_name for lightning_strike_count in database
+        # "lightning_strike_count" for variable names abbreviated with "lsc"
+        lsc_unit = converter.group_unit_dict["group_count"]
+
+        # Find the group_name for lightning_strike_count in the skin.conf
+        skin_lsc_unit = self.generator.converter.group_unit_dict["group_count"]
+
+        # Find the number of decimals to round the result based on the skin.conf
+        lsc_round = self.generator.skin_dict["Units"]["StringFormats"].get(
+            skin_lsc_unit, "%.0f"
+        )
+
+        # Thunderstormiest Day
+        thunderstormiest_day_query = wx_manager.getSql(
+            "SELECT dateTime, sum FROM archive_day_lightning_strike_count WHERE dateTime >= %s ORDER BY sum DESC LIMIT 1;"
+            % year_start_epoch
+        )
+        if thunderstormiest_day_query is not None:
+            thunderstormiest_day_tuple = (thunderstormiest_day_query[1], lsc_unit, "group_count")
+            thunderstormiest_day_converted = (
+                lsc_round % self.generator.converter.convert(thunderstormiest_day_tuple)[0]
+            )
+            thunderstormiest_day = [
+                thunderstormiest_day_query[0],
+                locale.format("%g", float(thunderstormiest_day_converted)),
+            ]
+        else:
+            thunderstormiest_day = [calendar.timegm(time.gmtime()), locale.format("%.0f", 0)]
+
+        # All Time Thunderstormiest Day
+        at_thunderstormiest_day_query = wx_manager.getSql(
+            "SELECT dateTime, sum FROM archive_day_lightning_strike_count ORDER BY sum DESC LIMIT 1"
+        )
+        at_thunderstormiest_day_tuple = (at_thunderstormiest_day_query[1], lsc_unit, "group_count")
+        at_thunderstormiest_day_converted = (
+            lsc_round % self.generator.converter.convert(at_thunderstormiest_day_tuple)[0]
+        )
+        at_thunderstormiest_day = [
+            at_thunderstormiest_day_query[0],
+            locale.format("%g", float(at_thunderstormiest_day_converted)),
+        ]
+
+        # Find what kind of database we're working with and specify the
+        # correctly tailored SQL Query for each type of database
+        data_binding = self.generator.config_dict["StdArchive"]["data_binding"]
+        database = self.generator.config_dict["DataBindings"][data_binding]["database"]
+        database_type = self.generator.config_dict["Databases"][database][
+            "database_type"
+        ]
+        driver = self.generator.config_dict["DatabaseTypes"][database_type]["driver"]
+        if driver == "weedb.sqlite":
+            year_thunderstormiest_month_sql = (
+                'SELECT strftime("%%m", datetime(dateTime, "unixepoch", "localtime")) as month, SUM( sum ) as total FROM archive_day_lightning_strike_count WHERE strftime("%%Y", datetime(dateTime, "unixepoch", "localtime")) = "%s" GROUP BY month ORDER BY total DESC LIMIT 1;'
+                % time.strftime("%Y", time.localtime(time.time()))
+            )
+            at_thunderstormiest_month_sql = 'SELECT strftime("%m", datetime(dateTime, "unixepoch", "localtime")) as month, strftime("%Y", datetime(dateTime, "unixepoch", "localtime")) as year, SUM( sum ) as total FROM archive_day_lightning_strike_count GROUP BY month, year ORDER BY total DESC LIMIT 1;'
+            year_lsc_data_sql = (
+                'SELECT dateTime, sum FROM archive_day_lightning_strike_count WHERE strftime("%%Y", datetime(dateTime, "unixepoch", "localtime")) = "%s" AND count > 0;'
+                % time.strftime("%Y", time.localtime(time.time()))
+            )
+            # The all stats from http://www.weewx.com/docs/customizing.htm
+            # doesn't seem to calculate "Total Rainfall for" all time stat
+            # correctly.
+            at_thunderstormiest_year_sql = 'SELECT strftime("%Y", datetime(dateTime, "unixepoch", "localtime")) as year, SUM( sum ) as total FROM archive_day_lightning_strike_count GROUP BY year ORDER BY total DESC LIMIT 1;'
+        elif driver == "weedb.mysql":
+            year_thunderstormiest_month_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%m" ) AS month, ROUND( SUM( sum ), 2 ) AS total FROM archive_day_lightning_strike_count WHERE year( FROM_UNIXTIME( dateTime ) ) = "{0}" GROUP BY month ORDER BY total DESC LIMIT 1;'.format(
+                time.strftime("%Y", time.localtime(time.time()))
+            )  # Why does this one require .format() but the other's don't?
+            at_thunderstormiest_month_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%m" ) AS month, FROM_UNIXTIME( dateTime, "%%Y" ) AS year, ROUND( SUM( sum ), 2 ) AS total FROM archive_day_lightning_strike_count GROUP BY month, year ORDER BY total DESC LIMIT 1;'
+            year_lsc_data_sql = (
+                'SELECT dateTime, ROUND( sum, 2 ) FROM archive_day_lightning_strike_count WHERE year( FROM_UNIXTIME( dateTime ) ) = "%s" AND count > 0;'
+                % time.strftime("%Y", time.localtime(time.time()))
+            )
+            # The all stats from http://www.weewx.com/docs/customizing.htm
+            # doesn't seem to calculate "Total Rainfall for" all time stat
+            # correctly.
+            at_thunderstormiest_year_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%Y" ) AS year, ROUND( SUM( sum ), 2 ) AS total FROM archive_day_lightning_strike_count GROUP BY year ORDER BY total DESC LIMIT 1;'
+
+        # Thunderstormiest month
+        year_thunderstormiest_month_query = wx_manager.getSql(year_thunderstormiest_month_sql)
+        if year_thunderstormiest_month_query is not None:
+            year_thunderstormiest_month_tuple = (
+                year_thunderstormiest_month_query[1],
+                lsc_unit,
+                "group_count",
+            )
+            year_thunderstormiest_month_converted = (
+                lsc_round
+                % self.generator.converter.convert(year_thunderstormiest_month_tuple)[0]
+            )
+            year_thunderstormiest_month_name = calendar.month_name[
+                int(year_thunderstormiest_month_query[0])
+            ]
+            year_thunderstormiest_month = [
+                year_thunderstormiest_month_name,
+                locale.format("%g", float(year_thunderstormiest_month_converted)),
+            ]
+        else:
+            year_thunderstormiest_month = ["N/A", 0.0]
+
+        # All time thunderstormiest month
+        at_thunderstormiest_month_query = wx_manager.getSql(at_thunderstormiest_month_sql)
+        at_thunderstormiest_month_tuple = (at_thunderstormiest_month_query[2], lsc_unit, "group_count")
+        at_thunderstormiest_month_converted = (
+            lsc_round % self.generator.converter.convert(at_thunderstormiest_month_tuple)[0]
+        )
+        at_thunderstormiest_month_name = calendar.month_name[int(at_thunderstormiest_month_query[0])]
+        at_thunderstormiest_month = [
+            "%s, %s" % (at_thunderstormiest_month_name, at_thunderstormiest_month_query[1]),
+            locale.format("%g", float(at_thunderstormiest_month_converted)),
+        ]
+
+        # All time thunderstormiest year
+        at_thunderstormiest_year_query = wx_manager.getSql(at_thunderstormiest_year_sql)
+        at_thunderstormiest_year_tuple = (
+            at_thunderstormiest_year_query[1],
+            lsc_unit,
+            "group_count",
+        )
+        at_thunderstormiest_year_converted = (
+            lsc_round % self.generator.converter.convert(at_thunderstormiest_year_tuple)[0]
+        )
+        at_thunderstormiest_year = [
+            at_thunderstormiest_year_query[0],
+            locale.format("%g", float(at_thunderstormiest_year_converted)),
+        ]
+
+        # Consecutive days with/without Thunderstorm
+        # dateTime needs to be epoch. Conversion done in the template using #echo
+        year_days_with_lsc_total = 0
+        year_days_without_lsc_total = 0
+        year_days_with_lsc_output = {}
+        year_days_without_lsc_output = {}
+        year_lsc_query = wx_manager.genSql(year_lsc_data_sql)
+        for row in year_lsc_query:
+            # Original MySQL way: CASE WHEN sum!=0 THEN @total+1 ELSE 0 END
+            if row[1] != 0:
+                year_days_with_lsc_total += 1
+            else:
+                year_days_with_lsc_total = 0
+
+            # Original MySQL way: CASE WHEN sum=0 THEN @total+1 ELSE 0 END
+            if row[1] == 0:
+                year_days_without_lsc_total += 1
+            else:
+                year_days_without_lsc_total = 0
+
+            year_days_with_lsc_output[row[0]] = year_days_with_lsc_total
+            year_days_without_lsc_output[row[0]] = year_days_without_lsc_total
+
+        if year_days_with_lsc_output:
+            year_days_with_lsc = max(
+                zip(
+                    year_days_with_lsc_output.values(),
+                    year_days_with_lsc_output.keys(),
+                )
+            )
+        else:
+            year_days_with_lsc = [
+                locale.format("%.1f", 0),
+                calendar.timegm(time.gmtime()),
+            ]
+
+        if year_days_without_lsc_output:
+            year_days_without_lsc = max(
+                zip(
+                    year_days_without_lsc_output.values(),
+                    year_days_without_lsc_output.keys(),
+                )
+            )
+        else:
+            year_days_without_lsc = [
+                locale.format("%.1f", 0),
+                calendar.timegm(time.gmtime()),
+            ]
+
+        at_days_with_lsc_total = 0
+        at_days_without_lsc_total = 0
+        at_days_with_lsc_output = {}
+        at_days_without_lsc_output = {}
+        at_lsc_query = wx_manager.genSql(
+            "SELECT dateTime, ROUND( sum, 2 ) FROM archive_day_lightning_strike_count WHERE count > 0;"
+        )
+        for row in at_lsc_query:
+            # Original MySQL way: CASE WHEN sum!=0 THEN @total+1 ELSE 0 END
+            if row[1] != 0:
+                at_days_with_lsc_total += 1
+            else:
+                at_days_with_lsc_total = 0
+
+            # Original MySQL way: CASE WHEN sum=0 THEN @total+1 ELSE 0 END
+            if row[1] == 0:
+                at_days_without_lsc_total += 1
+            else:
+                at_days_without_lsc_total = 0
+
+            at_days_with_lsc_output[row[0]] = at_days_with_lsc_total
+            at_days_without_lsc_output[row[0]] = at_days_without_lsc_total
+
+        if len(at_days_with_lsc_output) > 0:
+            at_days_with_lsc = max(
+                zip(at_days_with_lsc_output.values(), at_days_with_lsc_output.keys())
+            )
+        else:
+            at_days_with_lsc = (0, 0)
+        if len(at_days_without_lsc_output) > 0:
+            at_days_without_lsc = max(
+                zip(
+                    at_days_without_lsc_output.values(),
+                    at_days_without_lsc_output.keys(),
+                )
+            )
+        else:
+            at_days_without_lsc = (0, 0)
+
         # Rain lookups
         # Find the group_name for rain in database
         rain_unit = converter.group_unit_dict["group_rain"]
@@ -2155,6 +2371,15 @@ class getData(SearchList):
             "year_days_without_rain": year_days_without_rain,
             "at_days_with_rain": at_days_with_rain,
             "at_days_without_rain": at_days_without_rain,
+            "thunderstormiest_day": thunderstormiest_day,
+            "at_thunderstormiest_day": at_thunderstormiest_day,
+            "year_thunderstormiest_month": year_thunderstormiest_month,
+            "at_thunderstormiest_month": at_thunderstormiest_month,
+            "at_thunderstormiest_year": at_thunderstormiest_year,
+            "year_days_with_lsc": year_days_with_lsc,
+            "year_days_without_lsc": year_days_without_lsc,
+            "at_days_with_lsc": at_days_with_lsc,
+            "at_days_without_lsc": at_days_without_lsc,
             "windSpeedUnitLabel": windSpeed_unit_label,
             "noaa_header_html": noaa_header_html,
             "default_noaa_file": default_noaa_file,

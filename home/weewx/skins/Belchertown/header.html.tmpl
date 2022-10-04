@@ -45,6 +45,8 @@
         #set $head_title = $obs.label.html_title_imprint
     #else if $page == "privacy"
         #set $head_title = $obs.label.html_title_privacy
+    #else if $page == "extreme"
+        #set $head_title = $obs.label.html_title_extreme
     #else
         #set $head_title = $obs.label.html_title
     #end if
@@ -71,6 +73,8 @@
         #set $head_desc = $obs.label.html_description_imprint
     #else if $page == "privacy"
         #set $head_desc = $obs.label.html_description_privacy
+    #else if $page == "extreme"
+        #set $head_desc = $obs.label.html_description_extreme
     #else
         #set $head_desc = $obs.label.html_description
     #end if
@@ -162,7 +166,7 @@
         
         <script type="text/javascript" src="$relative_url/libs/jquery/3.6.1/jquery.min.js"></script>
         <script type="text/javascript" src="$relative_url/libs/moment.js/2.29.4/moment-with-locales.min.js"></script>
-        <script type="text/javascript" src="$relative_url/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
+        <script type="text/javascript" src="$relative_url/libs/moment-timezone/0.5.37/moment-timezone-with-data.min.js"></script>
         <script type="text/javascript" src="$relative_url/libs/bootstrap/3.4.1/js/bootstrap.min.js"></script>
         #if $page == "pi" or $page == "home" or $page == "kiosk" or $page == "console" and $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
         <script type="text/javascript" src="$relative_url/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"></script>
@@ -317,9 +321,10 @@
                                         #if $Extras.has_key('highcharts_enabled') and $Extras.highcharts_enabled == '1'
                                         <li class="menu-item menu-item-1"><a href="$relative_url/graphs/" itemprop="url"><span itemprop="name">$obs.label.nav_graphs</span></a></li>
                                         #end if
-                                        <li class="menu-item menu-item-2"><a href="$relative_url/records/" itemprop="url"><span itemprop="name">$obs.label.nav_records</span></a></li>
-                                        <li class="menu-item menu-item-3"><a href="$relative_url/reports/" itemprop="url"><span itemprop="name">$obs.label.nav_reports</span></a></li>
-                                        <li class="menu-item menu-item-4"><a href="$relative_url/about/" itemprop="url"><span itemprop="name">$obs.label.nav_about</span></a></li>
+                                        <li class="menu-item menu-item-2"><a href="$relative_url/reports/" itemprop="url"><span itemprop="name">$obs.label.nav_reports</span></a></li>
+                                        <li class="menu-item menu-item-3"><a href="$relative_url/extreme/" itemprop="url"><span itemprop="name">$obs.label.nav_extreme</span></a></li>
+                                        ##<li class="menu-item menu-item-4"><a href="$relative_url/records/" itemprop="url"><span itemprop="name">$obs.label.nav_records</span></a></li>
+                                        <li class="menu-item menu-item-5"><a href="$relative_url/about/" itemprop="url"><span itemprop="name">$obs.label.nav_about</span></a></li>
                                         #if $Extras.has_key('theme_toggle_enabled') and $Extras.theme_toggle_enabled == '1'
                                         <label class="themeSwitchLabel">
                                             <input type="checkbox" id="themeSwitch" $themeSwitchChecked>

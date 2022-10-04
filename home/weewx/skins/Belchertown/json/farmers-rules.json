@@ -2,9 +2,11 @@
     "title":"Liste von Bauernregeln",
     "description":"Die Liste von Bauernregeln ist nach dem Jahreslauf von Januar bis Dezember geordnet.",
     "datasource":"Wikipedia",
+    "datasource_version":"28.09.2022 16:01",
     "datasource_url":"https://de.wikipedia.org/wiki/Liste_von_Bauernregeln",
     "file_creator":"Henry Ott",
-    "file_version":"1.0.1",
+    "file_version":"1.0.2",
+    "file_modification":"04.10.2022 12:51",
     "months":{
         "1":{
             "general":{
@@ -2259,7 +2261,7 @@
                     ]
                 },
                 "27":{
-                    "name":"St. Hiltrud / Helmtrud",
+                    "name":"St. Hiltrud von Lissies / Helmtrud",
                     "rules":[
                         "Wenn Hiltrud im Kalender steht, wird noch einmal das Gras gemäht.",
                         "Fallen die Eicheln vor Michael (29. September) ab, so steigt der Sommer früh in’s Grab."

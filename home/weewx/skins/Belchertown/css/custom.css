@@ -1,3 +1,22 @@
+.wx-stn-name h1 { 
+    font-size: calc(20px + 0.5vw);
+}
+
+.about-outer h2 {
+    font-size: calc(22px + 0.5vw);
+}
+.about-outer h3 {
+    font-size: calc(18px + 0.5vw);
+}
+.about-outer h4 {
+    font-size: calc(14px + 0.5vw);
+}
+
+.current_temp .outtemp_outer {
+    font-size: 70px;
+    min-height: 95px;
+}
+
 .current_temp .outtemp_outer {
     font-size: 70px;
     min-height: 95px;
@@ -39,19 +58,7 @@
     padding-top: 0px;
 }
 
-/* current source toggle **/
-.currentSourceToggle, .dark .currentSourceToggle{
-    text-align:center;
-    padding-top: 0px;
-    padding-bottom: 0px;
-}
-
-.currentSourceSelected {
-    font-size:10px;
-    text-align:center;
-    padding-top: 0px;
-    padding-bottom: 0px;
-}
+/* PWS AQI */
 
 .obs-aqi-divider, .obs-aqi-divider, .aqi-wind-divider {
     height: 1px;
@@ -171,6 +178,7 @@
 }
 
 /* Index Radar */
+
 .dark .tabs-menu > li > a {
     padding: 0px 5px;
 }
@@ -212,6 +220,7 @@ span.highcharts-title {
 }
 
 /* weewx-DWD */
+
 .dwdforecasttable {
     line-height: 1.0;
 }
@@ -235,38 +244,125 @@ span.highcharts-title {
     background-color: #333;
 }
 
+/* Waldbrandgefahrenindex */
+
+.wbx-headline {
+    font-size: calc(20px + 0.3vw);
+    text-align: left;
+    margin-bottom: 0px;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.wbx-issued, .forecast-wbx-subtitle {
+    font-size: calc(10px + 0.3vw);
+}
+
+.wbx-table-container {
+    padding-right: 0px;
+    padding-left: 0px;
+}
+
+.dark .wbx-table-container {
+    padding-right: 0px;
+    padding-left: 0px;
+}
+
+.wbx-table {
+    font-size: calc(9px + 0.4vw);
+}
+
+.wbx-table >thead>tr>th, .wbx-table >thead>tr>td, .wbx-table >tbody>tr>th, .wbx-table >tbody>tr>td {
+    vertical-align: middle;
+    padding: 8px 0px 8px 0px;
+    border-top: 1px solid #ddd;
+}
+
+.dark .wbx-table >thead>tr>th, .dark .wbx-table >thead>tr>td, .dark .wbx-table >tbody>tr>th, .dark .wbx-table >tbody>tr>td {
+    vertical-align: middle;
+    padding: 8px 0px 8px 0px;
+    border-top: 1px solid #ddd;
+}
+
+.wbx-table-head-station, .wbx-table-body-station {
+    text-align: left;
+}
+
+.dark .wbx-table-head-station, .dark .wbx-table-body-station {
+    text-align: left;
+}
+
+.wbx-table-head-day, .wbx-table-body-day {
+    text-align: center;
+}
+
+.dark .wbx-table-head-day, .dark .wbx-table-body-day {
+    text-align: center;
+}
+
+
 /* reports */
 
-td.month, td.head, td.year, td.noaa, th.month, th.head, th.year, th.noaa {
-  padding: 2px;
-  white-space: nowrap;
-  text-align: center;
-}
-
-.month {
-  border-left-width: 1px;
-  border-right-width: 1px;
-  text-align: center;
-}
-
-.year {
-  border-left-style: none;
-  border-left-width: 4px;
-  text-align: center;
-}
-
-.history-headline {
+.history-headline, .noaa-headline {
     text-align: left;
-    font-size: 20px;
+    font-size: calc(16px + 0.3vw);
     margin-bottom: 0px;
+    padding-left: 0 !important;
     padding-right: 0 !important;
 }
 
-.noaa-headline {
+.dark .history-headline, .dark .noaa-headline {
     text-align: left;
-    font-size: 25px;
+    font-size: calc(16px + 0.3vw);
     margin-bottom: 0px;
+    padding-left: 0 !important;
     padding-right: 0 !important;
+}
+
+.history-table-container, .history-table-noaa-container {
+    padding-right: 0px;
+    padding-left: 0px;
+}
+
+.dark .history-table-container, .dark .history-table-noaa-container {
+    padding-right: 0px;
+    padding-left: 0px;
+}
+
+.history-table, .history-table-noaa {
+    font-size: calc(9px + 0.4vw);
+}
+
+.dark .history-table, .dark .history-table-noaa {
+    font-size: calc(9px + 0.4vw);
+}
+
+.history-table >thead>tr>th, .history-table >thead>tr>td, .history-table >tbody>tr>th, .history-table >tbody>tr>td {
+    vertical-align: middle;
+    padding: 4px 0px 4px 0px;
+    border-top: 1px solid #ddd;
+}
+
+.dark .history-table >thead>tr>th, .dark .history-table >thead>tr>td, .dark .history-table >tbody>tr>th, .dark .history-table >tbody>tr>td {
+    vertical-align: middle;
+    padding: 4px 0px 4px 0px;
+    border-top: 1px solid #ddd;
+}
+
+.history-table-noaa >thead>tr>th, .history-table-noaa >thead>tr>td, .history-table-noaa >tbody>tr>th, .history-table-noaa >tbody>tr>td {
+    vertical-align: middle;
+    padding: 4px 0px 4px 0px;
+    border-top: 1px solid #ddd;
+}
+
+.dark .history-table-noaa >thead>tr>th, .dark .history-table-noaa >thead>tr>td, .dark .history-table-noaa >tbody>tr>th, .dark .history-table-noaa >tbody>tr>td {
+    vertical-align: middle;
+    padding: 4px 0px 4px 0px;
+    border-top: 1px solid #ddd;
+}
+
+a.history-table-body-year-nav-noaa, a.history-table-body-month-nav-noaa {
+    text-decoration: none !important;
 }
 
 #noaa_contents {
@@ -274,7 +370,82 @@ td.month, td.head, td.year, td.noaa, th.month, th.head, th.year, th.noaa {
     margin: 0 auto;
 }
 
+/* records */
+
+.records-table {
+    font-size: calc(11px + 0.3vw);
+    padding-right: 0px;
+    padding-left: 0px;
+}
+
+/* extreme */
+
+.extreme-table-container {
+    padding-right: 0px;
+    padding-left: 0px;
+}
+
+.dark .extreme-table-container {
+    padding-right: 0px;
+    padding-left: 0px;
+}
+
+.extreme-table {
+    font-size: calc(10px + 0.4vw);
+}
+
+.dark .extreme-table {
+    font-size: calc(10px + 0.4vw);
+}
+
+.extreme-table >thead>tr>th, .extreme-table >thead>tr>td, .extreme-table >tbody>tr>th, .extreme-table >tbody>tr>td {
+    vertical-align: middle;
+    padding: 4px 0px 4px 0px;
+    border-top: 1px solid #ddd;
+}
+
+.dark .extreme-table >thead>tr>th, .dark .extreme-table >thead>tr>td, .dark .extreme-table >tbody>tr>th, .dark .extreme-table >tbody>tr>td {
+    vertical-align: middle;
+    padding: 4px 0px 4px 0px;
+    border-top: 1px solid #ddd;
+}
+
+.extreme-table-head-headline {
+    text-align:center;
+    background:#D7D7D7;
+    color:#000;
+}
+
+.extreme-table-head-year {
+    text-align: center;
+    background: #3da5f4;
+    color: #fff;
+}
+
+.extreme-table-head-alltime {
+    text-align: center;
+    background: #375a7f;
+    color: #fff;
+}
+
+.extreme-table-body-obs-ts-year, .extreme-table-body-obs-ts-alltime {
+    font-size: calc(8px + 0.4vw);
+}
+
+.dark .extreme-table-body-obs-ts-year, .dark .extreme-table-body-obs-ts-alltime {
+    font-size: calc(8px + 0.4vw);
+}
+
+.extreme-table-body-obs-descr-year, .extreme-table-body-obs-descr-alltime {
+    font-size: calc(8px + 0.4vw);
+}
+
+.dark .extreme-table-body-obs-descr-year, .dark .extreme-table-body-obs-descr-alltime {
+    font-size: calc(8px + 0.4vw);
+}
+
 /* sup und sub */
+
 sup, sub {
    position: relative;
    vertical-align: baseline;
@@ -295,22 +466,29 @@ sub { top: 0.4em; }
 }
 
 .forecast-title {
+    font-size: calc(20px + 0.3vw);
     text-align: left;
-    font-size: 25px;
     margin-bottom: 12px;
     padding-right: 0 !important;
     float: left;
 }
 
 .forecast-headline {
+    font-size: calc(20px + 0.3vw);
     text-align: left;
-    font-size: 25px;
     margin-bottom: 0px;
+    padding-left: 0 !important;
     padding-right: 0 !important;
 }
 
 .forecast-content {
     margin-bottom: 10px;
+    padding-left: 0;
+}
+
+.dark .forecast-content {
+    margin-bottom: 10px;
+    padding-left: 0;
 }
 
 .forecast-menu {
@@ -346,7 +524,7 @@ sub { top: 0.4em; }
 }
 
 .forecast-source {
-    font-size: 16px;
+    font-size: calc(10px + 0.3vw);
     text-align: center;
 }
 
@@ -355,11 +533,27 @@ sub { top: 0.4em; }
 }
 
 /* stats */
+
 .stats-label {
     font-weight: 700;
 }
 
+/* TODO */
 /* current conditions source Switch */
+/* current source toggle **/
+
+.currentSourceToggle, .dark .currentSourceToggle{
+    text-align:center;
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+.currentSourceSelected {
+    font-size:10px;
+    text-align:center;
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
 
 .currentSwitchLabel {
   position: relative;
@@ -399,12 +593,6 @@ sub { top: 0.4em; }
     font-size: 12px;
 }
 
-/* Waldbrandgefahrenindex */
-
-.forecast-wbx-subtitle {
-	font-size: 14px;
-}
-
 /* graphs */
 
 .wx-graph-front {
@@ -419,7 +607,20 @@ sub { top: 0.4em; }
 @media only screen and (max-width: 600px) {
 }
 
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media only screen and (min-width: 600px) {
+}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (min-width: 768px) {
+}
+
 @media only screen and (max-width: 800px) {
+    .site-inner, .wrap {
+        /* padding-top:20px; */
+        padding-left: 2%;
+        padding-right: 2%;
+    }
     .obs-header-icon {
         width: auto;
     }
@@ -464,14 +665,6 @@ sub { top: 0.4em; }
         width: 50%;
         float: right;
     }
-}
-
-/* Small devices (portrait tablets and large phones, 600px and up) */
-@media only screen and (min-width: 600px) {
-}
-
-/* Medium devices (landscape tablets, 768px and up) */
-@media only screen and (min-width: 768px) {
 }
 
 /* iPad Landscape */

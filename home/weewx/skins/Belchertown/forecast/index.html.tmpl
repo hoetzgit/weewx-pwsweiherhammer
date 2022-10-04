@@ -1,20 +1,23 @@
 #errorCatcher Echo
 #encoding UTF-8
 #set global $page = "forecast"
+#set $file = $page + "/" + $page + ".inc"
 
-    #include "header.html.tmpl"
+#include "header.html.tmpl"
 
-    <div class="site-inner">
-        <main class="content">	
-            <article class="weewx forecast" itemscope itemtype="https://schema.org/CreativeWork">
-                
-                    #include "page-header.inc"
+            <div class="site-inner">
+                <main class="content">
+                    <article class="weewx $page" itemscope itemtype="https://schema.org/CreativeWork">
+                        #include "page-header.inc"
+                        #if os.path.exists($file)
+                        <!-- Begin $file -->
 
-                    #include "forecast.inc"
-                
-            </article>
-        </main>
-    </div>
+                        #include $file
 
+                        <!-- End $file -->
+                        #end if
+                    </article>
+                </main>
+            </div>
 
-    #include "footer.html.tmpl"
+#include "footer.html.tmpl"

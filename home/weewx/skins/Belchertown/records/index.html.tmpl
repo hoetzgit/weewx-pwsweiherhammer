@@ -115,15 +115,15 @@
 
                 #include "page-header.inc"
 
+                #if os.path.exists("records/records.inc")
                 <!-- Begin row -->
                 <div class="row">
                     <div class="col-sm-12 wx-records-description">
-                        #if os.path.exists("records.inc")
-                        #include "records.inc"
-                        #end if
+                        #include "records/records.inc"
                     </div>
                 </div>
                 <!-- End row -->
+                #end if
 
                 <!-- Records table row -->
                 <div class="row records-table">
@@ -361,8 +361,8 @@
                             #end if
                                           
                             <!-- Add new table entries -->
-                            #if os.path.exists("records-table.inc")
-                            #include "records-table.inc"
+                            #if os.path.exists("records/records-table.inc")
+                            #include "records/records-table.inc"
                             #end if
                             
                         </tbody>

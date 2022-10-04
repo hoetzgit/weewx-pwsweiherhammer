@@ -13,11 +13,31 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-Version: 0.1.0                                          Date: ?? September 2022
+Version: 0.1.0                                          Date: 2 October 2022
 
 Revision History
-    ?? September 2022   v0.1.0
+    2 October 2022      v0.1.0
         - initial release
+
+Abbreviated Instruction for Use
+
+1.  Download the Cumulative XType extension package:
+
+    $ wget -P /var/tmp https://github.com/gjr80/weewx-gw1000/releases/download/v0.1.0/xcum-0.1.0.tar.gz
+
+2.  Install the Cumulative XType extension package
+
+    $ wee_extension --install=/var/tmp/xcum-0.1.0.tar.gz
+
+3.  Restart WeeWX:
+
+    $ sudo systemctl restart weewx
+
+You can now use the 'cumulative' aggregate type wherever you need a cumulative
+series, eg ImageGenerator plots. The reset time for the cumulative series data
+may be specified by using the 'reset' option in an ImageGenerator plot
+definition or by passing a 'reset' argument if calling the Cumulative XType
+programmatically.
 """
 
 # python imports
@@ -32,6 +52,7 @@ import weeutil.weeutil
 import weewx.engine
 import weewx.xtypes
 
+# we require WeeWX 4.6.0 or later so we can only use WeeWX 4 logging
 log = logging.getLogger(__name__)
 
 XCUM_VERSION = '0.1.0'
@@ -44,12 +65,33 @@ XCUM_VERSION = '0.1.0'
 class XCumulative(weewx.xtypes.XType):
     """XType to produce cumulative series data with user specified reset times."""
 
+    reset_defs = {'midnight': '00:00',
+                  'midday': '12:00',
+                  'day': '00:00',
+                  'month': '1T00:00',
+                  'year': '01-01T00:00'}
+
     def __init__(self):
         pass
 
     def get_series(self, obs_type, timespan, db_manager, aggregate_type=None,
                    aggregate_interval=None, **option_dict):
-        """Obtain a cumulative series with a user specified reset time."""
+        """Obtain a cumulative series with a user specified reset time.
+
+        The following options are supported in option_dict:
+
+        reset: Date-time specification for cumulative value reset times.
+               Optional string. Format is [mm-][dd][T]HH:MM or one of
+               ('midnight', 'midday', 'day', 'month', 'year'). Default is no
+               reset.
+        ignore_none: Whether to ignore None values when calculating the
+                     cumulative value. If ignored then data points for which
+                     the aggregate value is None are excluded from the
+                     resulting vector. If not ignored then data points for
+                     which the aggregate value is None are included in the
+                     resulting vector but the data point does not contribute to
+                     the cumulative value. Optional boolean. Default is True.
+        """
 
         # initialise lists to hold the vectors that will make up our result
         start_vec = list()
@@ -65,6 +107,11 @@ class XCumulative(weewx.xtypes.XType):
         else:
             # we've been asked for the cumulative aggregation type
 
+            # Are None values to be ignored? The default action is to ignore
+            # the data point if the aggregate for that span/data point is None.
+            # Setting ignore_none = False will include such data points in the
+            # resulting vector.
+            ignore_none = weeutil.weeutil.to_bool(option_dict.get('ignore_none', True))
             # first look at the reset option (if it exists) and obtain a list
             # of reset timestamps that will occur in our timespan of interest
             reset = self.parse_reset(option_dict.get('reset'), timespan)
@@ -83,8 +130,9 @@ class XCumulative(weewx.xtypes.XType):
                 # sum aggregate, we will do the cumulative part of the xtype
                 # later
                 agg_vt = weewx.xtypes.get_aggregate(obs_type, span, 'sum', db_manager)
-                # if the aggregate is None then continue to the next span
-                if agg_vt.value is None:
+                # if the aggregate is None, and we are ignoring None values,
+                # then continue to the next span
+                if agg_vt.value is None and ignore_none:
                     continue
                 # check for unit group consistency
                 if unit:
@@ -118,7 +166,7 @@ class XCumulative(weewx.xtypes.XType):
                         # Our stop timestamp is after the current reset
                         # timestamp, so reset the running total to the current
                         # aggregate value.
-                        total = agg_vt.value
+                        total = agg_vt.value if agg_vt.value is not None else 0.0
                         # since we encountered a reset timestamp increment the
                         # reset index
                         reset_index += 1
@@ -130,7 +178,7 @@ class XCumulative(weewx.xtypes.XType):
                 else:
                     # we have no reset timestamps, so just add the current
                     # aggregate to the running total
-                    total += agg_vt.value
+                    total += agg_vt.value if agg_vt.value is not None else 0.0
                 # append the total to our data vector
                 data_vec.append(total)
         # convert our result vectors to ValueTuples and return the ValueTuples
@@ -148,6 +196,13 @@ class XCumulative(weewx.xtypes.XType):
         - mm-ddTHH:MM - reset occurs ate HH:MM on dd-mm of each year
         - YYYY-mm-ddTHH:MM - reset occurs at HH:MM on YYYY-mm-dd
 
+        We could also have a keyword representing a reset time:
+        - midnight - reset occurs at 00:00 daily
+        - midday - reset occurs at 12:00 daily
+        - day - reset occurs at 00:00 daily
+        - month - reset occurs at 00:00 on the 1st of each month
+        - year - reset occurs at 00:00 on the 1st of January
+
         Defaults and handling of invalid formats:
         - if an invalid time or time format is specified midnight is used as
           the time component of the reset option
@@ -161,6 +216,9 @@ class XCumulative(weewx.xtypes.XType):
             # we have no reset option setting so return None
             return None
         else:
+            # do we have a reset specified by keyword, if so set reset_opt accordingly
+            if reset_opt.lower() in XCumulative.reset_defs.keys():
+                reset_opt = XCumulative.reset_defs[reset_opt.lower()]
             # first split on 'T'
             _split = reset_opt.split('T')
             if len(_split) == 1:
@@ -260,6 +318,7 @@ class XCumulative(weewx.xtypes.XType):
         If no matching timestamps are found return an empty list.
         """
 
+        # initialise an empty list for the result
         ts_list = list()
         # iterate over each day in the timespan of concern
         for day_span in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
@@ -283,14 +342,14 @@ class XCumulative(weewx.xtypes.XType):
 
 
 # ==============================================================================
-#                           Class StdCumulativeType
+#                           Class StdCumulativeXType
 # ==============================================================================
 
-class StdCumulativeType(weewx.engine.StdService):
+class StdCumulativeXType(weewx.engine.StdService):
     """Instantiate and register the XCumulative XType."""
 
     def __init__(self, engine, config_dict):
-        super(StdCumulativeType, self).__init__(engine, config_dict)
+        super(StdCumulativeXType, self).__init__(engine, config_dict)
 
         # obtain an XCumulative XType object
         self.xcumulative = XCumulative()

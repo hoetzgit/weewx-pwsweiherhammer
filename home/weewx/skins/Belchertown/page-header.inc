@@ -27,6 +27,8 @@
                 <h1>$obs.label.page_header_imprint</h1>
         #else if $page == "privacy"
                 <h1>$obs.label.page_header_privacy</h1>
+        #else if $page == "extreme"
+                <h1>$obs.label.page_header_extreme</h1>
         #end if
         </div>
         </div>

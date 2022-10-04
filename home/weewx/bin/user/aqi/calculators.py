@@ -65,33 +65,44 @@ PB = 'pb'
 def get_last_valid_index(observations, duration_in_secs):
     '''Returns index into observations of the observation that is the
     closest, but not earlier than the earliest valid timestamp.'''
-    first_invalid_timestamp = observations[0][0] - duration_in_secs
     best_delta = None
     best_index = None
     start = 0
-    end = len(observations)
+    try:
+        first_invalid_timestamp = observations[0][0] - duration_in_secs
+        end = len(observations)
 
-    while start < end:
-        mid = int((end - start) / 2) + start
-        delta = observations[mid][0] - first_invalid_timestamp;
-        if delta < 0:
-            # observation is too early
-            end = mid
-        elif delta == 0:
-            # We found the first invalid index, back up one
-            best_index = mid - 1
-            break
-        else:
-            # observation might be valid
-            if best_delta is None or best_delta > delta:
-                best_delta = delta
-                best_index = mid
-                start = mid + 1
-            else:
-                # worst delta, go to the front
+        while start < end:
+            mid = int((end - start) / 2) + start
+            delta = observations[mid][0] - first_invalid_timestamp;
+            if delta < 0:
+                # observation is too early
                 end = mid
-    if best_index is None:
-        raise ValueError('all observations are outside the valid range')
+            elif delta == 0:
+                # We found the first invalid index, back up one
+                best_index = mid - 1
+                break
+            else:
+                # observation might be valid
+                if best_delta is None or best_delta > delta:
+                    best_delta = delta
+                    best_index = mid
+                    start = mid + 1
+                else:
+                    # worst delta, go to the front
+                    end = mid
+        if best_index is None:
+            raise ValueError('all observations are outside the valid range')
+
+    except IndexError:
+        logerr("Exeption IndexError at %s" % str(observations))
+        pass
+    except ValueError:
+        logerr("Exeption ValueError at %s" % str(observations))
+        pass
+    except Exception as e:
+        logerr("%s threw exception %s" % (str(observations), str(e)))
+        pass
 
     return best_index
 
@@ -200,17 +211,21 @@ class AqiCalculator(with_metaclass(ABCMeta)):
 
         # validate observations
         last_valid_index = get_last_valid_index(observations, self.duration_in_secs)
-        observations = observations[:last_valid_index + 1]
-        validate_number_of_observations(observations,
-            self.duration_in_secs,
-            self.obs_frequency_in_sec,
-            self.required_observation_ratio)
+        if last_valid_index is not None:
+            observations = observations[:last_valid_index + 1]
+            validate_number_of_observations(observations,
+                self.duration_in_secs,
+                self.obs_frequency_in_sec,
+                self.required_observation_ratio)
 
-        # calculate the mean observation
-        obs_mean = self.mean_cleaner(self.mean_calculator(observations))
+            # calculate the mean observation
+            obs_mean = self.mean_cleaner(self.mean_calculator(observations))
 
-        # map the mean to an AQI value
-        return self._calculate_index_from_mean(obs_mean)
+            # map the mean to an AQI value
+            return self._calculate_index_from_mean(obs_mean)
+        else:
+            raise ValueError("AQI could not be calculated for the observations. %s" % (pollutant))
+            pass
 
     @abstractmethod
     def _calculate_index_from_mean(self, mean):

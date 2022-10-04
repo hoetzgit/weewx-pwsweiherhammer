@@ -2924,49 +2924,47 @@ class ForecastPWS(object):
             loginf("forecast_wbx_radius_km: get distance to '%s' not possible!" % (dest))
         return dist_km
 
-    # TODO css, error handling, opt issued time, change table to divs
+    # TODO css, error handling, opt issued time, change table to divs?
     def forecast_wbx_html(self, keymapping_dict, tabheader_list, tabcontent_dict, htmlsource, output, dryrun, lang='de'):
         if self.verbose:
             loginf('forecast_wbx_html: started.')
-        html = ''
-        html += '<div class="col-sm-12 forecast-headline">\n'
-        html += '$obs.label.forecast_header_wbx <span class="forecast-wbx-subtitle">$obs.label.forecast_issueTime_wbx ' + htmlsource + '</span>\n'
+        html = '<!-- Waldbrandgefahrenindex -->\n'
+        html += '<div class="col-xs-12 wbx-headline">$obs.label.forecast_header_wbx'
+        html += '<span class="wbx-issued"> $obs.label.forecast_issueTime_wbx ' + htmlsource + '</span>\n'
         html += '</div>\n'
-        html += '<div class="col-md-12 forecast-content table-responsive" style="margin-top:5px">\n'
-        html += '<table class="table table-striped table-bordered">\n'
-        html += '    <tbody>\n'
-        #html += '    <thead>\n'
-        html += '        <tr>\n'
+        html += '<div class="col-md-12 wbx-table-container" style="margin-top:5px">\n'
+        html += '    <table class="table table-striped wbx-table">\n'
+        html += '        <thead class="table-light wbx-table-head">\n'
+        html += '            <tr>\n'
         for col, cellcontent in enumerate(tabheader_list):
             if (col == 0):
-                html += '            <th scope="col">'
+                html += '                <th scope="col" class="wbx-table-head-station">'
             else:
-                html += '            <th scope="col" style="text-align:center;vertical-align:bottom;padding-top:3px;">'
+                html += '                <th scope="col" class="wbx-table-head-day">'
             html += str(cellcontent)
             html += '</th>\n'
-        html += '        </tr>\n'
-        #html += '    </thead>\n'
-        #html += '    <tbody>\n'
+        html += '            </tr>\n'
+        html += '        </thead>\n'
+        html += '        <tbody class="table-group-divider wbx-table-body">\n'
         for station, content_list in tabcontent_dict.items():
-            html += '        <tr>\n'
+            html += '            <tr>\n'
             for col, cellcontent in enumerate(content_list):
                 if (col == 0):
-                    html += '            <th scope="row">'
+                    html += '                <th scope="row" class="wbx-table-body-station">'
                     html += cellcontent
                     html += '</th>\n'
                 else:
-                    html += '            <td scope="row" style="text-align:center'
-                    html += (';background-color:' + keymapping_dict[cellcontent]['background-color'])
+                    html += '                <td class="wbx-table-body-day" style="'
+                    html += ('background-color:' + keymapping_dict[cellcontent]['background-color'])
                     html += (';color:' + keymapping_dict[cellcontent]['color'])
                     html += ';">'
                     html += (cellcontent + ' - ')
                     html += keymapping_dict[cellcontent]['description']
                     html += '</td>\n'
-        html += '        </tr>\n'
-        html += '    </tbody>\n'
-        html += '</table>\n'
+        html += '            </tr>\n'
+        html += '        </tbody>\n'
+        html += '    </table>\n'
         html += '</div>\n'
-        #html += '<p><span>' + htmlsource + '</span></p>\n'
         if dryrun:
             print(html)
         else:

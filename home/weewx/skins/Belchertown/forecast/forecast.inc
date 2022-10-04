@@ -1,7 +1,5 @@
 #encoding UTF-8
 
-<!-- Start forecast.inc -->
-
 <div class="entry-content about-outer">
     <!-- Start AerisWeather-->
 
@@ -250,5 +248,3 @@
     ##    <div class="col-md-12 mtg-meteogram" id="meteogram"</div>
     ##</div>
 </div>
-
-<!-- End forecast.inc -->

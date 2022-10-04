@@ -1,18 +1,19 @@
 #errorCatcher Echo
 #encoding UTF-8
 #set global $page = "reports"
+#set $path = $page + "/"
 
     #include "header.html.tmpl"
 
     <div class="site-inner">
-        <main class="content">    
+        <main class="content">
             <article class="weewx reports" itemscope itemtype="https://schema.org/CreativeWork">
                 #include "page-header.inc"
-                #if os.path.exists("history.inc")
-                #include "history.inc"
+                #if os.path.exists($path + "history.inc")
+                #include $path + "history.inc"
                 #end if
-                #if os.path.exists("noaa.inc")
-                #include "noaa.inc"
+                #if os.path.exists($path + "noaa.inc")
+                #include $path + "noaa.inc"
                 #end if
             </article>
         </main>
