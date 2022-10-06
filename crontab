@@ -30,8 +30,8 @@
 #
 # Webcam/AllSky to Website
 */1 * * * * /bin/bash /usr/local/bin/create_allsky_weather_data.sh >/dev/null 2>&1
-*/1 * * * * /bin/bash /usr/local/bin/copy_allsky_image_to_belchertown.sh  >/dev/null 2>&1
-*/1 * * * * /bin/bash /usr/local/bin/copy_webcam_image_to_belchertown.sh  >/dev/null 2>&1 && /bin/bash /usr/local/bin/copy_webcam_image_to_pwsdashboard.sh  >/dev/null 2>&1
+*/1 * * * * /bin/bash /usr/local/bin/copy_allsky_image_to_belchertown.sh >/dev/null 2>&1 && /bin/bash /usr/local/bin/copy_allsky_image_to_pwsdashboard.sh >/dev/null 2>&1
+*/1 * * * * /bin/bash /usr/local/bin/copy_webcam_image_to_belchertown.sh >/dev/null 2>&1 && /bin/bash /usr/local/bin/copy_webcam_image_to_pwsdashboard.sh >/dev/null 2>&1
 #
 # DWD Forecast Waldbrandgefahrenindex
 20 6  * * * /bin/bash /usr/local/bin/weewx-DWD/wget-dwd-wbx >/var/log/weewx/wget-dwd-wbx.log 2>&1
