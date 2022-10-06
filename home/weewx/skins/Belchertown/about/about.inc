@@ -272,19 +272,19 @@
             <ul>
                 <li>Wettersoftware <a href="https://github.com/weewx/weewx" target="_blank" rel="noreferrer">WeeWX</a>, Version: $station.version</li>
                 <li>MQTT Broker <a href="https://obrienlabs.net/go/mqttbroker" target="_blank" rel="noreferrer">Mosquitto</a> zur Aufnahme von Nachrichten per MQTT</li>
-                <li>Visualisierung dieser Webseite mit der <a href="https://github.com/poblabs/weewx-belchertown" target="_blank" rel="noreferrer">Belchertown skin</a>, Basis Version: $belchertown_version (angepasst)</li>
+                <li>Visualisierung dieser Webseite mit der <a href="https://github.com/poblabs/weewx-belchertown" target="_blank" rel="noreferrer">Belchertown skin</a>, angepasst, Basis Version: $belchertown_version</li>
                 <li>Erweiterung <a href="https://www.highcharts.com" target="_blank" rel="noreferrer">HighCharts</a> zur Erstellung von Charts auf dieser Webseite</li>
                 <li>generic <a href="https://loxwiki.atlassian.net/wiki/spaces/LOXBERRY/pages/1252524456/FOSHKplugin+-+generic+version" target="_blank" rel="noreferrer">FOSHKplugin</a> zum Empfang der GW1100 Daten und deren Weiterleitung per HTTP zu WeeWX und anderen Rechnern, Version: 0.0.9</li>
-                <li>WeeWX Treiber <a href="https://github.com/matthewwall/weewx-interceptor" target="_blank" rel="noreferrer">WeeWX-Interceptor</a> (ecowitt-client) zum Empfang der Daten von FOSHKplugin per HTTP, Version: 0.53, an eigene Sensoren angepasst</li>
+                <li>WeeWX Treiber <a href="https://github.com/matthewwall/weewx-interceptor" target="_blank" rel="noreferrer">weewx-interceptor</a> (ecowitt-client) zum Empfang der Daten von FOSHKplugin per HTTP, Version: 0.53, an eigene Sensoren angepasst</li>
                 <li>WeeWX Service <a href="https://github.com/bellrichm/WeeWX-MQTTSubscribe" target="_blank" rel="noreferrer">WeeWX-MQTTSubscribe</a> zum Empfang von zusätzlichen Daten (Solar Station, Wetter API's u.s.w.) per MQTT, Version: 2.2.2</li>
-                <li>WeeWX Service <a href="https://github.com/bellrichm/weewx-mqttpublish" target="_blank" rel="noreferrer">weewx-mqttpublish</a> zum Upload der WeeWX Daten per MQTT in den MQTT Broker, Version: 0.2.0-rc01</li>
+                <li>WeeWX Service <a href="https://github.com/bellrichm/weewx-mqttpublish" target="_blank" rel="noreferrer">weewx-mqttpublish</a> zum Upload der WeeWX Daten per MQTT in den MQTT Broker, Version: 0.2.0-rc01 (Test)</li>
+                <li>Erweiterung <a href="https://github.com/matthewwall/weewx-mqtt" target="_blank" rel="noreferrer">weewx-mqtt</a>, angepasste <a href="https://github.com/roe-dl/weewx-mqtt/tree/aggregate_values" target="_blank" rel="noreferrer">Version</a> zum Upload der WeeWX Daten per MQTT in den MQTT Broker, Version: 0.25</li>
                 <li>Erweiterungen <a href="https://github.com/roe-dl/weewx-DWD" target="_blank" rel="noreferrer">weewx-DWD</a>, um Daten vom DWD und dem UBA zu laden und aufzubereiten (zum Experimentieren mit anderen Wetter-Anbietern angepasst)</li>
                 <li>Erweiterung <a href="https://github.com/roe-dl/weewx-GTS" target="_blank" rel="noreferrer">weewx-GTS</a>, generiert die <a href="https://de.wikipedia.org/wiki/Gr%C3%BCnlandtemperatursumme" target="_blank" rel="noreferrer">Grünlandtemperatursumme</a> und viele weitere Daten, Version: 0.8a4</li>
                 ##<li>Die Meteogramm-Visualisierung der DWD Vorhersage erfolgt mit dem Meteogramm von <a href="http://tools.wettersoftware.de" target="_blank" rel="noreferrer">wettersoftware.de</a></li>
                 <li>Erweiterung <a href="https://github.com/jonathankoren/weewx-aqi" target="_blank" rel="noreferrer">weewx-aqi</a>, angepasste <a href="https://github.com/hoetzgit/weewx-aqi/tree/CustomAirQualityIndex" target="_blank" rel="noreferrer">Version</a>, diese orientiert sich an den <a href="https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex" target="_blank" rel="noreferrer">Berechnungsgrundlagen Luftqualit&auml;tsindex</a> des Umweltbundesamtes</li>
                 <li>Erweiterung <a href="https://github.com/Jterrettaz/sunduration" target="_blank" rel="noreferrer">sunduration</a>, angepasste <a href="https://github.com/hoetzgit/sunduration/tree/sunshineDur_seconds" target="_blank" rel="noreferrer">Version</a>, Berechnung der Sonnenscheindauer in Sekunden pro Archiv Intervall</li>
-                <li>Erweiterung <a href="https://github.com/brewster76/fuzzy-archer/tree/master/bin/user" target="_blank" rel="noreferrer">historygenerator</a> um tabellarische Reporte zu erstellen.</li>
-                ##<li>Erweiterung <a href="https://github.com/matthewwall/weewx-mqtt" target="_blank" rel="noreferrer">weewx-mqtt</a>, angepasste <a href="https://github.com/roe-dl/weewx-mqtt/tree/aggregate_values" target="_blank" rel="noreferrer">Version</a> zum MQTT Upload, Version: 0.25</li>
+                <li>Erweiterung <a href="https://github.com/brewster76/fuzzy-archer/tree/master/bin/user" target="_blank" rel="noreferrer">historygenerator</a> um <a href="https://www.weiherhammer-wetter.de/reports/" target="_blank" rel="noreferrer">tabellarische Reporte</a> zu erstellen.</li>
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-windy" target="_blank" rel="noreferrer">weewx-windy</a>, Upload zu <a href="https://www.windy.com" target="_blank" rel="noreferrer">Windy.com</a>, Version: 0.7</li>
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-wetter" target="_blank" rel="noreferrer">weewx-wetter</a>, Upload zu <a href="https://www.wetter.com" target="_blank" rel="noreferrer">wetter.com</a>, Version: 0.7</li>
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-owm" target="_blank" rel="noreferrer">weewx-owm</a>, angepasste <a href="https://github.com/hoetzgit/weewx-owm/tree/pws-weiherhammer" target="_blank" rel="noreferrer">Version</a>, Upload zu <a href="https://openweathermap.org" target="_blank" rel="noreferrer">OpenWeatherMap</a>, Version: 0.9</li>
@@ -383,13 +383,25 @@
         </div>
     </div>
 
+    <!-- GitHub -->
+    <div class="row" style="margin-top:10px;">
+        <div class="col-sm-12">
+            <h2>GitHub</h2>
+            <p>Meine aktuellen Anpassungen und Konfigurationen als Sicherung bei GitHub</p>
+            <ul>
+                <li>Anpassungen <a href="https://github.com/hoetzgit/weewx-pwsweiherhammer" target="_blank" rel="noreferrer">WeeWX</a> komplett PWS Weiherhammer</li>
+                <li>Anpassungen <a href="https://github.com/hoetzgit/weewx-belchertown-pwsweiherhammer" target="_blank" rel="noreferrer">Belchertown skin</a> PWS Weiherhammer</li>
+            </ul>
+        </div>
+    </div>
+
     <!-- Impressum und Datenschutz -->
     <div class="row" style="margin-top:10px;">
         <div class="col-sm-12">
             <h2>Impressum und Datenschutzerkl&auml;rung</h2>
             <ul>
-                <li><a href="$relative_url/imprint/">Impressum</a></li>
-                <li><a href="$relative_url/privacy/">Datenschutzerkl&auml;rung</a></li>
+                <li><a href="$relative_url/imprint/" target="_blank" rel="noreferrer">Impressum</a></li>
+                <li><a href="$relative_url/privacy/" target="_blank" rel="noreferrer">Datenschutzerkl&auml;rung</a></li>
             </ul>
         </div>
     </div>
