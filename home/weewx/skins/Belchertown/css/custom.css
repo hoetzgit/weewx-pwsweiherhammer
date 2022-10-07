@@ -2,6 +2,12 @@
     font-size: calc(20px + 0.5vw);
 }
 
+/* about page */
+
+.about-row {
+    margin-top:10px;
+}
+
 .about-outer h2 {
     font-size: calc(22px + 0.5vw);
 }
@@ -247,9 +253,19 @@ span.highcharts-title {
 /* Waldbrandgefahrenindex */
 
 .wbx-headline {
-    font-size: calc(20px + 0.3vw);
+    font-size: calc(18px + 0.3vw);
     text-align: left;
-    margin-bottom: 0px;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.dakr .wbx-headline {
+    font-size: calc(18px + 0.3vw);
+    text-align: left;
+    margin-top: 15px;
+    margin-bottom: 5px;
     padding-left: 0 !important;
     padding-right: 0 !important;
 }
@@ -305,16 +321,18 @@ span.highcharts-title {
 
 .history-headline, .noaa-headline {
     text-align: left;
-    font-size: calc(16px + 0.3vw);
-    margin-bottom: 0px;
+    font-size: calc(14px + 0.3vw);
+    margin-top: 20px;
+    margin-bottom: 10px;
     padding-left: 0 !important;
     padding-right: 0 !important;
 }
 
 .dark .history-headline, .dark .noaa-headline {
     text-align: left;
-    font-size: calc(16px + 0.3vw);
-    margin-bottom: 0px;
+    font-size: calc(14px + 0.3vw);
+    margin-top: 20px;
+    margin-bottom: 10px;
     padding-left: 0 !important;
     padding-right: 0 !important;
 }
@@ -466,7 +484,7 @@ sub { top: 0.4em; }
 }
 
 .forecast-title {
-    font-size: calc(20px + 0.3vw);
+    font-size: calc(18px + 0.3vw);
     text-align: left;
     margin-bottom: 12px;
     padding-right: 0 !important;
@@ -474,9 +492,19 @@ sub { top: 0.4em; }
 }
 
 .forecast-headline {
-    font-size: calc(20px + 0.3vw);
+    font-size: calc(18px + 0.3vw);
     text-align: left;
-    margin-bottom: 0px;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.dark .forecast-headline {
+    font-size: calc(18px + 0.3vw);
+    text-align: left;
+    margin-top: 15px;
+    margin-bottom: 5px;
     padding-left: 0 !important;
     padding-right: 0 !important;
 }

@@ -2,7 +2,7 @@
 <div class="entry-content about-outer" itemprop="text">
 
     <!-- Einleitung -->
-    <div class="row"  style="padding-top:15px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h2>Allgemein</h2>
             <p>Wie wird das Wetter in <a href="https://www.weiherhammer.de/" target="_blank" rel="noreferrer">Weiherhammer</a> heute? &Uuml;blich war mein Blick aus dem Fenster und auf das analoge Thermometer. Es sollte aber eine smartere L&ouml;sung her. 
@@ -13,14 +13,14 @@
         </div>
     </div>
 
-    <div class="row" style="margin-top:10px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h2>Sensoren und Messwerte</h2>
         </div>
     </div>
 
     <!-- Sainlogic WS3500 -->
-    <div class="row" style="margin-top:10px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h3>Sainlogic WS3500</h3>
             <p>Die Y-f&ouml;rmige Station <a href="https://www.amazon.de/Sainlogic-Profi-WLAN-Wetterstation-Wettervorhersage/dp/B07TVMQ2CK" target="_blank" rel="noreferrer">Sainlogic WS3500</a> 
@@ -59,7 +59,7 @@
         </div>
 
     <!-- Solar Station -->
-    <div class="row" style="margin-top:15px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h3>Solar Station</h3>
             <p>Im Juni 2020 installierte ich eine kleine Eigenbau Station, meine "Solar Station". In den Sommermonaten kann die Stromversorgung autark mit Solarstrom erfolgen. Gepuffert wird in 
@@ -88,7 +88,7 @@
     </div>
 
     <!-- Nova PM Sensor SDS011 -->
-    <div class="row" style="margin-top:15px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h3>Nova PM Sensor SDS011 - airRohr</h3>
             <p>Seit M&auml;rz 2022 ist ein Feinstaubsensor und ein DHT22 Sensor installiert. Dabei habe ich mich an dieser 
@@ -118,7 +118,7 @@
     </div>
 
 ##    <!-- AS3935 Franklin Lightning sensor -->
-##    <div class="row" style="margin-top:10px;">
+##    <div class="row about-row">
 ##        <div class="col-sm-12">
 ##            <h3>AS3935 Franklin Blitzsensor</h3>
 ##            <p>Seit Januar 2022 ...</p>
@@ -141,7 +141,7 @@
 ##    </div>
 ##
     <!-- AllSky Kamera -->
-    <div class="row" style="margin-top:10px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h3>AllSky Kamera mit einer 360&deg Ansicht</h3>
             <p>Meine AllSky Kameras - 
@@ -206,7 +206,7 @@
     </div>
 
     <!-- Webcam -->
-    <div class="row" style="margin-top:10px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h3>Foscam FI9900P IP Camera</h3>
             <p>Im Mai 2020 kam eine Webcam hinzu (<a href="$relative_url/webcam/">Anzeige des aktuellen Bildes</a>). Die Blickrichtung ist ungef&auml;hr SSW.</p>
@@ -222,7 +222,7 @@
     </div>
 
     <!-- Externe Datenquellen -->
-    <div class="row" style="margin-top:10px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h2>Externe Datenquellen</h2>
             <p>Nicht alle auf der Webseite angezeigten Daten werden durch die eigene Station gemessen. Um z.B. eine Wettervorhersage anzubieten, werden zus&auml;tzliche Daten von externen
@@ -232,7 +232,7 @@
     </div>
 
     <!-- Wetternetzwerke und Wetterdienste -->
-    <div class="row" style="margin-top:10px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h3>Wetternetzwerke und Wetterdienste</h3>
             <ul>
@@ -257,7 +257,7 @@
     </div>
 
     <!-- Verarbeitung -->
-    <div class="row" style="margin-top:10px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h2>Aufbereitung der Daten</h2>
             <p>Um die Sensordaten sowie die externen Daten aufzubereiten, verwende ich die Open Source Software <a href="https://weewx.com" target="_blank" rel="noreferrer">WeeWX</a>. 
@@ -266,7 +266,7 @@
     </div>
 
     <!-- Software -->
-    <div class="row" style="margin-top:10px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h3>&Uuml;bersicht der intern verwendeten Software</h3>
             <ul>
@@ -295,7 +295,7 @@
     </div>
 
     <!-- Externe Weiterleitungen -->
-    <div class="row" style="margin-top:10px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h2>Weiterleitung der Daten zu externen Wetterdiensten</h2>
             <ul>
@@ -315,7 +315,7 @@
     </div>
 
     <!-- Links -->
-    <div class="row" style="margin-top:10px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h2>Zus&auml;tzliche Visualisierungen</h2>
             <ul>
@@ -332,7 +332,7 @@
     </div>
 
     <!-- Zusatzinfos -->
-    <div class="row" style="margin-top:10px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h2>Weitere Informationen zur Wetterstation</h2>
             <ul>
@@ -373,7 +373,7 @@
     </div>
 
     <!-- Tipps -->
-    <div class="row" style="margin-top:10px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h2>Tipps</h2>
             <p>Wer eine tolle Wetterseite im deutschsprachigen Raum sucht, kann mal die Webseite <a href="https://www.woellsdorf-wetter.de" target="_blank" rel="noreferrer">Wetterstation D&ouml;beln-W&ouml;llsdorf</a> besuchen. 
@@ -384,7 +384,7 @@
     </div>
 
     <!-- GitHub -->
-    <div class="row" style="margin-top:10px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h2>GitHub</h2>
             <p>Meine aktuellen Anpassungen und Konfigurationen als Sicherung bei GitHub</p>
@@ -396,7 +396,7 @@
     </div>
 
     <!-- Impressum und Datenschutz -->
-    <div class="row" style="margin-top:10px;">
+    <div class="row about-row">
         <div class="col-sm-12">
             <h2>Impressum und Datenschutzerkl&auml;rung</h2>
             <ul>

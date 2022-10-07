@@ -123,14 +123,9 @@
         <div class="col-md-12" id="meteogramm2"></div>
         <div class="col-md-12" id="meteogramm3"></div>
     </div>
-    ##<div class="row border-bottom" style="margin-top:5px;margin-bottom:5px;">
-    ##    <div class="col-md-12 forecast-source">$obs.label.forecast_issueTime_dwd <span class="forecast-issueTime-dwd"></span><!-- moment.js --></div>
-    ##    <div class="col-md-12 forecast-source">$obs.label.forecast_source_dwd</div>
-    ##</div>
-    ##end if
 
     #if os.path.exists("dwd/SchilderMS.jpg")
-    <div class="row index-hook-after-forecast" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_warnings_by
         </div>
@@ -141,7 +136,7 @@
     #end if
 
     #if os.path.exists("dwd/warn-NEW.inc")
-    <div class="row index-hook-after-forecast" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_warnings_new
         </div>  
@@ -152,8 +147,7 @@
     #end if
 
     #if os.path.exists("dwd/warn-WEIHERHAMMER.inc")
-    ##<div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
-    <div class="row index-hook-after-forecast" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_warnings_whm
         </div>
@@ -164,15 +158,13 @@
     #end if
 
     #if os.path.exists("dwd/wbx_tab_BY.inc")
-    ##<div class="container-fluid">
-        <div class="row index-hook-after-forecast" style="margin-top:15px;">
-            #include "dwd/wbx_tab_BY.inc"
-        </div>
-    ##</div>
+    <div class="row index-hook-after-forecast">
+        #include "dwd/wbx_tab_BY.inc"
+    </div>
     #end if
 
     #if os.path.exists("dwd/VHDL54_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_bavaria
         </div>
@@ -183,7 +175,7 @@
     #end if
 
     #if os.path.exists("dwd/VHDL50_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_today
         </div>
@@ -194,7 +186,7 @@
     #end if
 
     #if os.path.exists("dwd/VHDL51_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_tomorrow
         </div>
@@ -205,7 +197,7 @@
     #end if
 
     #if os.path.exists("dwd/VHDL52_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_da_tomorrow
         </div>
@@ -216,7 +208,7 @@
     #end if
 
     #if os.path.exists("dwd/VHDL53_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_fourth_day
         </div>
@@ -227,7 +219,7 @@
     #end if
 
     #if os.path.exists("dwd/bwk_bodendruck_na_ana.png")
-    <div class="row index-hook-after-forecast" style="margin-top:15px;">
+    <div class="row index-hook-after-forecast">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_current_map
         </div>
@@ -240,7 +232,6 @@
     ##<!-- DWD Meteogramm wettersoftware.de -->
     ##<script src="$relative_url/meteogram.v2.0.min.js"></script>
     ##<script>new Meteogram('#meteogram', '10688');</script>
-
     ##<div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
     ##    <div class="col-md-12 forecast-headline">
     ##        $obs.label.forecast_header_dwd_meteo <span class="forecast-subtitle"></span><!-- moment.js -->

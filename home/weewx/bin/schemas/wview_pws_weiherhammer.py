@@ -238,13 +238,15 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 #
 # additional Values 
 ('airDensity', 'REAL'),
+('outEquiTemp', 'REAL'),
+('outHumAbs', 'REAL'),
+('sunshineDur', 'REAL'),
+('sunshineDurOriginal', 'REAL'),
 ('thswIndex', 'REAL'),
 ('thwIndex', 'REAL'),
 ('vaporPressure', 'REAL'),
 ('wetBulb', 'REAL'),
 ('windPressure', 'REAL'),
-('sunshineDur', 'REAL'),
-('sunshineDurOriginal', 'REAL'),
 ]
 
 day_summaries = [(e[0], 'scalar') for e in table

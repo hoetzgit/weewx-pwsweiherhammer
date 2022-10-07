@@ -130,9 +130,11 @@ import os.path
 
 from configobj import ConfigObj
 
+import weewx
 from weewx.cheetahgenerator import SearchList
 from weewx.tags import TimespanBinder
 import weeutil.weeutil
+import weewx.units
 
 log = logging.getLogger(__name__)
 
@@ -170,6 +172,13 @@ class TableGenerator(SearchList):
             table_type = table_options.get('table_type', 'normal').lower()
             refresh_interval = int(table_options.get('refresh_interval', 60))
             monthnames = table_options.get('monthnames', 'Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec')
+            table_type = table_options.get('table_type', 'normal').lower()
+            obs_type = table_options.get('obs_type', None)
+
+            if table_type == 'normal':
+                 if obs_type is None:
+                     log.error("Table %s without obs_type!" % table_name)
+                     continue
 
             if table_name not in self.tabcache:
                 self.tabcache[table_name] = {}
@@ -182,6 +191,7 @@ class TableGenerator(SearchList):
                     log.debug("Generate table %s." % (table_name))
                 binding = table_options.get('data_binding', 'wx_binding')
                 startdate = table_options.get('startdate', None)
+
                 if startdate is not None:
                     table_timespan = weeutil.weeutil.TimeSpan(int(startdate), db_lookup(binding).last_timestamp)
                 else:
@@ -248,6 +258,7 @@ class TableGenerator(SearchList):
 
         try:
             obs_type = table_options['obs_type']
+            unit_type = table_options.get('unit_type', None)
             aggregate_type = table_options['aggregate_type']
         except KeyError:
             log.error("Problem with config! Table: %s." % (table_name))
@@ -283,9 +294,12 @@ class TableGenerator(SearchList):
                 return "Error: Could not generate table %s" % table_name
 
         try:
-            unit_type = reading.converter.group_unit_dict[reading.value_t[2]]
+            reading_unit_type = reading.converter.group_unit_dict[reading.value_t[2]]
         except KeyError:
             log.error("Table %s, obs_type %s no unit found!" % (table_name, obs_type))
+
+        if unit_type is None:
+            unit_type = reading_unit_type
 
         year_heading = table_options.get('year_heading', None)
         if year_heading is None:
@@ -331,23 +345,40 @@ class TableGenerator(SearchList):
                     try:
                         value = getattr(obsMonth, aggregate_type)((threshold_value, threshold_unit)).value_t
                     except:
-                        value = [0, 'count']
+                        #value = [0, 'count']
+                        value = [None, '', '']
                 else:
                     value = converter.convert(getattr(obsMonth, aggregate_type).value_t)
-                htmlText += "            %s\n" % self._colorCell(value[0], format_string, cellColours)
+
+                if value[0] is None:
+                    value = None
+                else:
+                    if reading_unit_type != unit_type:
+                        value = weewx.units.convert(value, unit_type)
+                    value = value[0]
+
+                htmlText += "            %s\n" % self._colorCell(value, format_string, cellColours)
 
             if summary_column:
                 obsYear = getattr(year, obs_type)
                 obsYear.data_binding = binding;
-
                 if aggregation:
                     try:
                         value = getattr(obsYear, aggregate_type)((threshold_value, threshold_unit)).value_t
                     except:
-                        value = [0, 'count']
+                        #value = [0, 'count']
+                        value = [None, '', '']
                 else:
                     value = converter.convert(getattr(obsYear, aggregate_type).value_t)
-                htmlText += "            %s\n" % self._colorCell(value[0], format_string, cellColours, summary=True, summary_colored=summary_colored)
+
+                if value[0] is None:
+                    value = None
+                else:
+                    if reading_unit_type != unit_type:
+                        value = weewx.units.convert(value, unit_type)
+                    value = value[0]
+
+                htmlText += "            %s\n" % self._colorCell(value, format_string, cellColours, summary=True, summary_colored=summary_colored)
             htmlText += "        </tr>\n"
 
         htmlText += "    </tbody>\n"
