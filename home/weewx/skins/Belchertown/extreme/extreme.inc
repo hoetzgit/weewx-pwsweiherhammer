@@ -297,21 +297,20 @@
                     <td class="extreme-table-body-obs-val-alltime">$alltime.outHumidity.min</td>
                     <td class="extreme-table-body-obs-ts-alltime" id="at-outHumidity-min-ts"></td><!-- moment.js -->
                 </tr>
-                ## TODO: abs Luftfeuchte
-                ##<tr>
-                ##    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_high_outhumabs</th>
-                ##    <td class="extreme-table-body-obs-val-year">$year.outHumAbs.max</td>
-                ##    <td class="extreme-table-body-obs-ts-year" id="year-outHumAbs-max-ts"></td><!-- moment.js -->
-                ##    <td class="extreme-table-body-obs-val-alltime">$alltime.outHumAbs.max</td>
-                ##    <td class="extreme-table-body-obs-ts-alltime" id="at-outHumAbs-max-ts"></td><!-- moment.js -->
-                ##</tr>
-                ##<tr>
-                ##    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_lowest_outhumabs</th>
-                ##    <td class="extreme-table-body-obs-val-year">$year.outHumAbs.min</td>
-                ##    <td class="extreme-table-body-obs-ts-year" id="year-outHumAbs-min-ts"></td><!-- moment.js -->
-                ##    <td class="extreme-table-body-obs-val-alltime">$alltime.outHumAbs.min</td>
-                ##    <td class="extreme-table-body-obs-ts-alltime" id="at-outHumAbs-min-ts"></td><!-- moment.js -->
-                ##</tr>
+                <tr>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_high_outhumabs</th>
+                    <td class="extreme-table-body-obs-val-year">$year.outHumAbs.max.gram_per_meter_cubed</td>
+                    <td class="extreme-table-body-obs-ts-year" id="year-outHumAbs-max-ts"></td><!-- moment.js -->
+                    <td class="extreme-table-body-obs-val-alltime">$alltime.outHumAbs.max.gram_per_meter_cubed</td>
+                    <td class="extreme-table-body-obs-ts-alltime" id="at-outHumAbs-max-ts"></td><!-- moment.js -->
+                </tr>
+                <tr>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_lowest_outhumabs</th>
+                    <td class="extreme-table-body-obs-val-year">$year.outHumAbs.min.gram_per_meter_cubed</td>
+                    <td class="extreme-table-body-obs-ts-year" id="year-outHumAbs-min-ts"></td><!-- moment.js -->
+                    <td class="extreme-table-body-obs-val-alltime">$alltime.outHumAbs.min.gram_per_meter_cubed</td>
+                    <td class="extreme-table-body-obs-ts-alltime" id="at-outHumAbs-min-ts"></td><!-- moment.js -->
+                </tr>
             </tbody>
             <thead class="table-light extreme-table-head">
                 <tr>

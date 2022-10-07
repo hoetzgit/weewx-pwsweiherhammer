@@ -55,49 +55,49 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-12 history-headline">$obs.label.history_ice_days_title</div>
+    <div class="col-md-12 history-headline">$obs.label.history_ice_days_title <a href="$obs.label.history_ice_days_url" target="_blank" rel="noreferrer" title="$obs.label.history_info_title"><i class="fa fa-info-circle fa-1 history-info-icon"></i></a></div>
     <div class="col-xs-12 history-table-container">
         $ice_days_table
     </div>
 </div>
 <div class="row">
-    <div class="col-md-12 history-headline">$obs.label.history_frost_days_title</div>
+    <div class="col-md-12 history-headline">$obs.label.history_frost_days_title <a href="$obs.label.history_frost_days_url" target="_blank" rel="noreferrer" title="$obs.label.history_info_title"><i class="fa fa-info-circle fa-1 history-info-icon"></i></a></div>
     <div class="col-xs-12 history-table-container">
         $frost_days_table
     </div>
 </div>
 <div class="row">
-    <div class="col-md-12 history-headline">$obs.label.history_summer_days_title</div>
+    <div class="col-md-12 history-headline">$obs.label.history_summer_days_title <a href="$obs.label.history_summer_days_url" target="_blank" rel="noreferrer" title="$obs.label.history_info_title"><i class="fa fa-info-circle fa-1 history-info-icon"></i></a></div>
     <div class="col-xs-12 history-table-container">
         $summer_days_table
     </div>
 </div>
 <div class="row">
-    <div class="col-md-12 history-headline">$obs.label.history_hot_days_title</div>
+    <div class="col-md-12 history-headline">$obs.label.history_hot_days_title <a href="$obs.label.history_hot_days_url" target="_blank" rel="noreferrer" title="$obs.label.history_info_title"><i class="fa fa-info-circle fa-1 history-info-icon"></i></a></div>
     <div class="col-xs-12 history-table-container">
         $hot_days_table
     </div>
 </div>
 <div class="row">
-    <div class="col-md-12 history-headline">$obs.label.history_desert_days_title</div>
+    <div class="col-md-12 history-headline">$obs.label.history_desert_days_title <a href="$obs.label.history_desert_days_url" target="_blank" rel="noreferrer" title="$obs.label.history_info_title"><i class="fa fa-info-circle fa-1 history-info-icon"></i></a></div>
     <div class="col-xs-12 history-table-container">
         $desert_days_table
     </div>
 </div>
 <div class="row">
-    <div class="col-md-12 history-headline">$obs.label.history_sultry_days_title</div>
+    <div class="col-md-12 history-headline">$obs.label.history_sultry_days_title <a href="$obs.label.history_sultry_days_url" target="_blank" rel="noreferrer" title="$obs.label.history_info_title"><i class="fa fa-info-circle fa-1 history-info-icon"></i></a></div>
     <div class="col-xs-12 history-table-container">
         $sultry_days_table
     </div>
 </div>
 <div class="row">
-    <div class="col-md-12 history-headline">$obs.label.history_tropical_nights_title</div>
+    <div class="col-md-12 history-headline">$obs.label.history_tropical_nights_title <a href="$obs.label.history_tropical_nights_url" target="_blank" rel="noreferrer" title="$obs.label.history_info_title"><i class="fa fa-info-circle fa-1 history-info-icon"></i></a></div>
     <div class="col-xs-12 history-table-container">
         $tropical_nights_table
     </div>
 </div>
 <div class="row">
-    <div class="col-md-12 history-headline">$obs.label.history_vegetation_days_title</div>
+    <div class="col-md-12 history-headline">$obs.label.history_vegetation_days_title <a href="$obs.label.history_vegetation_days_url" target="_blank" rel="noreferrer" title="$obs.label.history_info_title"><i class="fa fa-info-circle fa-1 history-info-icon"></i></a></div>
     <div class="col-xs-12 history-table-container">
         $vegetation_days_table
     </div>
@@ -109,7 +109,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-12 history-headline">$obs.label.history_rain_days_title</div>
+    <div class="col-md-12 history-headline">$obs.label.history_rain_days_title <a href="$obs.label.history_rain_days_url" target="_blank" rel="noreferrer" title="$obs.label.history_info_title"><i class="fa fa-info-circle fa-1 history-info-icon"></i></a></div>
     <div class="col-xs-12 history-table-container">
         $rain_days_table
     </div>
@@ -121,7 +121,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-12 history-headline">$obs.label.history_lightning_days_title</div>
+    <div class="col-md-12 history-headline">$obs.label.history_lightning_days_title <a href="$obs.label.history_lightning_days_url" target="_blank" rel="noreferrer" title="$obs.label.history_info_title"><i class="fa fa-info-circle fa-1 history-info-icon"></i></a></div>
     <div class="col-xs-12 history-table-container">
         $lightning_days_table
     </div>

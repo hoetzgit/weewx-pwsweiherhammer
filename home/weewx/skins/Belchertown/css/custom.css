@@ -337,6 +337,10 @@ span.highcharts-title {
     padding-right: 0 !important;
 }
 
+.history-info-icon:before {
+    color: royalblue;
+}
+
 .history-table-container, .history-table-noaa-container {
     padding-right: 0px;
     padding-left: 0px;
@@ -349,10 +353,12 @@ span.highcharts-title {
 
 .history-table, .history-table-noaa {
     font-size: calc(9px + 0.4vw);
+    margin-bottom: 0px;
 }
 
 .dark .history-table, .dark .history-table-noaa {
     font-size: calc(9px + 0.4vw);
+    margin-bottom: 0px;
 }
 
 .history-table >thead>tr>th, .history-table >thead>tr>td, .history-table >tbody>tr>th, .history-table >tbody>tr>td {
