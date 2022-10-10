@@ -1,8 +1,6 @@
+#errorCatcher Echo
 #encoding UTF-8
-
 <div class="entry-content about-outer">
-    <!-- Start AerisWeather-->
-
     <script type="text/javascript">
         var moment_locale = "$system_locale_js";
         moment.locale(moment_locale);
@@ -18,23 +16,13 @@
             // Load forecast
             ajaxforecast(); // Initial call to load forecast data like 8 day outlook, weather icon and observation text
             #end if
-        
+
             jQuery(document).ready(function() {
                 // Update the Last Updated timestamp with moment.js,
                 updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
                 updated_text = "$obs.label.header_last_updated " + updated;
                 jQuery(".updated").html( updated_text );
 
-                #if $Extras.has_key("show_last_updated_alert") and $Extras.show_last_updated_alert == '1'
-                // Check if we need to alert on old information - if time now, minus the last update is greater than the threshold, show an alert.
-                if ( ( Math.floor(new Date().getTime()/1000.0) - $Extras.last_updated_alert_threshold ) > $current.dateTime.raw ) {
-                    belchertown_debug("Last Updated Alert: The weewx report timestamp is "+$current.dateTime.raw+". The current timestamp is "+Math.floor(new Date().getTime()/1000.0)+". The threshold is "+$Extras.last_updated_alert_threshold+". Report timestamp is greater than threshold of current time, showing no update alert.");
-                    last_updated_alert_text = "<i class='fa fa-exclamation-triangle' style='color:red;'></i> $obs.label.header_last_updated_alert";
-                    jQuery(".last-updated-alert").html( last_updated_alert_text );
-                    jQuery(".last-updated-alert").show();
-                }
-                #end if
-                        
                 // Update the Last Updated timestamp with moment.js,
                 updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
                 updated_text = "$obs.label.header_last_updated " + updated;
@@ -53,11 +41,9 @@
         }).catch(function(e) {
             console.log(e);
         });
-        
     </script>
 
     <!-- DWD Vorhersage -->
-
     #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1' and (($Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours != '0') or not ($Extras.has_key("forecast_interval_hours")))
     <div class="row border-bottom forecast-source-container">
         <div class="row col-sm-12 forecast-source">$obs.label.forecast_issueTime_dwd <span class="forecast-issueTime-dwd"></span><!-- moment.js --></div>
@@ -93,6 +79,7 @@
     #end if
 
     ###if os.path.exists("dwd/forecast-10688.inc")
+    ##<!-- DWD Vorhersage weewx-DWD-->
     ##<div class="row index-hook-after-forecast border-bottom" style="margin-top:15px;">
     ##    <div class="col-md-12 forecast-title">
     ##        Wettervorhersage der Station Weiden i.d. OPf
@@ -115,7 +102,7 @@
     ##</div>
     ###end if
 
-    <!-- DWD Meteogramm weewx-DWD -->
+    <!-- DWD Meteogramm -->
     <script type='text/javascript'>showChart("DWD");</script>
 
     <div class="row" style="margin-top:15px;">
@@ -125,6 +112,7 @@
     </div>
 
     #if os.path.exists("dwd/SchilderMS.jpg")
+    <!-- DWD Warnungen -->
     <div class="row index-hook-after-forecast">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_warnings_by
@@ -219,6 +207,7 @@
     #end if
 
     #if os.path.exists("dwd/bwk_bodendruck_na_ana.png")
+    <!-- DWD Luftdruck am Boden -->
     <div class="row index-hook-after-forecast">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_current_map

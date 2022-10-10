@@ -1,3 +1,4 @@
+#errorCatcher Echo
 #encoding UTF-8
 <div class="entry-content about-outer" itemprop="text">
 
@@ -173,7 +174,7 @@
             damit dies per Software sinnvoll gesteuert werden kann. Die Messwerte der Sensoren werden zus&auml;tzlich an die Station gesendet und 
             <a href="https://www.weiherhammer-wetter.de/graphs/?graph=AllSky" target="_blank" rel="noreferrer">visualisiert</a>.</p>
             <p>Der Raspberry Pi, die L&uuml;fter und die Heizung m&uuml;ssen mit gen&uuml;gend Power versorgt werden. Die Kamera ist mit einem 20m Stromkabel und einem st&auml;rkeren Netzteil verbunden, welches 
-            gen&uuml;gend Leistung liefert kann. Die Bauteile im Inneren sind &uuml;ber diesen 
+            gen&uuml;gend Leistung liefert. Die Bauteile im Inneren sind &uuml;ber einen 
             <a href="https://www.amazon.de/dp/B092VRTS7Z/?coliid=I2QFJ21HVTT0U8&colid=2OFTVJIQKSNN1&psc=1&ref_=lv_ov_lig_dp_it" target="_blank" rel="noreferrer">Buck Converter</a> angeschlossen und 
             erhalten so ihre 5V oder 12V Spannung.</p>
             <p>Als AllSky Backend und zur Darstellung der AllSky Webseite verwende ich das Projekt von <a href="https://github.com/thomasjacquin/allsky" target="_blank" rel="noreferrer">Thomas Jacquin</a>.</p>
@@ -284,7 +285,7 @@
                 ##<li>Die Meteogramm-Visualisierung der DWD Vorhersage erfolgt mit dem Meteogramm von <a href="http://tools.wettersoftware.de" target="_blank" rel="noreferrer">wettersoftware.de</a></li>
                 <li>Erweiterung <a href="https://github.com/jonathankoren/weewx-aqi" target="_blank" rel="noreferrer">weewx-aqi</a>, angepasste <a href="https://github.com/hoetzgit/weewx-aqi/tree/CustomAirQualityIndex" target="_blank" rel="noreferrer">Version</a>, diese orientiert sich an den <a href="https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex" target="_blank" rel="noreferrer">Berechnungsgrundlagen Luftqualit&auml;tsindex</a> des Umweltbundesamtes</li>
                 <li>Erweiterung <a href="https://github.com/Jterrettaz/sunduration" target="_blank" rel="noreferrer">sunduration</a>, angepasste <a href="https://github.com/hoetzgit/sunduration/tree/sunshineDur_seconds" target="_blank" rel="noreferrer">Version</a>, Berechnung der Sonnenscheindauer in Sekunden pro Archiv Intervall</li>
-                <li>Erweiterung <a href="https://github.com/brewster76/fuzzy-archer/tree/master/bin/user" target="_blank" rel="noreferrer">historygenerator</a> um <a href="https://www.weiherhammer-wetter.de/reports/" target="_blank" rel="noreferrer">tabellarische Reporte</a> zu erstellen.</li>
+                <li>Erweiterung <a href="https://github.com/brewster76/fuzzy-archer/tree/master/bin/user" target="_blank" rel="noreferrer">historygenerator</a>, angepasste <a href="https://github.com/hoetzgit/weewx-pwsweiherhammer/blob/master/home/weewx/bin/user/tablegenerator.py" target="_blank" rel="noreferrer">Version</a> um <a href="https://www.weiherhammer-wetter.de/reports/" target="_blank" rel="noreferrer">tabellarische Reporte</a> zu erstellen.</li>
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-windy" target="_blank" rel="noreferrer">weewx-windy</a>, Upload zu <a href="https://www.windy.com" target="_blank" rel="noreferrer">Windy.com</a>, Version: 0.7</li>
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-wetter" target="_blank" rel="noreferrer">weewx-wetter</a>, Upload zu <a href="https://www.wetter.com" target="_blank" rel="noreferrer">wetter.com</a>, Version: 0.7</li>
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-owm" target="_blank" rel="noreferrer">weewx-owm</a>, angepasste <a href="https://github.com/hoetzgit/weewx-owm/tree/pws-weiherhammer" target="_blank" rel="noreferrer">Version</a>, Upload zu <a href="https://openweathermap.org" target="_blank" rel="noreferrer">OpenWeatherMap</a>, Version: 0.9</li>
@@ -387,9 +388,9 @@
     <div class="row about-row">
         <div class="col-sm-12">
             <h2>GitHub</h2>
-            <p>Meine aktuellen Anpassungen und Konfigurationen als Sicherung bei GitHub</p>
+            <p>Meine Anpassungen und Konfigurationen als Sicherung bei GitHub</p>
             <ul>
-                <li>Anpassungen <a href="https://github.com/hoetzgit/weewx-pwsweiherhammer" target="_blank" rel="noreferrer">WeeWX</a> komplett PWS Weiherhammer</li>
+                <li>Anpassungen <a href="https://github.com/hoetzgit/weewx-pwsweiherhammer" target="_blank" rel="noreferrer">WeeWX</a> PWS Weiherhammer</li>
                 <li>Anpassungen <a href="https://github.com/hoetzgit/weewx-belchertown-pwsweiherhammer" target="_blank" rel="noreferrer">Belchertown skin</a> PWS Weiherhammer</li>
             </ul>
         </div>

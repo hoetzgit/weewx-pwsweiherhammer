@@ -1,3 +1,4 @@
+#errorCatcher Echo
 #encoding UTF-8
 <div class="entry-content about-outer" itemprop="text">
     <!-- Impressum -->

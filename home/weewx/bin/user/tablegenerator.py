@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the GNU GENERAL PUBLIC LICENSE
 #
-# 2022-09-29 Henry Ott
+# 2022-10-10 Henry Ott
 # This version was modified to better fit my WeeWX installation with the Belchertown skin.
 #
 """Extends the Cheetah generator search list to add html historic data tables in a nice colour scheme.
@@ -28,93 +28,184 @@ Adding the section below to your skins.conf file will create these new tags:
    $avg_temp_table
    $rain_table
    $noaa_table
+etc.
 
 ############################################################################################
 #
 # HTML month/year colour coded summary table generator
 #
 [TableGenerator]
-    # Set to > 0 for extra debug info, otherwise comment it out or set to zero
-    debug = 0
-
-    # All options from here on can be overwritten per table of type "normal":
-
+    # original: https://github.com/brewster76/fuzzy-archer/blob/master/bin/user/historygenerator.py
+    # Set to 1 for extra debug info, otherwise comment it out or set to zero
+    debug = 1
+    # refresh in minutes
+    refresh_interval = 20
     # table_type [normal|noaa]
     table_type = normal
-
-    # Get the binding where the data is allocated
     data_binding = wx_binding
-
-    # Show all time unless starting date specified
-    startdate =
-
-    # Headline year column. If empty, the unit is used
-    year_heading =
-
-    # summary column True|False
+    year_heading = Jahr
     summary_column = true
-
-    # Headline summary column
-    summary_heading =
-
-    # summary column with colors True|False
-    summary_colored =
-
-    monthnames = Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
-
-    # The Raspberry Pi typically takes 15+ seconds to calculate all the summaries with a few years of weather date.
-    # refresh_interval is how often in minutes the tables are calculated.
-    refresh_interval = 60
-
-    # minvalues, maxvalues and colours should contain the same number of elements.
-    #
-    # For example,  the [min_temp] example below, if the minimum temperature measured in
-    # a month is between -50 and -10 (degC) then the cell will be shaded in html colour code #0029E5.
-    #
-    # colours = background colour
-    # fontColours = foreground colour [optional, defaults to black if omitted]
-
-    # Default is temperature scale
+    summary_colored = false
+    monthnames = Jan, Feb, M&auml;rz, Apr, Mai, Juni, Juli, Aug, Sep, Okt, Nov, Dez
+    # temperature tables as defaults:
     minvalues = -50, -10, -5, 0, 5, 10, 15, 20, 25, 30, 35
     maxvalues = -10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 60
     colours = "#0029E5", "#0186E7", "#02E3EA", "#04EC97", "#05EF3D", "#2BF207", "#8AF408", "#E9F70A", "#F9A90B", "#FC4D0D", "#FF0F2D"
     fontColours = "#FFFFFF", "#FFFFFF", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#FFFFFF", "#FFFFFF", "#FFFFFF"
-
-    [[min_temp_table]]                     # Create a new Cheetah tag which will have a _table suffix: $min_temp_table
-        obs_type = outTemp                 # obs_type can be any weewx observation, e.g. outTemp, barometer, wind, ...
-        aggregate_type = min               # Any of these: 'sum', 'count', 'avg', 'max', 'min'
+    
+    [[min_temp_table]]
+        obs_type = outTemp
+        aggregate_type = min
         summary_heading = Min
         summary_colored = true
-
+    
     [[max_temp_table]]
         obs_type = outTemp
         aggregate_type = max
         summary_heading = Max
         summary_colored = true
-
+    
     [[avg_temp_table]]
         obs_type = outTemp
         aggregate_type = avg
         summary_heading = "&#8709;"
         summary_colored = true
-
+    
+    [[ice_days_table]]
+        obs_type = outTemp
+        aggregate_type = max_le
+        aggregate_threshold = 0.0000000000000001, degree_C
+        summary_heading = "&#931;"
+        minvalues = 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18
+        maxvalues = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 365
+        colours = "#EDEDFC", "#E0E0FC", "#D0D0FC", "#C0C0FC", "#B0B0FC", "#A0A0FC", "#9090FC", "#8080FC", "#7070FC", "#6060FC", "#5050FC", "#4040FC", "#6020FC", "#9015FC", "#AF10FC", "#CC10FC"
+        fontColours = "#000000", "#000000", "#000000", "#000000", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"
+    
+    [[frost_days_table]]
+        obs_type = outTemp
+        aggregate_type = min_le
+        aggregate_threshold = 0.0000000000000001, degree_C
+        summary_heading = "&#931;"
+        minvalues = 1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 31
+        maxvalues = 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 31, 365
+        colours = "#EDEDFC", "#E0E0FC", "#D0D0FC", "#C0C0FC", "#B0B0FC", "#A0A0FC", "#9090FC", "#8080FC", "#7070FC", "#6060FC", "#5050FC", "#4040FC", "#6020FC", "#9015FC", "#AF10FC", "#CC10FC"
+        fontColours = "#000000", "#000000", "#000000", "#000000", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"
+    
+    [[summer_days_table]]
+        obs_type = outTemp
+        aggregate_type = max_ge
+        aggregate_threshold = 25.0, degree_C
+        summary_heading = "&#931;"
+        minvalues = 1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22
+        maxvalues = 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 365
+        colours = "#fceded", "#fcdbdb", "#fcc0c0", "#fcaaaa", "#fc9090", "#fc7a7a", "#fc6060", "#fc4c4c", "#fc3030", "#fc1b1b", "#fc1b1b", "#fc0000"
+        fontColours = "#000000", "#000000", "#000000", "#000000", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"
+    
+    [[hot_days_table]]
+        obs_type = outTemp
+        aggregate_type = max_ge
+        aggregate_threshold = 30.0, degree_C
+        summary_heading = "&#931;"
+        minvalues = 1, 1, 2, 3, 5, 7, 9, 11, 13, 15, 18, 22
+        maxvalues = 1, 2, 3, 5, 7, 9, 11, 13, 15, 18, 22, 365
+        colours = "#fceded", "#fcdbdb", "#fcc0c0", "#fcaaaa", "#fc9090", "#fc7a7a", "#fc6060", "#fc4c4c", "#fc3030", "#fc1b1b", "#fc1b1b", "#fc0000"
+        fontColours = "#000000", "#000000", "#000000", "#000000", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"
+    
+    [[desert_days_table]]
+        obs_type = outTemp
+        aggregate_type = max_ge
+        aggregate_threshold = 35.0, degree_C
+        summary_heading = "&#931;"
+        minvalues = 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+        maxvalues = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 365
+        colours = "#fceded", "#fcdbdb", "#fcc0c0", "#fcaaaa", "#fc9090", "#fc7a7a", "#fc6060", "#fc4c4c", "#fc3030", "#fc1b1b", "#fc1b1b", "#fc0000"
+        fontColours = "#000000", "#000000", "#000000", "#000000", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"
+    
+    [[tropical_nights_table]]
+        obs_type = outTemp
+        aggregate_type = min_ge
+        aggregate_threshold = 20.0, degree_C
+        summary_heading = "&#931;"
+        minvalues = 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+        maxvalues = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 365
+        colours = "#fceded", "#fcdbdb", "#fcc0c0", "#fcaaaa", "#fc9090", "#fc7a7a", "#fc6060", "#fc4c4c", "#fc3030", "#fc1b1b", "#fc1b1b", "#fc0000"
+        fontColours = "#000000", "#000000", "#000000", "#000000", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"
+    
+    [[sultry_days_table]]
+        refresh_interval = 1
+        obs_type = dewpoint
+        aggregate_type = max_ge
+        aggregate_threshold = 17.0, degree_C
+        summary_heading = "&#931;"
+        minvalues = 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+        maxvalues = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 365
+        colours = "#fceded", "#fcdbdb", "#fcc0c0", "#fcaaaa", "#fc9090", "#fc7a7a", "#fc6060", "#fc4c4c", "#fc3030", "#fc1b1b", "#fc1b1b", "#fc0000"
+        fontColours = "#000000", "#000000", "#000000", "#000000", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"
+    
+    [[vegetation_days_table]]
+        obs_type = outTemp
+        aggregate_type = avg_ge
+        aggregate_threshold = 5.0000001, degree_C
+        summary_heading = "&#931;"
+        minvalues = 1, 1, 5, 10, 20, 27, 32, 190, 220, 240, 260, 280
+        maxvalues = 1, 5, 10, 20, 27, 32, 190, 220, 240, 260, 280, 365
+        colours = "#f0f0f0", "#c6fcc6", "#9bfc9b", "#64fc64", "#28fc28", "#00c800", "#f0f0f0", "#c6fcc6", "#9bfc9b", "#64fc64", "#28fc28", "#00c800"
+        fontColours = "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000"
+    
     [[rain_table]]
         obs_type = rain
         aggregate_type = sum
-        data_binding = alternative_binding
-
-        # Override default temperature colour scheme with rain specific scale
-        minvalues = 0, 25, 50, 75, 100, 150
-        maxvalues = 25, 50, 75, 100, 150, 1000
-        colours = "#E0F8E0", "#A9F5A9", "#58FA58", "#2EFE2E", "#01DF01", "#01DF01"
-        fontColours = "#000000", "#000000", "#000000", "#000000", "#000000", "#000000"
-
+        summary_heading = "&#931;"
+        minvalues = 0, 25, 50, 75, 100, 150, 200, 250, 300, 350, 390, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900
+        maxvalues = 25, 50, 75, 100, 150, 200, 250, 300, 350, 390, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 5000
+        colours = "#e6e5fc", "#cccafc", "#acaafc", "#8486fc", "#6c6efc", "#5c5afc", "#fc02fc", "#d402d4", "#9c029c", "#6d016d", "#ffffff", "#e6e5fc", "#cccafc", "#acaafc", "#8486fc", "#6c6efc", "#5c5afc", "#fc02fc", "#d402d4", "#9c029c", "#6d016d"
+        fontColours = "#000000", "#000000", "#000000", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#FFFFFF", "#FFFFFF"
+    
+    [[rain_days_table]]
+        obs_type = rain
+        aggregate_type = sum_ge
+        aggregate_threshold = 0.1, mm
+        summary_heading = "&#931;"
+        minvalues = 1, 5, 10, 15, 20, 25, 31, 100, 120, 140, 160, 180, 200
+        maxvalues = 5, 10, 15, 20, 25, 31, 100, 120, 140, 160, 180, 200, 365
+        colours = "#e6e5fc", "#cccafc", "#acaafc", "#8486fc", "#6c6efc", "#5c5afc", "#ffffff", "#e6e5fc", "#cccafc", "#acaafc", "#8486fc", "#6c6efc", "#5c5afc"
+        fontColours = "#000000", "#000000", "#000000", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000"
+    
+    [[lightning_days_table]]
+        obs_type = lightning_strike_count
+        aggregate_type = sum
+        summary_heading = "&#931;"
+        minvalues = 1, 5, 10, 20, 40, 80, 160, 250, 350, 450, 600
+        maxvalues = 5, 10, 20, 40, 80, 160, 250, 350, 450, 600, 20000
+        colours = "#F7F8E0", "#F3F781", "#FFFF00", "#F7D358", "#FFBF00", "#FAAC58", "#FF8000", "#FE642E", "#F9A90B", "#FC4D0D", "#FF0F2D"
+        fontColours = "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#FFFFFF", "#FFFFFF"
+        # 01.01.2022 00:00:00
+        startdate = 1640991600
+    
+    [[max_wind_table]]
+        obs_type = windGust
+        aggregate_type = max
+        summary_heading = Max
+        summary_colored = true
+        minvalues = 0, 1, 5, 11, 19, 29, 39, 50, 61, 74, 88, 102, 118
+        maxvalues = 1, 5, 11, 19, 29, 39, 50, 61, 74, 88, 102, 118, 200
+        colours = "#ffffff", "#72d475", "#10cd24", "#00b900", "#f1eea5", "#f6ef27", "#fed6d3", "#ffb6b3", "#ff9e9a", "#ff8281", "#ff6160", "#ff453c", "#ff200e"
+        fontColours = "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000"
+    
+    [[sunshineDur_table]]
+        obs_type = sunshineDur
+        unit_type = hour
+        aggregate_type = sum
+        summary_heading = "&#931;"
+        minvalues = 0.01, 50, 100, 150, 200, 300, 400
+        maxvalues = 50, 100, 150, 200, 250, 350, 10000
+        colours = "#FFC83F", "#FFC83F", "#FFC83F", "#FFC83F", "#FFC83F", "#FFC83F", "#FFC83F"
+        fontColours = "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000"
+        # 01.06.2022 00:00:00
+        startdate = 1654034400
+    
     [[noaa_table]]
         table_type = noaa
-        # Where to find the NOAA files and how they are named
-        # Uses Python datetime convention (docs.python.org/2/library/datetime.html):
-        # %Y = YYYY, %y = YY, %m = MM, etc.
-        #
         # https://www.weiherhammer-wetter.de/reports/?yr=2020
         #year_link = ?yr=%Y
         year_link = ../NOAA/NOAA-%Y.txt

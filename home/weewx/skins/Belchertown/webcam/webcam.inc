@@ -1,3 +1,4 @@
+#errorCatcher Echo
 #encoding UTF-8
 <div class="row" style="margin-top:10px;">
     <div id="webcamfull" class="col-xs-12">
