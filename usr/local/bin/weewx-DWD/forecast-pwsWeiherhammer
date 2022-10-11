@@ -2925,13 +2925,22 @@ class ForecastPWS(object):
         return dist_km
 
     # TODO css, error handling, opt issued time, change table to divs?
-    def forecast_wbx_html(self, keymapping_dict, tabheader_list, tabcontent_dict, htmlsource, output, dryrun, lang='de'):
+    # https://www.dwd.de/DWD/warnungen/agrar/wbx/wbx_tab_alle_BY.html
+    def forecast_wbx_html(self, keymapping_dict, tabheader_list, tabcontent_dict, issued_time, output, dryrun, lang='de'):
         if self.verbose:
             loginf('forecast_wbx_html: started.')
-        html = '<!-- Waldbrandgefahrenindex -->\n'
+        html  = '<!-- DWD Waldbrandgefahrenindex -->\n'
         html += '<div class="col-xs-12 wbx-headline">$obs.label.forecast_header_wbx'
-        html += '<span class="wbx-issued"> $obs.label.forecast_issueTime_wbx ' + htmlsource + '</span>\n'
+        html += '<span class="wbx-issued"> $obs.label.forecast_issueTime_wbx ' + issued_time + '</span>\n'
         html += '</div>\n'
+        html += '<style>\n'
+        html += '    .farbidx0 {background-color:#FFFFFF; color:#000000;}\n'
+        html += '    .farbidx1 {background-color:#FFFFCD; color:#000000;}\n'
+        html += '    .farbidx2 {background-color:#FFD879; color:#000000;}\n'
+        html += '    .farbidx3 {background-color:#FF8C39; color:#000000;}\n'
+        html += '    .farbidx4 {background-color:#E9161D; color:#000000;}\n'
+        html += '    .farbidx5 {background-color:#7F0126; color:#FFFFFF;}\n'
+        html += '</style>\n'
         html += '<div class="col-md-12 wbx-table-container" style="margin-top:5px">\n'
         html += '    <table class="table table-striped wbx-table">\n'
         html += '        <thead class="table-light wbx-table-head">\n'
@@ -2954,10 +2963,10 @@ class ForecastPWS(object):
                     html += cellcontent
                     html += '</th>\n'
                 else:
-                    html += '                <td class="wbx-table-body-day" style="'
-                    html += ('background-color:' + keymapping_dict[cellcontent]['background-color'])
-                    html += (';color:' + keymapping_dict[cellcontent]['color'])
-                    html += ';">'
+                    html += '                <td class="wbx-table-body-day'
+                    if keymapping_dict[cellcontent]['class'] is not None:
+                        html += ' ' + keymapping_dict[cellcontent]['class']
+                    html += '">'
                     html += (cellcontent + ' - ')
                     html += keymapping_dict[cellcontent]['description']
                     html += '</td>\n'
@@ -2977,7 +2986,7 @@ class ForecastPWS(object):
         if self.verbose:
             loginf('forecast_wbx_html: finished.')
     
-    # TODO error handling, opts
+    # TODO error handling, optimizations
     def forecast_wbx_read(self, data, output, dryrun, lang='de'):
         if self.verbose:
             loginf('forecast_wbx_read: started.')
@@ -2988,20 +2997,25 @@ class ForecastPWS(object):
         htmlsource = ''
         wbx_found = False
         try:
-            # Mapping index to color and description
+            # Mapping index to description and class
             for key, row in enumerate(data['data']['tables'][0]['rows']):
                 if (key > 0):
                     keymapping_dict[row['cols'][0]['nodeValue']] = dict()
                     keymapping_dict[row['cols'][0]['nodeValue']]['description'] = row['cols'][1]['nodeValue']
-                    styles = row['cols'][0]['attr']['style'].split(';')
-                    for elem in styles:
-                        if (elem != ''):
-                            tmplist = elem.split(':')
-                            if (tmplist[0] == 'color') or (tmplist[0] == 'background-color'):
-                                keymapping_dict[row['cols'][0]['nodeValue']][tmplist[0]] = tmplist[1]
+                    keymapping_dict[row['cols'][0]['nodeValue']]['class'] = None
+                    classes = row['cols'][0]['attr']['class'].split(' ')
+                    for elem in classes:
+                        if elem.find('farbidx') > -1:
+                            keymapping_dict[row['cols'][0]['nodeValue']]['class'] = elem
+            if self.verbose:
+                loginf('forecast_wbx_read: keymapping_dict: %s' % str(keymapping_dict))
+
             # Tab Header
             for key, col in enumerate(data['data']['tables'][1]['rows'][0]['cols']):
                 tabheader_list.append(col['nodeValue'])
+            if self.verbose:
+                loginf('forecast_wbx_read: tabheader_list:  %s' % str(tabheader_list))
+
             # Tab content wbx stations
             if not isinstance(self.wbx_stations,list):
                 # self.wbx_stations = list(self.wbx_stations) hat irgendwie nicht funktioniert
@@ -3037,26 +3051,31 @@ class ForecastPWS(object):
                         tabcontent_dict[stationidx].append(cols['nodeValue'])
                 if station_found:
                     stationidx += 1
+            if self.verbose:
+                loginf('forecast_wbx_read: tabcontent_dict: %s' % str(tabcontent_dict))
 
             # DWD issued time. I can't do better so far
             if wbx_found:
-                htmlcontent_dict = (data['data']['content'][(len(data['data']['content']) - 80):]).split('\n')
-                htmlsource = htmlcontent_dict[len(htmlcontent_dict) - 1];
-                htmlcontent_dict = htmlsource.split('erstellt')
-                htmlsource = htmlcontent_dict[1];
-                htmlsource = htmlsource.replace('UTC.','').strip();
-                is_zone = tz.gettz('UTC')
-                to_zone = tz.gettz('Europe/Berlin')
-                utc = datetime.datetime.strptime(htmlsource, '%d.%m.%Y %H:%M')
-                utc = utc.replace(tzinfo=is_zone)
-                central = utc.astimezone(to_zone)
-                htmlsource = central.strftime('%d.%m.%Y %H:%M')
-                if self.verbose:
-                    loginf('forecast_wbx_read: keymapping_dict: %s' % str(keymapping_dict))
-                    loginf('forecast_wbx_read: tabheader_list:  %s' % str(tabheader_list))
-                    loginf('forecast_wbx_read: tabcontent_dict: %s' % str(tabcontent_dict))
-                    loginf("forecast_wbx_read: htmlsource:      '%s'" % str(htmlsource))
-                self.forecast_wbx_html(keymapping_dict, tabheader_list, tabcontent_dict, htmlsource, output, dryrun, lang)
+                issued_time = None
+                startpos = data['data']['content'].find("Deutscher Wetterdienst, erstellt") + len("Deutscher Wetterdienst, erstellt")
+                if startpos > -1:
+                    endpos = startpos + data['data']['content'][startpos:].find("UTC")
+                    issued_time = data['data']['content'][startpos:endpos].strip()
+                if issued_time is not None:
+                    is_zone = tz.gettz('UTC')
+                    to_zone = tz.gettz('Europe/Berlin')
+                    utc = datetime.datetime.strptime(issued_time, '%d.%m.%Y %H:%M')
+                    utc = utc.replace(tzinfo=is_zone)
+                    central = utc.astimezone(to_zone)
+                    issued_time = central.strftime('%d.%m.%Y %H:%M')
+                    if self.verbose:
+                        loginf("forecast_wbx_read: issued_time:     '%s'" % issued_time)
+                else:
+                    issued_time = 'N/A'
+                    if self.log_failure:
+                        logerr("forecast_wbx_read: No data for issued_time found!")
+                # build html table
+                self.forecast_wbx_html(keymapping_dict, tabheader_list, tabcontent_dict, issued_time, output, dryrun, lang)
             elif self.log_failure:
                 logerr("forecast_wbx_read: No data for stations '%s' found!" % str(self.wbx_stations))
         except Exception as e:
