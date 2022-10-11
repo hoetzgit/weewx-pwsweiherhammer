@@ -142,6 +142,8 @@
 <div class="row">
     <div class="col-xs-12 extreme-table-container">
         <table class="table table-striped extreme-table">
+
+            <!-- Temperaturen -->
             <thead class="table-light extreme-table-head">
                 <tr>
                     <th scope="col" class="extreme-table-head-headline" colspan=5>$obs.label.extreme_temperature_records</th>
@@ -212,6 +214,8 @@
                     <td class="extreme-table-body-obs-ts-alltime" id="at-windchill-min-ts"></td><!-- moment.js -->
                 </tr>
             </tbody>
+
+            <!-- Temperaturdifferenzen -->
             <thead class="table-light extreme-table-head">
                 <tr>
                     <th scope="col" class="extreme-table-head-headline" colspan=5>$obs.label.extreme_temp_range</th>
@@ -226,26 +230,32 @@
                 <tr>
                     <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_largest_temp_range</th>
                     <td class="extreme-table-body-obs-val-year">$year_outTemp_range_max[1] $unit.label.outTemp</td>
-                    <td><span class="extreme-table-body-obs-ts-year" id="year-outtemp-range-max-ts"></span><br>
+                    <td class="extreme-table-body-obs-ts-year">
+                        <span id="year-outtemp-range-max-ts"></span><br><!-- moment.js -->
                         <span class="extreme-table-body-obs-descr-year">$year_outTemp_range_max[2] $unit.label.outTemp $obs.label.extreme_range_to $year_outTemp_range_max[3] $unit.label.outTemp</span>
-                    </td><!-- moment.js -->
+                    </td>
                     <td class="extreme-table-body-obs-val-alltime">$at_outTemp_range_max[1] $unit.label.outTemp</td>
-                    <td><span class="extreme-table-body-obs-ts-alltime" id="at-outtemp-range-max-ts"></span><br>
+                    <td class="extreme-table-body-obs-ts-alltime">
+                        <span id="at-outtemp-range-max-ts"></span><br><!-- moment.js -->
                         <span class="extreme-table-body-obs-descr-alltime">$at_outTemp_range_max[2] $unit.label.outTemp $obs.label.extreme_range_to $at_outTemp_range_max[3] $unit.label.outTemp</span>
-                    </td><!-- moment.js -->
+                    </td>
                 </tr>
                 <tr>
                     <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_smallest_temp_range</th>
                     <td class="extreme-table-body-obs-val-year">$year_outTemp_range_min[1] $unit.label.outTemp</td>
-                    <td><span class="extreme-table-body-obs-ts-year" id="year-outtemp-range-min-ts"></span><br>
+                    <td class="extreme-table-body-obs-ts-year">
+                        <span id="year-outtemp-range-min-ts"></span><br><!-- moment.js -->
                         <span class="extreme-table-body-obs-descr-year">$year_outTemp_range_min[2] $unit.label.outTemp $obs.label.extreme_range_to $year_outTemp_range_min[3] $unit.label.outTemp</span>
-                    </td><!-- moment.js -->
+                    </td>
                     <td class="extreme-table-body-obs-val-alltime">$at_outTemp_range_min[1] $unit.label.outTemp</td>
-                    <td><span class="extreme-table-body-obs-ts-alltime" id="at-outtemp-range-min-ts"></span><br>
+                    <td class="extreme-table-body-obs-ts-alltime">
+                        <span id="at-outtemp-range-min-ts"></span><br><!-- moment.js -->
                         <span class="extreme-table-body-obs-descr-alltime">$at_outTemp_range_min[2] $unit.label.outTemp $obs.label.extreme_range_to $at_outTemp_range_min[3] $unit.label.outTemp</span>
-                    </td><!-- moment.js -->
+                    </td>
                 </tr>
             </tbody>
+
+            <!-- rel. Luftdruck -->
             <thead class="table-light extreme-table-head">
                 <tr>
                     <th scope="col" class="extreme-table-head-headline" colspan=5>$obs.label.extreme_barometer_records</th>
@@ -272,6 +282,8 @@
                     <td class="extreme-table-body-obs-ts-alltime" id="at-barometer-min-ts"></td><!-- moment.js -->
                 </tr>
             </tbody>
+
+            <!-- Luftfeuchte -->
             <thead class="table-light extreme-table-head">
                 <tr>
                     <th scope="col" class="extreme-table-head-headline" colspan=5>$obs.label.extreme_humidity_records</th>
@@ -312,6 +324,8 @@
                     <td class="extreme-table-body-obs-ts-alltime" id="at-outHumAbs-min-ts"></td><!-- moment.js -->
                 </tr>
             </tbody>
+
+            <!-- Wind -->
             <thead class="table-light extreme-table-head">
                 <tr>
                     <th scope="col" class="extreme-table-head-headline" colspan=5>$obs.label.extreme_wind_records</th>
@@ -340,6 +354,8 @@
                 </tr>
                 #end if
             </tbody>
+
+            <!-- Regen -->
             <thead class="table-light extreme-table-head">
                 <tr>
                     <th scope="col" class="extreme-table-head-headline" colspan=5>$obs.label.extreme_rain_records</th>
@@ -380,6 +396,8 @@
                     <td class="extreme-table-body-obs-ts-alltime">$at_rain_highest_year[0]</td>
                 </tr>
             </tbody>
+
+            <!-- Aufeinanderfolgende Tage -->
             <thead class="table-light extreme-table-head">
                 <tr>
                     <th scope="col" class="extreme-table-head-headline" colspan=5>$obs.label.extreme_consec_days</th>
@@ -416,6 +434,8 @@
                     <td class="extreme-table-body-obs-ts-alltime" id="at-days-without-rainfall-range-ts"></td><!-- moment.js -->
                 </tr>
             </tbody>
+
+            <!-- Anzahl Gewitterblitze -->
             <thead class="table-light extreme-table-head">
                 <tr>
                     <th scope="col" class="extreme-table-head-headline" colspan=5>$obs.label.extreme_records_lsc</th>
@@ -449,7 +469,9 @@
                     <td class="extreme-table-body-obs-ts-alltime">$at_thunderstormiest_year[0]</td>
                 </tr>
             </tbody>
+
             #if $year.radiation.has_data or $year.UV.has_data
+            <!-- Sonnenstrahlung -->
             <thead class="table-light extreme-table-head">
                 <tr>
                     <th scope="col" class="extreme-table-head-headline" colspan=5>$obs.label.extreme_sun_records</th>
@@ -481,6 +503,8 @@
                 #end if
             </tbody>
             #end if
+
+            <!-- Innentemperaturen -->
             <thead class="table-light extreme-table-head">
                 <tr>
                     <th scope="col" class="extreme-table-head-headline" colspan=5>$obs.label.extreme_inTemp_records</th>

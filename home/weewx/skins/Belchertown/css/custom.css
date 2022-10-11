@@ -440,7 +440,19 @@ a.history-table-body-year-nav-noaa, a.history-table-body-month-nav-noaa {
     color:#000;
 }
 
+.dark .extreme-table-head-headline {
+    text-align:center;
+    background:#D7D7D7;
+    color:#000;
+}
+
 .extreme-table-head-year {
+    text-align: center;
+    background: #3da5f4;
+    color: #fff;
+}
+
+.dark .extreme-table-head-year {
     text-align: center;
     background: #3da5f4;
     color: #fff;
@@ -452,14 +464,43 @@ a.history-table-body-year-nav-noaa, a.history-table-body-month-nav-noaa {
     color: #fff;
 }
 
+.dark .extreme-table-head-alltime {
+    text-align: center;
+    background: #375a7f;
+    color: #fff;
+}
+
+.extreme-table-body-obs {
+    padding-left: 10px !important;
+}
+
+.dark .extreme-table-body-obs {
+    padding-left: 10px !important;
+}
+
+.extreme-table-body-obs-val-year, .extreme-table-body-obs-val-alltime {
+    text-align: right;
+    padding-right: 20px !important;
+}
+
+.dark .extreme-table-body-obs-val-year, .extreme-table-body-obs-val-alltime {
+    text-align: right;
+    padding-right: 20px !important;
+}
+
 .extreme-table-body-obs-ts-year, .extreme-table-body-obs-ts-alltime {
-    font-size: calc(8px + 0.4vw);
+    font-size: calc(10px + 0.4vw);
+    text-align: right;
+    padding-right: 20px !important;
 }
 
 .dark .extreme-table-body-obs-ts-year, .dark .extreme-table-body-obs-ts-alltime {
-    font-size: calc(8px + 0.4vw);
+    font-size: calc(10px + 0.4vw);
+    text-align: right;
+    padding-right: 20px !important;
 }
 
+/*
 .extreme-table-body-obs-descr-year, .extreme-table-body-obs-descr-alltime {
     font-size: calc(8px + 0.4vw);
 }
@@ -467,6 +508,7 @@ a.history-table-body-year-nav-noaa, a.history-table-body-month-nav-noaa {
 .dark .extreme-table-body-obs-descr-year, .dark .extreme-table-body-obs-descr-alltime {
     font-size: calc(8px + 0.4vw);
 }
+*/
 
 /* sup und sub */
 
@@ -698,6 +740,30 @@ sub { top: 0.4em; }
         padding-top: 0px;
         width: 50%;
         float: right;
+    }
+    .extreme-table-body-obs {
+        padding-left: 2px !important;
+    }
+    .dark .extreme-table-body-obs {
+        padding-left: 2px !important;
+    }
+    .extreme-table-body-obs-val-year, .extreme-table-body-obs-val-alltime {
+        text-align: right;
+        padding-right: 2px !important;
+    }
+    .dark .extreme-table-body-obs-val-year, .extreme-table-body-obs-val-alltime {
+        text-align: right;
+        padding-right: 2px !important;
+    }
+    .extreme-table-body-obs-ts-year, .extreme-table-body-obs-ts-alltime {
+        font-size: calc(9px + 0.4vw);
+        text-align: right;
+        padding-right: 2px !important;
+    }
+    .dark .extreme-table-body-obs-ts-year, .dark .extreme-table-body-obs-ts-alltime {
+        font-size: calc(9px + 0.4vw);
+        text-align: right;
+        padding-right: 2px !important;
     }
 }
 
