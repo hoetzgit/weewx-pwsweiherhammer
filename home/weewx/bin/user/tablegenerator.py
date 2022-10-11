@@ -74,7 +74,7 @@ etc.
     [[ice_days_table]]
         obs_type = outTemp
         aggregate_type = max_le
-        aggregate_threshold = 0.0000000000000001, degree_C
+        aggregate_threshold = 0.001, degree_C
         summary_heading = "&#931;"
         minvalues = 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18
         maxvalues = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 365
@@ -84,7 +84,7 @@ etc.
     [[frost_days_table]]
         obs_type = outTemp
         aggregate_type = min_le
-        aggregate_threshold = 0.0000000000000001, degree_C
+        aggregate_threshold = 0.001, degree_C
         summary_heading = "&#931;"
         minvalues = 1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 31
         maxvalues = 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 31, 365
@@ -145,7 +145,7 @@ etc.
     [[vegetation_days_table]]
         obs_type = outTemp
         aggregate_type = avg_ge
-        aggregate_threshold = 5.0000001, degree_C
+        aggregate_threshold = 5.001, degree_C
         summary_heading = "&#931;"
         minvalues = 1, 1, 5, 10, 20, 27, 32, 190, 220, 240, 260, 280
         maxvalues = 1, 5, 10, 20, 27, 32, 190, 220, 240, 260, 280, 365
@@ -260,11 +260,10 @@ class TableGenerator(SearchList):
                 log.debug("Check table %s" % table_name)
             start_ts = time.time()
             table_options = weeutil.weeutil.accumulateLeaves(self.table_dict[table_name])
+            obs_type = table_options.get('obs_type', None)
             table_type = table_options.get('table_type', 'normal').lower()
             refresh_interval = int(table_options.get('refresh_interval', 60))
             monthnames = table_options.get('monthnames', 'Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec')
-            table_type = table_options.get('table_type', 'normal').lower()
-            obs_type = table_options.get('obs_type', None)
 
             if table_type == 'normal':
                  if obs_type is None:
@@ -272,6 +271,7 @@ class TableGenerator(SearchList):
                      continue
 
             if table_name not in self.tabcache:
+                self.tabcache = {}
                 self.tabcache[table_name] = {}
                 self.tabcache[table_name]['refreshed_ts'] = 0
                 self.tabcache[table_name]['html'] = ''
