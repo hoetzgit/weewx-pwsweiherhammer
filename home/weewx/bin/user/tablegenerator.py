@@ -74,7 +74,7 @@ etc.
     [[ice_days_table]]
         obs_type = outTemp
         aggregate_type = max_le
-        aggregate_threshold = 0.001, degree_C
+        aggregate_threshold = -0.001, degree_C
         summary_heading = "&#931;"
         minvalues = 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18
         maxvalues = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 365
@@ -84,7 +84,7 @@ etc.
     [[frost_days_table]]
         obs_type = outTemp
         aggregate_type = min_le
-        aggregate_threshold = 0.001, degree_C
+        aggregate_threshold = -0.001, degree_C
         summary_heading = "&#931;"
         minvalues = 1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 31
         maxvalues = 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 31, 365
