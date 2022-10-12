@@ -91,6 +91,12 @@
     </div>
 </div>
 <div class="row">
+    <div class="col-md-12 history-headline">$obs.label.history_sultry_days2_title <a href="$obs.label.history_sultry_days2_url" target="_blank" rel="noreferrer" title="$obs.label.history_info_title"><i class="fa fa-info-circle fa-1 history-info-icon"></i></a></div>
+    <div class="col-xs-12 history-table-container">
+        $sultry_days2_table
+    </div>
+</div>
+<div class="row">
     <div class="col-md-12 history-headline">$obs.label.history_tropical_nights_title <a href="$obs.label.history_tropical_nights_url" target="_blank" rel="noreferrer" title="$obs.label.history_info_title"><i class="fa fa-info-circle fa-1 history-info-icon"></i></a></div>
     <div class="col-xs-12 history-table-container">
         $tropical_nights_table

@@ -308,9 +308,9 @@
                 <li><a href="https://wetternetzwerk.pro/#/wetterstation/78" target="_blank" rel="noreferrer">wetternetzwerk.pro</a></li>
                 <li><a href="https://opensensemap.org/explore/5cac7a833680f2001b658be9" target="_blank" rel="noreferrer">OpenSenseMap</a></li>
                 <li><a href="https://openweathermap.org/city/2812752" target="_blank" rel="noreferrer">OpenWeather</a></li>
-                <li><a href="https://stations.meteo-services.com/wetterstation/index.php?station_id=8504" target="_blank" rel="noreferrer">MeteoServices</a> (vormals Weather365)</li>
+                <li><a href="https://stations.meteo-services.com/wetterstation/index.php?station_id=8504" target="_blank" rel="noreferrer">MeteoServices</a></li>
                 <li><a href="https://www.awekas.at/de/instrument.php?id=22468" target="_blank" rel="noreferrer">AWEKAS</a></li>
-                <li><a href="https://deutschland.maps.sensor.community/#13/49.6271/12.0591" target="_blank" rel="noreferrer">Sensor.Community</a> (vormals Luftdaten.info)</li>
+                <li><a href="https://deutschland.maps.sensor.community/#13/49.6271/12.0591" target="_blank" rel="noreferrer">Sensor.Community</a></li>
             </ul>
         </div>
     </div>

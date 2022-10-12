@@ -691,6 +691,8 @@ sub { top: 0.4em; }
 @media only screen and (min-width: 768px) {
 }
 
+/* TODO: */
+
 @media only screen and (max-width: 800px) {
     .site-inner, .wrap {
         /* padding-top:20px; */
@@ -769,7 +771,6 @@ sub { top: 0.4em; }
 
 /* iPad Landscape */
 @media only screen and (min-device-width : 768px) and (max-device-width : 1024px) and (orientation : landscape) {
-
     .24hr_forecasts .forecast-24hour {
         width: 144px;
     }
@@ -785,11 +786,6 @@ sub { top: 0.4em; }
 }
 
 @media only screen and (max-width: 1196px) {
-    /* AQI
-    .obs-aqi-divider, .dark .obs-aqi-divider {
-        display: none;    
-    }
- */
 }
 
 /* TODO */

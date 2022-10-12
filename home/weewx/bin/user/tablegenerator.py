@@ -132,7 +132,6 @@ etc.
         fontColours = "#000000", "#000000", "#000000", "#000000", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"
     
     [[sultry_days_table]]
-        refresh_interval = 1
         obs_type = dewpoint
         aggregate_type = max_ge
         aggregate_threshold = 17.0, degree_C
