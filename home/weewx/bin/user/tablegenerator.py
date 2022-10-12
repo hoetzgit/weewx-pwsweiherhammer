@@ -233,10 +233,9 @@ class TableGenerator(SearchList):
         SearchList.__init__(self, generator)
         self.search_list_extension = {}
         self.tabcache = {}
+        self.tabcache['ts'] = 0
         self.table_dict = generator.skin_dict['TableGenerator']
         self.debug = int(self.table_dict.get('debug', 0))
-        if self.debug > 1:
-            log.debug("Initialization completed.")
 
     def get_extension_list(self, timespan, db_lookup):
         """Returns a search list extension with two additions.
@@ -253,7 +252,14 @@ class TableGenerator(SearchList):
 
         # Time to recalculate a table?
         check_ts = time.time()
-        refreshed_count = 0
+
+        # loop? call from other extensions?
+        if (check_ts - self.tabcache['ts']) < 10:
+            if self.debug > 1:
+                log.debug("Possible loop? Abort.")
+            return [self.search_list_extension]
+
+        refreshed_count = old_count = 0
         for table_name in self.table_dict.sections:
             if self.debug > 1:
                 log.debug("Check table %s" % table_name)
@@ -270,14 +276,12 @@ class TableGenerator(SearchList):
                      continue
 
             if table_name not in self.tabcache:
-                self.tabcache = {}
                 self.tabcache[table_name] = {}
                 self.tabcache[table_name]['refreshed_ts'] = 0
-                self.tabcache[table_name]['html'] = ''
             refreshed_ts = int(self.tabcache[table_name].get('refreshed_ts', 0))
 
-            if (start_ts - (refresh_interval * 60)) > refreshed_ts:
-                if self.debug > 0:
+            if (start_ts - (refresh_interval * 60)) >= refreshed_ts:
+                if self.debug > 1:
                     log.debug("Generate table %s." % (table_name))
                 binding = table_options.get('data_binding', 'wx_binding')
                 startdate = table_options.get('startdate', None)
@@ -295,17 +299,17 @@ class TableGenerator(SearchList):
                     self.search_list_extension[table_name] = self._NOAATable(table_options, table_stats, table_name, binding, monthnames)
                 end_ts = time.time()
                 self.tabcache[table_name]['refreshed_ts'] = end_ts
-                self.tabcache[table_name]['html'] = self.search_list_extension[table_name]
                 refreshed_count += 1
                 if self.debug > 1:
                     log.debug("Generated %s in %.2f seconds." % (table_name, (end_ts - start_ts)))
             else:
-                self.search_list_extension[table_name] = self.tabcache[table_name]['html']
+                old_count += 1
                 if self.debug > 1:
-                    log.debug("Skip generation table %s, the refresh time is not reached yet. Using cached table." % (table_name))
+                    log.debug("Skip generation table %s, the refresh time is not reached yet." % (table_name))
 
-        if self.debug > 0 and refreshed_count > 0:
-            log.debug("Generated %d tables in %.2f seconds." % (refreshed_count, (time.time() - check_ts)))
+        self.tabcache['ts'] = time.time()
+        if self.debug > 0:
+            log.debug("Generated tables in %.2f seconds. refreshed: %d old used: %d" % ((self.tabcache['ts'] - check_ts), refreshed_count, old_count))
 
         return [self.search_list_extension]
 
