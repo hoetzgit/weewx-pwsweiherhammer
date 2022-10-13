@@ -200,7 +200,7 @@ class AqiService(weewx.engine.StdService):
         self.mqtt_enable = to_bool(mqtt_config_dict.get('enable',False))
         self.mqtt_server_url = mqtt_config_dict.get('server_url','mqtt://127.0.0.1:1883')
         self.mqtt_topic = mqtt_config_dict.get('topic','aqiservice/aqi')
-        self.mqtt_client_id = mqtt_config_dict.get('client_id','AqiService')
+        self.mqtt_client_id = mqtt_config_dict.get('clientid','AqiService')
         self.mqtt_qos = int(mqtt_config_dict.get('qos',0))
         self.mqtt_retain = to_bool(mqtt_config_dict.get('retain',False))
         if self.mqtt_enable:
