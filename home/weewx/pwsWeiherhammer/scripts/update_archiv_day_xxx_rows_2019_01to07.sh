@@ -1,5 +1,5 @@
 #!/bin/bash
-#########################################################################################
+##################################################################################################
 #
 # Die Wetterstation speichert Datensätze seit dem 25.08.2019 in der WeeWX Datenbank.
 #
@@ -9,18 +9,19 @@
 #
 # Bei einem --rebuild-daily Lauf werden durch diese dummy Datensätze vom Wert her gültige
 # sum=0.0, count=0, wsum=0.0, sumtime=0 Werte in den archiv_day_xxx Tabellen erzeugt.
-# Da nicht wirklich Werte vor dem Start der Station entstanden sind, müssen diese auf
-# NULL gesetzt werden.
+# Werden diese Werte in Diagrammen, Tabellen etc ausgewertet, müssen sie auf NULL gesetzt werden,
+# da vor dem Start der Messung keine gültigen Werte entstanden sind.
 #
 # 1564610400 = Thu Aug 01 2019 00:00:00 GMT+0200 (Mitteleuropäische Sommerzeit)
 #
-#########################################################################################
+##################################################################################################
 DB=weewx
 DB_USER=weewx
 DB_PASSWD=weewx
 DB_HOST=192.168.0.182
 STARTDATE=1564610400
 DB_EXPORT="/tmp/weewx-dump-$(date +"%Y%m%d%H%M").sql"
+WHAT="${DB}.archiv_day_xxx vor dem 01.08.2019"
 
 #TODO: sowas wie: SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'archiv_day_*';
 TABLES=(
@@ -250,10 +251,10 @@ else
 fi
 
 echo ""
-echo "Achtung! Werte in den Tabellen ${DB}.archiv_day_xxx vor dem 01.08.2019 werden auf NULL gesetzt."
+echo "Achtung! Werte in den Tabellen ${WHAT} werden auf NULL gesetzt."
 read -r -p "Weiter? [j/N] " response
 if [[ "$response" =~ ^([yY]|[jJ])$ ]]; then
-    echo "Update der Tabellen ${DB}.archiv_day_xxx vor dem 01.08.2019 wird gestartet..."
+    echo "Update der Tabellen ${WHAT} wird gestartet..."
     for TABLE in "${TABLES[@]}"
     do
         echo "Update in ${DB}.${TABLE}..."

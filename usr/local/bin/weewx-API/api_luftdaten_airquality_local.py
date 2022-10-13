@@ -105,7 +105,7 @@ class LuftdatenAirqualityLocal(object):
         self.mqtt_enable = to_bool(mqtt_dict.get('enable',False))
         self.mqtt_server_url = mqtt_dict.get('server_url','mqtt://127.0.0.1:1883')
         self.mqtt_topic = mqtt_dict.get('topic','api/luftdaten/airquality/local')
-        self.mqtt_client_id = mqtt_dict.get('client_id','LuftdatenAirqualityLocal')
+        self.mqtt_client_id = mqtt_dict.get('clientid','LuftdatenAirqualityLocal')
         self.mqtt_qos = mqtt_dict.get('qos',0)
         self.mqtt_retain = to_bool(mqtt_dict.get('retain',False))
         self.mqtt_connected = False
