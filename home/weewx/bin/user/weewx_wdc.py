@@ -1023,7 +1023,7 @@ class WdcStatsUtil(SearchList):
             ).round(self.diagram_util.get_rounding("rain"))
 
             days = filter(
-                lambda x: x[1].raw > 0.0, list(zip(day_series.start, day_series.data))
+                lambda x: (x[1].raw > 0.0 if x[1].raw is not None else False), list(zip(day_series.start, day_series.data))
             )
             rainDays = []
 

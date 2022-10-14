@@ -38,8 +38,11 @@ etc.
     # original: https://github.com/brewster76/fuzzy-archer/blob/master/bin/user/historygenerator.py
     # Set to 1 for extra debug info, otherwise comment it out or set to zero
     debug = 1
-    # refresh in minutes
-    refresh_interval = 20
+    # after how many seconds the record is out of date and can be updated
+    stale_time = 60
+    # after how many seconds a complete pass should be made
+    # Simple loop detection during weewx report generation
+    wait_time = 30
     # table_type [normal|noaa]
     table_type = normal
     data_binding = wx_binding
@@ -233,9 +236,10 @@ class TableGenerator(SearchList):
         SearchList.__init__(self, generator)
         self.search_list_extension = {}
         self.tabcache = {}
-        self.tabcache['ts'] = 0
         self.table_dict = generator.skin_dict['TableGenerator']
         self.debug = int(self.table_dict.get('debug', 0))
+        self.wait_time = int(self.table_dict.get('wait_time', 0))
+        self.last_ts = 0
 
     def get_extension_list(self, timespan, db_lookup):
         """Returns a search list extension with two additions.
@@ -253,10 +257,10 @@ class TableGenerator(SearchList):
         # Time to recalculate a table?
         check_ts = time.time()
 
-        # loop? call from other extensions?
-        if (check_ts - self.tabcache['ts']) < 10:
+        # # Simple loop detection during weewx report generation
+        if (check_ts - self.last_ts) < self.wait_time:
             if self.debug > 1:
-                log.debug("Possible loop? Abort.")
+                log.debug("Possible loop detected? Abort without rebuilding.")
             return [self.search_list_extension]
 
         refreshed_count = old_count = 0
@@ -267,7 +271,7 @@ class TableGenerator(SearchList):
             table_options = weeutil.weeutil.accumulateLeaves(self.table_dict[table_name])
             obs_type = table_options.get('obs_type', None)
             table_type = table_options.get('table_type', 'normal').lower()
-            refresh_interval = int(table_options.get('refresh_interval', 60))
+            stale_time = int(table_options.get('stale_time', 0))
             monthnames = table_options.get('monthnames', 'Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec')
 
             if table_type == 'normal':
@@ -280,7 +284,7 @@ class TableGenerator(SearchList):
                 self.tabcache[table_name]['refreshed_ts'] = 0
             refreshed_ts = int(self.tabcache[table_name].get('refreshed_ts', 0))
 
-            if (start_ts - (refresh_interval * 60)) >= refreshed_ts:
+            if (start_ts - stale_time) >= refreshed_ts:
                 if self.debug > 1:
                     log.debug("Generate table %s." % (table_name))
                 binding = table_options.get('data_binding', 'wx_binding')
@@ -305,11 +309,11 @@ class TableGenerator(SearchList):
             else:
                 old_count += 1
                 if self.debug > 1:
-                    log.debug("Skip generation table %s, the refresh time is not reached yet." % (table_name))
+                    log.debug("Skip generation table %s, the stale time is not reached yet." % (table_name))
 
-        self.tabcache['ts'] = time.time()
+        self.last_ts = time.time()
         if self.debug > 0:
-            log.debug("Generated tables in %.2f seconds. refreshed: %d old used: %d" % ((self.tabcache['ts'] - check_ts), refreshed_count, old_count))
+            log.debug("Generated tables in %.2f seconds. refreshed: %d old used: %d" % ((self.last_ts - check_ts), refreshed_count, old_count))
 
         return [self.search_list_extension]
 
