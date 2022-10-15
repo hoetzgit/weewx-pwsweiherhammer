@@ -77,7 +77,9 @@ OBFUSCATE_MAP = {
     ],
     "do_not_obfuscate": [
         "station_country"
+        ,"station_name"
         ,"station_observations"
+        ,"station_state"
         ,"station_type"
         ,"station_url"
         ,"stations"
@@ -227,7 +229,6 @@ def main():
             # redirect stdout to our file
             sys.stdout = _out_file
             generateDebugConf(config_dict)
-            print("Parsed and obfuscated conf file")
             # close our file
             _out_file.close()
             # revert stdout
