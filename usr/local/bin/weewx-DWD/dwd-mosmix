@@ -87,8 +87,7 @@ LOCATION_DICT = {
   'Dresden':'10487',
   'Chemnitz':'10577',
   'Görlitz':'10499',
-  'Fichtelberg':'10578',
-  'Weiden':'10688'}
+  'Fichtelberg':'10578'}
 
 MOSMIX_DICT = {
   'l':'MOSMIX_L',
@@ -451,20 +450,14 @@ class DwdMosmix(object):
         self.target_path = config_dict['DeutscherWetterdienst']['path']
         # forecast config data
         forecast_dict = config_dict['DeutscherWetterdienst']['forecast']
-        # database config data
-        database_dict = config_dict['DeutscherWetterdienst']['database']
         # weather icons
         self.icon_pth = forecast_dict['icons']
         # station-specific configuration
         self.stations_dict = forecast_dict.get('stations',{})
         # HTML config
-        self.show_obs_symbols = tobool(forecast_dict.get('show_obs_symbols',True))
-        self.show_obs_description = tobool(forecast_dict.get('show_obs_description',False))
-
-        self.show_placemark = tobool(forecast_dict.get('show_placemark',False))
-        self.html_max_days = int(forecast_dict.get('max_days',None))
-        # database config
-        self.database_max_days = int(database_dict.get('max_days',None))
+        self.show_obs_symbols = forecast_dict.get('show_obs_symbols',True)
+        self.show_obs_description = forecast_dict.get('show_obs_description',False)
+        self.show_placemark = forecast_dict.get('show_placemark',True)
         # orientation of the HTML table
         orientation = forecast_dict.get('orientation','h,v')
         if not isinstance(orientation,list):
@@ -496,7 +489,7 @@ class DwdMosmix(object):
         if (int(config_dict.get('debug',0))>0) or verbose:
             self.log_success = True
             self.log_failure = True
-            # self.verbose = True
+            self.verbose = True
         # almanac
         stn = config_dict.get('Station',dict())
         self.latitude = float(stn.get('latitude'))
@@ -786,9 +779,6 @@ class DwdMosmix(object):
             start_day = range[0]
             end_day = range[1]
             count = 9999
-            #ho Test analog Belchertown
-            if (self.html_max_days) is not None:
-                end_day = self.html_max_days
         except TypeError:
             start_day = 0
             end_day = 9999
@@ -1520,7 +1510,7 @@ class DwdMosmix(object):
                     'profile':{},
                     'active':alert.get('status','')=='Actual'
                 }
-                if al['timestamps']['begins']<(now+self.belchertown_include_advance_warning) and al['timestamps']['expires']>now:
+                if al['timestamps']['begins']<(now+self.belchertown_include_advance_warning):
                     belchertown_alerts.append(al)
             success = True
             err = ''
@@ -1859,12 +1849,6 @@ class DwdMosmix(object):
         AVGS = ['TTT','Td','FF','DD','PPPP','N','Neff','VV']
         days = dict()
         # loop over all timestamps
-        #ho Test, xx Tage analog Belchertown, keine weiteren Checks, ob option belchertown ...
-        if self.database_max_days is not None:
-            actDate = datetime.datetime.now()
-            endDate = actDate + datetime.timedelta(days=self.database_max_days)
-            actDate = int(actDate.strftime('%Y%m%d%H') + '00')
-            endDate = int(endDate.strftime('%Y%m%d') + '0000')
         for idx,val in enumerate(timesteps):
             # the day of the actual timestep
             # The timestep marks the end of the interval. That's why
@@ -1872,15 +1856,6 @@ class DwdMosmix(object):
             # day (24:00 rather than 00:00). To get that the day is
             # calculated out of a timestamp 1 second before the actual
             # timestep.
-            #ho Test, xx Tage analog Belchertown, keine weiteren Checks, ob option belchertown ...
-            if self.database_max_days is not None:
-                checkDate = int(time.strftime('%Y%m%d%H%M',time.localtime(val*0.001)))
-                if (checkDate < actDate) or (checkDate > endDate):
-                    if self.verbose:
-                        print('calculate_daily_forecast: >>> skip forecast %s' % time.strftime('%d.%m.%Y %H:%M',time.localtime(val*0.001)))
-                    continue
-                if self.verbose:
-                    print('calculate_daily_forecast: insert forecast %s' % time.strftime('%d.%m.%Y %H:%M',time.localtime(val*0.001)))
             day = time.strftime('%d.%m.',time.localtime(val*0.001-1))
             # get the values for the actual timestep
             vals = {ii:placemark['Forecast'][ii][idx] for ii in placemark['Forecast']}
@@ -1983,22 +1958,7 @@ class DwdMosmix(object):
             self.dbm_open(placemark['id'])
             cursor = self.dbm_cursor()
             self.dbm_truncate(cursor)
-            #ho Test, xx Tage analog Belchertown, keine weiteren Checks, ob option belchertown ...
-            if self.database_max_days is not None:
-                actDate = datetime.datetime.now()
-                endDate = actDate + datetime.timedelta(days=self.database_max_days)
-                actDate = int(actDate.strftime('%Y%m%d%H') + '00')
-                endDate = int(endDate.strftime('%Y%m%d') + '0000')
             for idx,ii in enumerate(timesteps):
-                #ho Test, xx Tage analog Belchertown, keine weiteren Checks, ob option belchertown ...
-                if self.database_max_days is not None:
-                    checkDate = int(time.strftime('%Y%m%d%H%M',time.localtime(ii*0.001)))
-                    if (checkDate < actDate) or (checkDate > endDate):
-                        if self.verbose:
-                            print('write_database: >>> skip forecast %s' % time.strftime('%d.%m.%Y %H:%M',time.localtime(ii*0.001)))
-                        continue
-                    if self.verbose:
-                        print('write_database: insert forecast %s' % time.strftime('%d.%m.%Y %H:%M',time.localtime(ii*0.001)))
                 values = {'dateTime':int(ii*0.001),
                           'usUnits':0x10,  # METRIC
                           'interval':60,
@@ -2231,7 +2191,7 @@ https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg
         sys.exit(0)
         
     if options.weewx:
-        config_path = "/home/weewx/weewx.conf"
+        config_path = "/etc/weewx/weewx.conf"
     else:
         config_path = options.config_path
 
@@ -2243,19 +2203,19 @@ https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg
         print("Using test configuration")
         config = {
             'Station': {
-                'latitude':49.632270,
-                'longitude':12.056186,
-                'altitude':[394,'meter']},
+                'latitude':53.6059563,
+                'longitude':11.341407,
+                'altitude':[53.6,'meter']},
             'DeutscherWetterdienst': {
-                'path':'/home/weewx/skins/Belchertown/dwd',
+                'path':'/etc/weewx/skins/Belchertown1_3/dwd',
                 'forecast':{
-                    'icons':'../images'}}}
+                    'icons':'./weewx/belchertown/images'}}}
     
     if len(args)>0:
         location = args[0]
         if not location: location = None
     else:
-        location = 'Weiden'
+        location = 'Döbeln'
         
     if options.orientation:
         config['DeutscherWetterdienst']['forecast']['orientation'] = options.orientation
@@ -2268,9 +2228,6 @@ https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg
     if options.hideplacemark is not None:
         config['DeutscherWetterdienst']['forecast']['show_placemark'] = not options.hideplacemark
 
-    if options.verbose is None:
-       options.verbose = False
-
     dwd = DwdMosmix(config,options.verbose)
 
     if options.uba:
@@ -2280,7 +2237,7 @@ https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg
 
     zz = dwd.download_kml(location,'l')
     mmos = dwd.process_kml(zz,options.log_tags)
-    #print(json.dumps(mmos,indent=4,ensure_ascii=False))
+    #print(json.dumps(mos,indent=4,ensure_ascii=False))
     
     output = []
     if options.all: output.append('all')
