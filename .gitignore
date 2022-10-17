@@ -13,5 +13,6 @@ allskycam0*.down
 **/dwd/Schilder*
 **/dwd/uba*
 **/dwd/VHDL*
-**/dwd/warn*
+**/dwd/warn-*
 **/dwd/wbx*
+**/dwd/*.json
