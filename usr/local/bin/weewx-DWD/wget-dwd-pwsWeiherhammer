@@ -47,6 +47,34 @@ HTML2ENT="/usr/local/bin/weewx-DWD/html2ent.ansi"
 for i in 50 51 52 53 54; do
     FN="VHDL${i}_${DWD_BUNDESLAND}_LATEST"
     $WGET -a "${LOG_FN}" -O "${TMP}" "${DWD_URL}/${FN}_html"
+    #sed -i 's/WIND\/STURM:/<br><br><strong>WIND\/STURM:<\/strong><br>/' "${TMP}"
+    #sed -i 's/WIND:/<br><br><strong>WIND:<\/strong><br>/' "${TMP}"
+    #sed -i 's/GEWITTER:/<br><br><strong>GEWITTER:<\/strong><br>/' "${TMP}"
+    #sed -i 's/NEBEL:/<br><br><strong>NEBEL:<\/strong><br>/' "${TMP}"
+    #sed -i 's/FROST:/<br><br><strong>FROST:<\/strong><br>/' "${TMP}"
+    #sed -i 's/GLÄTTE:/<br><br><strong>GLÄTTE:<\/strong><br>/' "${TMP}"
+
+    #TODO: alle Merkmale
+    sed -i 's/WIND\/STURM:/<br><br><strong>Wind\/Sturm:<\/strong>/' "${TMP}"
+    sed -i 's/WIND:/<br><br><strong>Wind:<\/strong>/' "${TMP}"
+    sed -i 's/GEWITTER:/<br><br><strong>Gewitter:<\/strong>/' "${TMP}"
+    sed -i 's/NEBEL:/<br><br><strong>Nebel:<\/strong>/' "${TMP}"
+    sed -i 's/FROST:/<br><br><strong>Frost:<\/strong>/' "${TMP}"
+    sed -i 's/GLÄTTE:/<br><br><strong>Glätte:<\/strong>/' "${TMP}"
+
+    #sed -i 's/WIND\/STURM:/<br><br>WIND\/STURM:<br>/' "${TMP}"
+    #sed -i 's/WIND:/<br><br>WIND:<br>/' "${TMP}"
+    #sed -i 's/GEWITTER:/<br><br>GEWITTER:<br>/' "${TMP}"
+    #sed -i 's/NEBEL:/<br><br>NEBEL:<br>/' "${TMP}"
+    #sed -i 's/FROST:/<br><br>FROST:<br>/' "${TMP}"
+    #sed -i 's/GLÄTTE:/<br><br>GLÄTTE:<br>/' "${TMP}"
+
+    #sed -i 's/WIND\/STURM:/<br><br>Wind\/Sturm:<br>/' "${TMP}"
+    #sed -i 's/WIND:/<br><br>Wind:<br>/' "${TMP}"
+    #sed -i 's/GEWITTER:/<br><br>Gewitter:<br>/' "${TMP}"
+    #sed -i 's/NEBEL:/<br><br>Nebel:<br>/' "${TMP}"
+    #sed -i 's/FROST:/<br><br>Frost:<br>/' "${TMP}"
+    #sed -i 's/GLÄTTE:/<br><br>Glätte:<br>/' "${TMP}"
     if [ "$?" -eq 0 ]; then
         for EXPORT in ${EXPORTS[@]}; do
             ${HTML2ENT} <"${TMP}" >"${EXPORT}/${FN}.html"

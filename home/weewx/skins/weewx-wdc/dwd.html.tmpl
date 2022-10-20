@@ -40,21 +40,31 @@
             <div class="bx--col">
               <!--prettier-ignore-->
               <div class="bx--tile">
+                #if os.path.exists("dwd/VHDL54_" + $VHDL + "_LATEST.html")
+                <h3 class="bx--type-expressive-heading-03">Wetterlage</h3>
+                <p>
+                  #include raw "dwd/VHDL54_" + $VHDL + "_LATEST.html"
+                </p>
+                #end if
+
                 #for $day in [50, 51, 52, 53]
                   #if os.path.exists("dwd/VHDL" + str($day) + "_" + $VHDL + "_LATEST.html")
+                    <!--Test, nur Muster.-->
+                    #if $day == 50
+                      <h3 class="bx--type-expressive-heading-03" style="padding-top:25px;">Heute</h3>
+                    #elif day == 51
+                      <h3 class="bx--type-expressive-heading-03" style="padding-top:10px;">Morgen</h3>
+                    #elif day == 52
+                      <h3 class="bx--type-expressive-heading-03" style="padding-top:10px;">Übermorgen</h3>
+                    #else
+                      <h3 class="bx--type-expressive-heading-03" style="padding-top:10px;">4. Tag</h3>
+                    #end if
                     <p>
                     #include raw "dwd/VHDL" + str($day) + "_" + $VHDL + "_LATEST.html"
                     </p>
                   #end if
                 #end for
-
                 <br />
-
-                #if os.path.exists("dwd/VHDL54_" + $VHDL + "_LATEST.html")
-                <p>
-                  #include raw "dwd/VHDL54_" + $VHDL + "_LATEST.html"
-                </p>
-                #end if
 
                 <p style="text-align: right;">
                     [Quelle:
