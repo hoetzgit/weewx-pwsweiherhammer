@@ -116,6 +116,7 @@
     <div class="row index-hook-after-forecast">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_warnings_by
+            <spawn class="issued-DWD"> $obs.label.forecast_issuedWarnings_dwd</spawn>
         </div>
         <div class="col-sm-12 forecast-content" style="margin-top:5px;">
             <a id="warnlage_bay" name="warnlage_bay" href="https://www.dwd.de/DE/wetter/warnungen_gemeinden/warnWetter_node.html?ort=Weiherhammer&bundesland=bay" target="_blank"><img itemprop="image" src="$relative_url/dwd/SchilderMS.jpg" alt="Die Warnlage in Bayern"></a>
@@ -152,9 +153,10 @@
     #end if
 
     #if os.path.exists("dwd/VHDL54_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast">
+    <div class="row index-hook-after-forecast" style="margin-top:30px;">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_bavaria
+            <spawn class="issued-DWD"> $obs.label.forecast_issuedText_dwd</spawn>
         </div>
         <div class="col-md-12 forecast-content">
             #include raw "dwd/VHDL54_DWMG_LATEST.html"
@@ -211,6 +213,7 @@
     <div class="row index-hook-after-forecast">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_current_map
+            <spawn class="issued-DWD"> $obs.label.forecast_issuedMaps_dwd</spawn>
         </div>
         <div class="col-md-12 forecast-content" style="margin-top:5px;>
             <a id="wetterkarte_nae" name="wetterkarte_nae" href="https://www.dwd.de/DE/leistungen/hobbymet_wk_europa/hobbyeuropakarten.html" target="_blank"><img itemprop="image" src="$relative_url/dwd/bwk_bodendruck_na_ana.png" alt="Wetterkarte (Luftdruck am Boden)"></a>

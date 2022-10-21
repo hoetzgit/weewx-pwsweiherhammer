@@ -2931,7 +2931,7 @@ class ForecastPWS(object):
             loginf('forecast_wbx_html: started.')
         html  = '<!-- DWD Waldbrandgefahrenindex -->\n'
         html += '<div class="col-xs-12 wbx-headline">$obs.label.forecast_header_wbx'
-        html += '<span class="wbx-issued"> $obs.label.forecast_issueTime_wbx ' + issued_time + '</span>\n'
+        html += '<span class="issued-DWD"> $obs.label.forecast_issuedWBX_dwd ' + issued_time + '</span>\n'
         html += '</div>\n'
         html += '<style>\n'
         html += '    .farbidx0 {background-color:#FFFFFF; color:#000000;}\n'

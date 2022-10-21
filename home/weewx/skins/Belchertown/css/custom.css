@@ -183,22 +183,41 @@
     padding-top: 10px;
 }
 
-/* Index Radar */
+/* Nav Tabs Index Radar */
 
-.dark .tabs-menu > li > a {
+.tabs-menu > li > a, .dark .tabs-menu > li > a {
     padding: 0px 5px;
 }
 
-.dark .nav-tabs>li.active>a, .dark .nav-tabs>li.active>a:focus, .dark .nav-tabs>li.active>a:hover {
+.nav-tabs>li>a, .dark .nav-tabs>li>a {
     color: #e5554e;
+    margin-right: 4px;
+    line-height: 1.42857143;
+    border: 1px solid transparent;
+    border-radius: 4px 4px 0 0;
+    border-color: #ddd;
+    border-bottom-color: transparent;
+}
+
+.nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover {
+    cursor: default;
+    background-color: #f6f6f6;
+    border: 1px solid #ddd;
+    border-bottom-color: transparent;
+    font-weight: 400;
+}
+
+.dark .nav-tabs>li.active>a, .dark .nav-tabs>li.active>a:focus, .dark .nav-tabs>li.active>a:hover {
+    color: #FFF;
+    cursor: default;
+    background-color: #424242;
+    border: 1px solid #ddd;
+    border-bottom-color: transparent;
+    font-weight: 400;
 }
 
 .tab-content {
     display:none;
-}
-
-.tabs-menu > li > a {
-    padding: 0px 5px;
 }
 
 #radar {
@@ -253,7 +272,7 @@ span.highcharts-title {
 /* Waldbrandgefahrenindex */
 
 .wbx-headline {
-    font-size: calc(18px + 0.3vw);
+    font-size: calc(20px + 0.3vw);
     text-align: left;
     margin-top: 15px;
     margin-bottom: 5px;
@@ -262,7 +281,7 @@ span.highcharts-title {
 }
 
 .dakr .wbx-headline {
-    font-size: calc(18px + 0.3vw);
+    font-size: calc(20px + 0.3vw);
     text-align: left;
     margin-top: 15px;
     margin-bottom: 5px;
@@ -270,7 +289,7 @@ span.highcharts-title {
     padding-right: 0 !important;
 }
 
-.wbx-issued, .forecast-wbx-subtitle {
+.wbx-issued, .forecast-wbx-subtitle, .issued-DWD {
     font-size: calc(10px + 0.3vw);
 }
 
@@ -540,7 +559,7 @@ sub { top: 0.4em; }
 }
 
 .forecast-headline {
-    font-size: calc(18px + 0.3vw);
+    font-size: calc(20px + 0.3vw);
     text-align: left;
     margin-top: 15px;
     margin-bottom: 5px;
@@ -549,7 +568,7 @@ sub { top: 0.4em; }
 }
 
 .dark .forecast-headline {
-    font-size: calc(18px + 0.3vw);
+    font-size: calc(20px + 0.3vw);
     text-align: left;
     margin-top: 15px;
     margin-bottom: 5px;
@@ -766,6 +785,10 @@ sub { top: 0.4em; }
         font-size: calc(9px + 0.4vw);
         text-align: right;
         padding-right: 2px !important;
+    }
+    .wbx-issued, .forecast-wbx-subtitle, .issued-DWD {
+        font-size: calc(10px + 0.3vw);
+        display: block;
     }
 }
 
