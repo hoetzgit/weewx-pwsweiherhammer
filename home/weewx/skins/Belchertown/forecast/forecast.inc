@@ -1,5 +1,6 @@
 #errorCatcher Echo
 #encoding UTF-8
+#import datetime
 <div class="entry-content about-outer">
     <script type="text/javascript">
         var moment_locale = "$system_locale_js";
@@ -152,61 +153,30 @@
     </div>
     #end if
 
-    #if os.path.exists("dwd/VHDL54_DWMG_LATEST.html")
+    ## Die Idee mit Schleife und Wochentagen: https://github.com/Daveiano/weewx-wdc/blob/2.x/skins/weewx-wdc/dwd.html.tmpl
+    ## TODO: Sonderbehandlung File 54 optimieren
+    #set $VHDL = "DWMG"
+    #set $today = datetime.date.today()
+    #set $headings = {54: $obs.label.forecast_header_bavaria, 50: $obs.label.forecast_header_today, 51: $obs.label.forecast_header_tomorrow, 52: $obs.label.forecast_header_weekday + " " + ($today + datetime.timedelta(days=2)).strftime("%A"), 53: $obs.label.forecast_header_weekday + " " + ($today + datetime.timedelta(days=3)).strftime("%A")}
+    #for $filenumber in [54, 50, 51, 52, 53]
+        #if os.path.exists("dwd/VHDL" + str($filenumber) + "_" + $VHDL + "_LATEST.html")
+            #if $filenumber == 54
     <div class="row index-hook-after-forecast" style="margin-top:30px;">
+            #else
+    <div class="row index-hook-after-forecast">
+            #end if
         <div class="col-md-12 forecast-headline">
-            $obs.label.forecast_header_bavaria
+            $headings[$filenumber]
+            #if $filenumber == 54
             <spawn class="issued-DWD"> $obs.label.forecast_issuedText_dwd</spawn>
+            #end if
         </div>
         <div class="col-md-12 forecast-content">
-            #include raw "dwd/VHDL54_DWMG_LATEST.html"
+            #include raw "dwd/VHDL" + str($filenumber) + "_" + $VHDL + "_LATEST.html"
         </div>
     </div>
-    #end if
-
-    #if os.path.exists("dwd/VHDL50_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast">
-        <div class="col-md-12 forecast-headline">
-            $obs.label.forecast_header_today
-        </div>
-        <div class="col-md-12 forecast-content">
-            #include raw "dwd/VHDL50_DWMG_LATEST.html"
-        </div>
-    </div>
-    #end if
-
-    #if os.path.exists("dwd/VHDL51_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast">
-        <div class="col-md-12 forecast-headline">
-            $obs.label.forecast_header_tomorrow
-        </div>
-        <div class="col-md-12 forecast-content">
-            #include raw "dwd/VHDL51_DWMG_LATEST.html"
-        </div>
-    </div>
-    #end if
-
-    #if os.path.exists("dwd/VHDL52_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast">
-        <div class="col-md-12 forecast-headline">
-            $obs.label.forecast_header_da_tomorrow
-        </div>
-        <div class="col-md-12 forecast-content">
-            #include raw "dwd/VHDL52_DWMG_LATEST.html"
-        </div>
-    </div>
-    #end if
-
-    #if os.path.exists("dwd/VHDL53_DWMG_LATEST.html")
-    <div class="row index-hook-after-forecast">
-        <div class="col-md-12 forecast-headline">
-            $obs.label.forecast_header_fourth_day
-        </div>
-        <div class="col-md-12 forecast-content">
-            #include raw "dwd/VHDL53_DWMG_LATEST.html"
-        </div>
-    </div>
-    #end if
+        #end if
+    #end for
 
     #if os.path.exists("dwd/bwk_bodendruck_na_ana.png")
     <!-- DWD Luftdruck am Boden -->
