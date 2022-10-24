@@ -10,10 +10,10 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
                  Installer for the Cumulative XType Extension
 
-Version: 0.1.0                                          Date: 2 October 2022
+Version: 0.1.0                                          Date: 23 October 2022
 
 Revision History
-    2 October 2022      v0.1.0
+    23 October 2022     v0.1.0
         -   initial implementation
 """
 

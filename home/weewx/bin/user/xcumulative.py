@@ -13,10 +13,10 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-Version: 0.1.0                                          Date: 2 October 2022
+Version: 0.1.0                                          Date: 23 October 2022
 
 Revision History
-    2 October 2022      v0.1.0
+    23 October 2022     v0.1.0
         - initial release
 
 Abbreviated Instruction for Use

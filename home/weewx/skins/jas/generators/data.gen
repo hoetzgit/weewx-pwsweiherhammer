@@ -85,14 +85,15 @@ This data is stored in a javascript object named 'current'.
     #if $getVar('$Extras.current.observation', False)
         current.header = {};
         current.header.name = "$getVar('Extras.current.observation')";
-        #set line = '$current($data_binding=$page_data_binding).' + $getVar('Extras.current.observation') + '.format(add_label=False)' + '";'
-        current.header.value = "$evaluate($line)
+        #set line = '$current($data_binding=$page_data_binding).' + $getVar('Extras.current.observation') + '.format(add_label=False, localize=False)' + ';'
+        current.header.value = $evaluate($line)
         #set header_max_decimals = $getVar('$Extras.current.header_max_decimals', False)
-        #* ToDo - doesnt work with numbers using comma to separate decimal place
         #if $header_max_decimals
-            current.header.value = parseFloat(Number(current.header.value).toFixed($header_max_decimals));
+            current.header.value = current.header.value.toFixed($header_max_decimals);
         #end if
-        *#
+        if (!isNaN(current.header.value)) {
+            current.header.value = Number(current.header.value).toLocaleString();
+        }
         #set line = '$unit.label.' + $getVar('Extras.current.observation') +  '";'
         current.header.unit = "$evaluate($line)
     #end if
@@ -103,28 +104,29 @@ This data is stored in a javascript object named 'current'.
             #set type = $getVar("$Extras.current.observations" + "." + $observation + ".type", "")
             #set suffix = $getVar("$Extras.current.observations" + "." + $observation + ".suffix", "")
             #if $type == 'rise'    
-                #set observation_value = '$' + 'almanac.' + $observation + 'rise'
+                #set observation_value = '"$' + 'almanac.' + $observation + 'rise"'
                 #set observation_unit = " "
                 #set label = 'foo'
             #else if $type == 'sum'
-                #set observation_value = '$' + $interval_current + '($data_binding=$page_data_binding).' + $observation + "." + $type + '.format(add_label=False)'
+                #set observation_value = '$' + $interval_current + '($data_binding=$page_data_binding).' + $observation + "." + $type + '.format(add_label=False, localize=False)'
                 #set observation_unit = '$unit.label.' + $observation
             #else
-                #set observation_value = '$current($data_binding=$page_data_binding).' + $observation + '.format(add_label=False)'
+                #set observation_value = '$current($data_binding=$page_data_binding).' + $observation + '.format(add_label=False, localize=False)'
                 #set observation_unit = '$unit.label.' + $observation
             #end if
 
         var observation = {};
         observation.name = "$observation";
         observation.mqtt = $getVar('$Extras.current.observations.' + $observation + '.mqtt', 'true').lower();
-        #set source = '"' + $observation_value + '";'
+        #set source = $observation_value + ';'
         observation.value = $evaluate($source)
         #set max_decimals = $getVar('$Extras.current.observations.' + $observation + '.max_decimals', False)
-        #* ToDo - doesnt work with numbers using comma to separate decimal place
         #if max_decimals
-            observation.value = parseFloat(Number(observation.value).toFixed($max_decimals));
+            observation.value = observation.value.toFixed($max_decimals);
         #end if
-        *#
+        if (!isNaN(observation.value)) {
+            observation.value = Number(observation.value).toLocaleString();
+        }
         #set source = '"' + $observation_unit + '";'
         observation.unit = $evaluate($source)
         observation.maxDecimals = $getVar('$Extras.current.observations.' + $observation + '.max_decimals', 'null');

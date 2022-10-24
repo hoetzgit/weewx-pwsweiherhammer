@@ -12,7 +12,7 @@ except ImportError:
 import configobj
 from weecfg.extension import ExtensionInstaller
 
-VERSION = "0.2.3"
+VERSION = "0.2.4-rc01"
 
 EXTENSION_CONFIG = """
 [StdReport]
@@ -69,9 +69,11 @@ EXTENSION_CONFIG = """
                     [[[[[[dewpoint]]]]]]
                     [[[[[[outHumidity]]]]]]
                     [[[[[[barometer]]]]]]
-                        suffix = ($trend($data_binding=$data_binding).barometer.formatted)
+                        # ToDo: how to handle number localized formatting (use of periods and commas)
+                        #suffix = ($trend($data_binding=$data_binding).barometer.formatted)
                     [[[[[[windSpeed]]]]]]
-                        suffix = $current.windDir.ordinal_compass ($current.windDir)
+                        # ToDo: how to handle number localized formatting (use of periods and commas)
+                        #suffix = $current.windDir.ordinal_compass ($current.windDir)
                     [[[[[[rain]]]]]]
                         mqtt = false
                         type = sum
