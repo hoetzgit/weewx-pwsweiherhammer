@@ -103,7 +103,7 @@ jQuery(document).ready(function() {
     }
     // current provider switcher
     try {
-        jQuery('input[type=radio][name=current_provider_radio]').change(function() {
+        jQuery('input[type=radio][name=current_provider_radio]').click(function() {
             changeCurrentProviderRadio(this.value, true);
         });
     } catch (err) {

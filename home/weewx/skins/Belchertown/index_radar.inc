@@ -28,7 +28,8 @@
             <a id="radardwd" name="radardwd" href="https://www.dwd.de/DE/leistungen/radarbild_film/radarbild_film.html?cl2Categories_Bundesland=rdbf_bay&cl2Categories_Darstellung=rdbf_akt&cl2Categories_Format=radarbild" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/radar/radfilm_bay_akt.gif" alt="DWD Radar" width="420px" title="$obs.label.radar_content_ttt"></a>
         </div>
         <div id="meteosat" class="tab-content">
-            <a id="meteosat" name="meteosat" href="https://www.dwd.de/DE/leistungen/satellit_metsat/satellit_metsat.html" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/sat/bilder/meteosat/satbild_hrvir_akt.png" alt="Meteosat" width="488px" title="$obs.label.radar_content_ttt"></a>
+##            <a id="meteosat" name="meteosat" href="https://www.dwd.de/DE/leistungen/satellit_metsat/satellit_metsat.html" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/sat/bilder/meteosat/satbild_hrvir_akt.png" alt="Meteosat" width="488px" title="$obs.label.radar_content_ttt"></a>
+            <a id="meteosat" name="meteosat" href="http://de.sat24.com/de" target="_blank" rel="noreferrer"><img src="https://api.sat24.com/animated/DE/infraPolair/1/W_dot_%20Europe%20Standard%20Time/4277781" alt="Meteosat" width="488px" title="$obs.label.radar_content_ttt"></a>
         </div>
 ##        <div id="precipitation" class="tab-content">
 ##            <a id="precipitation" name="precipitation" href="https://www.dwd.de/DE/leistungen/wolken_niederschlagsart/wolken_niederschlagsart.html" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/sat/satwetter/njob_satrad.png" alt="DWD Niederschlagsdaten" width="420px" title="$obs.label.radar_content_ttt"></a>
