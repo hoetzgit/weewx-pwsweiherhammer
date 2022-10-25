@@ -576,6 +576,24 @@ sub { top: 0.4em; }
     padding-right: 0 !important;
 }
 
+.forecast-subheadline {
+    font-size: calc(16px + 0.3vw);
+    text-align: left;
+    margin-top: 5px;
+    margin-bottom: 0px;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.dark .subforecast-headline {
+    font-size: calc(16px + 0.3vw);
+    text-align: left;
+    margin-top: 5px;
+    margin-bottom: 0px;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
 .forecast-content {
     margin-bottom: 10px;
     padding-left: 0;
@@ -634,33 +652,27 @@ sub { top: 0.4em; }
 }
 
 /* TODO */
-/* current conditions source Switch */
-/* current source toggle **/
+/* current weather conditions provider test **/
 
-.currentSourceToggle, .dark .currentSourceToggle{
+.ProviderRadiosHead, .dark .ProviderRadiosHead {
+    font-size:10px;
     text-align:center;
-    padding-top: 0px;
+    padding-top: 5px;
     padding-bottom: 0px;
 }
 
-.currentSourceSelected {
+.ProviderRadios, .dark .ProviderRadios{
+    text-align:center;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    line-height: 100%;
+}
+
+.ProviderRadiosSelected, .dark .ProviderRadiosSelected {
     font-size:10px;
     text-align:center;
     padding-top: 0px;
     padding-bottom: 0px;
-}
-
-.currentSwitchLabel {
-  position: relative;
-  display: inline-block;
-  width: 35px;
-  height: 19px;
-}
-
-.currentSwitchLabel input { 
-  opacity: 0;
-  width: 0;
-  height: 0;
 }
 
 /* farmers rules */

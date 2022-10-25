@@ -732,8 +732,8 @@ class ForecastPWS(object):
                 es = dict()
             self.forecast_api_id = ew.get('forecast_api_id',es.get('forecast_api_id'))
             self.forecast_api_secret = ew.get('forecast_api_secret',es.get('forecast_api_secret'))
-            self.current_source_default = ew.get('current_source_default',es.get('current_source_default')).lower()
-            self.current_source_alternative = ew.get('current_source_alternative',es.get('current_source_alternative')).lower()
+            self.current_provider_default = ew.get('current_provider_default',es.get('current_provider_default','dwd'))
+            self.current_provider_list = ew.get('current_provider_list',es.get('current_provider_list', self.current_provider_default))
             self.weatherbit_api_key = ew.get('weatherbit_api_key',es.get('weatherbit_api_key'))
             self.owm_api_key = ew.get('owm_api_key',es.get('owm_api_key'))
         except LookupError:
@@ -743,8 +743,7 @@ class ForecastPWS(object):
             self.belchertown_forecast = None
             self.forecast_api_id = None
             self.forecast_api_secret = None
-            self.current_source_default = 'dwd'
-            self.current_source_alternative = None
+            self.current_provider_list = 'dwd'
             self.weatherbit_api_key = None
             self.owm_api_key = None
         # Database
@@ -766,8 +765,7 @@ class ForecastPWS(object):
             print('aeris api id               : ',self.forecast_api_id)
             print('aeris api secret           : ',self.forecast_api_secret)
             print('SQLITE_ROOT                : ',self.SQLITE_ROOT)
-            print('current source default     : ',self.current_source_default)
-            print('current source alternative : ',self.current_source_alternative)
+            print('current provider list      : ',self.current_provider_list)
             print('weatherbit api key         : ',self.weatherbit_api_key)
             print('owm api key                : ',self.owm_api_key)
             print('forecast wbx stations      : ',self.wbx_stations)
@@ -1860,7 +1858,7 @@ class ForecastPWS(object):
             }
 
         #ho TEST: additional current weather source Weatherbit.io API
-        if (self.current_source_default == 'weatherbit') or (self.current_source_alternative == 'weatherbit'):
+        if ('weatherbit' in self.current_provider_list):
             try:
                 forecast['weatherbit'] = self.download_weatherbit('current')
             except Exception as e:
@@ -1893,8 +1891,7 @@ class ForecastPWS(object):
                 }
 
         #ho TEST: additional current weather source OpenWeatherMap API
-        #if (self.current_source_default == 'owm') or (self.current_source_alternative == 'owm'):
-        if True:
+        if ('owm' in self.current_provider_list):
             try:
                 forecast['owm'] = self.download_owm('weather')
             except Exception as e:
@@ -1927,12 +1924,8 @@ class ForecastPWS(object):
                 }
 
         #ho TEST: additional current weather source AerisWeather API "metar" ==> but with "allstations"
-        #if (self.current_source_default == 'metar'):
-        #    self.current_source_default = 'ETIC'
-        #if (self.current_source_alternative == 'metar'):
-        #    self.current_source_alternative = 'ETIC'
         #ho TEST: additional current weather source AerisWeather API "metar"
-        if (self.current_source_default == 'metar') or (self.current_source_alternative == 'metar'):
+        if ('metar' in self.current_provider_list):
             try:
                 if self.forecast_api_id and self.forecast_api_secret:
                     forecast['metar'] = self.download_aeris('metar')
@@ -1968,7 +1961,7 @@ class ForecastPWS(object):
                 }
 
         #ho TEST: additional current weather source AerisWeather API "conditions"
-        if (self.current_source_default == 'conditions') or (self.current_source_alternative == 'conditions'):
+        if ('conditions' in self.current_provider_list):
             try:
                 if self.forecast_api_id and self.forecast_api_secret:
                     forecast['conditions'] = self.download_aeris('conditions')
@@ -2004,7 +1997,7 @@ class ForecastPWS(object):
                 }
 
         #ho Test: additional current weather source AerisWeather API "allstations"
-        if (self.current_source_default.upper() in AERIS_VALID_ALLSTATIONS) or (self.current_source_alternative.upper() in AERIS_VALID_ALLSTATIONS):
+        if ('allstations' in self.current_provider_list):
             try:
                 if self.forecast_api_id and self.forecast_api_secret:
                     forecast.update(self.download_aeris('allstations'))
@@ -2105,7 +2098,12 @@ class ForecastPWS(object):
                     for ii in rtn:
                         if ii=='response':
                             res['response'] = rtn[ii][0]
-                res['response']['ob']['source_api'] = 'Aeris ' + what
+                if what == 'allstations' or what == 'conditions':
+                    res['response']['ob']['source_api'] = 'Aeris ' + what
+                elif what == 'metar':
+                    res['response']['ob']['source_api'] = 'Aeris METAR ETIC'
+                else:
+                    res['response']['ob']['source_api'] = 'Aeris'
                 res = [{'success':True,'error':False,'response':res['response'],'original':rtn}]
                 return res
             except Exception as e:

@@ -224,55 +224,28 @@
                                     <div class="row current-obs-text">
                                         $current_obs_summary
                                     </div>
-                                    ##<div class="row avg10m-obs-symbols"></div>
-                                    #if $Extras.has_key('current_source_toggle') and $Extras.current_source_toggle == '1'
-                                    <div class="row currentSourceToggle">
-                                        <label class="currentSwitchLabel">
-                                            <input type="checkbox" id="current_source_toggle" $current_source_toggle_checked>
-                                            <span class="slider round"></span>
-                                        </label>
+                                    #if $Extras.has_key('current_provider_visible') and $Extras.current_provider_visible == '1'
+                                      #set $providers = 'dwd'
+                                      #if $Extras.has_key('current_provider_list')
+                                        #set $providers = $Extras.current_provider_list
+                                      #end if
+                                      #set $current_provider_default = "dwd"
+                                      #if $Extras.has_key('current_provider_default')
+                                        #set $current_provider_default = $Extras.current_provider_default
+                                      #end if
+                                    <div class="row ProviderRadiosHead">Vergleich current provider:</div>
+                                    <div class="row form-check form-check-inline ProviderRadios">
+                                      #for $provider in $providers
+                                        #set $id = "provider_radio_" + $provider
+                                        #if $provider == $current_provider_default
+                                          #set $checked=" checked"
+                                        #else
+                                          #set $checked=None
+                                        #end if
+                                        <input class="form-check-input" type="radio" name="current_provider_radio" aria-label="..." id="$id" value="$provider"$checked>
+                                      #end for
                                     </div>
-                                    <div class="row currentSourceSelected"></div><!-- AJAX -->
-                                    ##TODO Debug Window
-                                    ###if $Extras.has_key("current_source_debug") and $Extras.current_source_debug == '1'
-                                    ##<!-- Current Source Debug Modal -->
-                                    ##<div class="sun-moon-modal"><a href="#current-source-debug" data-toggle="modal" data-target="#current-source-debug">Vergleich</a></div>
-                                    ##<!-- Current Source Debug -->
-                                    ##<div class="modal fade" id="current-source-debug" tabindex="-1" role="dialog" aria-labelledby="current-source-debug" aria-hidden="true">
-                                    ##    <div class="modal-dialog modal-lg" role="document">
-                                    ##        <div class="modal-content">
-                                    ##            <div class="modal-header">
-                                    ##                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    ##                    <span aria-hidden="true">&times;</span>
-                                    ##                </button>
-                                    ##                <h4 class="modal-title" id="current-source-debug">Vergleich Anbieter aktuelle Wetterbedingungen</h4>
-                                    ##            </div>
-                                    ##            <div class="current-source-debug-extras-modal-body modal-body">
-                                    ##                <div class="row col-sm-12">
-                                    ##                    <div class="col-sm-4">
-                                    ##                        <div>DWD</div>
-                                    ##                        <img id="wxicon-dwd" src="$relative_url/images/$current_obs_icon">
-                                    ##                        <div class="current-obs-text-dwd">$current_obs_summary</div>
-                                    ##                    </div>
-                                    ##                    <div class="col-sm-4">
-                                    ##                        <div>Brightsky API</div>
-                                    ##                        <img id="wxicon-brightsky" src="$relative_url/images/$current_obs_icon">
-                                    ##                        <div class="current-obs-text-brightsky">$current_obs_summary</div>
-                                    ##                    </div>
-                                    ##                    <div class="col-sm-4">
-                                    ##                        <div>OWM API</div>
-                                    ##                        <img id="wxicon-owm" src="$relative_url/images/$current_obs_icon">
-                                    ##                        <div class="current-obs-text-owm">$current_obs_summary</div>
-                                    ##                    </div>
-                                    ##               </div>
-                                    ##            </div><!-- AJAX -->
-                                    ##            <div class="modal-footer">
-                                    ##                <button type="button" class="btn btn-primary" data-dismiss="modal">$obs.label.close</button>
-                                    ##            </div>
-                                    ##        </div>
-                                    ##    </div>
-                                    ##</div>
-                                    ###end if
+                                    <div class="row ProviderRadiosSelected"></div><!-- AJAX -->
                                     #end if
                                 </div>
                                 <!-- current temperature and feelslike -->

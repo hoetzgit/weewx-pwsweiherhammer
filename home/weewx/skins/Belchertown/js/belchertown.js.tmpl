@@ -94,18 +94,17 @@ jQuery(document).ready(function() {
     }
     #end if
 
-    #if $Extras.has_key('current_source_toggle') and $Extras.current_source_toggle == '1'
-    // If the visitor has overridden the current source, keep that current source going throughout the full site and their visit.
-    if (sessionStorage.getItem('current_source_toggle') == "toggleOverride") {
-        belchertown_log("current_source_toggle: sessionStorage override in place.");
-        changeCurrentSourceToggle(sessionStorage.getItem('current_source_toggle_checked'));
+    #if $Extras.has_key('current_provider_visible') and $Extras.current_provider_visible == '1'
+    //20221024,ho
+    // If the visitor has overridden the current source,provider keep that current source provider going throughout the full site and their visit.
+    if (sessionStorage.getItem('current_provider_override') == "toggleOverride") {
+        belchertown_log("current_provider_override: sessionStorage override in place.");
+        changeCurrentProviderRadio(sessionStorage.getItem('current_provider'));
     }
-
-    // current source checkbox toggle switcher
+    // current provider switcher
     try {
-        document.getElementById('current_source_toggle').addEventListener('change', function(event) {
-            belchertown_log("current_source_toggle: Toggle button changed");
-           (event.target.checked) ? changeCurrentSourceToggle("checked", true) : changeCurrentSourceToggle("", true);
+        jQuery('input[type=radio][name=current_provider_radio]').change(function() {
+            changeCurrentProviderRadio(this.value, true);
         });
     } catch (err) {
          // Silently exit
@@ -736,25 +735,33 @@ function changeTheme(themeName, toggleOverride = false) {
     }
 }
 
-#if $Extras.has_key('current_source_toggle') and $Extras.current_source_toggle == '1'
-function changeCurrentSourceToggle(checked, toggleOverride = false) {
-    belchertown_log("changeCurrentSourceToggle: Changing to: " + checked);
+#if $Extras.has_key('current_provider_visible') and $Extras.current_provider_visible == '1'
+//20221024,ho
+function changeCurrentProviderRadio(current_provider, toggleOverride = false) {
+    belchertown_log("changeCurrentProviderRadio: Changing to: " + current_provider);
+    sessionStorage.setItem('current_provider', current_provider);
     if (toggleOverride) {
-        sessionStorage.setItem('current_source_toggle', 'toggleOverride');
+        sessionStorage.setItem('current_provider_override', 'toggleOverride');
     }
-    if (checked == "checked") {
-        jQuery("#current_source_toggle").prop("checked", true);
+    if (current_provider == "dwd") {
+        jQuery("#provider_radio_dwd").prop("checked", true);
+    } else if (current_provider == "metar") {
+        jQuery("#provider_radio_metar").prop("checked", true);
+    } else if (current_provider == "brightsky") {
+        jQuery("#provider_radio_brightsky").prop("checked", true);
+    } else if (current_provider == "owm") {
+        jQuery("#provider_radio_owm").prop("checked", true);
+    } else if (current_provider == "weatherbit") {
+        jQuery("#provider_radio_weatherbit").prop("checked", true);
+    } else if (current_provider == "conditions") {
+        jQuery("#provider_radio_conditions").prop("checked", true);
     } else {
-        jQuery("#current_source_toggle").prop("checked", false);
+        sessionStorage.setItem('current_provider', 'dwd');
     }
-    sessionStorage.setItem('current_source_toggle_checked', checked);
-
-    belchertown_log("changeCurrentSourceToggle: Session current_source_toggle is " + sessionStorage.getItem('current_source_toggle'));
-    belchertown_log("changeCurrentSourceToggle: Session current_source_toggle_checked is " + sessionStorage.getItem('current_source_toggle_checked'));
-
     ajaxforecast();
 }
 #end if
+
 
 async function ajaxweewx() {
     resp = await fetch(get_relative_url() + "/json/weewx_data.json");
@@ -1313,14 +1320,6 @@ function update_forecast_data(data) {
     belchertown_debug("Forecast: Provider is " + forecast_provider);
     belchertown_debug("Forecast: Updating data");
     belchertown_debug(data);
-    current_source_toggle_checked = sessionStorage.getItem('current_source_toggle_checked');
-    if (current_source_toggle_checked == "checked") {
-        current_source_selected = "$current_source_alternative"
-    } else {
-        current_source_selected = "$current_source_default"
-    }
-    belchertown_log("current_source_toggle_checked: " + current_source_toggle_checked);
-    belchertown_log("current_source_selected: " + current_source_selected);
 
     try {
         var forecast_issueTime_dwd = tzAdjustedMoment(data["dwd"]["current"][0]["response"]["obTimestamp"]).format('$obs.label.time_forecast_last_updated');
@@ -1328,19 +1327,24 @@ function update_forecast_data(data) {
         // Returned "current" data does not have this value
     }
 
-    // 20220710,ho dwd | brightsky | weatherbit | owm | AERIS: metar | conditions
-    if (current_source_selected == "dwd") {
-        data["current"] = data["dwd"]["current"]
-    } else if (current_source_selected == "brightsky") {
-        data["current"] = data["_brightsky"]["current"]
-    } else if (current_source_selected == "weatherbit") {
-        data["current"] = data["_weatherbit"]["current"]
-    } else if (current_source_selected == "owm") {
-        data["current"] = data["_owm"]["current"]
-    } else if (current_source_selected == "metar") {
-        data["current"] = data["aeris_metar"]["current"]
-    } else if (current_source_selected == "conditions") {
-        data["current"] = data["aeris_conditions"]["current"]
+    //20221024,ho
+    current_provider = sessionStorage.getItem('current_provider');
+    try {
+        if (current_provider == "dwd") {
+            data["current"] = data["dwd"]["current"]
+        } else if (current_provider == "brightsky") {
+            data["current"] = data["_brightsky"]["current"]
+        } else if (current_provider == "weatherbit") {
+            data["current"] = data["_weatherbit"]["current"]
+        } else if (current_provider == "owm") {
+            data["current"] = data["_owm"]["current"]
+        } else if (current_provider == "metar") {
+            data["current"] = data["aeris_metar"]["current"]
+        } else if (current_provider == "conditions") {
+            data["current"] = data["aeris_conditions"]["current"]
+        }
+    } catch (err) {
+        // Returned "current" data does not have values
     }
 
     // 20220726,ho
@@ -1365,8 +1369,9 @@ function update_forecast_data(data) {
     }
 
 
-    #if $Extras.has_key('current_source_toggle') and $Extras.current_source_toggle == '1'
-    jQuery(".currentSourceSelected").html(data["current"][0]["response"]["ob"]["source_api"]);
+    #if $Extras.has_key('current_provider_visible') and $Extras.current_provider_visible == '1'
+    //20221024,ho
+    jQuery(".ProviderRadiosSelected").html(data["current"][0]["response"]["ob"]["source_api"]);
     #end if
 
     if (forecast_provider == "N/A") {

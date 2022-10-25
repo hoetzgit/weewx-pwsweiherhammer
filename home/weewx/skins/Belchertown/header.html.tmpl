@@ -246,15 +246,13 @@
             if ( sessionStorage.getItem('currentTheme') === null ) {
                 sessionStorage.setItem('currentTheme', '$bodyTheme');
             }
-            #if $Extras.has_key('current_source_toggle') and $Extras.current_source_toggle == '1'
-            // Set the session variables for current_source_toggle_checked
-            if ( sessionStorage.getItem('current_source_toggle') === null ) {
-                sessionStorage.setItem('current_source_toggle', '');
+            // Set the session variables for current provider
+            if ( sessionStorage.getItem('current_provider') === null ) {
+                sessionStorage.setItem('current_provider', '$current_provider_default');
             }
-            if ( sessionStorage.getItem('current_source_toggle_checked') === null ) {
-                sessionStorage.setItem('current_source_toggle_checked', '');
+            if ( sessionStorage.getItem('current_provider_override') === null ) {
+                sessionStorage.setItem('current_provider_override', '');
             }
-            #end if
         </script>
         #end if
         

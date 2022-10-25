@@ -1651,26 +1651,28 @@ class getData(SearchList):
             with open(forecast_file, "r") as read_file:
                 data = json.load(read_file)
 
-            # 20220710,ho dwd | brightsky | weatherbit | owm | AERIS: metar | conditions
-            current_source_default = self.generator.skin_dict["Extras"].get("current_source_default", "dwd")
-            current_source_alternative = self.generator.skin_dict["Extras"].get("current_source_alternative", current_source_default)
-            current_source_toggle = self.generator.skin_dict["Extras"].get("current_source_toggle", 0)
-            current_source_toggle_checked = ""
+            # 20221024,ho possible providers for current weather
+            current_provider_list = self.generator.skin_dict["Extras"].get("current_provider_list", "dwd")
+            current_provider_default = self.generator.skin_dict["Extras"].get("current_provider_default", "dwd")
+            current_provider_visible = self.generator.skin_dict["Extras"].get("current_provider_visible", 0)
             try:
-                if (current_source_default == "dwd"):
+                if (current_provider_default == "dwd"):
                     data["current"] = data["dwd"]["current"]
-                elif (current_source_default == "brightsky"):
+                elif (current_provider_default == "brightsky"):
                     data["current"] = data["_brightsky"]["current"]
-                elif (current_source_default == "owm"):
+                elif (current_provider_default == "owm"):
                     data["current"] = data["_owm"]["current"]
-                elif (current_source_default == "weatherbit"):
+                elif (current_provider_default == "weatherbit"):
                     data["current"] = data["_weatherbit"]["current"]
-                elif (current_source_default == "metar"):
+                elif (current_provider_default == "metar"):
                     data["current"] = data["aeris_metar"]["current"]
-                elif (current_source_default == "conditions"):
+                elif (current_provider_default == "conditions"):
                     data["current"] = data["aeris_conditions"]["current"]
             except Exception:
-                loginf("No data from %s" % current_source_default)
+                current_provider_list = "dwd"
+                current_provider_default = "dwd"
+                data["current"] = data["dwd"]["current"]
+                raise Warning("Error, no current data from %s" % current_provider_default)
 
             try:
                 cloud_cover = "{} %".format(data["current"][0]["response"]["ob"]["sky"])
@@ -2385,10 +2387,9 @@ class getData(SearchList):
             "default_noaa_file": default_noaa_file,
             "current_obs_icon": current_obs_icon,
             "current_obs_summary": current_obs_summary,
-            "current_source_toggle": current_source_toggle,
-            "current_source_toggle_checked": current_source_toggle_checked,
-            "current_source_default": current_source_default,
-            "current_source_alternative": current_source_alternative,
+            "current_provider_list": current_provider_list,
+            "current_provider_default": current_provider_default,
+            "current_provider_visible": current_provider_visible,
             "visibility": visibility,
             "visibility_unit": visibility_unit,
             "cloud_cover": cloud_cover,
