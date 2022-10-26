@@ -730,12 +730,12 @@ class ForecastPWS(object):
                 es = skin_dict['Extras']
             except Exception:
                 es = dict()
-            self.forecast_api_id = ew.get('forecast_api_id',es.get('forecast_api_id'))
-            self.forecast_api_secret = ew.get('forecast_api_secret',es.get('forecast_api_secret'))
+            self.forecast_api_id = ew.get('forecast_api_id',es.get('forecast_api_id', None))
+            self.forecast_api_secret = ew.get('forecast_api_secret',es.get('forecast_api_secret', None))
             self.current_provider_default = ew.get('current_provider_default',es.get('current_provider_default','dwd'))
             self.current_provider_list = ew.get('current_provider_list',es.get('current_provider_list', self.current_provider_default))
-            self.weatherbit_api_key = ew.get('weatherbit_api_key',es.get('weatherbit_api_key'))
-            self.owm_api_key = ew.get('owm_api_key',es.get('owm_api_key'))
+            self.weatherbit_api_key = ew.get('weatherbit_api_key',es.get('weatherbit_api_key', None))
+            self.owm_api_key = ew.get('owm_api_key',es.get('owm_api_key', None))
         except LookupError:
             belchertown_section = {}
             self.belchertown_html_root = None
@@ -1826,29 +1826,21 @@ class ForecastPWS(object):
                 'forecast_1hr':[{'response':[]}],
                 }
 
-        #ho TEST: additional current weather source Brightsky API
+        #ho TEST: additional weather source Brightsky
+        #TODO: forecast
         try:
-            forecast['brightsky'] = self.download_brightsky('current_weather')
-        except Exception as e:
-            print(e)
-            forecast['brightsky'] = [{
-                'success':False,
-                'error':{'code':e.__name__,
-                         'description':str(e)},
-                'response':[] }]
-        #ho TEST: brightsky own section
-        try:
-            forecast['_brightsky'] = {
-                'success':forecast['brightsky'][0]['success'],
-                'error':forecast['brightsky'][0]['error'],
-                'current':[{'response':forecast['brightsky'][0]['response']}],
+            data = self.download_brightsky('current_weather')
+            forecast['brightsky'] = {
+                'success':data[0]['success'],
+                'error':data[0]['error'],
+                'current':[{'response':data[0]['response']}],
                 'forecast_24hr':[{'response':[]}],
                 'forecast_3hr':[{'response':[]}],
                 'forecast_1hr':[{'response':[]}],
             }
         except Exception as e:
             print(e)
-            forecast['_brightsky'] = {
+            forecast['brightsky'] = {
                 'success':False,
                 'error':{'code':e.__name__,'description':str(e)},
                 'current':[{'response':[]}],
@@ -1857,31 +1849,22 @@ class ForecastPWS(object):
                 'forecast_1hr':[{'response':[]}],
             }
 
-        #ho TEST: additional current weather source Weatherbit.io API
+        #ho TEST: additional weather source Weatherbit.io
+        #TODO: forecast
         if ('weatherbit' in self.current_provider_list):
+            data = self.download_weatherbit('current')
             try:
-                forecast['weatherbit'] = self.download_weatherbit('current')
-            except Exception as e:
-                print(e)
-                forecast['weatherbit'] = [{
-                    'success':False,
-                    'error':{'code':e.__name__,
-                             'description':str(e)},
-                    'response':[]
-                }]
-            #ho TEST: weatherbit own section
-            try:
-                forecast['_weatherbit'] = {
-                    'success':forecast['weatherbit'][0]['success'],
-                    'error':forecast['weatherbit'][0]['error'],
-                    'current':[{'response':forecast['weatherbit'][0]['response']}],
+                forecast['weatherbit'] = {
+                    'success':data[0]['success'],
+                    'error':data[0]['error'],
+                    'current':[{'response':data[0]['response']}],
                     'forecast_24hr':[{'response':[]}],
                     'forecast_3hr':[{'response':[]}],
                     'forecast_1hr':[{'response':[]}],
                 }
             except Exception as e:
                 print(e)
-                forecast['_weatherbit'] = {
+                forecast['weatherbit'] = {
                     'success':False,
                     'error':{'code':e.__name__,'description':str(e)},
                     'current':[{'response':[]}],
@@ -1890,7 +1873,7 @@ class ForecastPWS(object):
                     'forecast_1hr':[{'response':[]}],
                 }
         else:
-            forecast['_weatherbit'] = {
+            forecast['weatherbit'] = {
                 'success':False,
                 'error':'disabled',
                 'current':[{'response':[]}],
@@ -1899,31 +1882,22 @@ class ForecastPWS(object):
                 'forecast_1hr':[{'response':[]}],
             }
 
-        #ho TEST: additional current weather source OpenWeatherMap API
+        #ho TEST: additional weather source OpenWeatherMap API
+        #TODO: forecast
         if ('owm' in self.current_provider_list):
             try:
-                forecast['owm'] = self.download_owm('weather')
-            except Exception as e:
-                print(e)
-                forecast['owm'] = [{
-                    'success':False,
-                    'error':{'code':e.__name__,
-                             'description':str(e)},
-                    'response':[]
-                }]
-            #ho TEST: owm own section
-            try:
-                forecast['_owm'] = {
-                    'success':forecast['owm'][0]['success'],
-                    'error':forecast['owm'][0]['error'],
-                    'current':[{'response':forecast['owm'][0]['response']}],
+                data = self.download_owm('weather')
+                forecast['owm'] = {
+                    'success':data[0]['success'],
+                    'error':data[0]['error'],
+                    'current':[{'response':data[0]['response']}],
                     'forecast_24hr':[{'response':[]}],
                     'forecast_3hr':[{'response':[]}],
                     'forecast_1hr':[{'response':[]}],
                 }
             except Exception as e:
                 print(e)
-                forecast['_owm'] = {
+                forecast['owm'] = {
                     'success':False,
                     'error':{'code':e.__name__,'description':str(e)},
                     'current':[{'response':[]}],
@@ -1932,7 +1906,7 @@ class ForecastPWS(object):
                     'forecast_1hr':[{'response':[]}],
                 }
         else:
-            forecast['_owm'] = {
+            forecast['owm'] = {
                 'success':False,
                 'error':'disabled',
                 'current':[{'response':[]}],
@@ -1941,28 +1915,15 @@ class ForecastPWS(object):
                 'forecast_1hr':[{'response':[]}],
             }
 
-        #ho TEST: additional current weather source AerisWeather API "metar" ==> but with "allstations"
-        #ho TEST: additional current weather source AerisWeather API "metar"
+        #ho TEST: additional weather source AerisWeather "metar"
+        #TODO: forecast
         if ('metar' in self.current_provider_list):
             try:
-                if self.forecast_api_id and self.forecast_api_secret:
-                    forecast['metar'] = self.download_aeris('metar')
-                else:
-                    raise Exception
-            except Exception as e:
-                print(e)
-                forecast['metar'] = [{
-                    'success':False,
-                    'error':{'code':e.__name__,
-                             'description':str(e)},
-                    'response':[]
-                }]
-            #ho TEST: Aeris Metar own section
-            try:
+                data = self.download_aeris('metar')
                 forecast['aeris_metar'] = {
-                    'success':forecast['metar'][0]['success'],
-                    'error':forecast['metar'][0]['error'],
-                    'current':[{'response':forecast['metar'][0]['response']}],
+                    'success':data[0]['success'],
+                    'error':data[0]['error'],
+                    'current':[{'response':data[0]['response']}],
                     'forecast_24hr':[{'response':[]}],
                     'forecast_3hr':[{'response':[]}],
                     'forecast_1hr':[{'response':[]}],
@@ -1987,27 +1948,15 @@ class ForecastPWS(object):
                 'forecast_1hr':[{'response':[]}],
             }
 
-        #ho TEST: additional current weather source AerisWeather API "conditions"
+        #ho TEST: additional weather source AerisWeather "conditions"
+        #TODO: forecast
         if ('conditions' in self.current_provider_list):
             try:
-                if self.forecast_api_id and self.forecast_api_secret:
-                    forecast['conditions'] = self.download_aeris('conditions')
-                else:
-                    raise Exception
-            except Exception as e:
-                print(e)
-                forecast['conditions'] = [{
-                    'success':False,
-                    'error':{'code':e.__name__,
-                             'description':str(e)},
-                    'response':[]
-                }]
-            #ho TEST: Aeris conditions own section
-            try:
+                data = self.download_aeris('conditions')
                 forecast['aeris_conditions'] = {
-                    'success':forecast['conditions'][0]['success'],
-                    'error':forecast['conditions'][0]['error'],
-                    'current':[{'response':forecast['conditions'][0]['response']}],
+                    'success':data[0]['success'],
+                    'error':data[0]['error'],
+                    'current':[{'response':data[0]['response']}],
                     'forecast_24hr':[{'response':[]}],
                     'forecast_3hr':[{'response':[]}],
                     'forecast_1hr':[{'response':[]}],
@@ -2032,7 +1981,9 @@ class ForecastPWS(object):
                 'forecast_1hr':[{'response':[]}],
             }
 
-        #ho Test: additional current weather source AerisWeather API "allstations"
+        #ho TEST: additional weather source AerisWeather "allstations"
+        #TODO: download current
+        #TODO: forecast
         if ('allstations' in self.current_provider_list):
             try:
                 if self.forecast_api_id and self.forecast_api_secret:
@@ -2133,12 +2084,6 @@ class ForecastPWS(object):
                     for ii in rtn:
                         if ii=='response':
                             res['response'] = rtn[ii][0]
-                    # original isDay is sometimes wrong
-                    #location = self.get_station_location()
-                    #night = self.is_night(location,int(res['response']['ob']['timestamp']))
-                    #res['response']['ob']['isDay'] = not night
-                    #icon_name = res['response']['ob']['icon'].split(".")[0]  # Remove .png
-                    #res['response']['ob']['icon'] = icon_name + ('n' if night else '') + '.png'
                 else:
                     for ii in rtn:
                         if ii=='response':
@@ -2415,9 +2360,8 @@ class ForecastPWS(object):
                             'solradWM2':None,
                             'isDay':not night,
                             'sky':cloudcover,
-                        },
-                    },
-                    'original':rtn, # debug
+                        }
+                    }
                 }]
 
                 return res
@@ -2511,8 +2455,7 @@ class ForecastPWS(object):
                             'isDay':not night,
                             'sky':cloudcover,
                         },
-                    },
-                    'original':rtn, # debug
+                    }
                 }]
 
                 return res
@@ -2606,8 +2549,7 @@ class ForecastPWS(object):
                             'isDay':not night,
                             'sky':cloudcover,
                         },
-                    },
-                    'original':rtn, # debug
+                    }
                 }]
 
                 return res

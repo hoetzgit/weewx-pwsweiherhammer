@@ -1338,25 +1338,25 @@ function update_forecast_data(data) {
             jQuery('input[type=radio]#provider_radio_dwd').remove();
         }
 
-        if (data["_brightsky"]["success"]) {
+        if (data["brightsky"]["success"]) {
             if (current_provider == "brightsky") {
-                data["current"] = data["_brightsky"]["current"]
+                data["current"] = data["brightsky"]["current"]
             }
         } else {
             jQuery('input[type=radio]#provider_radio_brightsky').remove();
         }
 
-        if (data["_weatherbit"]["success"]) {
+        if (data["weatherbit"]["success"]) {
             if (current_provider == "weatherbit") {
-                data["current"] = data["_weatherbit"]["current"]
+                data["current"] = data["weatherbit"]["current"]
             }
         } else {
             jQuery('input[type=radio]#provider_radio_weatherbit').remove();
         }
 
-        if (data["_owm"]["success"]) {
+        if (data["owm"]["success"]) {
             if (current_provider == "owm") {
-                data["current"] = data["_owm"]["current"]
+                data["current"] = data["owm"]["current"]
             }
         } else {
             jQuery('input[type=radio]#provider_radio_owm').remove();
