@@ -1808,8 +1808,8 @@ class ForecastPWS(object):
         #ho TEST: dwd own section
         try:
             forecast['dwd'] = {
-                'success':False,
-                'error':False,
+                'success':forecast['current'][0]['success'],
+                'error':forecast['current'][0]['error'],
                 'current':[{'response':forecast['current'][0]['response']}],
                 'forecast_24hr':[{'response':forecast['forecast_24hr'][0]['response']}],
                 'forecast_3hr':[{'response':forecast['forecast_3hr'][0]['response']}],
@@ -1839,8 +1839,8 @@ class ForecastPWS(object):
         #ho TEST: brightsky own section
         try:
             forecast['_brightsky'] = {
-                'success':False,
-                'error':False,
+                'success':forecast['brightsky'][0]['success'],
+                'error':forecast['brightsky'][0]['error'],
                 'current':[{'response':forecast['brightsky'][0]['response']}],
                 'forecast_24hr':[{'response':[]}],
                 'forecast_3hr':[{'response':[]}],
@@ -1872,8 +1872,8 @@ class ForecastPWS(object):
             #ho TEST: weatherbit own section
             try:
                 forecast['_weatherbit'] = {
-                    'success':False,
-                    'error':False,
+                    'success':forecast['weatherbit'][0]['success'],
+                    'error':forecast['weatherbit'][0]['error'],
                     'current':[{'response':forecast['weatherbit'][0]['response']}],
                     'forecast_24hr':[{'response':[]}],
                     'forecast_3hr':[{'response':[]}],
@@ -1889,6 +1889,15 @@ class ForecastPWS(object):
                     'forecast_3hr':[{'response':[]}],
                     'forecast_1hr':[{'response':[]}],
                 }
+        else:
+            forecast['_weatherbit'] = {
+                'success':False,
+                'error':'disabled',
+                'current':[{'response':[]}],
+                'forecast_24hr':[{'response':[]}],
+                'forecast_3hr':[{'response':[]}],
+                'forecast_1hr':[{'response':[]}],
+            }
 
         #ho TEST: additional current weather source OpenWeatherMap API
         if ('owm' in self.current_provider_list):
@@ -1905,8 +1914,8 @@ class ForecastPWS(object):
             #ho TEST: owm own section
             try:
                 forecast['_owm'] = {
-                    'success':False,
-                    'error':False,
+                    'success':forecast['owm'][0]['success'],
+                    'error':forecast['owm'][0]['error'],
                     'current':[{'response':forecast['owm'][0]['response']}],
                     'forecast_24hr':[{'response':[]}],
                     'forecast_3hr':[{'response':[]}],
@@ -1922,6 +1931,15 @@ class ForecastPWS(object):
                     'forecast_3hr':[{'response':[]}],
                     'forecast_1hr':[{'response':[]}],
                 }
+        else:
+            forecast['_owm'] = {
+                'success':False,
+                'error':'disabled',
+                'current':[{'response':[]}],
+                'forecast_24hr':[{'response':[]}],
+                'forecast_3hr':[{'response':[]}],
+                'forecast_1hr':[{'response':[]}],
+            }
 
         #ho TEST: additional current weather source AerisWeather API "metar" ==> but with "allstations"
         #ho TEST: additional current weather source AerisWeather API "metar"
@@ -1942,8 +1960,8 @@ class ForecastPWS(object):
             #ho TEST: Aeris Metar own section
             try:
                 forecast['aeris_metar'] = {
-                    'success':False,
-                    'error':False,
+                    'success':forecast['metar'][0]['success'],
+                    'error':forecast['metar'][0]['error'],
                     'current':[{'response':forecast['metar'][0]['response']}],
                     'forecast_24hr':[{'response':[]}],
                     'forecast_3hr':[{'response':[]}],
@@ -1959,6 +1977,15 @@ class ForecastPWS(object):
                     'forecast_3hr':[{'response':[]}],
                     'forecast_1hr':[{'response':[]}],
                 }
+        else:
+            forecast['aeris_metar'] = {
+                'success':False,
+                'error':'disabled',
+                'current':[{'response':[]}],
+                'forecast_24hr':[{'response':[]}],
+                'forecast_3hr':[{'response':[]}],
+                'forecast_1hr':[{'response':[]}],
+            }
 
         #ho TEST: additional current weather source AerisWeather API "conditions"
         if ('conditions' in self.current_provider_list):
@@ -1978,8 +2005,8 @@ class ForecastPWS(object):
             #ho TEST: Aeris conditions own section
             try:
                 forecast['aeris_conditions'] = {
-                    'success':False,
-                    'error':False,
+                    'success':forecast['conditions'][0]['success'],
+                    'error':forecast['conditions'][0]['error'],
                     'current':[{'response':forecast['conditions'][0]['response']}],
                     'forecast_24hr':[{'response':[]}],
                     'forecast_3hr':[{'response':[]}],
@@ -1995,6 +2022,15 @@ class ForecastPWS(object):
                     'forecast_3hr':[{'response':[]}],
                     'forecast_1hr':[{'response':[]}],
                 }
+        else:
+            forecast['aeris_conditions'] = {
+                'success':False,
+                'error':'disabled',
+                'current':[{'response':[]}],
+                'forecast_24hr':[{'response':[]}],
+                'forecast_3hr':[{'response':[]}],
+                'forecast_1hr':[{'response':[]}],
+            }
 
         #ho Test: additional current weather source AerisWeather API "allstations"
         if ('allstations' in self.current_provider_list):
@@ -2010,6 +2046,15 @@ class ForecastPWS(object):
                     'error':{'code':e.__name__,
                              'description':str(e)},
                     'response':[] }]
+        else:
+            forecast['allstations'] = {
+                'success':False,
+                'error':'disabled',
+                'current':[{'response':[]}],
+                'forecast_24hr':[{'response':[]}],
+                'forecast_3hr':[{'response':[]}],
+                'forecast_1hr':[{'response':[]}],
+            }
 
         if self.belchertown_html_root and self.belchertown_forecast and self.belchertown_forecast==placemark['id']:
             fn = os.path.join(self.belchertown_html_root,'json','forecast.json')

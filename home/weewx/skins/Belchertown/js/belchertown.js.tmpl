@@ -1330,19 +1330,54 @@ function update_forecast_data(data) {
     //20221024,ho
     current_provider = sessionStorage.getItem('current_provider');
     try {
-        if (current_provider == "dwd") {
-            data["current"] = data["dwd"]["current"]
-        } else if (current_provider == "brightsky") {
-            data["current"] = data["_brightsky"]["current"]
-        } else if (current_provider == "weatherbit") {
-            data["current"] = data["_weatherbit"]["current"]
-        } else if (current_provider == "owm") {
-            data["current"] = data["_owm"]["current"]
-        } else if (current_provider == "metar") {
-            data["current"] = data["aeris_metar"]["current"]
-        } else if (current_provider == "conditions") {
-            data["current"] = data["aeris_conditions"]["current"]
+        if (data["dwd"]["success"]) {
+            if (current_provider == "dwd") {
+                data["current"] = data["dwd"]["current"]
+            }
+        } else {
+            jQuery('input[type=radio]#provider_radio_dwd').remove();
         }
+
+        if (data["_brightsky"]["success"]) {
+            if (current_provider == "brightsky") {
+                data["current"] = data["_brightsky"]["current"]
+            }
+        } else {
+            jQuery('input[type=radio]#provider_radio_brightsky').remove();
+        }
+
+        if (data["_weatherbit"]["success"]) {
+            if (current_provider == "weatherbit") {
+                data["current"] = data["_weatherbit"]["current"]
+            }
+        } else {
+            jQuery('input[type=radio]#provider_radio_weatherbit').remove();
+        }
+
+        if (data["_owm"]["success"]) {
+            if (current_provider == "owm") {
+                data["current"] = data["_owm"]["current"]
+            }
+        } else {
+            jQuery('input[type=radio]#provider_radio_owm').remove();
+        }
+
+        if (data["aeris_metar"]["success"]) {
+            if (current_provider == "metar") {
+                data["current"] = data["aeris_metar"]["current"]
+            }
+        } else {
+            jQuery('input[type=radio]#provider_radio_metar').remove();
+        }
+
+        if (data["aeris_conditions"]["success"]) {
+            if (current_provider == "conditions") {
+                data["current"] = data["aeris_conditions"]["current"]
+            }
+        } else {
+            jQuery('input[type=radio]#provider_radio_conditions').remove();
+        }
+
     } catch (err) {
         // Returned "current" data does not have values
     }
