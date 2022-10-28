@@ -1,0 +1,105 @@
+#from weeutil.weeutil import to_list
+
+## ToDo: Init dictionary via cheetah and not javascript
+languages = {};
+#for $language in $languages
+    languages['$language'] = '$language';
+#end for
+
+## Set lang to browser's preferred language, falling back to language set in skin
+lang = '$lang';
+for (var i in navigator.languages) {
+    user_lang = navigator.languages[i].substr(0, 2);
+    if (user_lang in languages) {
+        lang = user_lang;
+        break;
+    }
+}
+
+dateTimeFormat = {};
+
+#for $language in $languages
+    #echo 'dateTimeFormat.' + $language + ' = {};\n'
+    #echo 'dateTimeFormat.' + $language + '.chart = {};\n'
+
+    #echo 'dateTimeFormat.' + $language + '.forecast = "' + $dateTimeFormats($language)['forecast_date_format'] + '";\n'
+    
+    #echo 'dateTimeFormat.' + $language + '.current = "' + $dateTimeFormats($language)['current_date_time'] + '";\n'
+    #echo 'dateTimeFormat.' + $language + '.datePicker = "' + $dateTimeFormats($language)['datepicker_date_format'] + '";\n'
+
+    #echo 'dateTimeFormat.' + $language + '.chart.yearToYearXaxis = "' + $dateTimeFormats($language)['year_to_year_xaxis_label'] + '";\n'
+
+    #echo 'dateTimeFormat.' + $language + '.chart.mqtt = {};\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.mqtt.toolTipX = "' + $dateTimeFormats($language)['aggregate_interval_mqtt']['tooltip_x'] + '";\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.mqtt.xAxisLabel = "' + $dateTimeFormats($language)['aggregate_interval_mqtt']['xaxis_label'] + '";\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.mqtt.label = "' + $dateTimeFormats($language)['aggregate_interval_mqtt']['label'] + '";\n'
+
+    #echo 'dateTimeFormat.' + $language + '.chart.multiyear = {};\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.multiyear.toolTipX = "' + $dateTimeFormats($language)['aggregate_interval_multiyear']['tooltip_x'] + '";\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.multiyear.xAxisLabel = "' + $dateTimeFormats($language)['aggregate_interval_multiyear']['xaxis_label'] + '";\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.multiyear.label = "' + $dateTimeFormats($language)['aggregate_interval_multiyear']['label'] + '";\n'
+
+    #echo 'dateTimeFormat.' + $language + '.chart.none = {};\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.none.toolTipX = "' + $dateTimeFormats($language)['aggregate_interval_none']['tooltip_x'] + '";\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.none.xAxisLabel = "' + $dateTimeFormats($language)['aggregate_interval_none']['xaxis_label'] + '";\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.none.label = "' + $dateTimeFormats($language)['aggregate_interval_none']['label'] + '";\n'
+
+    #echo 'dateTimeFormat.' + $language + '.chart.hour = {};\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.hour.toolTipX = "' + $dateTimeFormats($language)['aggregate_interval_hour']['tooltip_x'] + '";\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.hour.xAxisLabel = "' + $dateTimeFormats($language)['aggregate_interval_hour']['xaxis_label'] + '";\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.hour.label = "' + $dateTimeFormats($language)['aggregate_interval_hour']['label'] + '";\n'
+
+    #echo 'dateTimeFormat.' + $language + '.chart.day = {};\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.day.toolTipX = "' + $dateTimeFormats($language)['aggregate_interval_day']['tooltip_x'] + '";\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.day.xAxisLabel = "' + $dateTimeFormats($language)['aggregate_interval_day']['xaxis_label'] + '";\n'
+    #echo 'dateTimeFormat.' + $language + '.chart.day.label = "' + $dateTimeFormats($language)['aggregate_interval_day']['label'] + '";\n'
+#end for
+
+## ToDo: move, only needed on year to year
+#set month_days = {
+    '01': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
+    '02': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29'],
+    '03': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
+    '04': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'],
+    '05': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
+    '06': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'],
+    '07': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
+    '08': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
+    '09': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'],
+    '10': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
+    '11': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'],
+    '12': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
+
+}
+monthDays = {};
+#for $language in $languages
+    #set year_to_year_xaxis_label = $dateTimeFormats($language)['year_to_year_xaxis_label']
+
+    #set $label_start = $year_to_year_xaxis_label[:2]
+    #set $label_end = $year_to_year_xaxis_label[3:]
+    #set $label_separator = $year_to_year_xaxis_label[2:3]
+
+    ## ToDo: could do more checking
+    #if $label_start != 'DD' and $label_start != 'MM'
+        #raise ValueError("Invalid 'year_to_year_xaxis_label': " + $year_to_year_xaxis_label)
+    #end if
+    #echo 'monthDays.' + $language + ' = {};\n'
+    #echo 'monthDays.' + $language + ' = [\n'
+    ##var monthDays = [
+        #for $month in $month_days
+            #set line = ""
+            #set i = 0
+            #for $i in range(len($month_days[$month]))
+                #if $label_start == 'MM'
+                    #set $line += "'" + $month + $label_separator + $month_days[$month][$i] + "',"
+                #else if $label_start == 'DD'
+                    #set $line += "'" + $month_days[$month][$i] + $label_separator + $month + "',"
+                #else
+                    #raise ValueError("Invalid 'year_to_year_xaxis_label': " + $year_to_year_xaxis_label)
+                #end if
+                #set $i += 1
+            #end for
+            $line
+        #end for
+        ];
+#end forecast

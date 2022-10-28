@@ -76,7 +76,7 @@ class VaporPressure(weewx.xtypes.XType):
         elif self.algorithm == 'tetens':
             # Use Teten's algorithm.
             # Use the formula. Results will be in kPa:
-            p_kPa = 0.61078 * math.exp(17.27 * outTemp_C / (outTemp_C + 237.3))
+            p_kPa = 0.61078 * math.exp(17.27 * outTemp_C_vt[0] / (outTemp_C_vt[0] + 237.3))
             # Form a ValueTuple
             p_vt = ValueTuple(p_kPa, 'kPa', 'group_pressure')
         else:

@@ -31,7 +31,7 @@ To use:
 
 """
 
-VERSION = "0.0.2"
+VERSION = "0.0.3"
 
 import math
 from datetime import datetime
@@ -87,8 +87,11 @@ DEFAULTS_INI = """
       atc = 0.8
       nfac = 2
     [[[ET]]]
-      wind_height = 2.0
       et_period = 3600
+      wind_height = 2.0
+      albedo = 0.23
+      cn = 37
+      cd = 0.34
     [[[heatindex]]]
       algorithm = new
   [[PressureCooker]]
@@ -344,7 +347,7 @@ def thswIndex_US(t_F, RH, ws_mph, rahes):
 class pwsWeiherhammer(weewx.xtypes.XType):
 
     def __init__(self, altitude, latitude, longitude,
-                 solar_heat_index_algo='new',
+                 solar_heatindex_algo='new',
                  sunshine_coeff=0.79,
                  sunshine_min=20.0,
                  sunshine_debug=False
@@ -352,7 +355,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
         self.alt = altitude
         self.lat = latitude
         self.lon = longitude
-        self.solar_heat_index_algo = solar_heat_index_algo.lower()
+        self.solar_heatindex_algo = solar_heatindex_algo.lower()
         self.sunshine_coeff = sunshine_coeff
         self.sunshine_min = sunshine_min
         self.sunshine_debug = sunshine_debug
@@ -398,11 +401,11 @@ class pwsWeiherhammer(weewx.xtypes.XType):
             raise weewx.CannotCalculate(key)
         if data['usUnits'] == weewx.US:
             val = weewx.wxformulas.heatindexF(data['solar_temperature'], data['solar_humidity'],
-                                              algorithm=self.solar_heat_index_algo)
+                                              algorithm=self.solar_heatindex_algo)
             u = 'degree_F'
         else:
             val = weewx.wxformulas.heatindexC(data['solar_temperature'], data['solar_humidity'],
-                                              algorithm=self.solar_heat_index_algo)
+                                              algorithm=self.solar_heatindex_algo)
             u = 'degree_C'
         return ValueTuple(val, u, 'group_temperature')
 
