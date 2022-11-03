@@ -153,9 +153,15 @@
     #end if
 
     #if os.path.exists("dwd/wbx_tab_BY.inc")
+    #set $start = 300
+    #set $end = 1105
+    #set $act = int(datetime.date.today().strftime("%m%d"))
+    ## DWD Waldbrandgefahrenindex only in the period March to November
+    #if $act > $start and $act < $end
     <div class="row">
         #include "dwd/wbx_tab_BY.inc"
     </div>
+    #end if
     #end if
 
     ## Die Idee mit Schleife und Wochentagen: https://github.com/Daveiano/weewx-wdc/blob/2.x/skins/weewx-wdc/dwd.html.tmpl
