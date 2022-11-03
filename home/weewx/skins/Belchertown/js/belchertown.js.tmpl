@@ -339,7 +339,7 @@ function get_aqi_color(aqi, returnColor = false) {
 }
 
 // Change the color of the aqi variable according to Umweltbundesamt standards
-function change_aqi_color(aqi_category, container=".pws-aqi-category", property="background-color") {
+function change_aqi_color(aqi_category, container, property="background-color") {
     aqi_category = parseFloat(aqi_category).toFixed(0);
     if (aqi_category >= 4) {
         var aqi_color = "#960032";
@@ -352,12 +352,14 @@ function change_aqi_color(aqi_category, container=".pws-aqi-category", property=
     } else if (aqi_category == 0) {
         var aqi_color = "#50F0E6";
     } else {
-        var aqi_color = "#333";
+        var aqi_color = "transparent";
     }
     jQuery(container).css(property, aqi_color);
     //TODO
     if (aqi_category >= 4) {
         jQuery(container).css("color", "white");
+    } else {
+        jQuery(container).css("color", "#333");
     }
 }
 
@@ -863,11 +865,36 @@ function update_weewx_data(data) {
     #end if
 
     // PWS Airquality
-    change_aqi_color(data["current"]["pws_aqi_category"], ".pws-aqi-category");
-    change_aqi_color(data["current"]["pws_aqi_pm2_5_category"], ".pws_aqi_pm2_5_dot");
-    change_aqi_color(data["current"]["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot");
-    change_aqi_color(data["current"]["pws_aqi_o3_category"], ".pws_aqi_o3_dot");
-    change_aqi_color(data["current"]["pws_aqi_no2_category"], ".pws_aqi_no2_dot");
+    try {
+        change_aqi_color(data["current"]["pws_aqi_category"], ".pws-aqi-category");
+    } catch (err) {
+        // Returned "current" data does not have this value
+        change_aqi_color(-1, ".pws-aqi-category"); //Reset to default
+    }
+    try {
+        change_aqi_color(data["current"]["pws_aqi_pm2_5_category"], ".pws_aqi_pm2_5_dot");
+    } catch (err) {
+        // Returned "current" data does not have this value
+        change_aqi_color(-1, ".pws_aqi_pm2_5_dot"); //Reset to default
+    }
+    try {
+        change_aqi_color(data["current"]["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot");
+    } catch (err) {
+        // Returned "current" data does not have this value
+        change_aqi_color(-1, ".pws_aqi_pm10_0_dot"); //Reset to default
+    }
+    try {
+        change_aqi_color(data["current"]["pws_aqi_o3_category"], ".pws_aqi_o3_dot");
+    } catch (err) {
+        // Returned "current" data does not have this value
+        change_aqi_color(-1, ".pws_aqi_o3_dot"); //Reset to default
+    }
+    try {
+        change_aqi_color(data["current"]["pws_aqi_no2_category"], ".pws_aqi_no2_dot");
+    } catch (err) {
+        // Returned "current" data does not have this value
+        change_aqi_color(-1, ".pws_aqi_no2_dot"); //Reset to default
+    }
 
     try {
         // Barometer trending by finding a negative number
@@ -2322,7 +2349,7 @@ function update_current_wx(data) {
 
     // PWS Weiherhammer Airquality
     if (data.hasOwnProperty("pws_aqi_category")) {
-        change_aqi_label(data["pws_aqi_category"], ".pws-aqi-category");
+        change_aqi_label(data["pws_aqi_category"]);
         change_aqi_color(data["pws_aqi_category"], ".pws-aqi-category");
     }
     if (data.hasOwnProperty("sds011_pm2_5")) {
