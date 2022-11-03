@@ -339,7 +339,7 @@ function get_aqi_color(aqi, returnColor = false) {
 }
 
 // Change the color of the aqi variable according to Umweltbundesamt standards
-function change_aqi_color(aqi_category, container=".pws_aqi_outer", property="color") {
+function change_aqi_color(aqi_category, container=".pws-aqi-category", property="background-color") {
     aqi_category = parseFloat(aqi_category).toFixed(0);
     if (aqi_category >= 4) {
         var aqi_color = "#960032";
@@ -355,6 +355,10 @@ function change_aqi_color(aqi_category, container=".pws_aqi_outer", property="co
         var aqi_color = "#333";
     }
     jQuery(container).css(property, aqi_color);
+    //TODO
+    if (aqi_category >= 4) {
+        jQuery(container).css("color", "white");
+    }
 }
 
 // Change the label of the aqi variable according to Umweltbundesamt standards
@@ -860,10 +864,10 @@ function update_weewx_data(data) {
 
     // PWS Airquality
     change_aqi_color(data["current"]["pws_aqi_category"], ".pws-aqi-category");
-    change_aqi_color(data["current"]["pws_aqi_pm2_5_category"], ".pws_aqi_pm2_5_dot", "background-color");
-    change_aqi_color(data["current"]["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot", "background-color");
-    change_aqi_color(data["current"]["pws_aqi_o3_category"], ".pws_aqi_o3_dot", "background-color");
-    change_aqi_color(data["current"]["pws_aqi_no2_category"], ".pws_aqi_no2_dot", "background-color");
+    change_aqi_color(data["current"]["pws_aqi_pm2_5_category"], ".pws_aqi_pm2_5_dot");
+    change_aqi_color(data["current"]["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot");
+    change_aqi_color(data["current"]["pws_aqi_o3_category"], ".pws_aqi_o3_dot");
+    change_aqi_color(data["current"]["pws_aqi_no2_category"], ".pws_aqi_no2_dot");
 
     try {
         // Barometer trending by finding a negative number
@@ -2325,25 +2329,25 @@ function update_current_wx(data) {
         jQuery(".sds011-pm2_5").html(parseFloat(parseFloat(data["sds011_pm2_5"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["sds011_pm2_5"], maximumFractionDigits: unit_rounding_array["sds011_pm2_5"]}) + " $unit.label.sds011_pm2_5");
     }
     if (data.hasOwnProperty("pws_aqi_pm2_5_category")) {
-        change_aqi_color(data["pws_aqi_pm2_5_category"], ".pws_aqi_pm2_5_dot", "background-color");
+        change_aqi_color(data["pws_aqi_pm2_5_category"], ".pws_aqi_pm2_5_dot");
     }
     if (data.hasOwnProperty("sds011_pm10_0")) {
         jQuery(".sds011-pm10_0").html(parseFloat(parseFloat(data["sds011_pm10_0"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["sds011_pm10_0"], maximumFractionDigits: unit_rounding_array["sds011_pm10_0"]}) + " $unit.label.sds011_pm10_0");
     }
     if (data.hasOwnProperty("pws_aqi_pm10_0_category")) {
-        change_aqi_color(data["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot", "background-color");
+        change_aqi_color(data["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot");
     }
     if (data.hasOwnProperty("uba_o3")) {
         jQuery(".uba-o3").html(parseFloat(parseFloat(data["uba_o3"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["uba_o3"], maximumFractionDigits: unit_rounding_array["uba_o3"]}) + " $unit.label.uba_o3");
     }
     if (data.hasOwnProperty("pws_aqi_o3_category")) {
-        change_aqi_color(data["pws_aqi_o3_category"], ".pws_aqi_o3_dot", "background-color");
+        change_aqi_color(data["pws_aqi_o3_category"], ".pws_aqi_o3_dot");
     }
     if (data.hasOwnProperty("uba_no2")) {
         jQuery(".uba-no2").html(parseFloat(parseFloat(data["uba_no2"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["uba_no2"], maximumFractionDigits: unit_rounding_array["uba_no2"]}) + " $unit.label.uba_no2");
     }
     if (data.hasOwnProperty("pws_aqi_no2_category")) {
-        change_aqi_color(data["pws_aqi_no2_category"], ".pws_aqi_no2_dot", "background-color");
+        change_aqi_color(data["pws_aqi_no2_category"], ".pws_aqi_no2_dot");
     }
     // debug current Sunshine Symbol
     if (data.hasOwnProperty("sunshine")) {
