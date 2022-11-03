@@ -156,7 +156,7 @@
     #set $start = 300
     #set $end = 1105
     #set $act = int(datetime.date.today().strftime("%m%d"))
-    ## DWD Waldbrandgefahrenindex only in the period March to November
+    ## DWD Waldbrandgefahrenindex only in the period March to October
     #if $act > $start and $act < $end
     <div class="row">
         #include "dwd/wbx_tab_BY.inc"
