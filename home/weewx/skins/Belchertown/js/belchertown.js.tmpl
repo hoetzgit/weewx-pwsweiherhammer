@@ -3189,7 +3189,7 @@ function showChart(json_file, prepend_renderTo = false) {
                     options.yAxis[this_yAxis].minorGridLineWidth = 1;
                 }
 
-                if (s.obsType == "windDir") || s.obsType == "wind") {
+                if (s.obsType == "windDir" || s.obsType == "wind") {
                     options.yAxis[this_yAxis].tickInterval = 90;
                     options.yAxis[this_yAxis].labels = {
                         useHTML: true,
