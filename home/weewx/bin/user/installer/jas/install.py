@@ -12,7 +12,7 @@ except ImportError:
 import configobj
 from weecfg.extension import ExtensionInstaller
 
-VERSION = "0.2.4-rc05"
+VERSION = "0.2.4-rc06a"
 
 EXTENSION_CONFIG = """
 [StdReport]
@@ -23,7 +23,19 @@ EXTENSION_CONFIG = """
         HTML_ROOT = jas
         enable = true 
         [[[Extras]]]
+
+            # When True, the browser's preferred language setting is used to determine the language display settings.
+            # When False, the skin's lang setting is used.
+            # The default is False.
+            # For more information see, https://www.w3.org/International/questions/qa-lang-priorities#changing
+            # use_browser_language_preference = True
+            
             # display_aeris_observation = True
+
+            # This sets the 'page' that is first displayed.
+            # It should be one of the 'pages' in the [[[[pages]]]] section.
+            # If not set, the first/left most page is used.
+            # landing_page = last24hours
 
             # The client id abd secret for Aeris APIs
             client_id = REPLACE_ME
