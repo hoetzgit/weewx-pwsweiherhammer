@@ -6,7 +6,6 @@ __init__.py
 *.tmp
 allskycam0*.up
 allskycam0*.down
-**/dwd/aeris*
 **/dwd/bwk*
 **/dwd/forecast*
 **/dwd/geo*
