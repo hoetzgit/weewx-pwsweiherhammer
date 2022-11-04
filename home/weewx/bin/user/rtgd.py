@@ -17,9 +17,12 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see https://www.gnu.org/licenses/.
 
-Version: 0.6.0                                          Date: 3 November 2022
+Version: 0.6.1                                          Date: 4 November 2022
 
   Revision History
+    4 November 2022     v0.6.1
+        - fixed issue where a user specified max_cache_age config option is
+          used as a string instead of an integer
     3 November 2022     v0.6.0
         - fixed bug whereby 10 minute average wind bearing always matched
           current wind bearing
@@ -647,7 +650,7 @@ from weeutil.weeutil import to_bool, to_int
 log = logging.getLogger(__name__)
 
 # version number of this script
-RTGD_VERSION = '0.6.0'
+RTGD_VERSION = '0.6.1'
 # version number (format) of the generated gauge-data.txt
 GAUGE_DATA_VERSION = '14'
 
@@ -1591,7 +1594,7 @@ class RealtimeGaugeDataThread(threading.Thread):
         self.field_map = _field_map
 
         # get max cache age
-        self.max_cache_age = rtgd_config_dict.get('max_cache_age', 600)
+        self.max_cache_age = to_int(rtgd_config_dict.get('max_cache_age', 600))
 
         # initialise last average wind direction
         self.last_average_dir = 0
@@ -3002,7 +3005,7 @@ class CachedPacket(object):
         than max_age then None is returned.
         """
 
-        if obs in self.cache and ts - self.cache[obs]['ts'] <= float(max_age):
+        if obs in self.cache and ts - self.cache[obs]['ts'] <= max_age:
             return self.cache[obs]['value']
         return None
 
