@@ -1,6 +1,22 @@
-# Copyright 2021, 2022 Johanna Roedenbeck
 # timespans with different day boundaries
+# Copyright (C) 2021, 2022 Johanna Roedenbeck
 
+"""
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
 """
 
   Provides:
@@ -15,7 +31,7 @@
   $LMTyesterday(data_binding=None)
   $LMTmonth(data_binding=None, months_ago=0)
   $LMTyear(data_binding=None, years_ago=0)
-  $daylight(day=None, data_binding=None, days_ago=0, horizon=None, use_center=None)
+  $daylight(timestamp=None, data_binding=None, days_ago=0, horizon=None, use_center=None)
   
   "dayboundary" is an offset to UTC in seconds, that gives the 
   time of day that is used as day boundary for the given
@@ -31,7 +47,7 @@
 
 """
 
-VERSION = "0.8a4"
+VERSION = "0.8b1"
 
 # deal with differences between python 2 and python 3
 try:
@@ -211,27 +227,18 @@ def genWeekSpansWithoutDST(start_ts, stop_ts):
 
 def get_sunrise_sunset(ts, latlon, horizon, use_center, db_lookup, report_time, formatter, converter, **option_dict):
     # (derived from cheetahgenerator.py, Copyright Tom Keffer)
-    temperature_C = 15.0
-    pressure_mbar = 1010.0
-    # See if we can get more accurate values by looking them up in the
-    # weather database. The database might not exist, so be prepared for
-    # a KeyError exception.
     try:
-        binding = option_dict.get('skin_dict',{}).get('data_binding', 'wx_binding')
-        archive = db_lookup(binding)
-    except (KeyError, weewx.UnknownBinding, weedb.NoDatabaseError):
-        logerr("daylight")
+        # get the middle of the timespan ts
+        ts = ts.start//2 + ts.stop//2
+    except (LookupError,AttributeError):
+        # ts is already a timestamp, do nothing
         pass
-    else:
-        rec = archive.getRecord(report_time, max_delta=3600)
-        if rec is not None:
-            if 'outTemp' in rec:
-                temperature_C = weewx.units.convert(weewx.units.as_value_tuple(rec, 'outTemp'), "degree_C")[0]
-            if 'barometer' in rec:
-                pressure_mbar = weewx.units.convert(weewx.units.as_value_tuple(rec, 'barometer'), "mbar")[0]
+    # ICAO standard athmosphere
+    temperature_C = 15.0
+    pressure_mbar = 1013.25
     try:
         # get timestamp of sunrise and sunset out of pyephem
-        alm = Almanac(ts.start, 
+        alm = Almanac(ts, 
                       latlon[0], 
                       latlon[1], 
                       altitude=latlon[2],
@@ -242,6 +249,39 @@ def get_sunrise_sunset(ts, latlon, horizon, use_center, db_lookup, report_time, 
                       converter=converter)
         sunrise = alm.sun(use_center=use_center).rise.raw
         sunset = alm.sun(use_center=use_center).set.raw
+        # See if we can get more accurate values by looking them up in the
+        # weather database. The database might not exist, so be prepared for
+        # a KeyError exception.
+        temp1=temperature_C
+        press1=pressure_mbar
+        temp2=temperature_C
+        press2=pressure_mbar
+        try:
+            binding = option_dict.get('skin_dict',{}).get('data_binding', 'wx_binding')
+            archive = db_lookup(binding)
+        except (KeyError, weewx.UnknownBinding, weedb.NoDatabaseError):
+            logerr("daylight")
+            pass
+        else:
+            rec = archive.getRecord(sunrise, max_delta=3600)
+            if rec is not None:
+                if 'outTemp' in rec:
+                    temp1 = weewx.units.convert(weewx.units.as_value_tuple(rec, 'outTemp'), "degree_C")[0]
+                if 'barometer' in rec:
+                    press1 = weewx.units.convert(weewx.units.as_value_tuple(rec, 'barometer'), "mbar")[0]
+            rec = archive.getRecord(sunset, max_delta=3600)
+            if rec is not None:
+                if 'outTemp' in rec:
+                    temp2 = weewx.units.convert(weewx.units.as_value_tuple(rec, 'outTemp'), "degree_C")[0]
+                if 'barometer' in rec:
+                    press2 = weewx.units.convert(weewx.units.as_value_tuple(rec, 'barometer'), "mbar")[0]
+        try:
+            # get timestamp of sunrise and sunset out of pyephem
+            sunrise = alm(temperature=temp1,pressure=press1).sun(use_center=use_center).rise.raw
+            sunset = alm(temperature=temp2,pressure=press2).sun(use_center=use_center).set.raw
+        except Exception:
+            logerr("daylight2")
+            pass
     except Exception:
         # If pyephem is not installed or another error occurs, use
         # the built-in function of WeeWX instead.
@@ -415,19 +455,19 @@ class DayboundaryTimeBinder(TimeBinder):
             LMT=self.lmt,
             **self.option_dict)
             
-    def daylight(self, day=None, data_binding=None, days_ago=0, horizon=None, use_center=False):
+    def daylight(self, timestamp=None, data_binding=None, days_ago=0, horizon=None, use_center=False):
         dbin = data_binding
-        if day:
+        if timestamp:
             # timestamp or timespan
             try:
-                ts = day.timespan
-                self.db_lookup = day.db_lookup
-                dbin = day.data_binding if day.data_binding else data_binding
-            except LookupError:
+                ts = timestamp.timespan
+                self.db_lookup = timestamp.db_lookup
+                dbin = timestamp.data_binding if timestamp.data_binding else data_binding
+            except (LookupError,AttributeError):
                 try:
-                    ts = (to_int(day[0]),to_int(day[1]))
+                    ts = TimeSpan(to_int(timestamp[0]),to_int(timestamp[1]))
                 except LookupError:
-                    ts = daySpanTZ(self.lmt_tz, day, days_ago=days_ago)
+                    ts = daySpanTZ(self.lmt_tz, timestamp, days_ago=days_ago)
         else:
             # day timespan (from antitransit to antitransit)
             ts = daySpanTZ(self.lmt_tz, self.report_time, days_ago=days_ago)
@@ -508,6 +548,17 @@ class DayboundaryTimespanBinder(TimespanBinder):
         """Generator function that returns TimespanBinder for the appropriate timespans"""
         for span in genSpanFunc(timespan.start, timespan.stop):
             yield DayboundaryTimespanBinder(span, *args, **option_dict)
+            
+    @property
+    def length(self):
+        val = weewx.units.ValueTuple(self.timespan.stop-self.timespan.start, 'second', 'group_deltatime')
+        if val[0]<=5400:
+            context = 'brief_delta'
+        elif val[0]<=86400:
+            context = 'short_delta'
+        else:
+            context = 'long_delta'
+        return weewx.units.ValueHelper(val, context, self.formatter, self.converter)
 
 
 class DayboundaryStats(SearchList):
