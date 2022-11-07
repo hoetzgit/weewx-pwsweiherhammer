@@ -44,6 +44,13 @@
     padding-right: 0px;
 }
 
+.weather-obs-middle-top, .dark .weather-obs-middle-top {
+    position: relative;
+    min-height: 292px!important;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
 .weather-obs-bottom, .dark .weather-obs-bottom {
     padding-left: 0px;
     padding-right: 0px;
@@ -765,6 +772,10 @@ sub { top: 0.4em; }
     .weather-obs-top, .dark .weather-obs-top {
         min-height: 160px!important;
     }
+    .weather-obs-middle-top, .dark .weather-obs-middle-top {
+        min-height: max-content!important;
+        padding: 0px 15px 0px;
+    }
     .obs-aqi-divider, .obs-aqi-divider, .aqi-wind-divider {
         height: 1px;
         width: 104%;
@@ -781,6 +792,12 @@ sub { top: 0.4em; }
         padding-top: 0px;
         width: 50%;
         float: right;
+    }
+    .earthquake-container {
+        min-height: max-content!important;
+    }
+    .earthquake-container .earthquake-distance-outer {
+        min-height: max-content!important;
     }
     .extreme-table-body-obs {
         padding-left: 2px !important;
