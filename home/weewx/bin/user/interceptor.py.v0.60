@@ -303,7 +303,7 @@ import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'Interceptor'
-DRIVER_VERSION = '0.60.1'
+DRIVER_VERSION = '0.60'
 
 DEFAULT_ADDR = ''
 DEFAULT_PORT = 80
@@ -610,7 +610,7 @@ class Consumer(object):
         def do_POST(self):
             # get the payload from an HTTP POST
             length = int(self.headers["Content-Length"])
-            data = str(self.rfile.read(length).decode('utf-8'))
+            data = str(self.rfile.read(length))
             logdbg('POST: %s' % _obfuscate_passwords(data))
             Consumer.queue.put(data)
             self.reply()
@@ -2307,7 +2307,6 @@ class EcowittClient(Consumer):
 
         # map labels to observation names
         LABEL_MAP = {
-            'baromrelin': 'barometer',
             'baromabsin': 'pressure',
             'humidity': 'humidity_out',
             'humidityin': 'humidity_in',
@@ -2345,14 +2344,14 @@ class EcowittClient(Consumer):
             'soilmoisture6': 'soil_moisture_6',
             'soilmoisture7': 'soil_moisture_7',
             'soilmoisture8': 'soil_moisture_8',
-            'soilbatt1': 'soilbatt1',
-            'soilbatt2': 'soilbatt2',
-            'soilbatt3': 'soilbatt3',
-            'soilbatt4': 'soilbatt4',
-            'soilbatt5': 'soilbatt5',
-            'soilbatt6': 'soilbatt6',
-            'soilbatt7': 'soilbatt7',
-            'soilbatt8': 'soilbatt8',
+            'soilbatt1': 'soil_battery_1',
+            'soilbatt2': 'soil_battery_2',
+            'soilbatt3': 'soil_battery_3',
+            'soilbatt4': 'soil_battery_4',
+            'soilbatt5': 'soil_battery_5',
+            'soilbatt6': 'soil_battery_6',
+            'soilbatt7': 'soil_battery_7',
+            'soilbatt8': 'soil_battery_8',
             'windspeedmph': 'wind_speed',
             'windgustmph': 'wind_gust',
             'winddir': 'wind_dir',
@@ -2360,130 +2359,24 @@ class EcowittClient(Consumer):
             'uv': 'uv',
             'totalrainin': 'rain_total',
             'rainratein': 'rain_rate',
-            'wh25batt': 'wh25batt',
-            'wh26batt': 'wh26batt',
-            'wh40batt': 'wh40batt',
-            'wh57batt': 'wh57batt',
-            'wh65batt': 'wh65batt',
-            'wh68batt': 'wh65batt',
-            'wh80batt': 'wh80batt',
-            'wh90batt': 'wh90batt',
-            'pm25_ch1': 'pm25_ch1',
-            'pm25_ch2': 'pm25_ch2',
-            'pm25_ch3': 'pm25_ch3',
-            'pm25_ch4': 'pm25_ch4',
-            'pm25batt1': 'pm25batt1',
-            'pm25batt2': 'pm25batt2',
-            'pm25batt3': 'pm25batt3',
-            'pm25batt4': 'pm25batt4',
-            'lightning': 'lightning_distance',
-            'lightning_time': 'lightning_time',
-            'lightning_num': 'lightning_num',
-            'leak_ch1': 'leak_ch1',
-            'leak_ch2': 'leak_ch2',
-            'leak_ch3': 'leak_ch3',
-            'leak_ch4': 'leak_ch4',
-            'leakbatt1': 'leakbatt1',
-            'leakbatt2': 'leakbatt2',
-            'leakbatt3': 'leakbatt3',
-            'leakbatt4': 'leakbatt4',
-            'co2_batt': 'co2_batt',
-            'tf_co2': 'tf_co2',
-            'humi_co2': 'humi_co2',
-            'pm25_co2': 'pm25_co2',
-            'pm25_24h_co2': 'pm25_24h_co2',
-            'pm10_co2': 'pm10_co2',
-            'pm10_24h_co2': 'pm10_24h_co2',
-            'co2': 'co2',
-            'co2_24h': 'co2_24h',
-            'tf_ch1': 'tf_ch1',
-            'tf_ch2': 'tf_ch2',
-            'tf_ch3': 'tf_ch3',
-            'tf_ch4': 'tf_ch4',
-            'tf_ch5': 'tf_ch5',
-            'tf_ch6': 'tf_ch6',
-            'tf_ch7': 'tf_ch7',
-            'tf_ch8': 'tf_ch8',
-            'tf_batt1': 'tf_batt1',
-            'tf_batt2': 'tf_batt2',
-            'tf_batt3': 'tf_batt3',
-            'tf_batt4': 'tf_batt4',
-            'tf_batt5': 'tf_batt5',
-            'tf_batt6': 'tf_batt6',
-            'tf_batt7': 'tf_batt7',
-            'tf_batt8': 'tf_batt8',
-            'leafwetness_ch1': 'leafwetness_ch1',
-            'leafwetness_ch2': 'leafwetness_ch2',
-            'leafwetness_ch3': 'leafwetness_ch3',
-            'leafwetness_ch4': 'leafwetness_ch4',
-            'leafwetness_ch5': 'leafwetness_ch5',
-            'leafwetness_ch6': 'leafwetness_ch6',
-            'leafwetness_ch7': 'leafwetness_ch7',
-            'leafwetness_ch8': 'leafwetness_ch8',
-            'leaf_batt1': 'leaf_batt1',
-            'leaf_batt2': 'leaf_batt2',
-            'leaf_batt3': 'leaf_batt3',
-            'leaf_batt4': 'leaf_batt4',
-            'leaf_batt5': 'leaf_batt5',
-            'leaf_batt6': 'leaf_batt6',
-            'leaf_batt7': 'leaf_batt7',
-            'leaf_batt8': 'leaf_batt8',
-            'maxdailygust': 'maxdailygust',
-            'pm25_avg_24h_ch1': 'pm25_avg_24h_ch1',
-            'pm25_avg_24h_ch2': 'pm25_avg_24h_ch2',
-            'pm25_avg_24h_ch3': 'pm25_avg_24h_ch3',
-            'pm25_avg_24h_ch4': 'pm25_avg_24h_ch4',
-            'eventrainin': 'eventrain',
-            'hourlyrainin': 'hourlyrain',
-            'dailyrainin': 'dailyrain',
-            'weeklyrainin': 'weeklyrain',
-            'monthlyrainin': 'monthlyrain',
-            'yearlyrainin': 'yearlyrain',
-            'rainyear': 'rainyear',
-            'stationtype':  'stationtype',
-            'model': 'model',
-            'brightness': 'foshk_brightness',
-            'cloudf': 'foshk_cloudbase',
-            'dewptf': 'foshk_dewpoint',
-            'feelslikef': 'foshk_feelslike',
-            'heatindexf': 'foshk_heatindex',
-            'sunhours' : 'foshk_sunhours',
-            'windchillf': 'foshk_windchill',
-            'winddir_avg10m': 'foshk_winddir_avg10m',
-            'windspdmph_avg10m': 'foshk_windspeed_avg10m',
-            'windgustmph_max10m': 'foshk_windgust_max10m',
-            'isintvl': 'foshk_interval',
-            'sunshine': 'foshk_sunshine',
+            'wh25batt': 'wh25_battery',
+            'wh26batt': 'wh26_battery',
+            'wh40batt': 'wh40_battery',
+            'wh65batt': 'wh65_battery',
+            'pm25_ch1': 'pm2_5',
+            'pm25batt1': 'pm25_battery',
         }
 
         IGNORED_LABELS = [
-            # Ecowitt
-            'PASSKEY', 'dateutc', 'freq',
-            # FOSHKplugin
-            'ptrend1', 'pchange1', 'ptrend3', 'pchange3', 'runtime',
-            'isintvl10', 'osunhours', 'nsunhours'
+            'PASSKEY', 'dateutc', 'stationtype', 'model', 'freq', 'baromrelin',
+            'maxdailygust', 'eventrainin', 'hourlyrainin', 'dailyrainin',
+            'weeklyrainin', 'monthlyrainin', 'yearlyrainin',
+            'pm25_avg_24h_ch1', 'winddir_avg10m', 'windspdmph_avg10m',
         ]
 
         def __init__(self):
             self._last_rain = None
             self._rain_mapping_confirmed = False
-            self._last_strikes_total = None
-            self._strikes_mapping_confirmed = False
-            self._model = None
-            self._stationtype = None
-
-        @staticmethod
-        def _delta_strikes(strikes, last_strikes):
-            if strikes is None:
-                return None
-            if last_strikes is None:
-                loginf("skipping lightning strikes measurement of %s: no last strikes" % strikes)
-                return None
-            if strikes < last_strikes:
-                loginf("lightning strikes wraparound detected: new=%s last=%s" %
-                       (strikes, last_strikes))
-                return strikes
-            return strikes - last_strikes
 
         def parse(self, s):
             pkt = dict()
@@ -2499,21 +2392,6 @@ class EcowittClient(Consumer):
                 # for those devices, substitute a different cumulative rain
                 # measurement.  do this only once, and do not be fooled by
                 # partial packets.
-                if 'stationtype' in data:
-                    pkt['stationtype'] = data['stationtype']
-                    if self._stationtype != data['stationtype']:
-                       self._stationtype = data['stationtype']
-                       loginf("Station_type: %s" % (data['stationtype']))
-
-                if 'model' in data:
-                    pkt['model'] = data['model']
-                    if self._model != data['model']:
-                       self._model = data['model']  
-                       loginf("Hardware_model: %s" % (data['model']))
-
-                if 'totalrainin' not in data and 'yearlyrainin' in data:
-                    pkt['rainyear'] = self.decode_float(data['yearlyrainin']) if data['yearlyrainin'] != '' else 0
-
                 if not self._rain_mapping_confirmed:
                     if 'totalrainin' not in data and 'yearlyrainin' in data:
                         self.LABEL_MAP.pop('totalrainin')
@@ -2524,58 +2402,23 @@ class EcowittClient(Consumer):
                         self._rain_mapping_confirmed = True
                         loginf("using 'totalrainin' for rain_total")
 
-                if not self._strikes_mapping_confirmed:
-                    if 'lightning_num' in data:
-                        self._strikes_mapping_confirmed = True
-                        loginf("using 'lightning_num' for lightning_strike_count")
-
                 # get all of the other parameters
                 for n in data:
                     if n in self.LABEL_MAP:
-                        if n != 'model' and n != 'stationtype':
-                           pkt[self.LABEL_MAP[n]] = self.decode_float(data[n]) if data[n] != '' else 0
+                        pkt[self.LABEL_MAP[n]] = self.decode_float(data[n])
                     elif n in self.IGNORED_LABELS:
                         val = data[n]
                         if n == 'PASSKEY':
                             val = 'X' * len(data[n])
                         logdbg("ignored parameter %s=%s" % (n, val))
                     else:
-                        logerr("unrecognized parameter %s=%s" % (n, data[n]))
-
-                #Fix lightinig distance unit
-                if 'lightning_distance' in pkt:
-                    #WH57 gives a value in kilometers, if we have us units we must convert it to miles
-                    lightdistkm = pkt['lightning_distance']
-                    #direct conversion
-                    pkt['lightning_distance'] = 0.62137119 * lightdistkm
-                    pkt['lightning'] = pkt['lightning_distance']
+                        loginf("unrecognized parameter %s=%s" % (n, data[n]))
 
                 # get the rain this period from total
                 if 'rain_total' in pkt:
                     newtot = pkt['rain_total']
-                    logdbg("Rain old tot: %s" % str(self._last_rain))
-                    logdbg("Rain new tot: %s" % str(newtot))
-                    new_delta = self._delta_rain(newtot, self._last_rain)
-                    pkt['rain'] = new_delta
-                    logdbg("Rain: %s" % str(pkt['rain']))
+                    pkt['rain'] = self._delta_rain(newtot, self._last_rain)
                     self._last_rain = newtot
-
-                # get the lightinig this period from total
-                if 'lightning_num' in pkt:
-                    new_strikes_total = pkt['lightning_num']
-                    logdbg("Lightning old tot: %s" % str(self._last_strikes_total))
-                    logdbg("Lightning new tot: %s" % str(new_strikes_total))
-                    new_delta = self._delta_strikes(new_strikes_total, self._last_strikes_total)
-                    pkt['lightning_strike_count'] = new_delta
-                    logdbg("Lightning: %s" % str(pkt['lightning_strike_count']))
-                    self._last_strikes_total = new_strikes_total
-
-                # calculate luminosity
-                if ('solar_radiation' in pkt):
-                    luminosity = None
-                    if pkt['solar_radiation'] is not None:
-                        luminosity = float(pkt['solar_radiation']) * 126.7
-                    pkt['luminosity'] = luminosity
 
             except ValueError as e:
                 logerr("parse failed for %s: %s" % (s, e))
