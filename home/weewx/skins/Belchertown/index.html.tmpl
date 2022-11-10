@@ -181,6 +181,7 @@
             <article class="weewx frontpage" itemscope="" itemtype="http://schema.org/CreativeWork">
             
                 <!-- Top bar with city and share -->
+                <div class="dummy"></div>
                 <div class="wx-stn-info-container">
                     <div class="wx-stn-name">
                         <h1>$obs.label.home_page_header</h1>
@@ -195,8 +196,8 @@
                             <span class="loadingMarker" style="display:none"></span>
                             <span class="onlineMarker" style="display:none"></span>
                             <span class="offlineMarker" style="display:none"></span>
+                            <div class="updated"></div><!-- AJAX moment.js -->
                         </div>
-                        <div class="updated"></div><!-- AJAX moment.js -->
                     </div>
                     #if $social_html != ""
                     $social_html

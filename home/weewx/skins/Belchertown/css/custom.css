@@ -2,6 +2,69 @@
     font-size: calc(20px + 0.5vw);
 }
 
+.obs-header-outtemp {
+    font-size: calc(12px + 0.4vw);
+    line-height: 1.0;
+}
+
+/* Online Marker */
+.onlineMarkerOuter {
+    padding: 6px 0 0 15px;
+    float: left;
+}
+
+.loadingMarker:before {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    margin: 10px 0 0 -13px;
+    background: #ffbe00;
+    border-color: #ffbe00;
+    border-radius: 50%;
+}
+
+.offlineMarker:before {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    margin: 10px 0 0 -13px;
+    background: #ff0000;
+    border-color: #ff0000;
+    border-radius: 50%;
+}
+
+.onlineMarker:before {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    margin: 10px 0 0 -13px;
+    background: #00bb00;
+    border-color: #00bb00;
+    border-radius: 50%;
+}
+
+.onlineMarker:after {
+    content: '';
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    margin: -2px 0 0 -25px;
+    border: 1px solid #00bb00;
+    border-radius: 50%;
+    box-shadow: 0 0 4px #00bb00, inset 0 0 4px rgb(56, 111, 169);
+    -webkit-transform: scale(0);
+    -webkit-animation: online 2.5s ease-in-out infinite;
+    animation: online 2.5s ease-in-out infinite;
+}
+
+/* Nav tabs */
+.nav-tabs {
+    border-bottom: 1px solid transparent;
+}
+
 /* about page */
 
 .about-row {
@@ -29,8 +92,10 @@
 }
 
 .obs-header-icon {
+/*
     min-width: 30px;
     max-width: 60px;
+*/
 }
 
 .current-obs-symbol, .dark .current-obs-symbol {
@@ -724,22 +789,44 @@ sub { top: 0.4em; }
     text-align: center;
 }
 
+/* TODO: media queries */
+
 /* https://www.w3schools.com/css/css_rwd_mediaqueries.asp */
 /* Extra small devices (phones, 600px and down) */
 @media only screen and (max-width: 600px) {
+    .dummy {
+        text-align: center;
+    }
 }
 
 /* Small devices (portrait tablets and large phones, 600px and up) */
 @media only screen and (min-width: 600px) {
+    .dummy {
+        text-align: center;
+    }
 }
 
 /* Medium devices (landscape tablets, 768px and up) */
 @media only screen and (min-width: 768px) {
+    .dummy {
+        text-align: center;
+    }
 }
 
-/* TODO: */
+/* On the Samsung Galaxy S10+ it is 3.5 */
+/* https://www.webmobilefirst.com/en/devices/samsung-galaxy-s10-plus/ */
+/*
+@media only screen and (-webkit-min-device-pixel-ratio: 3.5) {
+    .dummy {
+        text-align: center;
+    }
+}
+*/
 
 @media only screen and (max-width: 800px) {
+    .dummy {
+        text-align: center;
+    }
     .site-inner, .wrap {
         /* padding-top:20px; */
         padding-left: 2%;
@@ -747,6 +834,9 @@ sub { top: 0.4em; }
     }
     .obs-header-icon {
         width: auto;
+    }
+    .wx-stn-info-current-obs img{
+        max-width: 40%;
     }
     .current_temp .outtemp_outer {
         padding-top: 15px!important;
@@ -827,63 +917,113 @@ sub { top: 0.4em; }
         font-size: calc(10px + 0.3vw);
         display: block;
     }
+/* Online Marker */
+    .onlineMarkerOuter {
+        padding: 6px 0 0 15px;
+        float: none;
+    }
+    .loadingMarker:before {
+        content: '';
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        margin: 8px 0 0 -13px;
+        background: #ffbe00;
+        border-color: #ffbe00;
+        border-radius: 50%;
+    }
+    .offlineMarker:before {
+        content: '';
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        margin: 8px 0 0 -13px;
+        background: #ff0000;
+        border-color: #ff0000;
+        border-radius: 50%;
+    }
+    .onlineMarker:before {
+        content: '';
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        margin: 8px 0 0 -13px;
+        background: #00bb00;
+        border-color: #00bb00;
+        border-radius: 50%;
+    }
+    .onlineMarker:after {
+        content: '';
+        position: absolute;
+        width: 32px;
+        height: 32px;
+        margin: -4px 0 0 -25px;
+        border: 1px solid #00bb00;
+        border-radius: 50%;
+        box-shadow: 0 0 4px #00bb00, inset 0 0 4px rgb(56, 111, 169);
+        -webkit-transform: scale(0);
+        -webkit-animation: online 2.5s ease-in-out infinite;
+        animation: online 2.5s ease-in-out infinite;
+    }
+}
+
+@media only screen and (max-width: 834px) and (orientation : landscape) {
+    .dummy {
+        text-align: center;
+    }
+    .site-inner, .wrap {
+        padding-left: 5%;
+        padding-right: 5%;
+    }
 }
 
 /* iPad Landscape */
+/*
 @media only screen and (min-device-width : 768px) and (max-device-width : 1024px) and (orientation : landscape) {
+    .dummy {
+        text-align: center;
+    }
     .24hr_forecasts .forecast-24hour {
         width: 144px;
     }
 
 }
+*/
 
 /* Large devices (laptops/desktops, 992px and up) */
 @media only screen and (min-width: 992px) {
+    .dummy {
+        text-align: center;
+    }
+}
+
+@media only screen and (min-width: 1196px) {
+    .dummy {
+        text-align: center;
+    }
+}
+
+@media only screen and (max-width: 1199px) {
+    .dummy {
+        text-align: center;
+    }
+    .site-inner, .wrap {
+        max-width: 960px;
+    }
+    .genesis-nav-menu a {
+        padding: 10px 10px;
+    }
+    .border-left {
+        border-left: 0px !important;
+    }
+    .border-right {
+        border-right: 0px !important;
+    }
 }
 
 /* Extra large devices (large laptops and desktops, 1200px and up) */
 @media only screen and (min-width: 1200px) {
-}
-
-@media only screen and (max-width: 1196px) {
-}
-
-/* TODO */
-/* Back to top button */
-/* https://codepen.io/matthewcain/pen/ZepbeR */
-#btnTOP {
-  display: inline-block;
-  background-color: #FF9800;
-  width: 50px;
-  height: 50px;
-  text-align: center;
-  border-radius: 4px;
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  transition: background-color .3s, 
-    opacity .5s, visibility .5s;
-  opacity: 0;
-  visibility: hidden;
-  z-index: 1000;
-}
-#btnTOP::after {
-  content: "\f077";
-  font-family: FontAwesome;
-  font-weight: normal;
-  font-style: normal;
-  font-size: 2em;
-  line-height: 50px;
-  color: #fff;
-}
-#btnTOP:hover {
-  cursor: pointer;
-  background-color: #333;
-}
-#btnTOP:active {
-  background-color: #555;
-}
-#btnTOP.show {
-  opacity: 1;
-  visibility: visible;
+    .dummy {
+        text-align: center;
+    }
 }

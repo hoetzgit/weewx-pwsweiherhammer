@@ -125,7 +125,7 @@
             <spawn class="issued-DWD"> $obs.label.forecast_issuedWarnings_dwd</spawn>
         </div>
         <div class="col-sm-12 forecast-content dwdwarningsbay" style="margin-top:5px;">
-            <a href="https://www.dwd.de/DE/wetter/warnungen_gemeinden/warnWetter_node.html?ort=Weiherhammer&bundesland=bay" target="_blank"><img itemprop="image" src="$relative_url/dwd/SchilderMS.jpg" alt="Die Warnlage in Bayern"></a>
+            <a href="https://www.dwd.de/DE/wetter/warnungen_gemeinden/warnWetter_node.html?ort=Weiherhammer&bundesland=bay" target="_blank" rel="noreferrer"><img itemprop="image" src="$relative_url/dwd/SchilderMS.jpg" alt="Die Warnlage in Bayern"></a>
         </div>
     </div>
     #end if
@@ -196,8 +196,8 @@
             $obs.label.forecast_header_current_map
             <spawn class="issued-DWD"> $obs.label.forecast_issuedMaps_dwd</spawn>
         </div>
-        <div class="col-md-12 forecast-content dwdmapeu" style="margin-top:5px;>
-            <a href="https://www.dwd.de/DE/leistungen/hobbymet_wk_europa/hobbyeuropakarten.html" target="_blank"><img itemprop="image" src="$relative_url/dwd/bwk_bodendruck_na_ana.png" alt="Wetterkarte (Luftdruck am Boden)"></a>
+        <div class="col-md-12 forecast-content dwdmapeu" style="margin-top:5px;">
+            <a href="https://www.dwd.de/DE/leistungen/hobbymet_wk_europa/hobbyeuropakarten.html" target="_blank" rel="noreferrer"><img itemprop="image" src="$relative_url/dwd/bwk_bodendruck_na_ana.png" alt="Wetterkarte (Luftdruck am Boden)"></a>
         </div>
     </div>
     #end if
