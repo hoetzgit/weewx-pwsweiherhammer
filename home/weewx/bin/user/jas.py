@@ -167,7 +167,7 @@ except ImportError:
         logmsg(syslog.LOG_ERR, msg)
 
 
-VERSION = "0.3.0"
+VERSION = "0.3.1-rc01"
 
 class JAS(SearchList):
     """ Implement tags used by templates in the skin. """
@@ -253,6 +253,7 @@ class JAS(SearchList):
                                  'data_binding': self.data_binding,
                                  'forecasts': self.data_forecast,
                                  'genCharts': self._gen_charts,
+                                 'getObsUnitLabel': self._get_obs_unit_label,
                                  'getRange': self._get_range,
                                  'getUnitLabel': self._get_unit_label,
                                  'languages': self.languages,
@@ -374,9 +375,12 @@ class JAS(SearchList):
         return last_n_days
 
 
-    def _get_unit_label(self, observation):
+    def _get_obs_unit_label(self, observation):
         # For now, return label for first observations unit. ToDo: possibly change to return all?
         return get_label_string(self.generator.formatter, self.generator.converter, observation, plural=False)
+
+    def _get_unit_label(self, unit):
+        return self.generator.formatter.get_label_string(unit, plural=False)
 
     def _get_wind_compass(self, data_binding=None, start_time=None, end_time=None):
         db_manager = self.generator.db_binder.get_manager(data_binding=data_binding)
@@ -712,8 +716,10 @@ class JAS(SearchList):
                             aggregate_type = weewx_options.get('aggregate_type', 'avg')
                             if aggregate_type not in observations[observation]['aggregate_types']:
                                 observations[observation]['aggregate_types'][aggregate_type] = {}
+                                observations[observation]['aggregate_types'][aggregate_type][obs_data_binding] = {}
 
-                            observations[observation]['aggregate_types'][aggregate_type][obs_data_binding] = {}
+                            unit = weewx_options.get('unit', 'default')
+                            observations[observation]['aggregate_types'][aggregate_type][obs_data_binding][unit] = {}
                             aggregate_types[aggregate_type] = {}
 
         minmax_observations = self.skin_dict.get('Extras', {}).get('minmax', {}).get('observations', {})
@@ -721,15 +727,20 @@ class JAS(SearchList):
         for observation in self.skin_dict['Extras']['minmax']['observations'].sections:
             data_binding = minmax_observations[observation].get('data_binding', minmax_data_binding)
             if observation not in self.wind_observations:
+                unit = minmax_observations[observation].get('unit', 'default')
                 if observation not in observations:
                     observations[observation] = {}
                     observations[observation]['aggregate_types'] = {}
 
-                observations[observation]['aggregate_types']['min'] = {}
-                observations[observation]['aggregate_types']['min'][data_binding] = {}
+                if 'min' not in observations[observation]['aggregate_types']:
+                    observations[observation]['aggregate_types']['min'] = {}
+                    observations[observation]['aggregate_types']['min'][data_binding] = {}
+                observations[observation]['aggregate_types']['min'][data_binding][unit] = {}
                 aggregate_types['min'] = {}
-                observations[observation]['aggregate_types']['max'] = {}
-                observations[observation]['aggregate_types']['max'][data_binding] = {}
+                if 'max' not in observations[observation]['aggregate_types']:
+                    observations[observation]['aggregate_types']['max'] = {}
+                    observations[observation]['aggregate_types']['max'][data_binding] = {}
+                observations[observation]['aggregate_types']['max'][data_binding][unit] = {}
                 aggregate_types['max'] = {}
 
         thisdate_observations = self.skin_dict.get('Extras', {}).get('thisdate', {}).get('observations', {})
@@ -737,15 +748,20 @@ class JAS(SearchList):
         for observation in thisdate_observations:
             data_binding = thisdate_observations[observation].get('data_binding', thisdate_data_binding)
             if observation not in self.wind_observations:
+                unit = thisdate_observations[observation].get('unit', 'default')
                 if observation not in observations:
                     observations[observation] = {}
                     observations[observation]['aggregate_types'] = {}
 
-                observations[observation]['aggregate_types']['min'] = {}
-                observations[observation]['aggregate_types']['min'][data_binding] = {}
+                if 'min' not in observations[observation]['aggregate_types']:
+                    observations[observation]['aggregate_types']['min'] = {}
+                    observations[observation]['aggregate_types']['min'][data_binding] = {}
+                observations[observation]['aggregate_types']['min'][data_binding][unit] = {}
                 aggregate_types['min'] = {}
-                observations[observation]['aggregate_types']['max'] = {}
-                observations[observation]['aggregate_types']['max'][data_binding] = {}
+                if 'max' not in observations[observation]['aggregate_types']:
+                    observations[observation]['aggregate_types']['max'] = {}
+                    observations[observation]['aggregate_types']['max'][data_binding] = {}
+                observations[observation]['aggregate_types']['max'][data_binding][unit] = {}
                 aggregate_types['max'] = {}
 
         return observations, aggregate_types
