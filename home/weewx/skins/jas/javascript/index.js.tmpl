@@ -31,7 +31,9 @@ function updatelogLevel(logLevel) {
 
 updatelogLevel(indexPageLogLevel);
 
-jasLogInfo("Running version: ", '$version');
+jasLogInfo("", navigator.userAgent);
+jasLogInfo("WeeWX version: ", '$weewx_version');
+jasLogInfo("weewx-jas version: ", '$version');
 jasLogInfo("Language setting is: ", lang);
 jasLogInfo("Log level: ", indexPageLogLevel);
 jasLogInfo("", "host: $Extras.mqtt.host");

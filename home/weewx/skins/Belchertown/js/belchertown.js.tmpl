@@ -2376,17 +2376,26 @@ function update_current_wx(data) {
     if (data.hasOwnProperty("pws_aqi_no2_category")) {
         change_aqi_color(data["pws_aqi_no2_category"], ".pws_aqi_no2_dot");
     }
+
     // debug current Sunshine Symbol
-    if (data.hasOwnProperty("sunshine")) {
-        var sun_output = ''
-        if (parseInt(data["sunshine"]) > 0) {
-            sun_output += '<i class="fa fa-sun-o"></i><sup>1</sup> '
+    var sun_output = '';
+    if (data.hasOwnProperty("sunshine1")) {
+        if (parseInt(data["sunshine1"]) > 0) {
+            sun_output += '<i class="fa fa-sun-o"></i><sup>1</sup>';
         }
-        if (parseInt(data["sunshineOriginal"]) > 0) {
-            sun_output += '<i class="fa fa-sun-o"></i><sup>2</sup>'
-        }
-       jQuery(".current-sunshine-symbol").html(sun_output);
     }
+    if (data.hasOwnProperty("sunshine2")) {
+        if (parseInt(data["sunshine2"]) > 0) {
+            sun_output += '<i class="fa fa-sun-o"></i><sup>2</sup>';
+        }
+    }
+    if (data.hasOwnProperty("sunshine3")) {
+        if (parseInt(data["sunshine3"]) > 0) {
+            sun_output += '<i class="fa fa-sun-o"></i><sup>3</sup>';
+        }
+    }
+    jQuery(".current-sunshine-symbol").html(sun_output);
+
     // debug avg10m Symbols
     var avg10m_output = '';
     if ((data.hasOwnProperty("thunderstorm_avg10m")) && (parseFloat(data["thunderstorm_avg10m"]) > 0.0)) {

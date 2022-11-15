@@ -344,11 +344,36 @@ def thswIndex_US(t_F, RH, ws_mph, rahes):
     # return round(thsw_F, 1) if thsw_F is not None else None
     return thsw_F if thsw_F is not None else None
 
+def sunshineThreshold(dateval, lat, lon, coeff):
+    utcdate = datetime.utcfromtimestamp(int(dateval))
+    dayofyear = int(time.strftime("%j",time.gmtime(int(dateval))))
+    theta = 360 * dayofyear / 365
+    equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
+        (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
+        2 * (pi / 180) * theta)
+    corrtemps = lon * 4
+    declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
+        (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
+        2 * (pi / 180) * theta)) * (180 / pi)
+    minutesjour = utcdate.hour * 60 + utcdate.minute
+    tempsolaire = (minutesjour + corrtemps + equatemps) / 60
+    angle_horaire = (tempsolaire - 12) * 15
+    hauteur_soleil = asin(sin((pi / 180) * lat) * sin((pi / 180) * declinaison) + cos(
+        (pi / 180) * lat) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
+    if hauteur_soleil > 3:
+        seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
+            (sin(pi / 180 * hauteur_soleil)), 1.25) * coeff
+    else:
+        seuil = 0.0
+    return ValueTuple(seuil, 'watt_per_meter_squared', 'group_radiation')
+
+
 class pwsWeiherhammer(weewx.xtypes.XType):
 
     def __init__(self, altitude, latitude, longitude,
                  solar_heatindex_algo='new',
                  sunshine_coeff=0.79,
+                 sunshine_coeff_mon_dict={},
                  sunshine_min=20.0,
                  sunshine_debug=False
                  ):
@@ -357,6 +382,7 @@ class pwsWeiherhammer(weewx.xtypes.XType):
         self.lon = longitude
         self.solar_heatindex_algo = solar_heatindex_algo.lower()
         self.sunshine_coeff = sunshine_coeff
+        self.sunshine_coeff_mon_dict = sunshine_coeff_mon_dict
         self.sunshine_min = sunshine_min
         self.sunshine_debug = sunshine_debug
 
@@ -466,53 +492,20 @@ class pwsWeiherhammer(weewx.xtypes.XType):
             u = 'degree_C'
         return ValueTuple(val, u, 'group_temperature')
 
-    # calculate sunshine threshold for sunshining yes/no
+    # calculate sunshine threshold for sunshining yes/no with static coeff
     def calc_sunshineThreshold(self, key, data, db_manager=None):
-        utcdate = datetime.utcfromtimestamp(int(data['dateTime']))
-        dayofyear = int(time.strftime("%j",time.gmtime(int(data['dateTime']))))
-        theta = 360 * dayofyear / 365
-        equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
-            (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
-            2 * (pi / 180) * theta)
-        corrtemps = self.lon * 4
-        declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
-            (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
-            2 * (pi / 180) * theta)) * (180 / pi)
-        minutesjour = utcdate.hour * 60 + utcdate.minute
-        tempsolaire = (minutesjour + corrtemps + equatemps) / 60
-        angle_horaire = (tempsolaire - 12) * 15
-        hauteur_soleil = asin(sin((pi / 180) * self.lat) * sin((pi / 180) * declinaison) + cos(
-            (pi / 180) * self.lat) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
-        if hauteur_soleil > 3:
-            seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
-                (sin(pi / 180 * hauteur_soleil)), 1.25) * self.sunshine_coeff
-        else:
-            seuil = 0.0
-        return ValueTuple(seuil, 'watt_per_meter_squared', 'group_radiation')
+        return sunshineThreshold(int(data['dateTime']), self.lat, self.lon, self.sunshine_coeff)
+
+    # calculate sunshine threshold for sunshining yes/no with coeff month based
+    def calc_sunshineThresholdMonth(self, key, data, db_manager=None):
+        monthofyear = int(time.strftime("%m",time.gmtime(int(data['dateTime']))))
+        coeff = self.sunshine_coeff_mon_dict.get(monthofyear, self.sunshine_coeff)
+        return sunshineThreshold(int(data['dateTime']), self.lat, self.lon, coeff)
 
     # calculate sunshine threshold for sunshining yes/no
+    # Version https://github.com/Jterrettaz/sunduration
     def calc_sunshineThresholdOriginal(self, key, data, db_manager=None):
-        utcdate = datetime.utcfromtimestamp(int(data['dateTime']))
-        dayofyear = int(time.strftime("%j",time.gmtime(int(data['dateTime']))))
-        theta = 360 * dayofyear / 365
-        equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
-            (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
-            2 * (pi / 180) * theta)
-        corrtemps = self.lon * 4
-        declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
-            (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
-            2 * (pi / 180) * theta)) * (180 / pi)
-        minutesjour = utcdate.hour * 60 + utcdate.minute
-        tempsolaire = (minutesjour + corrtemps + equatemps) / 60
-        angle_horaire = (tempsolaire - 12) * 15
-        hauteur_soleil = asin(sin((pi / 180) * self.lat) * sin((pi / 180) * declinaison) + cos(
-            (pi / 180) * self.lat) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
-        if hauteur_soleil > 3:
-            seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
-                (sin(pi / 180 * hauteur_soleil)), 1.25) 
-        else:
-            seuil = 0.0
-        return ValueTuple(seuil, 'watt_per_meter_squared', 'group_radiation')
+        return sunshineThreshold(int(data['dateTime']), self.lat, self.lon, 1.0)
 
     @staticmethod
     def calc_airDensity(key, data, db_manager=None):
@@ -593,6 +586,14 @@ class pwsWeiherhammerService(StdService):
 
         # sunshine threshold related options
         sunshine_coeff = float(option_dict['sunshineThreshold'].get('coeff', 0.79))
+        sunshine_coeff_mon_lst = option_dict['sunshineThreshold'].get('coeff_mon', None)
+        if sunshine_coeff_mon_lst is not None and not isinstance(sunshine_coeff_mon_lst, list):
+            tmplist = []
+            tmplist.append(sunshine_coeff_mon_lst)
+            sunshine_coeff_mon_lst = tmplist
+        sunshine_coeff_mon_dict = dict()
+        for i in range(0, len(sunshine_coeff_mon_lst), 1):
+            sunshine_coeff_mon_dict[i+1] = float(sunshine_coeff_mon_lst[i])
         sunshine_min = float(option_dict['sunshineThreshold'].get('sunshine_min', 20.0))
         sunshine_debug = to_bool(option_dict['sunshineThreshold'].get('debug', False))
 
@@ -600,6 +601,7 @@ class pwsWeiherhammerService(StdService):
         self.pwsW = pwsWeiherhammer(altitude, latitude, longitude, 
                                     solar_heatindex_algo,
                                     sunshine_coeff,
+                                    sunshine_coeff_mon_dict,
                                     sunshine_min,
                                     sunshine_debug
                                    )

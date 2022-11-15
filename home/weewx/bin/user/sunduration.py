@@ -50,6 +50,7 @@ class SunshineDuration(StdService):
         self.radiation_min = 20
         self.lastDate = 0
         self.sunshineDur = 0
+        self.sunshineDurMonth = 0
         self.sunshineDurOriginal = 0
         self.debug = to_bool(self.config_dict["debug"])
 
@@ -63,10 +64,6 @@ class SunshineDuration(StdService):
         if loopDate is None:
             logerr("Calculation LOOP sunshineDur not possible, dateTime not present!")
             return None
-        threshold = event.packet.get('sunshineThreshold', None)
-        if threshold is None:
-            logdbg("Calculation LOOP sunshineDur not possible, sunshineThreshold not present!")
-            return None
         loopInterval = 0
         stationInterval = event.packet.get('foshk_interval', None)
         if stationInterval is not None:
@@ -79,39 +76,60 @@ class SunshineDuration(StdService):
             logerr("Calculation LOOP sunshineDur not possible, interval could not be determined!")
             return None
 
-        # Calculation LOOP sunshineDur is possible
-        # Classic Version
+        # Calculation LOOP sunshineDur
+        # Version with static coeff over the year
         loopSunshineDur = 0
-        if threshold > 0 and radiation > threshold and radiation > self.radiation_min:
-            loopSunshineDur = int(loopInterval)
+        threshold = event.packet.get('sunshineThreshold', None)
+        if threshold is None:
+            logdbg("Calculation LOOP sunshineDur not possible, sunshineThreshold not present!")
+        else:
+            if threshold > 0 and radiation > threshold and radiation > self.radiation_min:
+                loopSunshineDur = int(loopInterval)
         self.sunshineDur += loopSunshineDur
         if self.debug:
-            logdbg("Added LOOP Interval=%d, based on radiation=%f and threshold=%f. LOOP sunshineDur=%d" % (
-                    loopSunshineDur, radiation, threshold, int(self.sunshineDur)))
+            logdbg("Version 1: dateTime=%d interval=%d threshold=%.2f radiation=%.2f LOOP sunshineDur=%d" % (
+                loopDate, loopInterval, threshold, radiation, int(self.sunshineDur)))
 
         # Original Version
-        loopSunshineDurOriginal = 0
+        # https://github.com/hoetzgit/sunduration/blob/master/sunduration.py
+        loopSunshineDur = 0
         threshold = event.packet.get('sunshineThresholdOriginal', None)
         if threshold is None:
             logdbg("Calculation LOOP sunshineDurOriginal not possible, sunshineThresholdOriginal not present!")
-            return None
-        if threshold > 0 and radiation > threshold:
-            loopSunshineDurOriginal = int(loopInterval)
-        self.sunshineDurOriginal += loopSunshineDurOriginal
+        else:
+            if threshold > 0 and radiation > threshold:
+                loopSunshineDur = int(loopInterval)
+        self.sunshineDurOriginal += loopSunshineDur
         if self.debug:
-            logdbg("Original Version:")
-            logdbg("Added LOOP Interval=%d, based on radiation=%f and threshold=%f. LOOP sunshineDur=%d" % (
-                    loopSunshineDurOriginal, radiation, threshold, int(self.sunshineDurOriginal)))
+            logdbg("Version 2: dateTime=%d interval=%d threshold=%.2f radiation=%.2f LOOP sunshineDur=%d" % (
+                loopDate, loopInterval, threshold, radiation, int(self.sunshineDur)))
+
+        # Calculation LOOP sunshineDur
+        # Version with coeff per month
+        loopSunshineDur = 0
+        threshold = event.packet.get('sunshineThresholdMonth', None)
+        if threshold is None:
+            logdbg("Calculation LOOP sunshineDurMonth not possible, sunshineThresholdMonth not present!")
+        else:
+            if threshold > 0 and radiation > threshold and radiation > self.radiation_min:
+                loopSunshineDur = int(loopInterval)
+        self.sunshineDurMonth += loopSunshineDur
+        if self.debug:
+            logdbg("Version 3: dateTime=%d interval=%d threshold=%.2f radiation=%.2f LOOP sunshineDur=%d" % (
+                loopDate, loopInterval, threshold, radiation, int(self.sunshineDur)))
+
 
     def newArchiveRecord(self, event):
         """Gets called on a new archive record event."""
         event.record['sunshineDur'] = int(self.sunshineDur)
         event.record['sunshineDurOriginal'] = int(self.sunshineDurOriginal)
+        event.record['sunshineDurMonth'] = int(self.sunshineDurMonth)
         self.sunshineDur = 0
         self.sunshineDurOriginal = 0
+        self.sunshineDurMonth = 0
         if self.debug:
-            logdbg("Total ARCHIVE sunshineDur=%d" % (event.record['sunshineDur']))
-            logdbg("Original Version:")
-            logdbg("Total ARCHIVE sunshineDur=%d" % (event.record['sunshineDurOriginal']))
+            logdbg("Version 1: ARCHIVE sunshineDur=%d" % (event.record['sunshineDur']))
+            logdbg("Version 2: ARCHIVE sunshineDur=%d" % (event.record['sunshineDurOriginal']))
+            logdbg("Version 3: ARCHIVE sunshineDur=%d" % (event.record['sunshineDurMonth']))
 
     schema_with_sunshine_time = schemas.wview.schema + [('sunshineDur', 'REAL')]

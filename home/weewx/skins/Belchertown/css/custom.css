@@ -131,9 +131,14 @@
 }
 
 /* Test Symbols */
+.current-sunshine-symbol {
+    font-size: 14px;
+}
+
 .avg10m-obs-symbols, .dark .avg10m-obs-symbols {
     text-align:center;
     padding-top: 0px;
+    font-size: 14px;
 }
 
 /* PWS AQI */
