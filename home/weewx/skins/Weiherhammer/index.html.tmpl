@@ -285,10 +285,8 @@
 
                         #if $Extras.has_key("pws_aqi_enabled") and $Extras.pws_aqi_enabled == '1'
                         <!-- AQI -->
-                        <div class="obs-aqi-divider"></div>
-                        <div class="row aqi-row">
-                            <!-- current conditions -->
-                            <div class="row col-sm-12 obs-aqi-index">
+                        <div class="row pws-aqi-row">
+                            <div class="pws-aqi-index">
                                  #if $current.pws_aqi_category.has_data
                                  #if $current.pws_aqi_category.raw == 0.0
                                  $obs.label.pws_aqi_long <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_very_good">$obs.label.pws_aqi_very_good</span>
@@ -307,42 +305,39 @@
                                  $obs.label.pws_aqi_long <span class="pws-aqi-category">$obs.label.pws_aqi_unknown</span>
                                  #end if
                             </div>
-                            <div class="row col-sm-12 obs-aqi-values">
-                                <div class="col-sm-6 obs-aqi-table-values">
-                                    <table class="obs-aqi-table">
-                                        <tbody>
-                                            <tr>
-                                                <td class="obs-aqi-table-title" title="$obs.label.ttt_pm2_5_short"><span class="pws_aqi_pm2_5_dot"></span>&nbsp;$obs.label.sds011_pm2_5_short</td>
-                                                <td class="obs-aqi-table-title border-left" title="$obs.label.ttt_pm10_0_short"><span class="pws_aqi_pm10_0_dot"></span>&nbsp;$obs.label.sds011_pm10_0_short</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="obs-aqi-table-value sds011-pm2_5" title="$obs.label.ttt_pm2_5_short">$current.sds011_pm2_5</td>
-                                                <td class="obs-aqi-table-value border-left sds011-pm10_0" title="$obs.label.ttt_pm10_0_short">$current.sds011_pm10_0</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="col-sm-6 obs-aqi-table-values">
-                                    <table class="obs-aqi-table">
-                                        <tbody>
-                                            <tr>
-                                                <td class="obs-aqi-table-title border-left" title="$obs.label.ttt_o3_short"><span class="pws_aqi_o3_dot"></span>&nbsp;$obs.label.uba_o3_short</td>
-                                                <td class="obs-aqi-table-title border-left" title="$obs.label.ttt_no2_short"><span class="pws_aqi_no2_dot"></span>&nbsp;$obs.label.uba_no2_short</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="obs-aqi-table-value border-left uba-o3" title="$obs.label.ttt_o3_short">$current.uba_o3</td>
-                                                <td class="obs-aqi-table-value border-left uba-no2" title="$obs.label.ttt_no2_short">$current.uba_no2</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div class="col-sm-6 pws-aqi-table-container">
+                                <table class="pws-aqi-table">
+                                    <tbody>
+                                        <tr>
+                                            <td class="pws-aqi-table-title" title="$obs.label.ttt_pm2_5_short"><span class="pws_aqi_pm2_5_dot"></span>&nbsp;$obs.label.sds011_pm2_5_short</td>
+                                            <td class="pws-aqi-table-title border-left" title="$obs.label.ttt_pm10_0_short"><span class="pws_aqi_pm10_0_dot"></span>&nbsp;$obs.label.sds011_pm10_0_short</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="pws-aqi-table-value sds011-pm2_5" title="$obs.label.ttt_pm2_5_short">$current.sds011_pm2_5</td>
+                                            <td class="pws-aqi-table-value border-left sds011-pm10_0" title="$obs.label.ttt_pm10_0_short">$current.sds011_pm10_0</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-sm-6 pws-aqi-table-container">
+                                <table class="pws-aqi-table">
+                                    <tbody>
+                                        <tr>
+                                            <td class="pws-aqi-table-title border-left" title="$obs.label.ttt_o3_short"><span class="pws_aqi_o3_dot"></span>&nbsp;$obs.label.uba_o3_short</td>
+                                            <td class="pws-aqi-table-title border-left" title="$obs.label.ttt_no2_short"><span class="pws_aqi_no2_dot"></span>&nbsp;$obs.label.uba_no2_short</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="pws-aqi-table-value border-left uba-o3" title="$obs.label.ttt_o3_short">$current.uba_o3</td>
+                                            <td class="pws-aqi-table-value border-left uba-no2" title="$obs.label.ttt_no2_short">$current.uba_no2</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         #end if
 
                         <!-- Wind -->
-                        <div class="aqi-wind-divider"></div>
-                        <div class="row windrow">
+                        <div class="row wind-row">
                             <div class="weather-obs-bottom">
                                 <div class="col-sm-12 current_wind" style="overflow:hidden;">
                                     <!-- compass -->
@@ -416,8 +411,8 @@
                     </div>
 
                     <!-- Station observations -->
-                    <div class="col-lg-3 current-almanac toprow-height border-left border-right">
-                        <div class="station-observations weather-obs-middle-top">
+                    <div class="col-lg-3 toprow-height border-left border-right">
+                        <div class="row obs-row-middle station-observations">
                             <table cellpadding="0" cellspacing="0">
                                 <tbody>
                                     $station_obs_html
@@ -434,12 +429,12 @@
                         </div>
                         
                         <!-- Sun and Moon section -->
-                        <div class="weather-obs-bottom">
+                        <div class="row almanac-row">
                             <table cellpadding="0" cellspacing="0">
                                 <tbody>
                                     <tr>
                                         <td colspan="2">
-                                            <div class="row small-almanac">
+                                            <div class="almanac">
                                                 #if $obs.label.sun_and_moon and $obs.label.sun_and_moon != ''
                                                 <div class="sun-moon-title">
                                                     $obs.label.sun_and_moon
@@ -492,12 +487,16 @@
                         </div>
                     </div>
                     
-                    <!-- Radar image -->
-                    <div class="col-lg-5 radar-map toprow-height">
+                    <!-- Tabs / Radar image -->
+                    <div class="col-lg-5 toprow-height col-radar-map">
                         #if os.path.exists("index_radar.inc")
+                        <div class="row tabs-row">
                         #include "index_radar.inc"
+                        </div>
                         #else
-                        <div class="radar_image">$radar_html</div>
+                        <div class="row tabs-row radar_image">
+                        $radar_html
+                        </div>
                         #end if
                     </div>
                 </div>

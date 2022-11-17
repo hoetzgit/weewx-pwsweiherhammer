@@ -1395,7 +1395,7 @@ p.entry-meta {
 	float:left;
 }
 .wx-stn-name h1 { 
-	font-size:32px;
+    font-size: calc(20px + 0.5vw);
 }
 
 .wx-stn-share, .wx-stn-info {
