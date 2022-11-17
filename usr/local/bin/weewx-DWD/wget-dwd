@@ -22,7 +22,7 @@ LOG_FN="/var/log/weewx/wget-dwd.log"
 # Zielpfad zum Speichern der Dateien
 # (Das Verzeichnis muss vorher vom Benutzer angelegt werden.)
 # PTH="/etc/weewx/skins/Belchertown/dwd"
-PTH="/home/weewx/skins/Belchertown/dwd"
+PTH="/home/weewx/skins/Weiherhammer/dwd"
 
 # Ende des vom Benutzer anzupassenden Bereichs
 

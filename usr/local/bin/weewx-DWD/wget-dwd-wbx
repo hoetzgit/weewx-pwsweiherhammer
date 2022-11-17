@@ -9,7 +9,7 @@
 # Zielpfad zum Speichern der Dateien
 # (Das Verzeichnis muss vorher vom Benutzer angelegt werden.)
 # PTH="/etc/weewx/skins/Belchertown/dwd"
-PTH="/home/weewx/skins/Belchertown/dwd"
+PTH="/home/weewx/skins/Weiherhammer/dwd"
 
 # URLs der herunterzuladenden Dateien beim DWD
 DWD_WBX="https://www.dwd.de/DWD/warnungen/agrar/wbx/wbx_tab_alle_BY.html"

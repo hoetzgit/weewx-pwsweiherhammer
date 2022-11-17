@@ -5,10 +5,10 @@
 			<div class="wrap">
                 <div class="row">
                     <div class="col-sm-4 footerLeft">
-                        &copy; $current.dateTime.format("%Y") $obs.label.footer_copyright_text
+                        $obs.label.copyright &copy; $current.dateTime.format("%Y") $obs.label.footer_copyright_text
                     </div>
                     <div class="col-sm-5 footerCenter">
-                        <small><a href="$relative_url/imprint/">$obs.label.imprint_link</a> &sdot; <a href="$relative_url/privacy/">$obs.label.privacy_link</a></small>
+                        <strong>$obs.label.footer_disclaimer_text</strong>
                     </div>
                     <div class="col-sm-3 footerRight">
                         weewx theme by <a href="https://obrienlabs.net" target="_blank">Pat O'Brien</a>

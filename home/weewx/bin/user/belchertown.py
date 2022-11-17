@@ -504,9 +504,7 @@ class getData(SearchList):
                     zoom,
                 )
             else:
-                radar_html_dark = '<iframe width="{}px" height="{}px" src="https://embed.windy.com/embed2.html?lat={}&lon={}&zoom={}&level=surface&overlay=radar&menu=&message=true&marker={}&calendar=&pressure=&type=map&location=coordinates&detail=&detailLat={}&detailLon={}&metricWind=&metricTemp=&radarRange=-1" frameborder="0"></iframe>'.format(
-                    radar_width, radar_height, lat, lon, zoom, marker, lat, lon
-                )
+                radar_html_dark = "None"
         else:
             radar_html_dark = self.generator.skin_dict["Extras"]["radar_html_dark"]
 
@@ -520,18 +518,6 @@ class getData(SearchList):
                 radar_width_kiosk,
                 radar_height_kiosk,
                 self.generator.skin_dict["Extras"]["radar_html_kiosk"]
-            )
-
-        # If the console radar is different then the homepage one.
-        if self.generator.skin_dict["Extras"].get("radar_html_console") == "":
-            radar_html_console = radar_html
-        else:
-            radar_width_console = self.generator.skin_dict["Extras"]["radar_width_console"]
-            radar_height_console = self.generator.skin_dict["Extras"]["radar_height_console"]
-            radar_html_console = '<iframe width="{}px" height="{}px" src="{}" frameborder="0"></iframe>'.format(
-                radar_width_console,
-                radar_height_console,
-                self.generator.skin_dict["Extras"]["radar_html_console"]
             )
 
 
@@ -757,222 +743,6 @@ class getData(SearchList):
                 locale.format("%.1f", 0),
                 locale.format("%.1f", 0),
             ]
-
-        # Lightning Strike Count lookups
-        # Find the group_name for lightning_strike_count in database
-        # "lightning_strike_count" for variable names abbreviated with "lsc"
-        lsc_unit = converter.group_unit_dict["group_count"]
-
-        # Find the group_name for lightning_strike_count in the skin.conf
-        skin_lsc_unit = self.generator.converter.group_unit_dict["group_count"]
-
-        # Find the number of decimals to round the result based on the skin.conf
-        lsc_round = self.generator.skin_dict["Units"]["StringFormats"].get(
-            skin_lsc_unit, "%.0f"
-        )
-
-        # Thunderstormiest Day
-        thunderstormiest_day_query = wx_manager.getSql(
-            "SELECT dateTime, sum FROM archive_day_lightning_strike_count WHERE dateTime >= %s ORDER BY sum DESC LIMIT 1;"
-            % year_start_epoch
-        )
-        if thunderstormiest_day_query is not None:
-            thunderstormiest_day_tuple = (thunderstormiest_day_query[1], lsc_unit, "group_count")
-            thunderstormiest_day_converted = (
-                lsc_round % self.generator.converter.convert(thunderstormiest_day_tuple)[0]
-            )
-            thunderstormiest_day = [
-                thunderstormiest_day_query[0],
-                locale.format("%g", float(thunderstormiest_day_converted)),
-            ]
-        else:
-            thunderstormiest_day = [calendar.timegm(time.gmtime()), locale.format("%.0f", 0)]
-
-        # All Time Thunderstormiest Day
-        at_thunderstormiest_day_query = wx_manager.getSql(
-            "SELECT dateTime, sum FROM archive_day_lightning_strike_count ORDER BY sum DESC LIMIT 1"
-        )
-        at_thunderstormiest_day_tuple = (at_thunderstormiest_day_query[1], lsc_unit, "group_count")
-        at_thunderstormiest_day_converted = (
-            lsc_round % self.generator.converter.convert(at_thunderstormiest_day_tuple)[0]
-        )
-        at_thunderstormiest_day = [
-            at_thunderstormiest_day_query[0],
-            locale.format("%g", float(at_thunderstormiest_day_converted)),
-        ]
-
-        # Find what kind of database we're working with and specify the
-        # correctly tailored SQL Query for each type of database
-        data_binding = self.generator.config_dict["StdArchive"]["data_binding"]
-        database = self.generator.config_dict["DataBindings"][data_binding]["database"]
-        database_type = self.generator.config_dict["Databases"][database][
-            "database_type"
-        ]
-        driver = self.generator.config_dict["DatabaseTypes"][database_type]["driver"]
-        if driver == "weedb.sqlite":
-            year_thunderstormiest_month_sql = (
-                'SELECT strftime("%%m", datetime(dateTime, "unixepoch", "localtime")) as month, SUM( sum ) as total FROM archive_day_lightning_strike_count WHERE strftime("%%Y", datetime(dateTime, "unixepoch", "localtime")) = "%s" GROUP BY month ORDER BY total DESC LIMIT 1;'
-                % time.strftime("%Y", time.localtime(time.time()))
-            )
-            at_thunderstormiest_month_sql = 'SELECT strftime("%m", datetime(dateTime, "unixepoch", "localtime")) as month, strftime("%Y", datetime(dateTime, "unixepoch", "localtime")) as year, SUM( sum ) as total FROM archive_day_lightning_strike_count GROUP BY month, year ORDER BY total DESC LIMIT 1;'
-            year_lsc_data_sql = (
-                'SELECT dateTime, sum FROM archive_day_lightning_strike_count WHERE strftime("%%Y", datetime(dateTime, "unixepoch", "localtime")) = "%s" AND count > 0;'
-                % time.strftime("%Y", time.localtime(time.time()))
-            )
-            # The all stats from http://www.weewx.com/docs/customizing.htm
-            # doesn't seem to calculate "Total Rainfall for" all time stat
-            # correctly.
-            at_thunderstormiest_year_sql = 'SELECT strftime("%Y", datetime(dateTime, "unixepoch", "localtime")) as year, SUM( sum ) as total FROM archive_day_lightning_strike_count GROUP BY year ORDER BY total DESC LIMIT 1;'
-        elif driver == "weedb.mysql":
-            year_thunderstormiest_month_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%m" ) AS month, ROUND( SUM( sum ), 2 ) AS total FROM archive_day_lightning_strike_count WHERE year( FROM_UNIXTIME( dateTime ) ) = "{0}" GROUP BY month ORDER BY total DESC LIMIT 1;'.format(
-                time.strftime("%Y", time.localtime(time.time()))
-            )  # Why does this one require .format() but the other's don't?
-            at_thunderstormiest_month_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%m" ) AS month, FROM_UNIXTIME( dateTime, "%%Y" ) AS year, ROUND( SUM( sum ), 2 ) AS total FROM archive_day_lightning_strike_count GROUP BY month, year ORDER BY total DESC LIMIT 1;'
-            year_lsc_data_sql = (
-                'SELECT dateTime, ROUND( sum, 2 ) FROM archive_day_lightning_strike_count WHERE year( FROM_UNIXTIME( dateTime ) ) = "%s" AND count > 0;'
-                % time.strftime("%Y", time.localtime(time.time()))
-            )
-            # The all stats from http://www.weewx.com/docs/customizing.htm
-            # doesn't seem to calculate "Total Rainfall for" all time stat
-            # correctly.
-            at_thunderstormiest_year_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%Y" ) AS year, ROUND( SUM( sum ), 2 ) AS total FROM archive_day_lightning_strike_count GROUP BY year ORDER BY total DESC LIMIT 1;'
-
-        # Thunderstormiest month
-        year_thunderstormiest_month_query = wx_manager.getSql(year_thunderstormiest_month_sql)
-        if year_thunderstormiest_month_query is not None:
-            year_thunderstormiest_month_tuple = (
-                year_thunderstormiest_month_query[1],
-                lsc_unit,
-                "group_count",
-            )
-            year_thunderstormiest_month_converted = (
-                lsc_round
-                % self.generator.converter.convert(year_thunderstormiest_month_tuple)[0]
-            )
-            year_thunderstormiest_month_name = calendar.month_name[
-                int(year_thunderstormiest_month_query[0])
-            ]
-            year_thunderstormiest_month = [
-                year_thunderstormiest_month_name,
-                locale.format("%g", float(year_thunderstormiest_month_converted)),
-            ]
-        else:
-            year_thunderstormiest_month = ["N/A", 0.0]
-
-        # All time thunderstormiest month
-        at_thunderstormiest_month_query = wx_manager.getSql(at_thunderstormiest_month_sql)
-        at_thunderstormiest_month_tuple = (at_thunderstormiest_month_query[2], lsc_unit, "group_count")
-        at_thunderstormiest_month_converted = (
-            lsc_round % self.generator.converter.convert(at_thunderstormiest_month_tuple)[0]
-        )
-        at_thunderstormiest_month_name = calendar.month_name[int(at_thunderstormiest_month_query[0])]
-        at_thunderstormiest_month = [
-            "%s, %s" % (at_thunderstormiest_month_name, at_thunderstormiest_month_query[1]),
-            locale.format("%g", float(at_thunderstormiest_month_converted)),
-        ]
-
-        # All time thunderstormiest year
-        at_thunderstormiest_year_query = wx_manager.getSql(at_thunderstormiest_year_sql)
-        at_thunderstormiest_year_tuple = (
-            at_thunderstormiest_year_query[1],
-            lsc_unit,
-            "group_count",
-        )
-        at_thunderstormiest_year_converted = (
-            lsc_round % self.generator.converter.convert(at_thunderstormiest_year_tuple)[0]
-        )
-        at_thunderstormiest_year = [
-            at_thunderstormiest_year_query[0],
-            locale.format("%g", float(at_thunderstormiest_year_converted)),
-        ]
-
-        # Consecutive days with/without Thunderstorm
-        # dateTime needs to be epoch. Conversion done in the template using #echo
-        year_days_with_lsc_total = 0
-        year_days_without_lsc_total = 0
-        year_days_with_lsc_output = {}
-        year_days_without_lsc_output = {}
-        year_lsc_query = wx_manager.genSql(year_lsc_data_sql)
-        for row in year_lsc_query:
-            # Original MySQL way: CASE WHEN sum!=0 THEN @total+1 ELSE 0 END
-            if row[1] != 0:
-                year_days_with_lsc_total += 1
-            else:
-                year_days_with_lsc_total = 0
-
-            # Original MySQL way: CASE WHEN sum=0 THEN @total+1 ELSE 0 END
-            if row[1] == 0:
-                year_days_without_lsc_total += 1
-            else:
-                year_days_without_lsc_total = 0
-
-            year_days_with_lsc_output[row[0]] = year_days_with_lsc_total
-            year_days_without_lsc_output[row[0]] = year_days_without_lsc_total
-
-        if year_days_with_lsc_output:
-            year_days_with_lsc = max(
-                zip(
-                    year_days_with_lsc_output.values(),
-                    year_days_with_lsc_output.keys(),
-                )
-            )
-        else:
-            year_days_with_lsc = [
-                locale.format("%.1f", 0),
-                calendar.timegm(time.gmtime()),
-            ]
-
-        if year_days_without_lsc_output:
-            year_days_without_lsc = max(
-                zip(
-                    year_days_without_lsc_output.values(),
-                    year_days_without_lsc_output.keys(),
-                )
-            )
-        else:
-            year_days_without_lsc = [
-                locale.format("%.1f", 0),
-                calendar.timegm(time.gmtime()),
-            ]
-
-        at_days_with_lsc_total = 0
-        at_days_without_lsc_total = 0
-        at_days_with_lsc_output = {}
-        at_days_without_lsc_output = {}
-        at_lsc_query = wx_manager.genSql(
-            "SELECT dateTime, ROUND( sum, 2 ) FROM archive_day_lightning_strike_count WHERE count > 0;"
-        )
-        for row in at_lsc_query:
-            # Original MySQL way: CASE WHEN sum!=0 THEN @total+1 ELSE 0 END
-            if row[1] != 0:
-                at_days_with_lsc_total += 1
-            else:
-                at_days_with_lsc_total = 0
-
-            # Original MySQL way: CASE WHEN sum=0 THEN @total+1 ELSE 0 END
-            if row[1] == 0:
-                at_days_without_lsc_total += 1
-            else:
-                at_days_without_lsc_total = 0
-
-            at_days_with_lsc_output[row[0]] = at_days_with_lsc_total
-            at_days_without_lsc_output[row[0]] = at_days_without_lsc_total
-
-        if len(at_days_with_lsc_output) > 0:
-            at_days_with_lsc = max(
-                zip(at_days_with_lsc_output.values(), at_days_with_lsc_output.keys())
-            )
-        else:
-            at_days_with_lsc = (0, 0)
-        if len(at_days_without_lsc_output) > 0:
-            at_days_without_lsc = max(
-                zip(
-                    at_days_without_lsc_output.values(),
-                    at_days_without_lsc_output.keys(),
-                )
-            )
-        else:
-            at_days_without_lsc = (0, 0)
 
         # Rain lookups
         # Find the group_name for rain in database
@@ -1476,9 +1246,6 @@ class getData(SearchList):
                 # File doesn't exist, download a new copy
                 forecast_is_stale = True
 
-            # forecast file created from forecast-pwsWeiherhammer
-            forecast_is_stale = False
-
             # File is stale, download a new copy
             if forecast_is_stale:
                 try:
@@ -1651,31 +1418,8 @@ class getData(SearchList):
             with open(forecast_file, "r") as read_file:
                 data = json.load(read_file)
 
-            # 20221024,ho possible providers for current weather
-            current_provider_list = self.generator.skin_dict["Extras"].get("current_provider_list", "dwd")
-            current_provider_default = self.generator.skin_dict["Extras"].get("current_provider_default", "dwd")
-            current_provider_visible = self.generator.skin_dict["Extras"].get("current_provider_visible", 0)
             try:
-                if (current_provider_default == "dwd"):
-                    data["current"] = data["dwd"]["current"]
-                elif (current_provider_default == "brightsky"):
-                    data["current"] = data["_brightsky"]["current"]
-                elif (current_provider_default == "owm"):
-                    data["current"] = data["_owm"]["current"]
-                elif (current_provider_default == "weatherbit"):
-                    data["current"] = data["_weatherbit"]["current"]
-                elif (current_provider_default == "metar"):
-                    data["current"] = data["aeris_metar"]["current"]
-                elif (current_provider_default == "conditions"):
-                    data["current"] = data["aeris_conditions"]["current"]
-            except Exception:
-                current_provider_list = "dwd"
-                current_provider_default = "dwd"
-                data["current"] = data["dwd"]["current"]
-                raise Warning("Error, no current data from %s" % current_provider_default)
-
-            try:
-                cloud_cover = "{} %".format(data["current"][0]["response"]["ob"]["sky"])
+                cloud_cover = "{}%".format(data["current"][0]["response"]["ob"]["sky"])
             except Exception:
                 loginf("No cloud cover data from Aeris weather")
                 cloud_cover = ""
@@ -1719,8 +1463,7 @@ class getData(SearchList):
             elif aqi_category == "hazardous":
                 aqi_category = label_dict["aqi_hazardous"]
             else:
-                # aqi_category = label_dict["aqi_unknown"]
-                aqi_category = aqi_category
+                aqi_category = label_dict["aqi_unknown"]
 
             if (
                 len(data["current"][0]["response"]) > 0
@@ -1737,17 +1480,12 @@ class getData(SearchList):
                 and self.generator.skin_dict["Extras"]["forecast_aeris_use_metar"]
                 == "1"
             ):
-                try:
-                    current_obs_summary = aeris_coded_weather(
-                        data["current"][0]["response"]["ob"]["weatherPrimaryCoded"]
-                    )
-                    current_obs_icon = (
-                        aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png"
-                    )
-                except Exception:
-                    logerr("No obs icon and text from forecast.json")
-                    current_obs_summary = ""
-                    current_obs_icon = ""
+                current_obs_summary = aeris_coded_weather(
+                    data["current"][0]["response"]["ob"]["weatherPrimaryCoded"]
+                )
+                current_obs_icon = (
+                    aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png"
+                )
 
                 if forecast_units in ("si", "ca"):
                     if data["current"][0]["response"]["ob"]["visibilityKM"] is not None:
@@ -2103,7 +1841,7 @@ class getData(SearchList):
                 obs_rain_output = "<span class='dayRain'>%s</span><!-- AJAX -->" % str(
                     dayRain_sum
                 )
-                obs_rain_output += "&nbsp;<span class='border-left-rain-hum'>&nbsp;</span>"
+                obs_rain_output += "&nbsp;<span class='border-left'>&nbsp;</span>"
                 obs_rain_output += (
                     "<span class='rainRate'>%s</span><!-- AJAX -->"
                     % str(getattr(current, "rainRate"))
@@ -2160,27 +1898,11 @@ class getData(SearchList):
                     pass
                 elif "-" in str(obs_trend):
                     station_obs_html += (
-                        # '<i class="fa fa-arrow-down barometer-down"></i>'
-                        '<i class="fa fa-level-down barometer-down"></i>'
+                        '<i class="fa fa-arrow-down barometer-down"></i>'
                     )
                 else:
-                    station_obs_html += '<i class="fa fa-level-up barometer-up"></i>'
+                    station_obs_html += '<i class="fa fa-arrow-up barometer-up"></i>'
                 station_obs_html += "</span>"  # Close the span
-            # 20220622,ho sunshine debug symbol
-            if obs == "radiation":
-                station_obs_html += ' <span class="current-sunshine-symbol"></span>'
-            # 20220803,ho cloudcover debug symbol
-            if obs == "cloud_cover":
-                station_obs_html += ' <span class="avg10m-obs-symbols"></span>'
-            # 20220811,ho add absolute humidity to relative humidity
-            # https://github.com/roe-dl/weewx-GTS/discussions/14
-            if obs=='outHumidity':
-                humabs_output = getattr(current,'outHumAbs',None)
-                if humabs_output is not None:
-                    humabs_output = humabs_output.gram_per_meter_cubed
-                    station_obs_html += '&nbsp;<span class="border-left-rain-hum">&nbsp;</span>'
-                    station_obs_html += '<span class="outHumAbs">%s</span><!-- AJAX -->' % humabs_output
-
             station_obs_html += "</td>"
             station_obs_html += "</tr>"
 
@@ -2226,11 +1948,6 @@ class getData(SearchList):
             else:
                 all_obs_rounding_json["visibility"] = ""
                 all_obs_unit_labels_json["visibility"] = ""
-
-        # 20220811,ho add absolute humidity to relative humidity
-        # https://github.com/roe-dl/weewx-GTS/discussions/14
-        all_obs_rounding_json["outHumAbs"] = 1
-        all_obs_unit_labels_json["outHumAbs"] = " g/m³"
 
         # ==============================================================================
         # Social Share
@@ -2309,32 +2026,12 @@ class getData(SearchList):
             mqtt_websockets_port_kiosk = self.generator.skin_dict["Extras"]["mqtt_websockets_port"]
             mqtt_websockets_ssl_kiosk = self.generator.skin_dict["Extras"]["mqtt_websockets_ssl"]
 
-        #==============================================================================
-        # MQTT settings for Console page
-        # ==============================================================================
-
-        if self.generator.skin_dict["Extras"]["mqtt_websockets_host_console"] != "":
-            if self.generator.skin_dict["Extras"]["mqtt_websockets_port_console"] != "":
-                mqtt_websockets_port_console = self.generator.skin_dict["Extras"]["mqtt_websockets_port_console"]
-            else:
-                mqtt_websockets_port_console = self.generator.skin_dict["Extras"]["mqtt_websockets_port"]
-            if self.generator.skin_dict["Extras"]["mqtt_websockets_ssl_console"] != "":
-                mqtt_websockets_ssl_console = self.generator.skin_dict["Extras"]["mqtt_websockets_ssl_console"]
-            else:
-                mqtt_websockets_ssl_console = self.generator.skin_dict["Extras"]["mqtt_websockets_ssl"]
-        else:
-            mqtt_websockets_port_console = self.generator.skin_dict["Extras"]["mqtt_websockets_host"]
-            mqtt_websockets_port_console = self.generator.skin_dict["Extras"]["mqtt_websockets_port"]
-            mqtt_websockets_ssl_console = self.generator.skin_dict["Extras"]["mqtt_websockets_ssl"]
-
 
 
         # Include custom.css if it exists in the HTML_ROOT folder
-        custom_css_file = html_root + "/css/custom.css"
-        custom_css_min_file = html_root + "/css/custom.min.css"
+        custom_css_file = html_root + "/custom.css"
         # Determine if the file exists
         custom_css_exists = os.path.isfile(custom_css_file)
-        custom_css_min_exists = os.path.isfile(custom_css_min_file)
 
         # Build the search list with the new values
         search_list_extension = {
@@ -2351,7 +2048,6 @@ class getData(SearchList):
             "radar_html": radar_html,
             "radar_html_dark": radar_html_dark,
             "radar_html_kiosk": radar_html_kiosk,
-            "radar_html_console": radar_html_console,
             "archive_interval_ms": archive_interval_ms,
             "ordinate_names": ordinate_names,
             "charts": json.dumps(charts),
@@ -2373,23 +2069,11 @@ class getData(SearchList):
             "year_days_without_rain": year_days_without_rain,
             "at_days_with_rain": at_days_with_rain,
             "at_days_without_rain": at_days_without_rain,
-            "thunderstormiest_day": thunderstormiest_day,
-            "at_thunderstormiest_day": at_thunderstormiest_day,
-            "year_thunderstormiest_month": year_thunderstormiest_month,
-            "at_thunderstormiest_month": at_thunderstormiest_month,
-            "at_thunderstormiest_year": at_thunderstormiest_year,
-            "year_days_with_lsc": year_days_with_lsc,
-            "year_days_without_lsc": year_days_without_lsc,
-            "at_days_with_lsc": at_days_with_lsc,
-            "at_days_without_lsc": at_days_without_lsc,
             "windSpeedUnitLabel": windSpeed_unit_label,
             "noaa_header_html": noaa_header_html,
             "default_noaa_file": default_noaa_file,
             "current_obs_icon": current_obs_icon,
             "current_obs_summary": current_obs_summary,
-            "current_provider_list": current_provider_list,
-            "current_provider_default": current_provider_default,
-            "current_provider_visible": current_provider_visible,
             "visibility": visibility,
             "visibility_unit": visibility_unit,
             "cloud_cover": cloud_cover,
@@ -2409,7 +2093,6 @@ class getData(SearchList):
             "earthquake_bearing_raw": eqbearing_raw,
             "social_html": social_html,
             "custom_css_exists": custom_css_exists,
-            "custom_css_min_exists": custom_css_min_exists,
             "aqi": aqi,
             "aqi_category": aqi_category,
             "aqi_location": aqi_location,
@@ -2428,8 +2111,6 @@ class getData(SearchList):
             "beaufort12": label_dict["beaufort12"],
             "mqtt_websockets_port_kiosk": mqtt_websockets_port_kiosk,
             "mqtt_websockets_ssl_kiosk": mqtt_websockets_ssl_kiosk,
-            "mqtt_websockets_port_console": mqtt_websockets_port_console,
-            "mqtt_websockets_ssl_console": mqtt_websockets_ssl_console,
         }
         # Finally, return our extension as a list:
         return [search_list_extension]
@@ -2856,8 +2537,8 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                         else:
                             minstamp, maxstamp = TimeSpan(time_ago, timespan.stop)
                     elif time_length == "timespan_specific":
-                        minstamp = int(line_options.get("timespan_start", None))
-                        maxstamp = int(line_options.get("timespan_stop", None))
+                        minstamp = line_options.get("timespan_start", None)
+                        maxstamp = line_options.get("timespan_stop", None)
                         if minstamp is None or maxstamp is None:
                             raise Warning(
                                 "Error trying to create timespan_specific graph. "

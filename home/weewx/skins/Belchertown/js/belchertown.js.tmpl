@@ -7,7 +7,7 @@
 #set global $hemisphere = "northern-hemisphere"
 #end if
 
-var pages = ["graphs", "records", "reports", "about", "pi", "webcam", "imprint", "privacy", "forecast", "extreme"];
+var pages = ["graphs", "records", "reports", "about", "pi"];
 var pageName = "";
 // If this page we're on now is listed as a subpage, use ".." to get to the relative root
 function get_relative_url() {
@@ -46,10 +46,6 @@ function belchertown_debug(message) {
     if (belchertown_debug_config > 0) {
         console.log(message);
     }
-}
-
-function belchertown_log(message) {
-    // console.log(message);
 }
 
 jQuery(document).ready(function() {
@@ -94,23 +90,6 @@ jQuery(document).ready(function() {
     }
     #end if
 
-    #if $Extras.has_key('current_provider_visible') and $Extras.current_provider_visible == '1'
-    //20221024,ho
-    // If the visitor has overridden the current source,provider keep that current source provider going throughout the full site and their visit.
-    if (sessionStorage.getItem('current_provider_override') == "toggleOverride") {
-        belchertown_log("current_provider_override: sessionStorage override in place.");
-        changeCurrentProviderRadio(sessionStorage.getItem('current_provider'));
-    }
-    // current provider switcher
-    try {
-        jQuery('input[type=radio][name=current_provider_radio]').click(function() {
-            changeCurrentProviderRadio(this.value, true);
-        });
-    } catch (err) {
-         // Silently exit
-    }
-    #end if
-
     // After charts are loaded, if an anchor tag is in the URL, let's scroll to it
     jQuery(window).on('load', function() {
         var anchor_tag = location.hash.replace('#', '');
@@ -138,93 +117,6 @@ ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_d
 jQuery.ajaxSetup({
     cache: false
 });
-
-#if $Extras.has_key("show_farmers_rules") and $Extras.show_farmers_rules == '1'
-// 20220816,ho Farmers rules
-// TODO error handling
-function farmers_rules() {
-    farmers_rules = {};
-    jQuery.when(
-        // get farmers rules
-        jQuery.getJSON(get_relative_url() + "/json/farmers-rules.json", function(frules) {
-            farmers_rules = frules;
-        })
-    ).then(function() {
-        // show farmers rules
-        show_farmers_rules(farmers_rules);
-    });
-}
-#end if
-
-#if $Extras.has_key("show_farmers_rules") and $Extras.show_farmers_rules == '1'
-// 20220816,ho Farmers rules
-// https://stackoverflow.com/questions/4959975/generate-random-number-between-two-numbers-in-javascript
-function randomIntFromInterval(min, max) { // min and max included 
-    return Math.floor(Math.random() * (max - min + 1) + min)
-}
-#end if
-
-#if $Extras.has_key("show_farmers_rules") and $Extras.show_farmers_rules == '1'
-// 20220816,ho Farmers rules
-// TODO hasOwnProperty
-function show_farmers_rules(data) {
-    var dname = "No data found!";
-    var frule = "No data found!";
-    var grule = false;
-    try {
-        var month = moment().format("M");
-        var day = moment().format("D");
-        var today = moment().format("D. MMMM");
-        belchertown_debug("show_farmers_rules: month: " + month);
-        belchertown_debug("show_farmers_rules: day: " + day);
-        var drcount = data.months[month].days[day].rules.length;
-        belchertown_debug("show_farmers_rules: day rule count: " + drcount);
-        var rkey = -1;
-
-        if (drcount > 1) {
-            rkey = randomIntFromInterval(1, drcount) - 1;
-            belchertown_debug("show_farmers_rules: day rule using random idx: " + rkey);
-        } else if (drcount == 1) {
-            rkey = 0;
-            belchertown_debug("show_farmers_rules: day rule using idx: " + rkey);
-        } else {
-            var grcount = data.months[month].general.rules.length;
-            belchertown_debug("show_farmers_rules: general rule count: " + grcount);
-            if (grcount > 1) {
-                rkey = randomIntFromInterval(1, grcount) - 1;
-                belchertown_debug("show_farmers_rules: general rule using random idx: " + rkey);
-                grule = true;
-            } else if (grcount == 1) {
-                rkey = 0;
-                belchertown_debug("show_farmers_rules: general rule using idx: " + rkey);
-                grule = true;
-            }
-        }
-        if (rkey >= 0) {
-            jQuery(".farmers-rules-title").html('$obs.label.farmers_rules_title');
-            var datasource_url = data.datasource_url;
-            if (grule) {
-                frule = data.months[month].general.rules[rkey];
-                month = moment().format("MMMM");
-                jQuery(".farmers-rules-day").html('$obs.label.farmers_rules_grule&nbsp;' + month);
-                datasource_url += ('#' + month);
-            } else {
-                dname = data.months[month].days[day].name;
-                frule = data.months[month].days[day].rules[rkey];
-                jQuery(".farmers-rules-day").html('$obs.label.farmers_rules_drule&nbsp;' + today + (dname == ''?'':'&nbsp;-&nbsp;' + dname));
-                // https://stackoverflow.com/questions/1983648/replace-spaces-with-dashes-and-make-all-letters-lower-case
-                datasource_url += ('#' + today.replace(/\s+/g,"_") + (dname == ''?'':':_' + dname.replace(/\s+/g,"_")));
-            }
-            jQuery(".farmers-rules-rule").html(frule);
-            jQuery(".farmers-rules-source").html('$obs.label.farmers_rules_source:&nbsp;<a href="' + datasource_url + '" target="_blank" rel="noreferrer">' + data.datasource + '</a>');
-        }
-    } catch (err) {
-        belchertown_debug("show_farmers_rules: Returned data does not have this value");
-    }
-    belchertown_debug("show_farmers_rules: day: " + dname);
-    belchertown_debug("show_farmers_rules: rule: " + frule);
-}
-#end if
 
 // Get the URL variables. Source: https://stackoverflow.com/a/26744533/1177153
 function getURLvar(k) {
@@ -336,50 +228,6 @@ function get_aqi_color(aqi, returnColor = false) {
     } else {
         jQuery(".aqi_outer").css("color", aqi_color);
     }
-}
-
-// Change the color of the aqi variable according to Umweltbundesamt standards
-function change_aqi_color(aqi_category, container, property="background-color") {
-    aqi_category = parseFloat(aqi_category).toFixed(0);
-    if (aqi_category >= 4) {
-        var aqi_color = "#960032";
-    } else if (aqi_category == 3) {
-        var aqi_color = "#FF5050";
-    } else if (aqi_category == 2) {
-        var aqi_color = "#F0E641";
-    } else if (aqi_category == 1) {
-        var aqi_color = "#50CDAA";
-    } else if (aqi_category == 0) {
-        var aqi_color = "#50F0E6";
-    } else {
-        var aqi_color = "transparent";
-    }
-    jQuery(container).css(property, aqi_color);
-    //TODO
-    if (aqi_category >= 4) {
-        jQuery(container).css("color", "white");
-    } else {
-        jQuery(container).css("color", "#333");
-    }
-}
-
-// Change the label of the aqi variable according to Umweltbundesamt standards
-function change_aqi_label(aqi_category, container=".pws-aqi-category") {
-    aqi_category = parseFloat(aqi_category).toFixed(0);
-    if (aqi_category >= 4) {
-        var aqi_label = "$obs.label.pws_aqi_very_poor";
-    } else if (aqi_category == 3) {
-        var aqi_label = "$obs.label.pws_aqi_poor";
-    } else if (aqi_category == 2) {
-        var aqi_label = "$obs.label.pws_aqi_moderate";
-    } else if (aqi_category == 1) {
-        var aqi_label = "$obs.label.pws_aqi_good";
-    } else if (aqi_category == 0) {
-        var aqi_label = "$obs.label.pws_aqi_very_good";
-    } else {
-        var aqi_label = "$obs.label.pws_aqi_unknown";
-    }
-    jQuery(container).html(aqi_label);
 }
 
 function get_gauge_color(value, options) {
@@ -720,12 +568,12 @@ function changeTheme(themeName, toggleOverride = false) {
         #end if
         #if $Extras.has_key('logo_image_dark') and $Extras.logo_image_dark != ""
         belchertown_debug("Theme: logo_image_dark is defined.");
-        jQuery("#logo_image").attr("src", get_relative_url() + "/images/$Extras.logo_image_dark");
+        jQuery("#logo_image").attr("src", "$Extras.logo_image_dark");
         #end if
         sessionStorage.setItem('currentTheme', 'dark');
     } else if (themeName == "light") {
         // Apply light theme
-        #if $radar_html != "None"
+        #if $radar_html_dark != "None"
         jQuery('.radar_image').html('$radar_html');
         #end if
         jQuery('body').addClass("light");
@@ -735,39 +583,11 @@ function changeTheme(themeName, toggleOverride = false) {
         #end if
         #if $Extras.has_key('logo_image') and $Extras.logo_image != ""
         belchertown_debug("Theme: logo_image is defined.");
-        jQuery("#logo_image").attr("src", get_relative_url() + "/images/$Extras.logo_image");
+        jQuery("#logo_image").attr("src", "$Extras.logo_image");
         #end if
         sessionStorage.setItem('currentTheme', 'light');
     }
 }
-
-#if $Extras.has_key('current_provider_visible') and $Extras.current_provider_visible == '1'
-//20221024,ho
-function changeCurrentProviderRadio(current_provider, toggleOverride = false) {
-    belchertown_log("changeCurrentProviderRadio: Changing to: " + current_provider);
-    sessionStorage.setItem('current_provider', current_provider);
-    if (toggleOverride) {
-        sessionStorage.setItem('current_provider_override', 'toggleOverride');
-    }
-    if (current_provider == "dwd") {
-        jQuery("#provider_radio_dwd").prop("checked", true);
-    } else if (current_provider == "metar") {
-        jQuery("#provider_radio_metar").prop("checked", true);
-    } else if (current_provider == "brightsky") {
-        jQuery("#provider_radio_brightsky").prop("checked", true);
-    } else if (current_provider == "owm") {
-        jQuery("#provider_radio_owm").prop("checked", true);
-    } else if (current_provider == "weatherbit") {
-        jQuery("#provider_radio_weatherbit").prop("checked", true);
-    } else if (current_provider == "conditions") {
-        jQuery("#provider_radio_conditions").prop("checked", true);
-    } else {
-        sessionStorage.setItem('current_provider', 'dwd');
-    }
-    ajaxforecast();
-}
-#end if
-
 
 async function ajaxweewx() {
     resp = await fetch(get_relative_url() + "/json/weewx_data.json");
@@ -810,9 +630,9 @@ function update_weewx_data(data) {
     }
 
     if (count >= 1) {
-        jQuery(".pressure-trend").html('<i class="fa fa-level-down barometer-down"></i>');
+        jQuery(".pressure-trend").html('<i class="fa fa-arrow-down barometer-down"></i>');
     } else {
-        jQuery(".pressure-trend").html('<i class="fa fa-level-up barometer-up"></i>');
+        jQuery(".pressure-trend").html('<i class="fa fa-arrow-up barometer-up"></i>');
     }
 
     // Daily max gust span
@@ -826,13 +646,14 @@ function update_weewx_data(data) {
         // Returned "current" data does not have this value
     }
 
+
     jQuery(".dailystatshigh").html(data["day"]["outTemp"]["max"]);
     jQuery(".dailystatslow").html(data["day"]["outTemp"]["min"]);
     jQuery(".dailystatswindavg").html(data["day"]["wind"]["average"]);
     jQuery(".dailystatswindmax").html(data["day"]["wind"]["max"]);
     jQuery(".dailystatsrain").html(data["day"]["rain"]["sum"]);
     jQuery(".dailystatsrainrate").html(data["day"]["rain"]["max"]);
-    // jQuery(".dailywindrun").html(data["day"]["wind"]["windrun"]);
+    jQuery(".dailywindrun").html(data["day"]["wind"]["windrun"]);
 
     // Month Snapshot Stats Section
     jQuery(".monthstatshigh").html(data["month"]["outTemp"]["max"]);
@@ -863,46 +684,6 @@ function update_weewx_data(data) {
         // Returned "current" data does not have this value
     }
     #end if
-
-    // PWS Airquality
-    try {
-        change_aqi_color(data["current"]["pws_aqi_category"], ".pws-aqi-category");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        change_aqi_color(-1, ".pws-aqi-category"); //Reset to default
-    }
-    try {
-        change_aqi_color(data["current"]["pws_aqi_pm2_5_category"], ".pws_aqi_pm2_5_dot");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        change_aqi_color(-1, ".pws_aqi_pm2_5_dot"); //Reset to default
-    }
-    try {
-        change_aqi_color(data["current"]["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        change_aqi_color(-1, ".pws_aqi_pm10_0_dot"); //Reset to default
-    }
-    try {
-        change_aqi_color(data["current"]["pws_aqi_o3_category"], ".pws_aqi_o3_dot");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        change_aqi_color(-1, ".pws_aqi_o3_dot"); //Reset to default
-    }
-    try {
-        change_aqi_color(data["current"]["pws_aqi_no2_category"], ".pws_aqi_no2_dot");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        change_aqi_color(-1, ".pws_aqi_no2_dot"); //Reset to default
-    }
-
-    try {
-        // Barometer trending by finding a negative number
-        count = (data["current"]["barometer_trend"].match(/-/g) || []).length
-    } catch (err) {
-        // Returned "current" data does not have this value
-    }
-
 }
 
 //  function returns html for moon-icon according to moonphase value and currentTheme setting
@@ -938,8 +719,9 @@ function ajaxforecast() {
         ),
         // Get the forecast
         jQuery.getJSON(get_relative_url() + "/json/forecast.json", function(forecast) {
-            forecast_data = forecast;
-        })
+        forecast_data = forecast;
+            }
+        )
     ).then(function() {
         //  update forecast once both promises are fulfilled
         update_forecast_data(forecast_data);
@@ -1281,20 +1063,16 @@ function show_forcast_alert(data, forecast_provider) {
         if (data['alerts'][0]['response'][0]) {
             for (i = 0; i < data['alerts'][0]['response'].length; i++) {
                 //forecast_alert_title = data['alerts'][0]['response'][i]['details']['name'];
-                /*
                 forecast_alert_title = aeris_coded_alerts(data['alerts'][0]['response'][i]['details']['type']);
                 if (typeof forecast_alert_title === "undefined") {
                     // If the type can't be decoded then use the raw name in the alert. I have seen this for "Hurricane Local Statement" not matching a coded weather value
                     forecast_alert_title = data['alerts'][0]['response'][i]['details']['name'];
                 }
-                */
-                forecast_alert_title = "$obs.label.forecast_alert_title: " + data['alerts'][0]['response'][i]['details']['name'];
                 forecast_alert_body = data['alerts'][0]['response'][i]['details']['body'].replace(/\n/g, '<br>');
                 //forecast_alert_link = data['alerts'][0]['response'][i]['details']['name'];
                 forecast_alert_link = data['alerts'][0]['response'][i]['details']['type'];
-                forecast_alert_begins = tzAdjustedMoment(data['alerts'][0]['response'][i]['timestamps']['begins']).format('$obs.label.time_forecast_alert_expires');
                 forecast_alert_expires = tzAdjustedMoment(data['alerts'][0]['response'][i]['timestamps']['expires']).format('$obs.label.time_forecast_alert_expires');
-                forecast_alerts.push({"title": forecast_alert_title, "body": forecast_alert_body, "link": forecast_alert_link, "begins": forecast_alert_begins, "expires": forecast_alert_expires});
+                forecast_alerts.push({"title": forecast_alert_title, "body": forecast_alert_body, "link": forecast_alert_link, "expires": forecast_alert_expires});
             }
         }
     }
@@ -1303,7 +1081,7 @@ function show_forcast_alert(data, forecast_provider) {
         belchertown_debug("Forecast: There are " + forecast_alerts.length + " alert(s).");
         for (i = 0; i < forecast_alerts.length; i++) {
 
-            alert_link = "<i class='fa fa-exclamation-triangle'></i> <a href='#forecast-alert-" + i + "' data-toggle='modal' data-target='#forecast-alert-" + i + "'><b>" + forecast_alerts[i]["title"] + "</b>, $obs.label.forecast_alert_begins " + forecast_alerts[i]["begins"] + " $obs.label.forecast_alert_expires " + forecast_alerts[i]["expires"] + "</a><br>";
+            alert_link = "<i class='fa fa-exclamation-triangle'></i> <a href='#forecast-alert-" + i + "' data-toggle='modal' data-target='#forecast-alert-" + i + "'>" + forecast_alerts[i]["title"] + " $obs.label.alert_in_effect " + forecast_alerts[i]["expires"] + "</a><br>";
             jQuery(".wx-stn-alert-text").append(alert_link);
 
             forecast_alert_modal += "<!-- Forecast Alert Modal " + i + " -->";
@@ -1316,7 +1094,6 @@ function show_forcast_alert(data, forecast_provider) {
             forecast_alert_modal += "</div>";
             forecast_alert_modal += "<div class='modal-body'>";
             forecast_alert_modal += forecast_alerts[i]["body"];
-            forecast_alert_modal += "<br><p><small>" + " $obs.label.forecast_alert_begins " + forecast_alerts[i]["begins"] + " $obs.label.forecast_alert_expires " + forecast_alerts[i]["expires"] + "</small></p>";
             forecast_alert_modal += "</div>";
             forecast_alert_modal += "<div class='modal-footer'>";
             forecast_alert_modal += "<button type='button' class='btn btn-primary' data-dismiss='modal'>$obs.label.close</button>";
@@ -1341,7 +1118,7 @@ function aeris_aqi_translate(data) {
     else if (data === "unhealthy") data = "$obs.label.aqi_unhealthy";
     else if (data === "very unhealthy") data = "$obs.label.aqi_very_unhealthy";
     else if (data === "hazardous") data = "$obs.label.aqi_hazardous";
-    //20220312,ho else data = "$obs.label.aqi_unknown";
+    else data = "$obs.label.aqi_unknown";
 
     return data;
 }
@@ -1352,100 +1129,13 @@ function update_forecast_data(data) {
     belchertown_debug("Forecast: Updating data");
     belchertown_debug(data);
 
-    try {
-        var forecast_issueTime_dwd = tzAdjustedMoment(data["dwd"]["current"][0]["response"]["obTimestamp"]).format('$obs.label.time_forecast_last_updated');
-    } catch (err) {
-        // Returned "current" data does not have this value
-    }
-
-    //20221024,ho
-    current_provider = sessionStorage.getItem('current_provider');
-    try {
-        if (data["dwd"]["success"]) {
-            if (current_provider == "dwd") {
-                data["current"] = data["dwd"]["current"]
-            }
-        } else {
-            jQuery('input[type=radio]#provider_radio_dwd').remove();
-        }
-
-        if (data["brightsky"]["success"]) {
-            if (current_provider == "brightsky") {
-                data["current"] = data["brightsky"]["current"]
-            }
-        } else {
-            jQuery('input[type=radio]#provider_radio_brightsky').remove();
-        }
-
-        if (data["weatherbit"]["success"]) {
-            if (current_provider == "weatherbit") {
-                data["current"] = data["weatherbit"]["current"]
-            }
-        } else {
-            jQuery('input[type=radio]#provider_radio_weatherbit').remove();
-        }
-
-        if (data["owm"]["success"]) {
-            if (current_provider == "owm") {
-                data["current"] = data["owm"]["current"]
-            }
-        } else {
-            jQuery('input[type=radio]#provider_radio_owm').remove();
-        }
-
-        if (data["aeris_metar"]["success"]) {
-            if (current_provider == "metar") {
-                data["current"] = data["aeris_metar"]["current"]
-            }
-        } else {
-            jQuery('input[type=radio]#provider_radio_metar').remove();
-        }
-
-        if (data["aeris_conditions"]["success"]) {
-            if (current_provider == "conditions") {
-                data["current"] = data["aeris_conditions"]["current"]
-            }
-        } else {
-            jQuery('input[type=radio]#provider_radio_conditions').remove();
-        }
-
-    } catch (err) {
-        // Returned "current" data does not have values
-    }
-
-    // 20220726,ho
-    if (pageName == "console.html") {
-        var forecast_show_conditions = "$Extras.forecast_show_conditions_console";
-        var forecast_show_temperature = "$Extras.forecast_show_temperature_console";
-        var forecast_show_pop = "$Extras.forecast_show_pop_console";
-        var forecast_show_dewpoint = "$Extras.forecast_show_dewpoint_console";
-        var forecast_show_humidity = "$Extras.forecast_show_humidity_console";
-        var forecast_show_windspeed = "$Extras.forecast_show_windspeed_console";
-        var forecast_show_winddirdeg = "$Extras.forecast_show_winddirdeg_console";
-        var forecast_show_pressure = "$Extras.forecast_show_pressure_console";
-    } else {
-        var forecast_show_conditions = "$Extras.forecast_show_conditions";
-        var forecast_show_temperature = "$Extras.forecast_show_temperature";
-        var forecast_show_pop = "$Extras.forecast_show_pop";
-        var forecast_show_dewpoint = "$Extras.forecast_show_dewpoint";
-        var forecast_show_humidity = "$Extras.forecast_show_humidity";
-        var forecast_show_windspeed = "$Extras.forecast_show_windspeed";
-        var forecast_show_winddirdeg = "$Extras.forecast_show_winddirdeg";
-        var forecast_show_pressure = "$Extras.forecast_show_pressure";
-    }
-
-
-    #if $Extras.has_key('current_provider_visible') and $Extras.current_provider_visible == '1'
-    //20221024,ho
-    jQuery(".ProviderRadiosSelected").html(data["current"][0]["response"]["ob"]["source_api"]);
-    #end if
-
     if (forecast_provider == "N/A") {
         jQuery(".forecastrow").hide();
         belchertown_debug("Forecast: No provider, hiding forecastrow");
         return;
     } else if (forecast_provider == "aeris") {
         var forecast_subtitle = tzAdjustedMoment(data["timestamp"]).format('$obs.label.time_forecast_last_updated');
+
         try {
             var wxicon = get_relative_url() + "/images/" + aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png";
         } catch (err) {
@@ -1464,7 +1154,7 @@ function update_forecast_data(data) {
         if (data["aqi"][0]["success"] && !data["aqi"][0]["error"]) {
             jQuery(".wx-aqi").html(data["aqi"][0]["response"][0]["periods"][0]["aqi"]);
             jQuery(".wx-aqi-category").html(aeris_aqi_translate(data["aqi"][0]["response"][0]["periods"][0]["category"]));
-            if ("$Extras.aqi_location_enabled" === "1") jQuery(".aqi_location_outer").html("<br>" + '$obs.label.aqi_source, ' + data["aqi"][0]["response"][0]["place"]["name"]).css('textTransform', 'capitalize');
+            if ("$Extras.aqi_location_enabled" === "1") jQuery(".aqi_location_outer").html("<br>" + data["aqi"][0]["response"][0]["place"]["name"]).css('textTransform', 'capitalize');
             get_aqi_color(data["aqi"][0]["response"][0]["periods"][0]["aqi"]);
             try {
                 jQuery(".station-observations .aqi").html(data["aqi"][0]["response"][0]["periods"][0]["aqi"]);
@@ -1487,6 +1177,7 @@ function update_forecast_data(data) {
             if (("$Extras.forecast_units" == "si") || ("$Extras.forecast_units" == "ca")) {
                 // si and ca = kilometer
                 visibility = data["current"][0]["response"]["ob"]["visibilityKM"];
+
             } else {
                 // us and uk2 and default = miles
                 visibility = data["current"][0]["response"]["ob"]["visibilityMI"];
@@ -1501,27 +1192,6 @@ function update_forecast_data(data) {
             jQuery(".station-observations .visibility").html(visibility_output);
         } catch (err) {
             // Visibility not in the station observation table or any of the unit arrays, so silently exit
-        }
-
-        // Cloudcover text in station observation table
-        try {
-            if (("$Extras.forecast_units" == "si") || ("$Extras.forecast_units" == "ca")) {
-                // si and ca = kilometer
-                cloud_cover = data["current"][0]["response"]["ob"]["sky"];
-            } else {
-                // us and uk2 and default = miles
-                cloud_cover = "N/A"
-            }
-        } catch (err) {
-            // Returned "current" data does not have this value
-        }
-
-        try {
-            cloud_cover_output = parseFloat(parseFloat(cloud_cover)).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["cloudcover"], maximumFractionDigits: unit_rounding_array["cloudcover"]}) + " " + unit_label_array["cloudcover"];
-
-            jQuery(".station-observations .cloud_cover").html(cloud_cover_output);
-        } catch (err) {
-            // Cloudcover not in the station observation table or any of the unit arrays, so silently exit
         }
 
         //  start of new composite version of forecast code
@@ -1622,11 +1292,6 @@ function update_forecast_data(data) {
 
                 var forecast_link = '<a href="' + forecast_link_setup + '" target="_blank">$obs.label.daily_forecast</a>';
 
-                //20220227,ho
-                var windDirDEG = data[(forecast_interval)][0]["response"][0]["periods"][i]["windDirDEG"] || 0;
-                var windDir = data[(forecast_interval)][0]["response"][0]["periods"][i]["windDir"] || 0;
-                var pressureMB = data[(forecast_interval)][0]["response"][0]["periods"][i]["pressureMB"] || 0;
-
                 forecast_row.push({
                     "weekday": weekday,
                     "image_url": image_url,
@@ -1641,10 +1306,7 @@ function update_forecast_data(data) {
                     "precip": precip,
                     "humidity": humidity,
                     "dewPoint": dewPoint,
-                    "forecast_link": forecast_link,
-                    "windDirDEG": windDirDEG,
-                    "windDir": windDir,
-                    "pressureMB": pressureMB
+                    "forecast_link": forecast_link
                 });
             }
 
@@ -1667,73 +1329,46 @@ function update_forecast_data(data) {
                     }
                     output_html += '<span id="weekday">' + forecast_time(i, forecast_interval, forecast_row[i]["weekday"]) + '</span>';
                     output_html += '<br>';
-
-                    //TODO forecast_show_conditions/forecast_show_temperature
-                    if (pageName == "console.html") {
-                        output_html += '<div class="forecast-conditions-1hour">';
-                        output_html += '<img id="icon" src="' + forecast_row[i]["image_url"] + '">';
-                        output_html += '<br>';
-                        output_html += '<span class="forecast-condition-text">' + forecast_row[i]["condition_text"] + '</span>';
+                    output_html += '<div class="forecast-conditions"';
+                    #if $Extras.has_key("forecast_show_humidity_dewpoint") and $Extras.forecast_show_humidity_dewpoint > '0'
+                    output_html += ' style="min-height:155px">'
+                    output_html += '<div class="forecast-temp-graph" style="padding-top:';
+                    //  padding = ( ( highTemp - forecast_row[i]["avgTemp"] = offset ) * 76 / ( rangeTemp) ) where 100 ~ max calculated space available for padding
+                    output_html += parseInt((highTemp - forecast_row[i]["avgTemp"] + offset) * 76 / (rangeTemp)) + 'px';
+                    output_html += '; height:155px">'
+                    #else
+                    output_html += '>'
+                    output_html += '<div class="forecast-temp-graph" style="padding-top:';
+                    //  padding = ( ( highTemp - forecast_row[i]["avgTemp"] = offset ) * 100 / ( rangeTemp) ) where 100 ~ max calculated space available for padding
+                    output_html += parseInt((highTemp - forecast_row[i]["avgTemp"] + offset) * 100 / (rangeTemp)) + 'px">';
+                    #end if
+                    output_html += '<div class="forecast-image">';
+                    output_html += '<img id="icon" src="' + forecast_row[i]["image_url"] + '">';
+                    output_html += '</div>';
+                    output_html += parseFloat(forecast_row[i]["avgTemp"]).toFixed(0) + '&deg;</div>';
+                    output_html += '</div>';
+                    //  output_html += '<br>';
+                    output_html += '<div class="forecast-precip">';
+                    #if $Extras.has_key("forecast_show_humidity_dewpoint") and $Extras.forecast_show_humidity_dewpoint == '1'
+                    output_html += '<div><i class="wi wi-humidity rain-precip"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span></div>';
+                    #elif $Extras.has_key("forecast_show_humidity_dewpoint") and $Extras.forecast_show_humidity_dewpoint == '2'
+                    output_html += '<div><i class="wi wi-raindrops rain-precip"></i> <span>' + parseFloat(forecast_row[i]["dewPoint"]).toFixed(0) + '&deg;</span></div>';
+                    #end if
+                    if (forecast_row[i]["snow_depth"] > 0) {
+                        output_html += '<div class="snow-precip">';
+                        // output_html += '<img src="'+get_relative_url()+'/images/snowflake-icon-15px.png"> <span>';
+                        output_html += '<img src="' + get_relative_url() + '/images/snowflake-icon-15px.png"> <span>' + parseFloat(forecast_row[i]["snow_depth"]).toFixed(0) + '<span> ' + forecast_row[i]["snow_unit"];
                         output_html += '</div>';
-                        output_html += '<span class="forecast-avg">' + parseFloat(forecast_row[i]["maxTemp"]).toFixed(0) + '&deg;</span>';
-                        output_html += '<br>';
+                    } else if (forecast_row[i]["precip"] > 0) {
+                        output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-precip"></i> <span>' + parseFloat(forecast_row[i]["precip"]).toFixed(0) + '%</span>';
                     } else {
-                        output_html += '<div class="forecast-conditions">';
-                        output_html += '<div class="forecast-temp-graph" style="padding-top:';
-                        //  padding = ( ( highTemp - forecast_row[i]["avgTemp"] = offset ) * 100 / ( rangeTemp) ) where 100 ~ max calculated space available for padding 
-                        output_html += parseInt((highTemp - forecast_row[i]["avgTemp"] + offset) * 100 / (rangeTemp)) + 'px">';
-                        output_html += '<div class="forecast-image">';
-                        output_html += '<img id="icon" src="' + forecast_row[i]["image_url"] + '">';
-                        output_html += '</div>';
-                        output_html += parseFloat(forecast_row[i]["avgTemp"]).toFixed(0) + '&deg;</div>';
-                        output_html += '</div>';
+                        output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-no-precip"></i> <span>0%</span>';
                     }
-
-                    if (forecast_show_dewpoint == "1") {
-                        output_html += '<div class="forecast-dewpoint">';
-                        output_html += '<i class="wi wi-thermometer wi-raindrops rain-precip"></i> <span>' + parseFloat(forecast_row[i]["dewPoint"]).toFixed(0) + '&deg;</span>';
-                        output_html += '</div>';
-                    }
-
-                    if (forecast_show_pop == "1") {
-                        output_html += '<div class="forecast-precip">';
-                        if (forecast_row[i]["snow_depth"] > 0) {
-                            output_html += '<div class="snow-precip">';
-                            // output_html += '<img src="'+get_relative_url()+'/images/snowflake-icon-15px.png"> <span>';
-                            output_html += '<img src="' + get_relative_url() + '/images/snowflake-icon-15px.png"> <span>' + parseFloat(forecast_row[i]["snow_depth"]).toFixed(0) + '<span> ' + forecast_row[i]["snow_unit"];
-                            output_html += '</div>';
-                        } else if (forecast_row[i]["precip"] > 0) {
-                            output_html += '<i class="fa fa-umbrella rain-precip"></i> <span>' + parseFloat(forecast_row[i]["precip"]).toFixed(0) + '%</span>';
-                        } else {
-                            output_html += '<i class="fa fa-umbrella rain-no-precip"></i> <span>0%</span>';
-                        }
-                        output_html += '</div>';
-                    }
-
-                    if (forecast_show_humidity == "1") {
-                        output_html += '<div class="forecast-humidity">';
-                        output_html += '<i class="wi wi-humidity humidity-forecast"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span>';
-                        output_html += '</div>';
-                    }
-
-                    if (forecast_show_windspeed == "1") {
-                        output_html += '<div class="forecast-wind" title="' + '$unit.label.windSpeed' + '">';
-                        output_html += '<i class="wi wi-strong-wind"></i> <span>'+ parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span>|<span>' + parseFloat(forecast_row[i]["windGust"]).toFixed(0) + '</span>';        
-                        output_html += '</div>';
-                    }
-
-                    if (forecast_show_winddirdeg == "1") {
-                        output_html += '<div class="forecast-winddirdeg">';
-                        output_html += '<i class="wi wi-wind wi-from-n" style="transform:rotate(' + parseFloat(forecast_row[i]["windDirDEG"]).toFixed(0) + 'deg);font-size:30px"></i> <span style="font-size:12px">' + forecast_row[i]["windDir"] + '</span>';
-                        output_html += '</div>';
-                    }
-
-                    if (forecast_show_pressure == "1") {
-                        output_html += '<div class="forecast-pressure" title="' + '$unit.label.barometer' + '">';
-                        output_html += '<i class="wi wi-barometer"></i> <span>' + parseFloat(forecast_row[i]["pressureMB"]).toFixed(0) + '</span>';
-                        output_html += '</div>';
-                    }
-
+                    output_html += '</div>';
+                    output_html += '<div class="forecast-wind">';
+                    output_html += '<i class="wi wi-strong-wind"></i> <span>' + parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span>';
+                    //  output_html += '<i class="wi wi-strong-wind"></i> <span>'+ parseFloat( forecast_row[i]["windSpeed"] ).toFixed(0) +'</span> | <span> '+ parseFloat( forecast_row[i]["windGust"] ).toFixed(0) +'$unit.label.windSpeed';        
+                    output_html += '</div>';
                     #if $Extras.has_key("forecast_show_daily_forecast_link") and $Extras.forecast_show_daily_forecast_link == '1'
                     output_html += forecast_row[i]["forecast_link"];
                     #end if
@@ -1758,62 +1393,32 @@ function update_forecast_data(data) {
                     }
                     output_html += '<span id="weekday">' + forecast_time(i, forecast_interval, forecast_row[i]["weekday"]) + '</span>';
                     output_html += '<br>';
-
-                    if (forecast_show_conditions == "1") {
-                        output_html += '<div class="forecast-conditions">';
-                        output_html += '<img id="icon" src="' + forecast_row[i]["image_url"] + '" alt="Vorhersagesymbol ' + forecast_row[i]["weekday"] + '">';
-                        output_html += '<div class="forecast-condition-text">' + forecast_row[i]["condition_text"] + '</div>';
+                    output_html += '<div class="forecast-conditions">';
+                    output_html += '<img id="icon" src="' + forecast_row[i]["image_url"] + '">';
+                    output_html += '<br>';
+                    output_html += '<span class="forecast-condition-text">' + forecast_row[i]["condition_text"] + '</span>';
+                    output_html += '</div>';
+                    output_html += '<span class="forecast-high">' + parseFloat(forecast_row[i]["maxTemp"]).toFixed(0) + '&deg;</span> | <span class="forecast-low">' + parseFloat(forecast_row[i]["minTemp"]).toFixed(0) + '&deg;</span>';
+                    output_html += '<br>';
+                    output_html += '<div class="forecast-precip">';
+                    #if $Extras.has_key("forecast_show_humidity_dewpoint") and $Extras.forecast_show_humidity_dewpoint == '1'
+                    output_html += '<i class="wi wi-humidity rain-precip"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span> | ';
+                    #elif $Extras.has_key("forecast_show_humidity_dewpoint") and $Extras.forecast_show_humidity_dewpoint == '2'
+                    output_html += '<i class="wi wi-raindrops rain-precip"></i> <span>' + parseFloat(forecast_row[i]["dewPoint"]).toFixed(0) + '&deg;</span> | ';
+                    #end if
+                    if (forecast_row[i]["snow_depth"] > 0) {
+                        output_html += '<div class="snow-precip">';
+                        output_html += '<img src="' + get_relative_url() + '/images/snowflake-icon-15px.png"> <span>' + parseFloat(forecast_row[i]["snow_depth"]).toFixed(0) + '<span> ' + forecast_row[i]["snow_unit"];
                         output_html += '</div>';
+                    } else if (forecast_row[i]["precip"] > 0) {
+                        output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-precip"></i> <span>' + parseFloat(forecast_row[i]["precip"]).toFixed(0) + '%</span>';
+                    } else {
+                        output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-no-precip"></i> <span>0%</span>';
                     }
-
-                    if (forecast_show_temperature == "1") {
-                        output_html += '<div class="forecast-high">' + parseFloat(forecast_row[i]["minTemp"]).toFixed(0) + '&deg;</span> | <span class="forecast-low">' + parseFloat(forecast_row[i]["maxTemp"]).toFixed(0) + '&deg;</div>';
-                    }
-
-                    if (forecast_show_dewpoint == "1") {
-                        output_html += '<div class="forecast-dewpoint">';
-                        output_html += '<i class="wi wi-thermometer wi-raindrops rain-precip"></i> <span>' + parseFloat(forecast_row[i]["dewPoint"]).toFixed(0) + '&deg;</span>';
-                        output_html += '</div>';
-                    }
-
-                    if (forecast_show_pop == "1") {
-                        output_html += '<div class="forecast-precip">';
-                        if (forecast_row[i]["snow_depth"] > 0) {
-                            output_html += '<div class="snow-precip">';
-                            output_html += '<img src="' + get_relative_url() + '/images/snowflake-icon-15px.png"> <span>' + parseFloat(forecast_row[i]["snow_depth"]).toFixed(0) + '<span> ' + forecast_row[i]["snow_unit"];
-                            output_html += '</div>';
-                        } else if (forecast_row[i]["precip"] > 0) {
-                            output_html += '<i class="fa fa-umbrella rain-precip"></i> <span>' + parseFloat(forecast_row[i]["precip"]).toFixed(0) + '%</span>';
-                        } else {
-                            output_html += '<i class="fa fa-umbrella rain-no-precip"></i> <span>0%</span>';
-                        }
-                        output_html += '</div>';
-                    }
-
-                    if (forecast_show_humidity == "1") {
-                        output_html += '<div class="forecast-humidity">';
-                        output_html += '<i class="wi wi-humidity humidity-forecast"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span>';
-                        output_html += '</div>';
-                    }
-
-                    if (forecast_show_windspeed == "1") {
-                        output_html += '<div class="forecast-wind">';
-                        output_html += '<i class="wi wi-strong-wind"></i> <span>' + parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span> | <span> ' + parseFloat(forecast_row[i]["windGust"]).toFixed(0) + '$unit.label.windSpeed' + '</span>';
-                        output_html += '</div>';
-                    }
-
-                    if (forecast_show_winddirdeg == "1") {
-                        output_html += '<div class="forecast-winddirdeg">';
-                        output_html += '<i class="wi wi-wind wi-from-n" style="transform:rotate(' + parseFloat(forecast_row[i]["windDirDEG"]).toFixed(0) + 'deg);font-size:30px"></i> <span>' + forecast_row[i]["windDir"] + '</span>';
-                        output_html += '</div>';
-                    }
-
-                    if (forecast_show_pressure == "1") {
-                        output_html += '<div class="forecast-pressure">';
-                        output_html += '<i class="wi wi-barometer"></i> <span>' + parseFloat(forecast_row[i]["pressureMB"]).toFixed(0) + '$unit.label.barometer' + '</span>';
-                        output_html += '</div>';
-                    }
-
+                    output_html += '</div>';
+                    output_html += '<div class="forecast-wind">';
+                    output_html += '<i class="wi wi-strong-wind"></i> <span>' + parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span> | <span> ' + parseFloat(forecast_row[i]["windGust"]).toFixed(0) + '$unit.label.windSpeed';
+                    output_html += '</div>';
                     #if $Extras.has_key("forecast_show_daily_forecast_link") and $Extras.forecast_show_daily_forecast_link == '1'
                     output_html += forecast_row[i]["forecast_link"];
                     #end if
@@ -1834,7 +1439,6 @@ function update_forecast_data(data) {
             }
             // Show the forecast_subtitle
             jQuery(".forecast-subtitle").html("$obs.label.forecast_last_updated " + forecast_subtitle);
-            jQuery(".forecast-issueTime-dwd").html(forecast_issueTime_dwd);
         }
 
 //	End of new composite version of forecast code
@@ -1852,29 +1456,29 @@ function update_forecast_data(data) {
 #end if
 //  function to display selected forecast according to value of interval (1, 3 or 24); 0 hides all forecasts
 function forecast_select(interval) {
-    if (interval == 0) {
-        jQuery(".forecastrow").hide();
-    } else {
-        oldinterval = sessionStorage.getItem("forecastInterval");
-        if (interval != oldinterval) {
-            //  hide the old forecast
-            var forecast = document.getElementById((oldinterval + "hour-selected-forecast"));
-            var button = document.getElementById(("button" + oldinterval));
-            if (forecast != null) forecast.style.display = "none";
-            if (button != null) button.style.borderStyle = "hidden";
-            //  display the new forecast and store its interval value
-            forecast = document.getElementById((interval + "hour-selected-forecast"));
-            button = document.getElementById(("button" + interval));
-            if (forecast != null) forecast.style.display = "block";
-            if (button != null) button.style.borderStyle = "solid";
-            sessionStorage.setItem("forecastInterval", interval);
+        if (interval == 0) {
+            jQuery(".forecastrow").hide();
+        } else {
+            oldinterval = sessionStorage.getItem("forecastInterval");
+            if (interval != oldinterval) {
+                //  hide the old forecast
+                var forecast = document.getElementById((oldinterval + "hour-selected-forecast"));
+                var button = document.getElementById(("button" + oldinterval));
+                if (forecast != null) forecast.style.display = "none";
+                if (button != null) button.style.borderStyle = "hidden";
+                //  display the new forecast and store its interval value
+                forecast = document.getElementById((interval + "hour-selected-forecast"));
+                button = document.getElementById(("button" + interval));
+                if (forecast != null) forecast.style.display = "block";
+                if (button != null) button.style.borderStyle = "solid";
+                sessionStorage.setItem("forecastInterval", interval);
+            }
         }
     }
-}
 
 function forecast_default(interval) {
-    sessionStorage.setItem("defaultInterval", interval);
-}
+        sessionStorage.setItem("defaultInterval", interval);
+    }
 
 //  function adjusts daytime format for forecast_1hr & _3hr; assumes "ddd LT" format for daytime
 function forecast_time(i, interval, daytime) {
@@ -1908,18 +1512,17 @@ function ajaximages(section = false, reload_timer_interval_seconds = false) {
     // Update images within the specific section
     if (!section || section == "radar") {
         belchertown_debug("Updating radar image");
-        // Reload only Windy Radar
-        if (document.querySelectorAll(".radar_image img").length > 0) {
-            var radar_img = document.querySelectorAll(".radar_image img")[0].src;
+    // Reload images
+        if (document.querySelectorAll(".radar-map img").length > 0) {
+            var radar_img = document.querySelectorAll(".radar-map img")[0].src;
             var new_radar_img = radar_img + "&t=" + Math.floor(Math.random() * 999999999);
-            document.querySelectorAll(".radar_image img")[0].src = new_radar_img;
+            document.querySelectorAll(".radar-map img")[0].src = new_radar_img;
             //var radar_html = jQuery('.radar-map').children('img').attr('src').split('?')[0] // Get the img src and remove everything after "?" so we don't stack ?'s onto the image during updates
             //jQuery('.radar-map').children('img').attr('src', radar_html + "?" + Math.floor(Math.random() * 999999999));
         }
         // Reload iframe - https://stackoverflow.com/a/4249946/1177153
-        //if (document.querySelectorAll(".radar-map iframe").length > 0) {
-        if (document.querySelectorAll(".radar_mage iframe").length > 0) {
-            jQuery(".radar_image iframe").each(function() {
+        if (document.querySelectorAll(".radar-map iframe").length > 0) {
+            jQuery(".radar-map iframe").each(function() {
                 jQuery(this).attr('src', function(i, val) {return val;});
             });
         }
@@ -1947,11 +1550,6 @@ var inactive_timestamp = "";
 
 // MQTT connect
 function connect() {
-    #if $Extras.has_key("mqtt_websockets_ssl") and $Extras.mqtt_websockets_ssl == '1'
-    belchertown_debug("MQTT: Connecting to MQTT Websockets: $Extras.mqtt_websockets_host $Extras.mqtt_websockets_port (SSL Enabled)");
-    #else
-    belchertown_debug("MQTT: Connecting to MQTT Websockets: $Extras.mqtt_websockets_host $Extras.mqtt_websockets_port (SSL Disabled)");
-    #end if
     if (reconnect_using_inactive_timestamp) {
             updated = tzAdjustedMoment(inactive_timestamp).format("$obs.label.time_last_updated");
         } else {
@@ -1973,27 +1571,6 @@ function connect() {
         var useSSL = false;
         #end if
         client = new Paho.Client("$Extras.mqtt_websockets_host_kiosk", $mqtt_websockets_port_kiosk, mqttclient);
-    }
-    else {
-        #if $Extras.has_key("mqtt_websockets_ssl") and $Extras.mqtt_websockets_ssl == '1'
-        belchertown_debug("MQTT: Connecting to MQTT Websockets: $Extras.mqtt_websockets_host $Extras.mqtt_websockets_port (SSL Enabled)");
-        var useSSL = true;
-        #else
-        belchertown_debug("MQTT: Connecting to MQTT Websockets: $Extras.mqtt_websockets_host $Extras.mqtt_websockets_port (SSL Disabled)");
-        var useSSL = false;
-        #end if
-        client = new Paho.Client("$Extras.mqtt_websockets_host", $Extras.mqtt_websockets_port, mqttclient);
-    }
-    #elif $Extras.has_key("mqtt_websockets_host_console") and $Extras.mqtt_websockets_host_console != ""
-    if (pageName == "console.html") {
-        #if $Extras.has_key("mqtt_websockets_ssl_console") and $Extras.mqtt_websockets_ssl_console == '1'
-        belchertown_debug("MQTT: Connecting to MQTT Websockets: $Extras.mqtt_websockets_host_console $mqtt_websockets_port_console (SSL Enabled)");
-        var useSSL = true;
-        #else
-        belchertown_debug("MQTT: Connecting to MQTT Websockets: $Extras.mqtt_websockets_host_console $mqtt_websockets_port_console (SSL Disabled)");
-        var useSSL = false;
-        #end if
-        client = new Paho.Client("$Extras.mqtt_websockets_host_console", $mqtt_websockets_port_console, mqttclient);
     }
     else {
         #if $Extras.has_key("mqtt_websockets_ssl") and $Extras.mqtt_websockets_ssl == '1'
@@ -2059,7 +1636,7 @@ function onConnect() {
     if (getURLvar("stayconnected") && (getURLvar("stayconnected") == "true" || getURLvar("stayconnected") == "1")) {
         belchertown_debug("MQTT: stayconnected URL var found: ignoring disconnect_live_website_visitor value");
     } else {
-        if  (pageName == "pi" || pageName == "kiosk.html" || pageName == "console.html") {
+        if  (pageName == "pi" || pageName == "kiosk.html") {
             belchertown_debug("MQTT: ignoring disconnect_live_website_visitor value for page: " + pageName);
         }
         else {
@@ -2150,7 +1727,7 @@ function update_current_wx(data) {
     if (data.hasOwnProperty("interval_minute")) {
         // Delays are recommended to allow the other skins to complete processing
         belchertown_debug("MQTT: MQTT message indicates this is an archive interval.");
-        if (pageName == "pi" || pageName == "kiosk.html" || pageName == "console.html") {
+        if (pageName == "pi" || pageName == "kiosk.html") {
             belchertown_debug("Skipping chart update for page " + pageName + ", no charts to be updated.");
         }
         else {
@@ -2235,13 +1812,6 @@ function update_current_wx(data) {
         jQuery(".outtemp").html(outTemp);
     }
 
-    // Temperature C PWS Weiherhammer
-    if (data.hasOwnProperty("outTemp")) {
-        outTemp = parseFloat(parseFloat(data["outTemp"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]});
-        get_outTemp_color("degree_C", outTemp);
-        jQuery(".outtemp").html(outTemp);
-    }
-
     // Apparent Temperature US
     if (data.hasOwnProperty("appTemp_F")) {
         jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["appTemp_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
@@ -2250,16 +1820,6 @@ function update_current_wx(data) {
     // Apparent Temperature Metric
     if (data.hasOwnProperty("appTemp_C")) {
         jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["appTemp_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
-    }
-
-    // Apparent Temperature Metric PWS Weiherhammer
-    //if (data.hasOwnProperty("appTemp")) {
-    //    jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["appTemp"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
-    //}
-
-    // THSW Temperature Metric PWS Weiherhammer
-    if (data.hasOwnProperty("thswIndex")) {
-        jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["thswIndex"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
     }
 
     // Wind
@@ -2278,10 +1838,6 @@ function update_current_wx(data) {
     // Windspeed Metric
     if (data.hasOwnProperty("windSpeed_kph")) {
         jQuery(".curwindspeed").html(parseFloat(parseFloat(data["windSpeed_kph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
-    }
-    // Windspeed Metric PWS Weiherhammer
-    if (data.hasOwnProperty("windSpeed")) {
-        jQuery(".curwindspeed").html(parseFloat(parseFloat(data["windSpeed"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
     }
     // Windspeed METRICWX
     if (data.hasOwnProperty("windSpeed_mps")) {
@@ -2312,10 +1868,6 @@ function update_current_wx(data) {
     if (data.hasOwnProperty("windGust_kph")) {
         jQuery(".curwindgust").html(parseFloat(parseFloat(data["windGust_kph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}));
     }
-    // Wind Gust Metric PWS Weiherhammer
-    if (data.hasOwnProperty("windGust")) {
-        jQuery(".curwindgust").html(parseFloat(parseFloat(data["windGust"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}));
-    }
     // Wind Gust METRICWX
     if (data.hasOwnProperty("windGust_mps")) {
         jQuery(".curwindgust").html(parseFloat(parseFloat(data["windGust_mps"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}));
@@ -2330,91 +1882,16 @@ function update_current_wx(data) {
     }
 
     // Windchill US
-    if (data.hasOwnProperty("windchill_F")) {
-        jQuery(".curwindchill").html(parseFloat(parseFloat(data["windchill_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp");
+    if (data.hasOwnProperty("windchill")) {
+        jQuery(".curwindchill").html(parseFloat(parseFloat(data["windchill"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp");
     }
     // Windchill Metric
     if (data.hasOwnProperty("windchill_C")) {
         jQuery(".curwindchill").html(parseFloat(parseFloat(data["windchill_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp");
     }
-    // Windchill Metric PWS Weiherhammer
-    if (data.hasOwnProperty("windchill")) {
-        jQuery(".curwindchill").html(parseFloat(parseFloat(data["windchill"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp");
-    }
-
-    // Daily Windrun Metric PWS Weiherhammer
-    if (data.hasOwnProperty("dayWindrun")) {
-        jQuery(".dailywindrun").html("$obs.label.windrun: " + parseFloat(parseFloat(data["dayWindrun"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windrun"], maximumFractionDigits: unit_rounding_array["windrun"]}) + "$unit.label.windrun");
-    }
-
-    // PWS Weiherhammer Airquality
-    if (data.hasOwnProperty("pws_aqi_category")) {
-        change_aqi_label(data["pws_aqi_category"]);
-        change_aqi_color(data["pws_aqi_category"], ".pws-aqi-category");
-    }
-    if (data.hasOwnProperty("sds011_pm2_5")) {
-        jQuery(".sds011-pm2_5").html(parseFloat(parseFloat(data["sds011_pm2_5"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["sds011_pm2_5"], maximumFractionDigits: unit_rounding_array["sds011_pm2_5"]}) + " $unit.label.sds011_pm2_5");
-    }
-    if (data.hasOwnProperty("pws_aqi_pm2_5_category")) {
-        change_aqi_color(data["pws_aqi_pm2_5_category"], ".pws_aqi_pm2_5_dot");
-    }
-    if (data.hasOwnProperty("sds011_pm10_0")) {
-        jQuery(".sds011-pm10_0").html(parseFloat(parseFloat(data["sds011_pm10_0"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["sds011_pm10_0"], maximumFractionDigits: unit_rounding_array["sds011_pm10_0"]}) + " $unit.label.sds011_pm10_0");
-    }
-    if (data.hasOwnProperty("pws_aqi_pm10_0_category")) {
-        change_aqi_color(data["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot");
-    }
-    if (data.hasOwnProperty("uba_o3")) {
-        jQuery(".uba-o3").html(parseFloat(parseFloat(data["uba_o3"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["uba_o3"], maximumFractionDigits: unit_rounding_array["uba_o3"]}) + " $unit.label.uba_o3");
-    }
-    if (data.hasOwnProperty("pws_aqi_o3_category")) {
-        change_aqi_color(data["pws_aqi_o3_category"], ".pws_aqi_o3_dot");
-    }
-    if (data.hasOwnProperty("uba_no2")) {
-        jQuery(".uba-no2").html(parseFloat(parseFloat(data["uba_no2"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["uba_no2"], maximumFractionDigits: unit_rounding_array["uba_no2"]}) + " $unit.label.uba_no2");
-    }
-    if (data.hasOwnProperty("pws_aqi_no2_category")) {
-        change_aqi_color(data["pws_aqi_no2_category"], ".pws_aqi_no2_dot");
-    }
-
-    // debug current Sunshine Symbol
-    var sun_output = '';
-    if (data.hasOwnProperty("sunshine1")) {
-        if (parseInt(data["sunshine1"]) > 0) {
-            sun_output += '<i class="fa fa-sun-o"></i><sup>1</sup>';
-        }
-    }
-    if (data.hasOwnProperty("sunshine2")) {
-        if (parseInt(data["sunshine2"]) > 0) {
-            sun_output += '<i class="fa fa-sun-o"></i><sup>2</sup>';
-        }
-    }
-    if (data.hasOwnProperty("sunshine3")) {
-        if (parseInt(data["sunshine3"]) > 0) {
-            sun_output += '<i class="fa fa-sun-o"></i><sup>3</sup>';
-        }
-    }
-    jQuery(".current-sunshine-symbol").html(sun_output);
-
-    // debug avg10m Symbols
-    var avg10m_output = '';
-    if ((data.hasOwnProperty("thunderstorm_avg10m")) && (parseFloat(data["thunderstorm_avg10m"]) > 0.0)) {
-        avg10m_output = '<i class="wi wi-lightning"></i>';
-    } else if ((data.hasOwnProperty("raining_avg10m")) && (parseFloat(data["raining_avg10m"]) > 0.0)) {
-        avg10m_output = '<i class="wi wi-rain"></i>';
-    } else if ((data.hasOwnProperty("radiation")) && (parseFloat(data["radiation"]) > 100.0) && (data.hasOwnProperty("sunshine_avg10m"))) {
-        var sunshine_avg10m = parseFloat(data["sunshine_avg10m"]).toFixed(2);
-        if (sunshine_avg10m == 0.0) {
-            avg10m_output = '<i class="wi wi-cloudy"></i>';
-        } else if (sunshine_avg10m == 1.0) {
-            avg10m_output = '<i class="wi wi-day-sunny"></i>';
-        } else if ((sunshine_avg10m > 0.0) && (sunshine_avg10m < 1.0)) {
-            avg10m_output = '<i class="wi wi-day-cloudy"></i>';
-        }
-    }
-    jQuery(".avg10m-obs-symbols").html(avg10m_output);
 };
 #end if
+
 
 Highcharts.setOptions({
     global: {
@@ -2733,7 +2210,7 @@ function showChart(json_file, prepend_renderTo = false) {
                                     var rounding = point.series.userOptions.rounding;
                                     var mirrored = point.series.userOptions.mirrored_value;
                                     var numberFormat = point.series.userOptions.numberFormat ? point.series.userOptions.numberFormat : "";
-                                    return '<span style="color:' + point.series.color + '">\u25CF</span> ' + point.series.name + ': ' + highcharts_tooltip_factory(point.y, point_obsType, true, rounding, mirrored, numberFormat);
+                                    return "<span style='color:" + point.series.color + "'>\u25CF</span> " + point.series.name + ': ' + highcharts_tooltip_factory(point.y, point_obsType, true, rounding, mirrored, numberFormat);
                                 })
                             );
                         } catch (e) {
@@ -2746,7 +2223,7 @@ function showChart(json_file, prepend_renderTo = false) {
                                 return tzAdjustedMoment(this.x / 1000).format(tooltip_date_format) + '<br><b>' + highcharts_tooltip_factory(this.point.y, point_obsType, true, rounding, mirrored);
                             } else if (this.series.userOptions.type == "scatter") {
                                 // Catch anything else that might be a scatter plot. Scatter plots will just show x,y coordinates without this.
-                                return '<span style="color:' + this.series.color + '">\u25CF</span> ' + this.series.name + ': ' + Highcharts.numberFormat(this.y);
+                                return "<span style='color:" + this.series.color + "'>\u25CF</span> " + this.series.name + ': ' + Highcharts.numberFormat(this.y);
                             } else {
                                 return tooltip.defaultFormatter.call(this, tooltip);
                             }
@@ -2880,320 +2357,6 @@ function showChart(json_file, prepend_renderTo = false) {
 
                 belchertown_debug(options.chart.renderTo + ": " + s.obsType + " is on yAxis " + this_yAxis);
 
-                // yAxis AQI PlotLines PM10
-                // https://github.com/poblabs/weewx-belchertown/issues/682
-                // PM10 Umweltbundesamt LQI levels, labels and colors
-                // https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex
-                if (s.obsType == "sds011_pm10_0") {
-                    belchertown_debug('yAxis plotLines true');
-
-                    var yAxis_plotlines = [];
-
-                    const eaqi = [{
-                        color: "#50F0E6",
-                        label: "sehr gut",
-                        level: 20
-                    }, {
-                        color: "#50CDAA",
-                        label: "gut",
-                        level: 35
-                    }, {
-                        color: "#F0E641",
-                        label: "mäßig",
-                        level: 50
-                    }, {
-                        color: "#FF5050",
-                        label: "schlecht",
-                        level: 100
-                    }, {
-                        color: "#960032",
-                        label: "sehr schlecht",
-                        level: 200
-                    }];
-
-                    for (i = 0; i < eaqi.length; i++) {
-                        yAxis_plotlines.push({
-                            color: eaqi[i].color,
-                            value: eaqi[i].level,
-                            label: {
-                                text: eaqi[i].label,
-                                x: 0,
-                                y: 15,
-                                style: {
-                                    color: eaqi[i].color,
-                                    //fontWeight: 'bold'
-                                }
-                            },
-                            width: 1,
-                            dashStyle: 'longdashdot',
-                            zIndex : 3
-                        });
-                    }
-
-                    // Add plotlines to yAxis options
-                    options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
-                    belchertown_debug(yAxis_plotlines);
-                }
-
-                // yAxis AQI PlotLines PM2.5
-                // https://github.com/poblabs/weewx-belchertown/issues/682
-                // PM2.5 LQI levels, labels and colors
-                // https://de.euronews.com/wetter/copernicus-air-quality-index
-                if (s.obsType == "sds011_pm2_5") {
-                    belchertown_debug('yAxis plotLines true');
-
-                    var yAxis_plotlines = [];
-
-                    const eaqi = [{
-                        color: "#50F0E6",
-                        label: "sehr gut",
-                        level: 10
-                    }, {
-                        color: "#50CDAA",
-                        label: "gut",
-                        level: 20
-                    }, {
-                        color: "#F0E641",
-                        label: "mäßig",
-                        level: 25
-                    }, {
-                        color: "#FF5050",
-                        label: "schlecht",
-                        level: 50
-                    }, {
-                        color: "#960032",
-                        label: "sehr schlecht",
-                        level: 200
-                    }];
-
-                    for (i = 0; i < eaqi.length; i++) {
-                        yAxis_plotlines.push({
-                            color: eaqi[i].color,
-                            value: eaqi[i].level,
-                            label: {
-                                text: eaqi[i].label,
-                                x: 0,
-                                y: 15,
-                                style: {
-                                    color: eaqi[i].color,
-                                    //fontWeight: 'bold'
-                                }
-                            },
-                            width: 1,
-                            dashStyle: 'longdashdot',
-                            zIndex : 3
-                        });
-                    }
-
-                    // Add plotlines to yAxis options
-                    options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
-                    belchertown_debug(yAxis_plotlines);
-                }
-
-                // yAxis AQI PlotLines NO2
-                // https://github.com/poblabs/weewx-belchertown/issues/682
-                // NO2 Umweltbundesamt LQI levels, labels and colors
-                // https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex
-                if (s.obsType == "uba_no2") {
-                    belchertown_debug('yAxis plotLines true');
-
-                    var yAxis_plotlines = [];
-
-                    const eaqi = [{
-                        color: "#50F0E6",
-                        label: "sehr gut",
-                        level: 20
-                    }, {
-                        color: "#50CDAA",
-                        label: "gut",
-                        level: 40
-                    }, {
-                        color: "#F0E641",
-                        label: "mäßig",
-                        level: 100
-                    }, {
-                        color: "#FF5050",
-                        label: "schlecht",
-                        level: 200
-                    }, {
-                        color: "#960032",
-                        label: "sehr schlecht",
-                        level: 300
-                    }];
-
-                    for (i = 0; i < eaqi.length; i++) {
-                        yAxis_plotlines.push({
-                            color: eaqi[i].color,
-                            value: eaqi[i].level,
-                            label: {
-                                text: eaqi[i].label,
-                                x: 0,
-                                y: 15,
-                                style: {
-                                    color: eaqi[i].color,
-                                    //fontWeight: 'bold'
-                                }
-                            },
-                            width: 1,
-                            dashStyle: 'longdashdot',
-                            zIndex : 3
-                        });
-                    }
-
-                    // Add plotlines to yAxis options
-                    options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
-                    belchertown_debug(yAxis_plotlines);
-                }
-
-                // yAxis AQI PlotLines O3
-                // https://github.com/poblabs/weewx-belchertown/issues/682
-                // O3 Umweltbundesamt LQI levels, labels and colors
-                // https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex
-                if (s.obsType == "uba_o3") {
-                    belchertown_debug('yAxis plotLines true');
-
-                    var yAxis_plotlines = [];
-
-                    const eaqi = [{
-                        color: "#50F0E6",
-                        label: "sehr gut",
-                        level: 60
-                    }, {
-                        color: "#50CDAA",
-                        label: "gut",
-                        level: 120
-                    }, {
-                        color: "#F0E641",
-                        label: "mäßig",
-                        level: 180
-                    }, {
-                        color: "#FF5050",
-                        label: "schlecht",
-                        level: 240
-                    }, {
-                        color: "#960032",
-                        label: "sehr schlecht",
-                        level: 340
-                    }];
-
-                    for (i = 0; i < eaqi.length; i++) {
-                        yAxis_plotlines.push({
-                            color: eaqi[i].color,
-                            value: eaqi[i].level,
-                            label: {
-                                text: eaqi[i].label,
-                                x: 0,
-                                y: 15,
-                                style: {
-                                    color: eaqi[i].color,
-                                    //fontWeight: 'bold'
-                                }
-                            },
-                            width: 1,
-                            dashStyle: 'longdashdot',
-                            zIndex : 3
-                        });
-                    }
-
-                    // Add plotlines to yAxis options
-                    options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
-                    belchertown_debug(yAxis_plotlines);
-                }
-
-                // yAxis AQI PlotLines SO2
-                // https://github.com/poblabs/weewx-belchertown/issues/682
-                // SO2 LQI levels, labels and colors
-                // https://de.euronews.com/wetter/copernicus-air-quality-index
-                if (s.obsType == "aeris_so2") {
-                    belchertown_debug('yAxis plotLines true');
-
-                    var yAxis_plotlines = [];
-
-                    const eaqi = [{
-                        color: "#50F0E6",
-                        label: "sehr gut",
-                        level: 100
-                    }, {
-                        color: "#50CDAA",
-                        label: "gut",
-                        level: 200
-                    }, {
-                        color: "#F0E641",
-                        label: "mäßig",
-                        level: 350
-                    }, {
-                        color: "#FF5050",
-                        label: "schlecht",
-                        level: 500
-                    }, {
-                        color: "#960032",
-                        label: "sehr schlecht",
-                        level: 1250
-                    }];
-
-                    for (i = 0; i < eaqi.length; i++) {
-                        yAxis_plotlines.push({
-                            color: eaqi[i].color,
-                            value: eaqi[i].level,
-                            label: {
-                                text: eaqi[i].label,
-                                x: 0,
-                                y: 15,
-                                style: {
-                                    color: eaqi[i].color,
-                                    //fontWeight: 'bold'
-                                }
-                            },
-                            width: 1,
-                            dashStyle: 'longdashdot',
-                            zIndex : 3
-                        });
-                    }
-
-                    // Add plotlines to yAxis options
-                    options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
-                    belchertown_debug(yAxis_plotlines);
-                }
-
-                // yAxis PlotLines equivalent temperature "Schwüle"
-                // https://github.com/poblabs/weewx-belchertown/issues/682
-                // equivalent temperature levels, labels and colors
-                // https://www.spektrum.de/lexikon/geographie/aequivalenttemperatur/437
-                if (s.obsType == "outEquiTemp") {
-                    belchertown_debug('yAxis plotLines true');
-
-                    var yAxis_plotlines = [];
-
-                    const stemp = [{
-                        color: "#FF5733",
-                        label: "ab 50 &deg;C Schw&uuml;legrenze",
-                        level: 50
-                    }];
-
-                    for (i = 0; i < stemp.length; i++) {
-                        yAxis_plotlines.push({
-                            color: stemp[i].color,
-                            value: stemp[i].level,
-                            label: {
-                                text: stemp[i].label,
-                                x: 0,
-                                y: 15,
-                                style: {
-                                    color: stemp[i].color,
-                                    //fontWeight: 'bold'
-                                }
-                            },
-                            width: 1,
-                            dashStyle: 'longdashdot',
-                            zIndex : 3
-                        });
-                    }
-
-                    // Add plotlines to yAxis options
-                    options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
-                    belchertown_debug(yAxis_plotlines);
-                }
-
                 // Some charts may require a defined min/max on the yAxis
                 options.yAxis[this_yAxis].min = s.yAxis_min !== "undefined" ? s.yAxis_min : null;
                 options.yAxis[this_yAxis].max = s.yAxis_max !== "undefined" ? s.yAxis_max : null;
@@ -3229,7 +2392,7 @@ function showChart(json_file, prepend_renderTo = false) {
                     options.yAxis[this_yAxis].minorGridLineWidth = 1;
                 }
 
-                if (s.obsType == "windDir" || s.obsType == "wind") {
+                if (s.obsType == "windDir") {
                     options.yAxis[this_yAxis].tickInterval = 90;
                     options.yAxis[this_yAxis].labels = {
                         useHTML: true,

@@ -1,0 +1,47 @@
+/* Meteogramm Wettersoftware */
+
+.mtg-credits {
+    font-family: inherit;
+    font-size: calc(8px + 0.3vw);
+    line-height: 1.5;
+    padding-right: unset;
+    color: inherit;
+    margin-top: -70px;
+    text-align: center;
+}
+
+.mtg-credits a {
+    color: #e5554e;
+    text-decoration: none;
+}
+
+/* https://www.w3schools.com/css/css_rwd_mediaqueries.asp */
+/* Extra small devices (phones, 600px and down) */
+@media only screen and (max-width: 600px) {
+}
+
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media only screen and (min-width: 600px) {
+}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (min-width: 768px) {
+}
+
+@media only screen and (max-width: 800px) {
+}
+
+/* iPad Landscape */
+@media only screen and (min-device-width : 768px) and (max-device-width : 1024px) and (orientation : landscape) {
+}
+
+/* Large devices (laptops/desktops, 992px and up) */
+@media only screen and (min-width: 992px) {
+}
+
+/* Extra large devices (large laptops and desktops, 1200px and up) */
+@media only screen and (min-width: 1200px) {
+}
+
+@media only screen and (max-width: 1196px) {
+}

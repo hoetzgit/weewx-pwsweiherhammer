@@ -30,19 +30,19 @@
 #
 # Webcam/AllSky to Website
 */1 * * * * /bin/bash /usr/local/bin/create_allsky_weather_data.sh >/dev/null 2>&1
-*/1 * * * * /bin/bash /usr/local/bin/copy_allsky_image_to_belchertown.sh >/dev/null 2>&1 && /bin/bash /usr/local/bin/copy_allsky_image_to_pwsdashboard.sh >/dev/null 2>&1
-*/1 * * * * /bin/bash /usr/local/bin/copy_webcam_image_to_belchertown.sh >/dev/null 2>&1 && /bin/bash /usr/local/bin/copy_webcam_image_to_pwsdashboard.sh >/dev/null 2>&1
+*/1 * * * * /bin/bash /usr/local/bin/copy_allsky_image_to_pws.sh >/var/log/weewx/copy_allsky_image_to_pws.log 2>&1
+*/1 * * * * /bin/bash /usr/local/bin/copy_webcam_image_to_pws.sh >/var/log/weewx/copy_webcam_image_to_pws.log 2>&1
 #
-# DWD Forecast Waldbrandgefahrenindex (Belchertown skin)
+# DWD Forecast Waldbrandgefahrenindex (Weiherhammer skin)
 20 6 * 3,4,5,6,7,8,9,10 * /bin/bash /usr/local/bin/weewx-DWD/wget-dwd-wbx >/var/log/weewx/wget-dwd-wbx.log 2>&1
 22 6 * 3,4,5,6,7,8,9,10 * /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --wbx-only >/var/log/weewx/forecast-pwsWeiherhammer-wbx.log
 #
-# DWD Forecast and Warnings (Belchertown and weewx-wdc skin) TODO: Parameter o. other conf
+# DWD Forecast and Warnings (Weiherhammer and weewx-wdc skin) TODO: conf files
 14,29,44,59 * * * * /bin/bash /usr/local/bin/weewx-DWD/wget-dwd-pwsWeiherhammer >/var/log/weewx/wget-dwd.log 2>&1
-# Belchertown
+# Weiherhammer skin
 14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-cap-warnings-pwsWeiherhammer --config=/home/weewx/weewx.conf --resolution=county --verbose >/var/log/weewx/dwd-cap-warnings-pwsWeiherhammer-county.log 2>&1
 14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-cap-warnings-pwsWeiherhammer --config=/home/weewx/weewx.conf --resolution=city --verbose >/var/log/weewx/dwd-cap-warnings-pwsWeiherhammer-city.log 2>&1
-# weewx-wdc
+# weewx-wdc skin
 14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-cap-warnings --config=/home/weewx/weewx.conf --resolution=county --verbose >/var/log/weewx/dwd-cap-warnings-county.log 2>&1
 14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-cap-warnings --config=/home/weewx/weewx.conf --resolution=city --verbose >/var/log/weewx/dwd-cap-warnings-city.log 2>&1
 #
@@ -51,7 +51,7 @@
 #14,29,44,59       * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx.conf --verbose --html --daily --hide-placemark 10688 >/var/log/weewx/dwd-mosmix-html-daily-10688.log 2>&1
 #14,29,44,59       * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx.conf --verbose --html --hourly --hide-placemark 10688 >/var/log/weewx/dwd-mosmix-html-hourly-10688.log 2>&1
 #
-# forecast-pwsWeiherhammer (Belchertown skin)
+# forecast-pwsWeiherhammer (Weiherhammer skin)
 14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --database --belchertown  10688 >/var/log/weewx/forecast-pwsWeiherhammer-belchertown-10688.log 2>&1
 #14,29,44,59 * * * * sleep 5; /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --html --daily --hide-placemark 10688 >/var/log/weewx/forecast-pwsWeiherhammer-html-daily-10688.log 2>&1
 #14,29,44,59 * * * * sleep 10; /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --html --hourly --hide-placemark 10688 >/var/log/weewx/forecast-pwsWeiherhammer-html-hourly-10688.log 2>&1

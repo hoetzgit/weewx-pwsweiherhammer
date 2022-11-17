@@ -13,7 +13,7 @@ except ImportError:
 
 #-------- extension info -----------
 
-VERSION      = "1.3b1"
+VERSION      = "1.3b2"
 NAME         = 'Belchertown'
 DESCRIPTION  = 'A clean modern skin with real time streaming updates and interactive charts. Modeled after BelchertownWeather.com'
 AUTHOR       = "Pat OBrien"
@@ -127,6 +127,16 @@ extension_config = """
            # twitter_enabled = 0
            # twitter_hashtags = "weewx #weather"
            # social_share_html = ""
+           
+           #--- Kiosk Options ---
+           # radar_html_kiosk = ""
+           # radar_width_kiosk = 490
+           # radar_height_kiosk = 362
+           # mqtt_websockets_host_kiosk = ""
+           # mqtt_websockets_port_kiosk = ""
+           # mqtt_websockets_ssl_kiosk = ""
+           # forecast_interval_hours_kiosk = 24
+           # aqi_enabled_kiosk = 0
 
            #-------------------------------------------------------------
            #---
@@ -172,6 +182,8 @@ files=[('bin/user', ['bin/user/belchertown.py'
                               'skins/Belchertown/header.html.tmpl',
                               'skins/Belchertown/index.html.tmpl',
                               'skins/Belchertown/about.inc.example',
+                              'skins/Belchertown/kiosk.html.tmpl',
+                              'skins/Belchertown/kiosk.css',
                               'skins/Belchertown/celestial.inc',
                               'skins/Belchertown/graphs.conf.example',
                               'skins/Belchertown/page-header.inc',

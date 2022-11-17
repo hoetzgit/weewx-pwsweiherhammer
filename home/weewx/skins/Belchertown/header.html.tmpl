@@ -3,13 +3,13 @@
 ## Auto theme setting determines which CSS class to use based on the hour
 #set $bodyTheme = ""
 #set $themeSwitchChecked = ""
-#if $Extras.theme == "dark"
+#if $Extras.theme == "dark" or $Extras.pi_theme == "dark"
     #set $bodyTheme = "dark"
     #set $themeSwitchChecked = "checked"
-#elif $Extras.theme == "light"
+#elif $Extras.theme == "light" or $Extras.pi_theme == "light"
     #set $bodyTheme = "light"
     #set $themeSwitchChecked = ""
-#elif $Extras.theme == "auto"
+#elif $Extras.theme == "auto" or $Extras.pi_theme == "auto"
     #import datetime
     #set $now = datetime.datetime.now()
     #set $nowHour = $now.hour
@@ -26,117 +26,72 @@
         #end if
 #end if
 
-#if $obs.label.html_title != "" 
-    #if $page == "home" or $page == "kiosk" or $page == "console"
-        #set $head_title = $obs.label.html_title
-    #else if $page == "forecast"
-        #set $head_title = $obs.label.html_title_forecast
-    #else if $page == "graphs"
-        #set $head_title = $obs.label.html_title_graphs
-    #else if $page == "records"
-        #set $head_title = $obs.label.html_title_records
-    #else if $page == "reports"
-        #set $head_title = $obs.label.html_title_reports
-    #else if $page == "about"
-        #set $head_title = $obs.label.html_title_about
-    #else if $page == "webcam"
-        #set $head_title = $obs.label.html_title_webcam
-    #else if $page == "imprint"
-        #set $head_title = $obs.label.html_title_imprint
-    #else if $page == "privacy"
-        #set $head_title = $obs.label.html_title_privacy
-    #else if $page == "extreme"
-        #set $head_title = $obs.label.html_title_extreme
-    #else
-        #set $head_title = $obs.label.html_title
-    #end if
+## Setup the header labels, setting a default if not defined
+#if $obs.label.html_title == "" 
+#set $head_title = $station.location + " Weather Conditions"
 #else
-    #set $head_title = "Das Wetter in Weiherhammer aktuell"
+#set $head_title = $obs.label.html_title
 #end if
 
-#if $obs.label.html_description != "" 
-    #if $page == "home" or $page == "kiosk" or $page == "console"
-        #set $head_desc = $obs.label.html_description
-    #else if $page == "forecast"
-        #set $head_desc = $obs.label.html_description_forecast
-    #else if $page == "graphs"
-        #set $head_desc = $obs.label.html_description_graphs
-    #else if $page == "records"
-        #set $head_desc = $obs.label.html_description_records
-    #else if $page == "reports"
-        #set $head_desc = $obs.label.html_description_reports
-    #else if $page == "about"
-        #set $head_desc = $obs.label.html_description_about
-    #else if $page == "webcam"
-        #set $head_desc = $obs.label.html_description_webcam
-    #else if $page == "imprint"
-        #set $head_desc = $obs.label.html_description_imprint
-    #else if $page == "privacy"
-        #set $head_desc = $obs.label.html_description_privacy
-    #else if $page == "extreme"
-        #set $head_desc = $obs.label.html_description_extreme
-    #else
-        #set $head_desc = $obs.label.html_description
-    #end if
+#if $obs.label.html_description == "" 
+#set $head_desc = "Weather conditions for " + $station.location + " as observed by a personal weather station and the weewx weather software"
 #else
-    #set $head_desc = "Aktuelles Wetter, Wetterwarnungen sowie Wetterverl&auml;e in 92729 Weiherhammer (Bayern, Deutschland) und Umgebung."
+#set $head_desc = $obs.label.html_description
 #end if
 
 ## Setup the relative URLs. Use . for homepage and .. for anything in a subfolder. 
-#if $page == "home" or $page == "kiosk" or $page == "console"
+#if $page == "home" or $page == "kiosk"
 #set global $relative_url = "."
-#set $pws_url = $station.station_url
 #else
 #set global $relative_url = ".."
-#set $pws_url = $station.station_url + "/" + $page + "/"
 #end if
 
 
 <!DOCTYPE html>
-##<html lang="$system_locale_js" prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#">
-<html lang="de" prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#">
+<html lang="$system_locale_js" prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#">
     <head >
-        ##<meta charset="UTF-8"/>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <meta charset="UTF-8" />
         <title>$head_title</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
 
         <meta name="description" content="$head_desc"/>
-        #if $page == "reports"
-        <meta name="robots" content="noindex, nofollow, noodp"/>
-        #else
-        <meta name="robots" content="index, follow, noodp"/>
-        #end if
+        <meta name="robots" content="noodp"/>
         #if $station.station_url
-        <link rel="canonical" href="$pws_url"/>
+        <link rel="canonical" href="$station.station_url" />
         #end if
-        
-        <meta http-equiv="pragma" content="no-cache"/>
-        <meta http-equiv="cache-control" content="no-store"/>
-        <meta http-equiv="cache-control" content="max-age=0"/>
-        <meta http-equiv="expires" content="-1"/>
-        <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT"/>
-        
-        <meta property="og:locale" content="$system_locale"/>
-        <meta property="og:type" content="website"/>
-        <meta property="og:title" content="$head_title"/>
-        <meta property="og:description" content="$head_desc"/>
+        <meta property="og:locale" content="$system_locale" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="$head_title" />
+        <meta property="og:description" content="$head_desc" />
         #if $station.station_url
-        <meta property="og:url" content="$pws_url"/>
-        #if $page == "home-deactivated"
-        <meta property="og:image" content="$station.station_url/images/website.jpg"/>
-        <link itemprop="thumbnailUrl" href="$station.station_url/images/website.jpg">
-        <meta property="og:image:type" content="image/jpeg">
-        <meta property="og:image:width" content="341"/> 
-        <meta property="og:image:height" content="300"/>
+        <meta property="og:url" content="$station.station_url" />
         #end if
-        #end if
-        <meta property="og:site_name" content="$head_title"/>
-        
+        <meta property="og:site_name" content="$head_title" />
+
         #if $page != "kiosk"
-        <link rel="dns-prefetch" href="//code.highcharts.com"/>
+        <link rel='dns-prefetch' href='//code.highcharts.com' />
         #end if
-        
+        ##20221116,ho replaces with local files<link rel='dns-prefetch' href='//fonts.googleapis.com' />
+        ##20221116,ho replaces with local files<link rel='dns-prefetch' href='//stackpath.bootstrapcdn.com' />
+        ##20221116,ho replaces with local files<link rel='dns-prefetch' href='//cdnjs.cloudflare.com' />
+
+        ##20221116,ho replaces with local files<link rel='stylesheet' href='//fonts.googleapis.com/css?family=Roboto%3A300%2C400%2C700&#038;ver=1.0' type='text/css' media='all' />
+        <link rel="stylesheet" href="$relative_url/libs/roboto/css/roboto.css" type="text/css" media="all"/>
+        ##20221116,ho replaces with local files<link rel='stylesheet' href='//stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css' type='text/css' media='all' />
+        <link rel="stylesheet" href="$relative_url/libs/font-awesome/4.7.0/css/font-awesome.min.css" type="text/css" media="all"/>
+        ##20221116,ho replaces with local files<link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.9/css/weather-icons.min.css?ver=4.7.4' type='text/css' media='all' />
+        <link rel="stylesheet" href="$relative_url/libs/weather-icons/2.0.12/css/weather-icons.min.css" type="text/css" media="all"/>
+        ##20221116,ho replaces with local files<link rel='stylesheet' href='//stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css' type='text/css' media='all' />
+        <link rel="stylesheet" href="$relative_url/libs/bootstrap/3.4.1/css/bootstrap.min.css" type="text/css" media="all"/>
+        <link rel='stylesheet' href='$relative_url/style.css?ver=#echo int( time.time() ) #' type='text/css' media='all' id="belchertownStyle" />
+        <link rel='stylesheet' href='$relative_url/belchertown-dark.min.css?ver=#echo int( time.time() ) #' type='text/css' media='all' id="belchertownStyle" />
+        #if $page == "kiosk"
+        <link rel='stylesheet' href='$relative_url/kiosk.css?ver=#echo int( time.time() ) #' type='text/css' media='all' id="belchertownCustomStyle" />
+        #end if
+        #if $custom_css_exists
+        <link rel='stylesheet' href='$relative_url/custom.css?ver=#echo int( time.time() ) #' type='text/css' media='all' id="belchertownCustomStyle" />
+        #end if
+
         <link rel="manifest" href="$relative_url/manifest.json" crossorigin="use-credentials">
         <link rel="apple-touch-icon" href="$relative_url/images/station.png">
         <link rel="apple-touch-icon" sizes="48x48" href="$relative_url/images/station48.png">
@@ -146,106 +101,41 @@
         <link rel="apple-touch-icon" sizes="168x168" href="$relative_url/images/station168.png">
         <link rel="apple-touch-icon" sizes="192x192" href="$relative_url/images/station192.png">
         
-        <link rel="stylesheet" href="$relative_url/libs/bootstrap/3.4.1/css/bootstrap.min.css" type="text/css" media="all"/>
-        <link rel="stylesheet" href="$relative_url/libs/roboto/css/roboto.css" type="text/css" media="all"/>
-        <link rel="stylesheet" href="$relative_url/libs/font-awesome/4.7.0/css/font-awesome.min.css" type="text/css" media="all"/>
-        <link rel="stylesheet" href="$relative_url/libs/weather-icons/2.0.12/css/weather-icons.min.css" type="text/css" media="all"/>
-        #if $page == "forecast" or $page == "console"
-        <!-- Forecast Page - add wind icon css -->
-        <link rel="stylesheet" href="$relative_url/libs/weather-icons/2.0.12/css/weather-icons-wind.min.css" type="text/css" media="all"/>
-        #end if
-        <link rel="stylesheet" href="$relative_url/css/style.min.css?ver=#echo int( time.time() ) #" type="text/css" media="all" id="belchertownStyle"/>
-        <link rel="stylesheet" href="$relative_url/css/belchertown-dark.min.css?ver=#echo int( time.time() ) #" type="text/css" media="all" id="belchertownDarkStyle"/>
-        #if $page == "reports" and os.path.exists("history.inc")
-        <link rel="stylesheet" href="$relative_url/libs/historygenerator/css/live.css" type="text/css" media="all"/>
-        #end if
-        #if $custom_css_min_exists
-        <link rel="stylesheet" href="$relative_url/css/custom.min.css?ver=#echo int( time.time() ) #" type="text/css" media="all" id="belchertownCustomStyle"/>
-        #else if $custom_css_exists
-        <link rel="stylesheet" href="$relative_url/css/custom.css?ver=#echo int( time.time() ) #" type="text/css" media="all" id="belchertownCustomStyle"/>
-        #end if
-        #if $page == "kiosk"
-        <link rel="stylesheet" href="$relative_url/css/kiosk.min.css?ver=#echo int( time.time() ) #" type="text/css" media="all" id="belchertownKioskStyle"/>
-        #end if
-        #if $page == "console"
-        <link rel="stylesheet" href="$relative_url/css/console.min.css?ver=#echo int( time.time() ) #" type="text/css" media="all" id="belchertownConsoleStyle"/>
-        #end if
-        
+        <!--[if lt IE 9]>
+        ##20221116,ho replaces with local files<script type='text/javascript' src='//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js'></script>
+        <script type='text/javascript' src='$relative_url/libs/html5shiv/3.7.3/html5shiv.min.js'></script>
+        <![endif]-->
+        ##20221116,ho replaces with local files<script type='text/javascript' src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <script type="text/javascript" src="$relative_url/libs/jquery/3.6.1/jquery.min.js"></script>
+        ##20221116,ho replaces with local files<script type='text/javascript' src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment-with-locales.min.js"></script>
         <script type="text/javascript" src="$relative_url/libs/moment.js/2.29.4/moment-with-locales.min.js"></script>
+        ##20221116,ho replaces with local files<script type='text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.33/moment-timezone-with-data.min.js"></script>
         <script type="text/javascript" src="$relative_url/libs/moment-timezone/0.5.37/moment-timezone-with-data.min.js"></script>
-        <script type="text/javascript" src="$relative_url/libs/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-        #if $page == "pi" or $page == "home" or $page == "kiosk" or $page == "console" and $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
+        #if $page == "pi" or $page == "home" or $page == "kiosk" and $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
+        ##20221116,ho replaces with local files<script type='text/javascript' src="//cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"></script>
         <script type="text/javascript" src="$relative_url/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"></script>
         #end if
         #if $page != "kiosk"
-        <script type="text/javascript" src="//code.highcharts.com/stock/highstock.js"></script>
-        <script type="text/javascript" src="//code.highcharts.com/highcharts-more.js"></script>
-        <script type="text/javascript" src="//code.highcharts.com/modules/exporting.js"></script>
-        <script type="text/javascript" src="//code.highcharts.com/modules/export-data.js"></script>
-        <script type="text/javascript" src="//code.highcharts.com/modules/solid-gauge.js"></script>
-        <script type="text/javascript" src="//code.highcharts.com/modules/accessibility.js"></script>
+        <script type='text/javascript' src='//code.highcharts.com/stock/highstock.js'></script>
+        <script type='text/javascript' src='//code.highcharts.com/highcharts-more.js'></script>
+        <script type='text/javascript' src='//code.highcharts.com/modules/exporting.js'></script>
+        <script type='text/javascript' src='//code.highcharts.com/modules/solid-gauge.js'></script>
         #end if
-        <script type="text/javascript" src="$relative_url/js/belchertown.js?#echo int( time.time() )#"></script>
-        
+        ##20221116,ho replaces with local files<script type='text/javascript' src='//stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js'></script>
+        <script type="text/javascript" src="$relative_url/libs/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+        <script type='text/javascript' src='$relative_url/js/belchertown.js?#echo int( time.time() )#'></script>
         #if $page == "pi"
-            #if $Extras.pi_theme == "dark"
-            #set $piTheme = "dark"
-            #elif $Extras.pi_theme == "light"
-            #set $piTheme = "light"
-            #elif $Extras.pi_theme == "auto"
-                #import datetime
-                #set $now = datetime.datetime.now()
-                #set $nowHour = $now.hour
-                #set $sunrise_hour = datetime.datetime.fromtimestamp($almanac.sunrise.raw).strftime('%H')
-                #set $sunset_hour = datetime.datetime.fromtimestamp($almanac.sunset.raw).strftime('%H')
-                #if int($sunrise_hour) <= int($nowHour) and int($nowHour) < int($sunset_hour)
-                   ## Day time, use light mode
-                   #set $piTheme = "light"
-                #else
-                   ## Night time, use dark mode
-                   #set $piTheme = "dark"
-                #end if
-            #end if
-        <script type="text/javascript">
+        <script>
             // Set the session variables for the theme
             if ( sessionStorage.getItem('pi_theme') === null ) {
-                sessionStorage.setItem('pi_theme', '$Extras.pi_theme');
+                sessionStorage.setItem('pi_theme', '$Extras.theme');
             }
             if ( sessionStorage.getItem('pi_currentTheme') === null ) {
-                sessionStorage.setItem('pi_currentTheme', '$piTheme');
-            }
-        </script>
-        #elif $page == "console"
-            #if $Extras.console_theme == "dark"
-            #set $consoleTheme = "dark"
-            #elif $Extras.console_theme == "light"
-            #set $consoleTheme = "light"
-            #elif $Extras.console_theme == "auto"
-                #import datetime
-                #set $now = datetime.datetime.now()
-                #set $nowHour = $now.hour
-                #set $sunrise_hour = datetime.datetime.fromtimestamp($almanac.sunrise.raw).strftime('%H')
-                #set $sunset_hour = datetime.datetime.fromtimestamp($almanac.sunset.raw).strftime('%H')
-                #if int($sunrise_hour) <= int($nowHour) and int($nowHour) < int($sunset_hour)
-                   ## Day time, use light mode
-                   #set $consoleTheme = "light"
-                #else
-                   ## Night time, use dark mode
-                   #set $consoleTheme = "dark"
-                #end if
-            #end if
-        <script type="text/javascript">
-            // Set the session variables for the theme
-            if ( sessionStorage.getItem('console_theme') === null ) {
-                sessionStorage.setItem('console_theme', '$Extras.console_theme');
-            }
-            if ( sessionStorage.getItem('console_currentTheme') === null ) {
-                sessionStorage.setItem('console_currentTheme', '$consoleTheme');
+                sessionStorage.setItem('pi_currentTheme', '$bodyTheme');
             }
         </script>
         #else
-        <script type="text/javascript">
+        <script>
             // Set the session variables for the theme
             if ( sessionStorage.getItem('theme') === null ) {
                 sessionStorage.setItem('theme', '$Extras.theme');
@@ -253,26 +143,19 @@
             if ( sessionStorage.getItem('currentTheme') === null ) {
                 sessionStorage.setItem('currentTheme', '$bodyTheme');
             }
-            // Set the session variables for current provider
-            if ( sessionStorage.getItem('current_provider') === null ) {
-                sessionStorage.setItem('current_provider', '$current_provider_default');
-            }
-            if ( sessionStorage.getItem('current_provider_override') === null ) {
-                sessionStorage.setItem('current_provider_override', '');
-            }
         </script>
         #end if
         
         #if $station.station_url
-        <link rel='shortlink' href="$station.station_url"/>
+        <link rel='shortlink' href="$station.station_url" />
         #end if
                 
-        <link rel="icon" href="$relative_url/favicon.ico"/>
+        <link rel="icon" href="$relative_url/favicon.ico" />
         
-        #if $Extras.has_key('googleAnalyticsId') and $page != "kiosk" and $page != "console"
+        #if $Extras.has_key('googleAnalyticsId') and $page != "kiosk"
         <!-- Global Site Tag (gtag.js) - Google Analytics -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=$Extras.googleAnalyticsId"></script>
-        <script type="text/javascript">
+        <script>
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
@@ -280,33 +163,28 @@
         </script>
         #end if
 
-        #if os.path.exists("header.inc") and $page != "kiosk" and $page != "console"
+        #if os.path.exists("header.inc") and $page != "kiosk"
         #include "header.inc"
         #end if
 
     </head>
     
     #if $page == "pi"
-    <body class="pi page full-width-content $piTheme" itemscope itemtype="https://schema.org/WebPage">
-        <div class="site-container">
-    #elif $page == "console"
-    <body class="page-template-default page full-width-content $consoleTheme" itemscope itemtype="https://schema.org/WebPage">
-        <div class="site-container">
-    #elif $page == "kiosk"
-    <body class="page-template-default page full-width-content $bodyTheme" itemscope itemtype="https://schema.org/WebPage">
+    <body class="pi page full-width-content $bodyTheme" itemscope itemtype="https://schema.org/WebPage">
         <div class="site-container">
     #else
     <body class="page-template-default page full-width-content $bodyTheme" itemscope itemtype="https://schema.org/WebPage">
         <div class="site-container">
+        #if $page != "kiosk"
             <header class="site-header">
                 <div class="wrap">
                     <div class="title-area">
                         <p class="site-title" itemprop="headline">
                             <a href="$relative_url/">
                                 #if $Extras.has_key("logo_image_dark") and $Extras.logo_image_dark != '' and $bodyTheme == "dark"
-                                <img src="$relative_url/images/$Extras.logo_image_dark" id="logo_image" title="$head_title" alt="$head_title">
+                                <img src="$Extras.logo_image_dark" id="logo_image" title="$head_title" alt="$head_title">
                                 #elif $Extras.has_key("logo_image") and $Extras.logo_image != ''
-                                <img src="$relative_url/images/$Extras.logo_image" id="logo_image" title="$head_title" alt="$head_title">
+                                <img src="$Extras.logo_image" id="logo_image" title="$head_title" alt="$head_title">
                                 #else if $Extras.has_key("site_title") and $Extras.site_title != ''
                                 $Extras.site_title
                                 #end if
@@ -320,16 +198,12 @@
                                     <ul id="menu-menu" class="menu genesis-nav-menu">
                                         <!-- class = current-menu-item -->
                                         <li class="menu-item menu-item-home"><a href="$relative_url" itemprop="url"><span itemprop="name">$obs.label.nav_home</span></a></li>
-                                        #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
-                                        <li class="menu-item menu-item-forecast"><a href="$relative_url/forecast/" itemprop="url"><span itemprop="name">$obs.label.nav_forecast</span></a></li>
-                                        #end if
                                         #if $Extras.has_key('highcharts_enabled') and $Extras.highcharts_enabled == '1'
-                                        <li class="menu-item menu-item-1"><a href="$relative_url/graphs/" itemprop="url"><span itemprop="name">$obs.label.nav_graphs</span></a></li>
+                                        <li class="menu-item menu-item-1"><a href="$relative_url/graphs" itemprop="url"><span itemprop="name">$obs.label.nav_graphs</span></a></li>
                                         #end if
-                                        <li class="menu-item menu-item-2"><a href="$relative_url/reports/" itemprop="url"><span itemprop="name">$obs.label.nav_reports</span></a></li>
-                                        <li class="menu-item menu-item-3"><a href="$relative_url/extreme/" itemprop="url"><span itemprop="name">$obs.label.nav_extreme</span></a></li>
-                                        ##<li class="menu-item menu-item-4"><a href="$relative_url/records/" itemprop="url"><span itemprop="name">$obs.label.nav_records</span></a></li>
-                                        <li class="menu-item menu-item-5"><a href="$relative_url/about/" itemprop="url"><span itemprop="name">$obs.label.nav_about</span></a></li>
+                                        <li class="menu-item menu-item-2"><a href="$relative_url/records" itemprop="url"><span itemprop="name">$obs.label.nav_records</span></a></li>
+                                        <li class="menu-item menu-item-3"><a href="$relative_url/reports" itemprop="url"><span itemprop="name">$obs.label.nav_reports</span></a></li>
+                                        <li class="menu-item menu-item-4"><a href="$relative_url/about" itemprop="url"><span itemprop="name">$obs.label.nav_about</span></a></li>
                                         #if $Extras.has_key('theme_toggle_enabled') and $Extras.theme_toggle_enabled == '1'
                                         <label class="themeSwitchLabel">
                                             <input type="checkbox" id="themeSwitch" $themeSwitchChecked>
@@ -343,4 +217,5 @@
                     </div>
                 </div>
             </header>
+            #end if
     #end if
