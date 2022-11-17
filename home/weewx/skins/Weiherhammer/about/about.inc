@@ -331,6 +331,7 @@
                 <li><a href="https://sofa2.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Sofa-CW9009 Skin</a> (<a href="https://github.com/weatherstorm/Sofaskin-CW9009" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://rtgauges.weiherhammer-wetter.de" target="_blank" rel="noreferrer">SteelSeries Weather Gauges</a> (<a href="https://github.com/mcrossley/SteelSeries-Weather-Gauges" target="_blank" rel="noreferrer">Infos</a>/<a  href="https://github.com/gjr80/weewx-realtime_gauge-data" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://mesowx.weiherhammer-wetter.de" target="_blank" rel="noreferrer">MesoWX</a> (realtime HTML frontend, <a href="https://github.com/glennmckechnie/weewx-mesowx" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://belchertown.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Belchertown</a> (original, <a href="https://github.com/poblabs/weewx-belchertown" target="_blank" rel="noreferrer">Infos</a>)</li>
             </ul>
         </div>
     </div>
@@ -345,7 +346,7 @@
                 <li>Longitude: $station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]</li>
                 <li>H&ouml;he ca.: $station.altitude</li>
                 <li>Konsole Software EasyWeather Version: 1.6.4</li>
-                <li>Ecowitt GW1100 Gateway Software Version: 2.1.9</li>
+                <li>Ecowitt GW1100 Gateway Software Version: 2.2.0</li>
                 <li>Backend- und WebServer: Diverse virtuelle VMware ESXi basierende Rechner mit Ubuntu 22.04.1 LTS, Webseite self hosted</li>
                 <li>WeeWX Server uptime: $station.os_uptime</li>
                 <li>WeeWX Service uptime: $station.uptime</li>
@@ -394,7 +395,6 @@
             <p>Meine Anpassungen und Konfigurationen als Sicherung bei GitHub</p>
             <ul>
                 <li>Anpassungen <a href="https://github.com/hoetzgit/weewx-pwsweiherhammer" target="_blank" rel="noreferrer">WeeWX</a> PWS Weiherhammer</li>
-                <li>Anpassungen <a href="https://github.com/hoetzgit/weewx-belchertown-pwsweiherhammer" target="_blank" rel="noreferrer">Weiherhammer skin</a> PWS Weiherhammer</li>
             </ul>
         </div>
     </div>
