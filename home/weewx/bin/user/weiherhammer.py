@@ -2108,7 +2108,21 @@ class getData(SearchList):
                     "<span class='rainRate'>%s</span><!-- AJAX -->"
                     % str(getattr(current, "rainRate"))
                 )
-
+                # Empty field for the JSON "current" output
+                obs_output = ""
+            elif obs == "outHumidityWithAbs":
+                # outHumidityWithAbs rel humidity with abs humidity
+                # https://github.com/roe-dl/weewx-GTS/discussions/14
+                obs_humidity_output = ""
+                humrel_output = getattr(current,'outHumidity',None)
+                humabs_output = getattr(current,'outHumAbs',None)
+                if humrel_output is not None:
+                    obs_humidity_output += "<span class='outHumidity'>%s</span><!-- AJAX -->" % str(humrel_output)
+                if humabs_output is not None:
+                    if humrel_output is not None:
+                        obs_humidity_output += '&nbsp;<span class="border-left-rain-hum">&nbsp;</span>'
+                    humabs_output = humabs_output.gram_per_meter_cubed
+                    obs_humidity_output += '<span class="outHumAbs">%s</span><!-- AJAX -->' % str(humabs_output)
                 # Empty field for the JSON "current" output
                 obs_output = ""
             elif obs == "cloud_cover":
@@ -2135,6 +2149,9 @@ class getData(SearchList):
             if obs == "rainWithRainRate":
                 # Add special rain + rainRate one liner
                 station_obs_html += obs_rain_output
+            elif obs == "outHumidityWithAbs":
+                # Add special rel + abs humidity
+                station_obs_html += obs_humidity_output
             else:
                 station_obs_html += "<span class=%s>%s</span><!-- AJAX -->" % (
                     obs,
@@ -2169,14 +2186,6 @@ class getData(SearchList):
             # 20220803,ho cloudcover debug symbol
             if obs == "cloud_cover":
                 station_obs_html += ' <span class="avg10m-obs-symbols"></span>'
-            # 20220811,ho add absolute humidity to relative humidity
-            # https://github.com/roe-dl/weewx-GTS/discussions/14
-            if obs=='outHumidity':
-                humabs_output = getattr(current,'outHumAbs',None)
-                if humabs_output is not None:
-                    humabs_output = humabs_output.gram_per_meter_cubed
-                    station_obs_html += '&nbsp;<span class="border-left-rain-hum">&nbsp;</span>'
-                    station_obs_html += '<span class="outHumAbs">%s</span><!-- AJAX -->' % humabs_output
 
             station_obs_html += "</td>"
             station_obs_html += "</tr>"
