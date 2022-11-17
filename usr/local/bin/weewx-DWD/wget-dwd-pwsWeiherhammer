@@ -33,11 +33,11 @@ EXPORTS=(
 # Ende des vom Benutzer anzupassenden Bereichs
 
 # Programm zum Herunterladen
-WGET="/usr/bin/wget"
-TOUCH="/usr/bin/touch"
-MV="/usr/bin/mv"
-CP="/usr/bin/cp"
-RM="/usr/bin/rm"
+WGET="/usr/bin/wget -a ${LOG_FN}"
+TOUCH="/usr/bin/touch -r"
+MV="/usr/bin/mv -vf"
+CP="/usr/bin/cp -vf"
+RM="/usr/bin/rm -vf"
 TMP="/tmp/wget-dwd.tmp"
 HTML2ENT="/usr/local/bin/weewx-DWD/html2ent.ansi"
 
@@ -47,7 +47,7 @@ HTML2ENT="/usr/local/bin/weewx-DWD/html2ent.ansi"
 # Herunterladen der Vorhersage-Dateien und Zeichensatz konvertieren
 for i in 50 51 52 53 54; do
     FN="VHDL${i}_${DWD_BUNDESLAND}_LATEST"
-    $WGET -a "${LOG_FN}" -O "${TMP}" "${DWD_URL}/${FN}_html"
+    ${WGET} -O "${TMP}" "${DWD_URL}/${FN}_html"
     #TODO: Im Moment gehe ich davon aus, dass die jeweiligen Dateien mit <p> </p> eingebunden sind.
     if [[ i -eq 50 ]]; then
         sed -i 's/<\/strong>/&<\/p><p>/g' "${TMP}"
@@ -60,26 +60,26 @@ for i in 50 51 52 53 54; do
     if [ "$?" -eq 0 ]; then
         for EXPORT in ${EXPORTS[@]}; do
             ${HTML2ENT} <"${TMP}" >"${EXPORT}/${FN}.html"
-            ${TOUCH} -r "${TMP}" "${EXPORT}/${FN}.html"
+            ${TOUCH} "${TMP}" "${EXPORT}/${FN}.html"
         done
-        rm "${TMP}"
+        ${RM} "${TMP}"
     fi
 done
 
 # Herunterladen der uebrigen Dateien
-$WGET -a "$LOG_FN" -O "/tmp/${DWD_MAP##*/}" ${DWD_MAP}
-$WGET -a "$LOG_FN" -O "/tmp/${DWD_MAP2##*/}" ${DWD_MAP2}
-$WGET -a "$LOG_FN" -O "/tmp/${DWD_WARN##*/}" ${DWD_WARN}
-$WGET -a "$LOG_FN" -O "/tmp/${DWD_WARNJ##*/}" ${DWD_WARNJ}
+${WGET} -O "/tmp/${DWD_MAP##*/}" ${DWD_MAP}
+${WGET} -O "/tmp/${DWD_MAP2##*/}" ${DWD_MAP2}
+${WGET} -O "/tmp/${DWD_WARN##*/}" ${DWD_WARN}
+${WGET} -O "/tmp/${DWD_WARNJ##*/}" ${DWD_WARNJ}
 for EXPORT in ${EXPORTS[@]}; do
-    ${CP} -fv "/tmp/${DWD_MAP##*/}" ${EXPORT}/
-    ${CP} -fv "/tmp/${DWD_MAP2##*/}" ${EXPORT}/
-    ${CP} -fv "/tmp/${DWD_WARN##*/}" ${EXPORT}/
-    ${CP} -fv "/tmp/${DWD_WARNJ##*/}" ${EXPORT}/
+    ${CP} "/tmp/${DWD_MAP##*/}" ${EXPORT}/
+    ${CP} "/tmp/${DWD_MAP2##*/}" ${EXPORT}/
+    ${CP} "/tmp/${DWD_WARN##*/}" ${EXPORT}/
+    ${CP} "/tmp/${DWD_WARNJ##*/}" ${EXPORT}/
 done
-${RM} -fv "/tmp/${DWD_MAP##*/}"
-${RM} -fv "/tmp/${DWD_MAP2##*/}"
-${RM} -fv "/tmp/${DWD_WARN##*/}"
-${RM} -fv "/tmp/${DWD_WARNJ##*/}"
+${RM} "/tmp/${DWD_MAP##*/}"
+${RM} "/tmp/${DWD_MAP2##*/}"
+${RM} "/tmp/${DWD_WARN##*/}"
+${RM} "/tmp/${DWD_WARNJ##*/}"
 
-
+exit 0
