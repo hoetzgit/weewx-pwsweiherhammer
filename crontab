@@ -48,8 +48,6 @@
 #
 # original dwd-mosmix (weewx-wdc skin)
 14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx.conf --verbose --json 10688 >/var/log/weewx/dwd-mosmix-json-10688.log 2>&1
-#14,29,44,59       * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx.conf --verbose --html --daily --hide-placemark 10688 >/var/log/weewx/dwd-mosmix-html-daily-10688.log 2>&1
-#14,29,44,59       * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx.conf --verbose --html --hourly --hide-placemark 10688 >/var/log/weewx/dwd-mosmix-html-hourly-10688.log 2>&1
 #
 # forecast-pwsWeiherhammer (Weiherhammer skin)
 14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --database --belchertown  10688 >/var/log/weewx/forecast-pwsWeiherhammer-belchertown-10688.log 2>&1
