@@ -2176,16 +2176,16 @@ class getData(SearchList):
                 if str(obs_trend) == "N/A":
                     pass
                 elif "-" in str(obs_trend):
-                    station_obs_html += '&nbsp;<i class="fa fa-long-arrow-down barometer-down"></i>'
+                    station_obs_html += '<i class="fa fa-long-arrow-down barometer-down"></i>'
                 else:
-                    station_obs_html += '&nbsp;<i class="fa fa-long-arrow-up barometer-up"></i>'
+                    station_obs_html += '<i class="fa fa-long-arrow-up barometer-up"></i>'
                 station_obs_html += "</span>"  # Close the span
             # 20220622,ho sunshine debug symbol
             if obs == "radiation":
-                station_obs_html += ' <span class="current-sunshine-symbol"></span>'
+                station_obs_html += '<span class="current-sunshine-symbol"></span>'
             # 20220803,ho cloudcover debug symbol
             if obs == "cloud_cover":
-                station_obs_html += ' <span class="avg10m-obs-symbols"></span>'
+                station_obs_html += '<span class="avg10m-obs-symbols"></span>'
 
             station_obs_html += "</td>"
             station_obs_html += "</tr>"

@@ -12,6 +12,8 @@
 #sudo echo "y" | /home/weewx/bin/wee_database --add-column=windPressure --type=REAL
 #sudo echo "y" | /home/weewx/bin/wee_database --add-column=sunshineDur --type=REAL
 #sudo echo "y" | /home/weewx/bin/wee_database --add-column=sunshineDurOriginal --type=REAL
+#sudo echo "y" | /home/weewx/bin/wee_database --add-column=sunshineDurMonth --type=REAL
 #sudo echo "y" | /home/weewx/bin/wee_database --add-column=lightning --type=REAL
 #sudo echo "y" | /home/weewx/bin/wee_database --add-column=outEquiTemp --type=REAL
 #sudo echo "y" | /home/weewx/bin/wee_database --add-column=outHumAbs --type=REAL
+#sudo echo "y" | /home/weewx/bin/wee_database --add-column=gw1100_rain_total --type=REAL
