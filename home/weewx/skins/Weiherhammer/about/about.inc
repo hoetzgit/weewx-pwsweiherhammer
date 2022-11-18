@@ -285,7 +285,7 @@
                 <li>Erweiterung <a href="https://github.com/roe-dl/weewx-GTS" target="_blank" rel="noreferrer">weewx-GTS</a>, generiert die <a href="https://de.wikipedia.org/wiki/Gr%C3%BCnlandtemperatursumme" target="_blank" rel="noreferrer">Grünlandtemperatursumme</a> und viele weitere Daten, Version: 0.8b1</li>
                 ##<li>Die Meteogramm-Visualisierung der DWD Vorhersage erfolgt mit dem Meteogramm von <a href="http://tools.wettersoftware.de" target="_blank" rel="noreferrer">wettersoftware.de</a></li>
                 <li>Erweiterung <a href="https://github.com/jonathankoren/weewx-aqi" target="_blank" rel="noreferrer">weewx-aqi</a>, angepasste <a href="https://github.com/hoetzgit/weewx-aqi/tree/CustomAirQualityIndex" target="_blank" rel="noreferrer">Version</a>, diese orientiert sich an den <a href="https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex" target="_blank" rel="noreferrer">Berechnungsgrundlagen Luftqualit&auml;tsindex</a> des Umweltbundesamtes</li>
-                <li>Erweiterung <a href="https://github.com/Jterrettaz/sunduration" target="_blank" rel="noreferrer">sunduration</a>, angepasste <a href="https://github.com/hoetzgit/sunduration/tree/sunshineDur_seconds" target="_blank" rel="noreferrer">Version</a>, Berechnung der Sonnenscheindauer in Sekunden pro Archiv Intervall</li>
+                <li>Erweiterung <a href="https://github.com/Jterrettaz/sunduration" target="_blank" rel="noreferrer">sunduration</a>, angepasste <a href="https://github.com/hoetzgit/weewx-pwsweiherhammer/blob/master/home/weewx/bin/user/sunshineduration.py" target="_blank" rel="noreferrer">Version</a>, Berechnung der Sonnenscheindauer in Sekunden pro Archiv Intervall</li>
                 <li>Erweiterung <a href="https://github.com/brewster76/fuzzy-archer/tree/master/bin/user" target="_blank" rel="noreferrer">historygenerator</a>, angepasste <a href="https://github.com/hoetzgit/weewx-pwsweiherhammer/blob/master/home/weewx/bin/user/tablegenerator.py" target="_blank" rel="noreferrer">Version</a> um <a href="https://www.weiherhammer-wetter.de/reports/" target="_blank" rel="noreferrer">tabellarische Reporte</a> zu erstellen.</li>
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-windy" target="_blank" rel="noreferrer">weewx-windy</a>, Upload zu <a href="https://www.windy.com" target="_blank" rel="noreferrer">Windy.com</a>, Version: 0.7</li>
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-wetter" target="_blank" rel="noreferrer">weewx-wetter</a>, Upload zu <a href="https://www.wetter.com" target="_blank" rel="noreferrer">wetter.com</a>, Version: 0.7</li>
@@ -301,17 +301,17 @@
         <div class="col-sm-12">
             <h2>Weiterleitung der Daten zu externen Wetterdiensten</h2>
             <ul>
-                <li><a href="https://www.wunderground.com/personal-weather-station/dashboard?ID=IWEIHE1" target="_blank" rel="noreferrer">Weather Underground</a></li>
                 <li><a href="https://pwsweather.com/station/pws/IWEIHE1" target="_blank" rel="noreferrer">PWSWeather.com</a></li>
+                <li><a href="https://www.awekas.at/de/instrument.php?id=22468" target="_blank" rel="noreferrer">AWEKAS</a></li>
+                <li><a href="https://stations.meteo-services.com/wetterstation/index.php?station_id=8504" target="_blank" rel="noreferrer">MeteoServices</a></li>
+                <li><a href="https://wetternetzwerk.pro/#/wetterstation/78" target="_blank" rel="noreferrer">wetternetzwerk.pro</a></li>
+                <li><a href="https://netzwerk.wetter.com/wetterstation/20758/" target="_blank" rel="noreferrer">wetter.com</a></li>
+                <li><a href="https://www.wunderground.com/personal-weather-station/dashboard?ID=IWEIHE1" target="_blank" rel="noreferrer">Weather Underground</a></li>
                 <li><a href="https://app.weathercloud.net/d6258809966" target="_blank" rel="noreferrer">WeatherCloud.net</a></li>
                 <li><a href="https://www.windy.com/station/pws-f0652fc0?49.632,12.056,10" target="_blank" rel="noreferrer">Windy.com</a></li>
-                <li><a href="https://netzwerk.wetter.com/wetterstation/20758/" target="_blank" rel="noreferrer">wetter.com</a></li>
-                <li><a href="https://wetternetzwerk.pro/#/wetterstation/78" target="_blank" rel="noreferrer">wetternetzwerk.pro</a></li>
                 <li><a href="https://opensensemap.org/explore/5cac7a833680f2001b658be9" target="_blank" rel="noreferrer">OpenSenseMap</a></li>
-                <li><a href="https://openweathermap.org/city/2812752" target="_blank" rel="noreferrer">OpenWeather</a></li>
-                <li><a href="https://stations.meteo-services.com/wetterstation/index.php?station_id=8504" target="_blank" rel="noreferrer">MeteoServices</a></li>
-                <li><a href="https://www.awekas.at/de/instrument.php?id=22468" target="_blank" rel="noreferrer">AWEKAS</a></li>
                 <li><a href="https://deutschland.maps.sensor.community/#13/49.6271/12.0591" target="_blank" rel="noreferrer">Sensor.Community</a></li>
+                <li><a href="https://openweathermap.org/city/2812752" target="_blank" rel="noreferrer">OpenWeather</a></li>
             </ul>
         </div>
     </div>
@@ -321,17 +321,17 @@
         <div class="col-sm-12">
             <h2>Zus&auml;tzliche Visualisierungen</h2>
             <ul>
-                <li><a href="https://seasons.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Seasons</a> (Skin bei WeeWX dabei)</li>
+                <li><a href="https://belchertown.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Belchertown</a> (original, <a href="https://github.com/poblabs/weewx-belchertown" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://seasons.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WeeWX Seasons</a> (Skin bei WeeWX dabei, <a href="https://github.com/weewx/weewx/tree/master/skins/Seasons" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://wdc.weiherhammer-wetter.de" target="_blank" rel="noreferrer">WDC</a> (Weather Data Center, <a href="https://github.com/Daveiano/weewx-wdc" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://jas.weiherhammer-wetter.de" target="_blank" rel="noreferrer">JAS</a> (just another skin, <a href="https://github.com/bellrichm/weewx-jas" target="_blank" rel="noreferrer">Infos</a>)</li>
-                <li><a href="https://fuzzy.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Fuzzy Archer</a> (<a href="https://github.com/brewster76/fuzzy-archer" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://neowx.weiherhammer-wetter.de" target="_blank" rel="noreferrer">NeoWX Material</a> (<a href="https://neoground.com/projects/neowx-material" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://pwsd.weiherhammer-wetter.de" target="_blank" rel="noreferrer">PWS Dashboard</a> (PHP Dashboard, <a href="https://pwsdashboard.com" target="_blank" rel="noreferrer">Infos</a>)</li>
-                <li><a href="https://sofa.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Sofa Skin</a> (<a href="https://neoground.com/projects/sofaskin" target="_blank" rel="noreferrer">Infos</a>)</li>
-                <li><a href="https://sofa2.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Sofa-CW9009 Skin</a> (<a href="https://github.com/weatherstorm/Sofaskin-CW9009" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://fuzzy.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Fuzzy Archer</a> (<a href="https://github.com/brewster76/fuzzy-archer" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://rtgauges.weiherhammer-wetter.de" target="_blank" rel="noreferrer">SteelSeries Weather Gauges</a> (<a href="https://github.com/mcrossley/SteelSeries-Weather-Gauges" target="_blank" rel="noreferrer">Infos</a>/<a  href="https://github.com/gjr80/weewx-realtime_gauge-data" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://mesowx.weiherhammer-wetter.de" target="_blank" rel="noreferrer">MesoWX</a> (realtime HTML frontend, <a href="https://github.com/glennmckechnie/weewx-mesowx" target="_blank" rel="noreferrer">Infos</a>)</li>
-                <li><a href="https://belchertown.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Belchertown</a> (original, <a href="https://github.com/poblabs/weewx-belchertown" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://sofa.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Sofa Skin</a> (<a href="https://neoground.com/projects/sofaskin" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://sofa2.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Sofa-CW9009 Skin</a> (<a href="https://github.com/weatherstorm/Sofaskin-CW9009" target="_blank" rel="noreferrer">Infos</a>)</li>
             </ul>
         </div>
     </div>

@@ -709,10 +709,6 @@ sub { top: 0.4em; }
     text-align: center;
 }
 
-.forecast-24hour {
-    width: 144px;
-}
-
 /* stats */
 
 .stats-label {
