@@ -7,6 +7,15 @@ Distributed under the terms of the GNU Public License (GPLv3)
 weewx-rainrate is a WeeWX service that attempts to produce a
 "better" rainRate in loop packets.
 
+Estimating Rain Rates from Tipping-Bucket Rain Gauge Measurements
+-----------------------------------------------------------------
+See: https://ntrs.nasa.gov/api/citations/20070016690/downloads/20070016690.pdf
+One-minute rain rates suffer substantial errors, especially at low rain rates.
+When one-minute rain rates are averaged to 4 -7 minute scales, the errors
+dramatically reduce. At the 10- and 15-minute time scales, the errors further
+reduce. If the time scale increases to longer than 30 minutes, the errors become
+negligible.
+
 The impetus for this extension is that author purchased a
 high quality HyQuest Solutions TB3 siphoning rain gauge.
 It is accurate to 2% at any rain intensity, but with the
@@ -16,20 +25,20 @@ two tips can be wildly overstated.
 
 weewx-rainrate ignores the rainRate in the loop packet (if present)
 by overwriting/inserting rainRate to be the max of the
-3 through 15m rain rate (in 30s increments)  as computed by the extension.
+4 through 15m rain rate as computed by the extension.
 
 For low rain cases:
 
-If there was just one bucket tip (in the first 30s), we would see a rate of 1.2
-selected (which is absurdly high).  For cases where 0.01 is observed in the
+If there was just one bucket tip (in the first 60s), we would see a rate of 0.6
+per hour selected (which is absurdly high).  For cases where 0.01 is observed in the
 last 15m, no matter when in that 15m it occurred, only the 15m bucket is considered
 (rate of 0.04).
 
 Similarly, for cases where only 0.02 has been observed in the last 15m, the
-30s-9.5m buckets will report unreasonably high rates, so they will not be
+1-9m buckets will report unreasonably high rates, so they will not be
 considered.
 
-Lasttly, for cases where 0.03 has been observed in the last 15m, the 30s-4.5m
+Lasttly, for cases where 0.03 has been observed in the last 15m, the 1m-4m
 buckets will not be considered.
 """
 
@@ -53,7 +62,7 @@ from weewx.engine import StdService
 # get a logger object
 log = logging.getLogger(__name__)
 
-RAIN24H_VERSION = '0.12'
+RAIN24H_VERSION = '0.13'
 
 if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 7):
     raise weewx.UnsupportedFeature(
@@ -188,13 +197,13 @@ class RainRate(StdService):
 
     @staticmethod
     def compute_rain_buckets(pkt, rain_entries)->List[float]:
-        """ Accumulate rate in 30s buckets (which are cumulative); e.g., for
-            the 9.5m bucket, all rain in the last 9.5m is reflected in it's value."""
+        """ Accumulate rate in 1m buckets (which are cumulative); e.g., in
+            the 10m bucket, all rain in the last 10m is reflected in it's value."""
         pkt_time = pkt['dateTime']
-        rain_buckets = [ 0.0 ] * 31 # cell 0 will remain 0.0 as we're only using buckets 1-30.
+        rain_buckets = [ 0.0 ] * 16 # cell 0 will remain 0.0 as we're only using buckets 1-15.
         for entry in rain_entries:
-            for bucket in range(1, 31):
-                if pkt_time - entry.timestamp < bucket * 30:
+            for bucket in range(1, 16):
+                if pkt_time - entry.timestamp < bucket * 60:
                     rain_buckets[bucket] += entry.amount
         return rain_buckets
 
@@ -202,20 +211,20 @@ class RainRate(StdService):
     def eliminate_buckets(rain_buckets):
         """ Eliminate (i.e., zero out) any buckets that our algorithm requires us
             not to consider.  This includes:
-            1. Always eliminate the 30s through 2.5m buckets (inclusive).
+            1. Always eliminate the 1m through 4m buckets (inclusive).
             2. If total rain in the last 15m is 0.01,
-               - Eliminate buckets up to and including 14.5m.
+               - Eliminate buckets up to and including 14m.
             3. If total rain in the last 15m is 0.02,
-               - Eliminate buckets up to and including 9.5m.
+               - Eliminate buckets up to and including 9m.
             4. If total rain in the last 15m is 0.03,
-               - Eliminate buckets up to and including 4.5m."""
+               - Eliminate buckets up to and including 4m."""
 
-        # Zero out the 30s-2.5m (1-3) buckets as it is thought they will always be too noisy.
-        for i in range(1,6):
+        # Always zero out buckets 1-3 as they are too noisy.
+        for i in range(1,4):
             rain_buckets[i] = 0.0
 
         # The total amount of rain in the last 15m will be reflected in the last (15m) bucket.
-        total_rain = rain_buckets[30]
+        total_rain = rain_buckets[15]
 
         # Consider low rain cases.
         #
@@ -224,31 +233,30 @@ class RainRate(StdService):
         # (rate of 0.04).
         #
         # Similarly, for cases where only 0.02 has been observed in the last 15m, the
-        # 2-9.5m buckets will report unreasonably high rates, so zero them out.
+        # 1-9m buckets will report unreasonably high rates, so zero them out.
         #
         # Lasttly, for cases where 0.03 has been observed in the last 15m, zero out the
-        # 3-4.5m buckets.
+        # 1-4m buckets.
         if total_rain == 0.01:
-            # Zero everthing but bucket 30.
-            for bucket in range(6, 30):
+            # Zero everthing but bucket 15.
+            for bucket in range(4, 15):
                 rain_buckets[bucket] = 0.0
         elif total_rain  == 0.02:
-            # Zero buckets 2-19.
-            for bucket in range(6, 20):
+            # Zero buckets 4-10.
+            for bucket in range(4, 10):
                 rain_buckets[bucket] = 0.0
         elif total_rain  == 0.03:
-            # Zero buckets 6-9.
-            for bucket in range(6, 10):
-                rain_buckets[bucket] = 0.0
+            # Zero bucket 4.
+            rain_buckets[4] = 0.0
 
     @staticmethod
     def compute_rain_rates(rain_buckets)->List[float]:
         """ Rain rates are computed simply by dividing the rain by the time span (and
         multiplying by the number of seconds in a hour (to get an hourly rate).
         Rain rates are rounded to three decimals."""
-        rain_rates = [ 0.0 ] * 31
-        for bucket in range(1, 31):
-            rain_rates[bucket] = round(3600.0 * rain_buckets[bucket] / (bucket * 30), 3)
+        rain_rates = [ 0.0 ] * 16
+        for bucket in range(1, 16):
+            rain_rates[bucket] = round(3600.0 * rain_buckets[bucket] / (bucket * 60), 3)
         return rain_rates
 
     @staticmethod

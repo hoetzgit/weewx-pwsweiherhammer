@@ -101,7 +101,7 @@
         
 """
 
-VERSION = "0.8b1"
+VERSION = "0.8"
 
 # deal with differences between python 2 and python 3
 try:
@@ -1059,7 +1059,7 @@ class GTSType(weewx.xtypes.XType):
         
         # aggregation types that are defined for those values
         if aggregate_type not in ['avg','max','min','last','maxtime','mintime','lasttime']:
-            raise weewx.UnknownAggregation("%s undefinded aggregation %s" % (obs_type,aggregation_type))
+            raise weewx.UnknownAggregation("%s undefinded aggregation %s" % (obs_type,aggregate_type))
 
         if timespan is None:
             raise weewx.CannotCalculate("%s %s no timespan" % (obs_type,aggregate_type))

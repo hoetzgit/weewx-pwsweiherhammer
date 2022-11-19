@@ -79,7 +79,7 @@ This search list extension provides the following tags:
 
   $weewx_version
     Returns:
-      The version of WeeWX.      
+      The version of WeeWX.
 
   $windCompass(start_offset, end_offset)
     Arguments:
@@ -253,7 +253,7 @@ class JAS(SearchList):
 
         search_list_extension = {'aggregate_types': self.aggregate_types,
                                  'current_observation': self.data_current,
-                                 'dateTimeFormats': self.get_dateTime_formats,
+                                 'dateTimeFormats': self.get_date_time_formats,
                                  'data_binding': self.data_binding,
                                  'forecasts': self.data_forecast,
                                  'genCharts': self._gen_charts,
@@ -301,46 +301,48 @@ class JAS(SearchList):
             if language in self.languages:
                 self._get_skin_dict(language)
 
-        return self.skin_dicts[language]['Texts']        
+        return self.skin_dicts[language]['Texts']
 
-    def get_dateTime_formats(self, language):
+    def get_date_time_formats(self, language):
         if language not in self.skin_dicts:
             if language in self.languages:
                 self._get_skin_dict(language)
 
-        dateTime_formats = {}
-        dateTime_formats['forecast_date_format'] = self.skin_dicts[language]['Texts']['forecast_date_format']
-        dateTime_formats['current_date_time'] = self.skin_dicts[language]['Texts']['current_date_time']
-        dateTime_formats['datepicker_date_format'] = self.skin_dicts[language]['Texts']['datepicker_date_format']
+        date_time_formats = {}
+        date_time_formats['forecast_date_format'] = self.skin_dicts[language]['Texts']['forecast_date_format']
+        date_time_formats['current_date_time'] = self.skin_dicts[language]['Texts']['current_date_time']
+        date_time_formats['datepicker_date_format'] = self.skin_dicts[language]['Texts']['datepicker_date_format']
 
-        dateTime_formats['year_to_year_xaxis_label'] = self.skin_dicts[language]['Texts']['year_to_year_xaxis_label']
+        date_time_formats['year_to_year_xaxis_label'] = self.skin_dicts[language]['Texts']['year_to_year_xaxis_label']
 
-        dateTime_formats['aggregate_interval_mqtt'] = {}
-        dateTime_formats['aggregate_interval_mqtt']['tooltip_x'] = self.skin_dicts[language]['Texts']['aggregate_interval_mqtt']['tooltip_x']
-        dateTime_formats['aggregate_interval_mqtt']['xaxis_label'] = self.skin_dicts[language]['Texts']['aggregate_interval_mqtt']['xaxis_label']
-        dateTime_formats['aggregate_interval_mqtt']['label'] = self.skin_dicts[language]['Texts']['aggregate_interval_mqtt']['label']
+        date_time_formats['aggregate_interval_mqtt'] = {}
+        date_time_formats['aggregate_interval_mqtt']['tooltip_x'] = self.skin_dicts[language]['Texts']['aggregate_interval_mqtt']['tooltip_x']
+        date_time_formats['aggregate_interval_mqtt']['xaxis_label'] = self.skin_dicts[language]['Texts']['aggregate_interval_mqtt']['xaxis_label']
+        date_time_formats['aggregate_interval_mqtt']['label'] = self.skin_dicts[language]['Texts']['aggregate_interval_mqtt']['label']
 
-        dateTime_formats['aggregate_interval_multiyear'] = {}
-        dateTime_formats['aggregate_interval_multiyear']['tooltip_x'] = self.skin_dicts[language]['Texts']['aggregate_interval_multiyear']['tooltip_x']
-        dateTime_formats['aggregate_interval_multiyear']['xaxis_label'] = self.skin_dicts[language]['Texts']['aggregate_interval_multiyear']['xaxis_label']
-        dateTime_formats['aggregate_interval_multiyear']['label'] = self.skin_dicts[language]['Texts']['aggregate_interval_multiyear']['label']
-                
-        dateTime_formats['aggregate_interval_none'] = {}
-        dateTime_formats['aggregate_interval_none']['tooltip_x'] = self.skin_dicts[language]['Texts']['aggregate_interval_none']['tooltip_x']
-        dateTime_formats['aggregate_interval_none']['xaxis_label'] = self.skin_dicts[language]['Texts']['aggregate_interval_none']['xaxis_label']
-        dateTime_formats['aggregate_interval_none']['label'] = self.skin_dicts[language]['Texts']['aggregate_interval_none']['label']
+        date_time_formats['aggregate_interval_multiyear'] = {}
+        date_time_formats['aggregate_interval_multiyear']['tooltip_x'] = \
+            self.skin_dicts[language]['Texts']['aggregate_interval_multiyear']['tooltip_x']
+        date_time_formats['aggregate_interval_multiyear']['xaxis_label'] = \
+            self.skin_dicts[language]['Texts']['aggregate_interval_multiyear']['xaxis_label']
+        date_time_formats['aggregate_interval_multiyear']['label'] = self.skin_dicts[language]['Texts']['aggregate_interval_multiyear']['label']
 
-        dateTime_formats['aggregate_interval_hour'] = {}
-        dateTime_formats['aggregate_interval_hour']['tooltip_x'] = self.skin_dicts[language]['Texts']['aggregate_interval_hour']['tooltip_x']
-        dateTime_formats['aggregate_interval_hour']['xaxis_label'] = self.skin_dicts[language]['Texts']['aggregate_interval_hour']['xaxis_label']
-        dateTime_formats['aggregate_interval_hour']['label'] = self.skin_dicts[language]['Texts']['aggregate_interval_hour']['label']
+        date_time_formats['aggregate_interval_none'] = {}
+        date_time_formats['aggregate_interval_none']['tooltip_x'] = self.skin_dicts[language]['Texts']['aggregate_interval_none']['tooltip_x']
+        date_time_formats['aggregate_interval_none']['xaxis_label'] = self.skin_dicts[language]['Texts']['aggregate_interval_none']['xaxis_label']
+        date_time_formats['aggregate_interval_none']['label'] = self.skin_dicts[language]['Texts']['aggregate_interval_none']['label']
 
-        dateTime_formats['aggregate_interval_day'] = {}
-        dateTime_formats['aggregate_interval_day']['tooltip_x'] = self.skin_dicts[language]['Texts']['aggregate_interval_day']['tooltip_x']
-        dateTime_formats['aggregate_interval_day']['xaxis_label'] = self.skin_dicts[language]['Texts']['aggregate_interval_day']['xaxis_label']
-        dateTime_formats['aggregate_interval_day']['label'] = self.skin_dicts[language]['Texts']['aggregate_interval_day']['label']
+        date_time_formats['aggregate_interval_hour'] = {}
+        date_time_formats['aggregate_interval_hour']['tooltip_x'] = self.skin_dicts[language]['Texts']['aggregate_interval_hour']['tooltip_x']
+        date_time_formats['aggregate_interval_hour']['xaxis_label'] = self.skin_dicts[language]['Texts']['aggregate_interval_hour']['xaxis_label']
+        date_time_formats['aggregate_interval_hour']['label'] = self.skin_dicts[language]['Texts']['aggregate_interval_hour']['label']
 
-        return dateTime_formats
+        date_time_formats['aggregate_interval_day'] = {}
+        date_time_formats['aggregate_interval_day']['tooltip_x'] = self.skin_dicts[language]['Texts']['aggregate_interval_day']['tooltip_x']
+        date_time_formats['aggregate_interval_day']['xaxis_label'] = self.skin_dicts[language]['Texts']['aggregate_interval_day']['xaxis_label']
+        date_time_formats['aggregate_interval_day']['label'] = self.skin_dicts[language]['Texts']['aggregate_interval_day']['label']
+
+        return date_time_formats
 
     def _get_last24hours(self, data_binding=None):
         dbm = self.generator.db_binder.get_manager(data_binding=data_binding)
@@ -800,9 +802,10 @@ class JAS(SearchList):
             self.chart_defs[chart]['weewx']['yAxis']['0'] = {}
             self.chart_defs[chart]['weewx']['yAxis']['0']['weewx'] = {}
             self.chart_defs[chart]['weewx']['yAxis']['0']['weewx']['obs'] = observation
-            
+
             if self.skin_dict['Extras']['chart_definitions'][chart]['series'][obs].get('weewx', False):
-                self.chart_defs[chart]['weewx']['yAxis']['0']['weewx']['unit'] = self.skin_dict['Extras']['chart_definitions'][chart]['series'][obs]['weewx'].get('unit', None)
+                self.chart_defs[chart]['weewx']['yAxis']['0']['weewx']['unit'] = \
+                    self.skin_dict['Extras']['chart_definitions'][chart]['series'][obs]['weewx'].get('unit', None)
 
             # ToDo: rework
             for value in self.skin_dict['Extras']['chart_definitions'][chart]['series']:
@@ -823,7 +826,8 @@ class JAS(SearchList):
                         self.chart_defs[chart]['weewx']['yAxis'][y_axis_index]['weewx'] = {}
                     self.chart_defs[chart]['weewx']['yAxis'][y_axis_index]['weewx']['obs'] = observation
                     if self.skin_dict['Extras']['chart_definitions'][chart]['series'][value].get('weewx', False):
-                        self.chart_defs[chart]['weewx']['yAxis'][y_axis_index]['weewx']['unit'] = self.skin_dict['Extras']['chart_definitions'][chart]['series'][value]['weewx'].get('unit', None)
+                        self.chart_defs[chart]['weewx']['yAxis'][y_axis_index]['weewx']['unit'] = \
+                            self.skin_dict['Extras']['chart_definitions'][chart]['series'][value]['weewx'].get('unit', None)
 
                 self.chart_defs[chart]['series'][value].merge((self.chart_series_defaults.get(coordinate_type, {}).get(charttype, {})))
                 weewx_options['observation'] = observation
@@ -976,9 +980,6 @@ class JAS(SearchList):
                     chart2 += "]};\n"
                     chart2 += "pageChart.option = option;\n"
                 elif series_type == 'comparison':
-                    text_translations = self.generator.skin_dict.get('Texts', weeutil.config.config_from_str('lang = en'))
-                    year_to_year_xaxis_label = text_translations.get('year_to_year_xaxis_label', 'MM/DD')
-
                     chart2 += "option = {\n"
                     chart2 += "  series: [\n"
                     obs = next(iter(chart_def['series']))
@@ -991,7 +992,8 @@ class JAS(SearchList):
                         chart2 += "    {name: '" + str(year) + "',\n"
                         chart2 += "     data: year" + str(year) + "_" + aggregate_type \
                                 + "." + obs + "_"  + obs_data_binding \
-                                + ".map(arr => [moment.unix(arr[0] / 1000).utcOffset(" + str(self.utc_offset) + ").format(dateTimeFormat[lang].chart.yearToYearXaxis), arr[1]]),\n" \
+                                + ".map(arr => [moment.unix(arr[0] / 1000).utcOffset(" + str(self.utc_offset) \
+                                + ").format(dateTimeFormat[lang].chart.yearToYearXaxis), arr[1]]),\n" \
                                 + "},\n"
                     chart2 += "]};\n"
                     chart2 += "pageChart.option = option;\n"
