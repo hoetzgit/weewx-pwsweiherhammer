@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Important note: This file has to be edited and saved in
+# ISO8859-1 code set. Otherwise it will not work any more.
+
+# replace german umlauts and predefined character sequences
+# with html-entities in a file given as parameter
+# place it into /usr/local/bin, make it executable
+# to all and add it to nautilus-actions
+# Michael Luthardt 2007
+# http://dr-luthardt.de/
+
+sed -e 's/ae/\ä/g' \
+    -e 's/oe/\ö/g' \
+    -e 's/ue/\ü/g' \
+    -e 's/sz/\ß/g'

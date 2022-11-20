@@ -2546,8 +2546,10 @@ class EcowittClient(Consumer):
                 if 'lightning_distance' in pkt:
                     #WH57 gives a value in kilometers, if we have us units we must convert it to miles
                     lightdistkm = pkt['lightning_distance']
-                    #direct conversion
+                    #direct conversion km to mi
+                    #using lightning_distance only if ligtning_strike_count > 0 (weewx.conf [[Corrections]])
                     pkt['lightning_distance'] = 0.62137119 * lightdistkm
+                    #Displaying the historical last distance
                     pkt['lightning'] = pkt['lightning_distance']
 
                 # get the rain this period from total
@@ -2557,17 +2559,17 @@ class EcowittClient(Consumer):
                     logdbg("Rain new tot: %s" % str(newtot))
                     new_delta = self._delta_rain(newtot, self._last_rain)
                     pkt['rain'] = new_delta
-                    logdbg("Rain: %s" % str(pkt['rain']))
+                    logdbg("Rain Delta: %s" % str(pkt['rain']))
                     self._last_rain = newtot
 
                 # get the lightinig this period from total
                 if 'lightning_num' in pkt:
                     new_strikes_total = pkt['lightning_num']
-                    logdbg("Lightning old tot: %s" % str(self._last_strikes_total))
-                    logdbg("Lightning new tot: %s" % str(new_strikes_total))
+                    logdbg("Lightning strikes old tot: %s" % str(self._last_strikes_total))
+                    logdbg("Lightning strikes new tot: %s" % str(new_strikes_total))
                     new_delta = self._delta_strikes(new_strikes_total, self._last_strikes_total)
                     pkt['lightning_strike_count'] = new_delta
-                    logdbg("Lightning: %s" % str(pkt['lightning_strike_count']))
+                    logdbg("Lightning strikes Delta: %s" % str(pkt['lightning_strike_count']))
                     self._last_strikes_total = new_strikes_total
 
                 # calculate luminosity

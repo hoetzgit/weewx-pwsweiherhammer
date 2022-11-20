@@ -39,7 +39,10 @@ MV="/usr/bin/mv -vf"
 CP="/usr/bin/cp -vf"
 RM="/usr/bin/rm -vf"
 TMP="/tmp/wget-dwd.tmp"
+TMP2="/tmp/wget-dwd2.tmp"
 HTML2ENT="/usr/local/bin/weewx-DWD/html2ent.ansi"
+UML2DUMMY="/usr/local/bin/weewx-DWD/uml2dummy.ansi"
+DUMMY2UML="/usr/local/bin/weewx-DWD/dummy2uml.ansi"
 
 # Logdatei loeschen
 #/bin/rm "$LOG_FN" 2>/dev/null
@@ -53,9 +56,14 @@ for i in 50 51 52 53 54; do
         sed -i 's/<\/strong>/&<\/p><p>/g' "${TMP}"
     elif [[ i -eq 54 ]]; then
         sed -i 's/\<Uhr\><\/strong>/&<\/p><p>/g' "${TMP}"
-        #TODO: sed Zusammenfassen
+        #TODO: sed zusammenfassen
+        #TODO: UML2DUMMY/DUMMY2UML: bessere Lösung möglich? Grund: :upper: und Umlaute (z.B. SCHNEE/GLÄTTE:)
+        ${UML2DUMMY} <"${TMP}" >"${TMP2}"
+        ${MV} ${TMP2} ${TMP}
         sed -i 's/\([[:upper:]]\)\([[:upper:]]*\>\)\([\/]\)\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2\/\u\4\L\5:<\/strong>/g' "${TMP}"
         sed -i 's/\b\([[:upper:]]\)\([[:upper:]]*\b\):/<\/p><p><strong>\u\1\L\2:<\/strong>/g' "${TMP}"
+        ${DUMMY2UML} <"${TMP}" >"${TMP2}"
+        ${MV} ${TMP2} ${TMP}
     fi
     if [ "$?" -eq 0 ]; then
         for EXPORT in ${EXPORTS[@]}; do
