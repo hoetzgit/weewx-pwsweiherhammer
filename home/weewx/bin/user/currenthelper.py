@@ -81,18 +81,18 @@ class CurrentHelper(StdService):
         self.lat = to_float(config_dict.get('latitude', 49.632270))
         self.lon = to_float(config_dict.get('longitude', 12.056186))
         self.radiation_min = to_int(currenthelper_dict.get('radiation_min', 50))
-        self.sunshine_coeff = to_float(currenthelper_dict.get('sunshine_coeff', 0.79))
+        self.sunshine_coeff_default = to_float(currenthelper_dict.get('sunshine_coeff_default', 1.0))
 
-        sunshine_coeff_mon_lst = currenthelper_dict.get('sunshine_coeff_mon', None)
-        if sunshine_coeff_mon_lst is not None and not isinstance(sunshine_coeff_mon_lst, list):
+        sunshine_coeff_monthly = currenthelper_dict.get('sunshine_coeff_monthly', None)
+        if sunshine_coeff_monthly is not None and not isinstance(sunshine_coeff_monthly, list):
             tmplist = []
-            tmplist.append(sunshine_coeff_mon_lst)
-            sunshine_coeff_mon_lst = tmplist
-        self.sunshine_coeff_mon_dict = dict()
-        for i in range(0, len(sunshine_coeff_mon_lst), 1):
-            self.sunshine_coeff_mon_dict[i+1] = float(sunshine_coeff_mon_lst[i])
+            tmplist.append(sunshine_coeff_monthly)
+            sunshine_coeff_monthly = tmplist
+        self.sunshine_coeff_monthly = dict()
+        for i in range(0, len(sunshine_coeff_monthly), 1):
+            self.sunshine_coeff_monthly[i+1] = float(sunshine_coeff_monthly[i])
         if self.debug >= 2:
-            logdbg("sunshine_coeff_mon_dict %s" % str(self.sunshine_coeff_mon_dict))
+            logdbg("sunshine_coeff_monthly %s" % str(self.sunshine_coeff_monthly))
 
         self.observations = currenthelper_dict.get('observations', 'raining')
         if self.observations is not None and not isinstance(self.observations, list):
@@ -240,11 +240,14 @@ class CurrentHelper(StdService):
             monthofyear = to_int(time.strftime("%m", time.gmtime(loopDate)))
             # Test
             # Version 1: static coeff over the year
-            coeff_1 = self.sunshine_coeff
+            coeff_1 = self.sunshine_coeff_default
             # Version 2: coeff disabled, without radiation min (https://github.com/hoetzgit/sunduration/blob/master/sunduration.py)
             coeff_2 = 1.0
             # Version 3: coeff per month, fallback to static coeff
-            coeff_3 = self.sunshine_coeff_mon_dict.get(monthofyear, self.sunshine_coeff) # coeff per month, fallback to static coeff
+            coeff_3 = self.sunshine_coeff_monthly.get(monthofyear, None) # coeff per month, fallback to static coeff
+            if coeff_3 is None:
+                logerr("Monthly based coeff is not valid, using coeff default instead!")
+                coeff_3 = self.sunshine_coeff_default
 
             threshold_1 = float(self.sunshine_Threshold(loopDate, self.lat, self.lon, coeff_1))
             threshold_2 = float(self.sunshine_Threshold(loopDate, self.lat, self.lon, coeff_2))

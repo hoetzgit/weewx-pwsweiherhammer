@@ -60,7 +60,13 @@ for i in 50 51 52 53 54; do
         #TODO: UML2DUMMY/DUMMY2UML: bessere Lösung möglich? Grund: :upper: und Umlaute (z.B. SCHNEE/GLÄTTE:)
         ${UML2DUMMY} <"${TMP}" >"${TMP2}"
         ${MV} ${TMP2} ${TMP}
+        # XXX/XXX/XXX/XXX:
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\>\)\([\/]\)\([[:upper:]]\)\([[:upper:]]*\>\)\([\/]\)\([[:upper:]]\)\([[:upper:]]*\>\)\([\/]\)\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2\/\u\4\L\5\/\u\7\L\8\/\u\10\L\11:<\/strong>/g' "${TMP}"
+        # XXX/XXX/XXX:
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\>\)\([\/]\)\([[:upper:]]\)\([[:upper:]]*\>\)\([\/]\)\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2\/\u\4\L\5\/\u\7\L\8:<\/strong>/g' "${TMP}"
+        # XXX/XXX:
         sed -i 's/\([[:upper:]]\)\([[:upper:]]*\>\)\([\/]\)\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2\/\u\4\L\5:<\/strong>/g' "${TMP}"
+        # XXX:
         sed -i 's/\b\([[:upper:]]\)\([[:upper:]]*\b\):/<\/p><p><strong>\u\1\L\2:<\/strong>/g' "${TMP}"
         ${DUMMY2UML} <"${TMP}" >"${TMP2}"
         ${MV} ${TMP2} ${TMP}

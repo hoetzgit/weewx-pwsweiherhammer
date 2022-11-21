@@ -388,15 +388,15 @@ class XWeiherhammer(weewx.xtypes.XType):
 
     def __init__(self, altitude, latitude, longitude,
                  solar_heatindex_algo='new',
-                 sunshine_coeff=0.79,
-                 sunshine_coeff_mon_dict={}
+                 sunshine_coeff_default=1.0,
+                 sunshine_coeff_monthly={}
                  ):
         self.alt = altitude
         self.lat = latitude
         self.lon = longitude
         self.solar_heatindex_algo = solar_heatindex_algo.lower()
-        self.sunshine_coeff = sunshine_coeff
-        self.sunshine_coeff_mon_dict = sunshine_coeff_mon_dict
+        self.sunshine_coeff_default = sunshine_coeff_default
+        self.sunshine_coeff_monthly = sunshine_coeff_monthly
 
         loginf("Version is %s" % XWEIHERHAMMER_VERSION)
 
@@ -506,12 +506,15 @@ class XWeiherhammer(weewx.xtypes.XType):
 
     # calculate sunshine threshold for sunshining yes/no with static coeff
     def calc_sunshineThreshold(self, key, data, db_manager=None):
-        return sunshineThreshold(to_int(data['dateTime']), self.lat, self.lon, self.sunshine_coeff)
+        return sunshineThreshold(to_int(data['dateTime']), self.lat, self.lon, self.sunshine_coeff_default)
 
     # calculate sunshine threshold for sunshining yes/no with coeff month based
     def calc_sunshineThresholdMonth(self, key, data, db_manager=None):
         monthofyear = to_int(time.strftime("%m",time.gmtime(int(data['dateTime']))))
-        coeff = self.sunshine_coeff_mon_dict.get(monthofyear, self.sunshine_coeff)
+        coeff = self.sunshine_coeff_monthly.get(monthofyear, None)
+        if coeff is None:
+            logerr("Monthly based coeff is not valid, using coeff default instead!")
+            coeff = self.sunshine_coeff_default
         return sunshineThreshold(to_int(data['dateTime']), self.lat, self.lon, coeff)
 
     # calculate sunshine threshold for sunshining yes/no
@@ -596,21 +599,22 @@ class XWeiherhammerService(StdService):
         solar_heatindex_algo = option_dict['solar_heatindex'].get('algorithm', 'new').lower()
 
         # sunshine threshold related options
-        sunshine_coeff = to_float(option_dict['sunshineThreshold'].get('coeff', 0.79))
-        sunshine_coeff_mon_lst = option_dict['sunshineThreshold'].get('coeff_mon', None)
-        if sunshine_coeff_mon_lst is not None and not isinstance(sunshine_coeff_mon_lst, list):
+        sunshine_coeff_default = to_float(option_dict['sunshineThreshold'].get('coeff_default', 1.0))
+        sunshine_coeff_monthly = option_dict['sunshineThreshold'].get('coeff_monthly', None)
+        if sunshine_coeff_monthly is not None and not isinstance(sunshine_coeff_monthly, list):
             tmplist = []
             tmplist.append(sunshine_coeff_mon_lst)
-            sunshine_coeff_mon_lst = tmplist
-        sunshine_coeff_mon_dict = dict()
-        for i in range(0, len(sunshine_coeff_mon_lst), 1):
-            sunshine_coeff_mon_dict[i+1] = to_float(sunshine_coeff_mon_lst[i])
+            sunshine_coeff_monthly = tmplist
+        tmplist = sunshine_coeff_monthly
+        sunshine_coeff_monthly = dict()
+        for i in range(0, len(tmplist), 1):
+            sunshine_coeff_monthly[i+1] = to_float(tmplist[i])
 
         # Instantiate an instance of XWeiherhammer:
         self.XW = XWeiherhammer(altitude, latitude, longitude, 
                                 solar_heatindex_algo,
-                                sunshine_coeff,
-                                sunshine_coeff_mon_dict
+                                sunshine_coeff_default,
+                                sunshine_coeff_monthly
                                 )
         # Register it:
         weewx.xtypes.xtypes.append(self.XW)
