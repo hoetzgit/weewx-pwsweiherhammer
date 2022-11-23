@@ -10,7 +10,7 @@
 # Michael Luthardt 2007
 # http://dr-luthardt.de/
 
-sed -e 's/\Ä/AE/g' \
-    -e 's/\Ö/OE/g' \
-    -e 's/\Ü/UE/g' \
-    -e 's/\ß/SZ/g'
+sed -e 's/\Ä/AEAE/g' \
+    -e 's/\Ö/OEOE/g' \
+    -e 's/\Ü/UEUE/g' \
+    -e 's/\ß/SZSZ/g'

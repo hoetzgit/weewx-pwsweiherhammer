@@ -1,26 +1,46 @@
 """
-    Copyright (C) 2022 Henry Ott
+currenthelper.py
 
-    Determination of some values to better compare current weather
-    conditions delivered via an API with local conditions.
+Copyright (C) 2022 Henry Ott
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Determination of some values to better compare current weather
+conditions delivered via an API with local conditions.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Example weewx.conf configuration:
+
+[CurrentHelper]
+    enable = true
+    debug = 1
+    observations = raining, thunderstorm, sunshine, fog, snow
+    timeintervals = 10, 20, 30, 60
+    loopinterval = 16
+    radiation_min = 50.0
+    # TODO: to adjust coeffizient month 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, --, 12
+    coeff_monthly = "{1: 0.79, 2: 0.79, 3: 0.79, 4: 0.79, 5: 0.79, 6: 0.79, 7: 0.79, 8: 0.79, 9: 0.79, 10: 0.78, 11: 0.71, 12: 0.7}"
+    # If the coeff_monthly is incorrectly configured, this value will be used
+    coeff_fallback = 0.79
+
+Status: work in progress
+My Python knowledge is rudimentary. Hints are welcome!
 """
 
-VERSION = "0.3.1"
+VERSION = "0.1"
 
 import syslog
+import ast
 from datetime import datetime
 import time
 import weewx
@@ -67,8 +87,8 @@ class CurrentHelper(StdService):
         super(CurrentHelper, self).__init__(engine, config_dict)
         loginf("Service version is %s" % VERSION)
 
-        currenthelper_dict = config_dict.get('CurrentHelper', {})
-        enable = to_bool(currenthelper_dict.get('enable', 'false'))
+        cust_dict = config_dict.get('CurrentHelper', {})
+        enable = to_bool(cust_dict.get('enable', True))
         if enable:
             loginf("Service is enabled.")
         else:
@@ -76,25 +96,32 @@ class CurrentHelper(StdService):
             return
 
         # inits
-        self.last_strikes_total = None
-        self.debug = to_int(currenthelper_dict.get('debug', config_dict.get('debug', 0)))
-        self.lat = to_float(config_dict.get('latitude', 49.632270))
-        self.lon = to_float(config_dict.get('longitude', 12.056186))
-        self.radiation_min = to_float(currenthelper_dict.get('radiation_min', 0))
-        self.sunshine_coeff_default = to_float(currenthelper_dict.get('sunshine_coeff_default', 1.0))
+        self.debug = to_int(cust_dict.get('debug', config_dict.get('debug', 0)))
+        loginf("debug level is %d" % self.debug)
+        self.radiation_min = to_float(cust_dict.get('radiation_min', 0))
+        loginf("radiation min threshold is %.2f" % self.radiation_min)
 
-        sunshine_coeff_monthly = currenthelper_dict.get('sunshine_coeff_monthly')
-        if sunshine_coeff_monthly is not None and not isinstance(sunshine_coeff_monthly, list):
-            tmplist = []
-            tmplist.append(sunshine_coeff_monthly)
-            sunshine_coeff_monthly = tmplist
-        self.sunshine_coeff_monthly = dict()
-        for i in range(0, len(sunshine_coeff_monthly), 1):
-            self.sunshine_coeff_monthly[i+1] = float(sunshine_coeff_monthly[i])
-        if self.debug >= 2:
-            logdbg("sunshine_coeff_monthly %s" % str(self.sunshine_coeff_monthly))
+        self.coeff_fallback = to_float(cust_dict.get('coeff_fallback', 1.0))
+        loginf("coeff_fallback is %s" % str(self.coeff_fallback))
+        coeff_monthly = cust_dict.get('coeff_monthly', None)
+        if coeff_monthly is not None:
+            coeff_valid = True
+            if isinstance(coeff_monthly, str):
+                try:
+                    coeff_monthly = ast.literal_eval(coeff_monthly)
+                except ValueError:
+                    coeff_valid = False
+            if not isinstance(coeff_monthly, dict):
+                coeff_valid = False
 
-        self.observations = currenthelper_dict.get('observations', 'raining')
+            if coeff_valid:
+                self.coeff_monthly = coeff_monthly
+                loginf("User configured coeff_monthly is a valid dict! Using user coeff_monthly.")
+            else:
+                logerr("User configured coeff_monthly is not a valid dict! Using default coeff_monthly instead.")
+        loginf("coeff_monthly is %s" % str(self.coeff_monthly))
+
+        self.observations = cust_dict.get('observations', 'raining')
         if self.observations is not None and not isinstance(self.observations, list):
             tmplist = []
             tmplist.append(self.observations)
@@ -102,7 +129,7 @@ class CurrentHelper(StdService):
         if self.debug >= 2:
             logdbg("Observations %s" % str(self.observations))
 
-        self.timeintervals = currenthelper_dict.get('timeintervals', '10')
+        self.timeintervals = cust_dict.get('timeintervals', '10')
         if self.timeintervals is not None and not isinstance(self.timeintervals, list):
             tmplist = []
             tmplist.append(self.timeintervals)
@@ -110,7 +137,7 @@ class CurrentHelper(StdService):
         if self.debug >= 2:
             logdbg("Time intervals %s" % str(self.timeintervals))
 
-        self.loopinterval = to_int(currenthelper_dict.get('loopinterval', 16))
+        self.loopinterval = to_int(cust_dict.get('loopinterval', 16))
         if self.debug >= 2:
             logdbg("Loop interval %d" % self.loopinterval)
 
@@ -123,6 +150,7 @@ class CurrentHelper(StdService):
                 self.obsvalues[obs][ti] = deque(maxlen=(maxlen))
 
         loginf("radiation min threshold is %.2f" % self.radiation_min)
+        self.last_strikes_total = None
 
         # Start intercepting events:
         self.bind(weewx.NEW_LOOP_PACKET, self.newLoopPacket)
@@ -150,29 +178,36 @@ class CurrentHelper(StdService):
             return new_total
         return new_total - old_total
 
-    @staticmethod
-    # calculate sunshine threshold for sunshining yes/no
-    def sunshine_Threshold(dateval, lat, lon, coeff):
-        utcdate = datetime.utcfromtimestamp(to_int(dateval))
-        dayofyear = to_int(time.strftime("%j",time.gmtime(to_int(dateval))))
+    def sunshineThreshold(self, mydatetime):
+        utcdate = datetime.utcfromtimestamp(mydatetime)
+        dayofyear = to_int(time.strftime("%j", time.gmtime(mydatetime)))
+        monthofyear = to_int(time.strftime("%m", time.gmtime(mydatetime)))
+        coeff = self.coeff_monthly.get(monthofyear, None)
+        if coeff is None:
+            coeff = self.coeff_fallback
+            logerr("User configured coeff_monthly month=%d is not valid! Using coeff_fallback=%.2f instead." % (monthofyear, self.coeff_fallback))
+        if self.debug > 1:
+            logdbg("sunshineThreshold coeff=%.2f" % coeff) 
         theta = 360 * dayofyear / 365
         equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
             (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
             2 * (pi / 180) * theta)
-        corrtemps = lon * 4
+        latitude = to_float(self.config_dict["Station"]["latitude"])
+        longitude = to_float(self.config_dict["Station"]["longitude"])
+        corrtemps = longitude * 4
         declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
             (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
             2 * (pi / 180) * theta)) * (180 / pi)
         minutesjour = utcdate.hour * 60 + utcdate.minute
         tempsolaire = (minutesjour + corrtemps + equatemps) / 60
         angle_horaire = (tempsolaire - 12) * 15
-        hauteur_soleil = asin(sin((pi / 180) * lat) * sin((pi / 180) * declinaison) + cos(
-            (pi / 180) * lat) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
+        hauteur_soleil = asin(sin((pi / 180) * latitude) * sin((pi / 180) * declinaison) + cos(
+            (pi / 180) * latitude) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
         if hauteur_soleil > 3:
             seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
-                sin((pi / 180) * hauteur_soleil), 1.25) * coeff
+                sin((pi / 180) * hauteur_soleil), 1.25) * to_float(coeff)
         else:
-            seuil = 0.0
+            seuil = 0
         return seuil
 
     def newLoopPacket(self, event):
@@ -196,7 +231,7 @@ class CurrentHelper(StdService):
             # Add thunderstorm to loop packet
             target_data['thunderstorm'] = thunderstorm
             if self.debug >= 1:
-                logdbg("Thunderstorm now: %s" % ("yes" if thunderstorm > 0 else "no"))
+                logdbg("Thunderstorm: %s" % ("YES" if thunderstorm > 0 else "NO"))
             for ti in self.timeintervals:
                 ti = to_int(ti)
                 self.obsvalues['thunderstorm'][ti].append(thunderstorm)
@@ -219,7 +254,7 @@ class CurrentHelper(StdService):
             # Add raining to loop packet
             target_data['raining'] = raining
             if self.debug >= 1:
-                logdbg("Raining now: %s" % ("yes" if raining > 0 else "no"))
+                logdbg("Rain: %s" % ("YES" if raining > 0 else "NO"))
             for ti in self.timeintervals:
                 ti = to_int(ti)
                 self.obsvalues['raining'][ti].append(raining)
@@ -236,27 +271,25 @@ class CurrentHelper(StdService):
         #################################
         sunshine = event.packet.get('sunshine')
         if sunshine is None:
+            sunshine = 0
             radiation = event.packet.get('radiation')
             if radiation is not None:
                 threshold = event.packet.get('sunshineThreshold')
                 if threshold is None:
-                    loopDate = to_int(target_data.get('dateTime', to_int(datetime.now().timestamp())))
-                    monthofyear = to_int(time.strftime("%m", time.gmtime(loopDate)))
-                    coeff = self.sunshine_coeff_monthly.get(monthofyear)
-                    if coeff is None:
-                        logerr("Monthly based coeff is not valid, using coeff_default instead!")
-                        coeff = self.sunshine_coeff_default
-                    threshold = float(self.sunshine_Threshold(loopDate, self.lat, self.lon, coeff))
+                    loopDate = event.packet.get('dateTime')
+                    threshold = self.sunshineThreshold(loopDate)
 
-                sunshine = 0
                 if threshold > 0.0 and radiation > threshold and radiation >= self.radiation_min:
                     sunshine = 1
             elif self.debug >= 3:
                 logdbg("radiation not present!")
 
         if sunshine is not None:
+            # Add raining to loop packet
+            #target_data['sunshine'] = sunshine
+
             if self.debug >= 1:
-                logdbg("Sun is shining now: %s" % ("yes" if sunshine > 0 else "no"))
+                logdbg("Sunshine: %s" % ("YES" if sunshine > 0 else "NO"))
 
             for ti in self.timeintervals:
                 ti = to_int(ti)
