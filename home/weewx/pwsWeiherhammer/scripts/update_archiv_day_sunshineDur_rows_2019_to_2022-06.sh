@@ -21,7 +21,6 @@ WHAT="${DB}.archiv_day_sunshineDur* vor dem 06.06.2022"
 
 TABLES=(
 "archive_day_sunshineDur"
-"archive_day_sunshineDurOriginal"
 )
 
 echo ""

@@ -1,7 +1,7 @@
 """
     Copyright (C) 2022 Henry Ott
 
-    this weewx extension is based on code from https://github.com/Jterrettaz/sunduration
+    based on code from https://github.com/Jterrettaz/sunduration
 
     Determination of some values to better compare current weather
     conditions delivered via an API with local conditions.
@@ -20,9 +20,10 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-VERSION = "0.2"
+VERSION = "0.3.1"
 
 import syslog
+import ast
 from math import sin, cos, pi, asin
 from datetime import datetime
 import time
@@ -67,105 +68,105 @@ class SunshineDuration(StdService):
         super(SunshineDuration, self).__init__(engine, config_dict)
         loginf("Service version is %s" % VERSION)
 
-        sunshineduration_dict = config_dict.get('SunshineDuration', {})
-        enable = to_bool(sunshineduration_dict.get('enable', 'false'))
+        # extension defaults
+        enable = True
+        self.debug = 0
+        self.radiation_min = 0.0
+        self.add_sunshine_to_loop = False
+
+        # optional customizations by the user.
+        cust_dict = config_dict.get('SunshineDuration', {})
+        enable = to_bool(cust_dict.get('enable', enable))
         if enable:
             loginf("Service is enabled.")
         else:
-            loginf("Service is disabled. Enable it in the CurrentHelper section of weewx.conf.")
+            loginf("Service is disabled. Enable it in the SunshineDuration section of weewx.conf.")
             return
+        self.debug = to_int(cust_dict.get('debug', self.debug))
+        loginf("debug level is %d" % self.debug)
+        self.radiation_min = to_float(cust_dict.get('radiation_min', self.radiation_min))
+        loginf("radiation min threshold is %.2f" % self.radiation_min)
+        self.add_sunshine_to_loop = to_bool(cust_dict.get("add_sunshine_to_loop", self.add_sunshine_to_loop))
+        loginf("add_sunshine_to_loop is %s" % ("True" if self.add_sunshine_to_loop else "False"))
 
-        self.radiation_min = to_int(sunshineduration_dict.get("radiation_min", 50))
-        self.debug = to_int(sunshineduration_dict.get("debug", config_dict.get("debug", 0)))
-        self.lastDate = 0
+        # last dateTime loop package with valid 'radiation'
+        self.lastdateTime = 0
+        # sum sunshineDur within archiv interval
         self.sunshineDur = 0
-        self.sunshineDurMonth = 0
-        self.sunshineDurOriginal = 0
-
-        loginf("Radiation min is %d" % self.radiation_min)
 
         # Start intercepting events:
         self.bind(weewx.NEW_LOOP_PACKET, self.newLoopPacket)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)
 
-
     def newLoopPacket(self, event):
         """Gets called on a new loop packet event."""
-        radiation = event.packet.get('radiation', None)
-        if radiation is None:
-            logerr("Calculation LOOP sunshineDur not possible, radiation not present!")
-            return None
-        loopDate = event.packet.get('dateTime', None)
-        if loopDate is None:
-            logerr("Calculation LOOP sunshineDur not possible, dateTime not present!")
-            return None
-        loopInterval = 0
-        stationInterval = event.packet.get('foshk_interval', None)
-        if stationInterval is not None:
-            loopInterval = stationInterval
-            self.lastDate = loopDate
-        elif self.lastDate > 0 and loopDate is not None:
-            loopInterval = loopDate - self.lastDate
-            self.lastDate = loopDate
-        else:
-            logerr("Calculation LOOP sunshineDur not possible, interval could not be determined!")
-            return None
-
-        # Calculation LOOP sunshineDur
-        # Version with static coeff over the year
-        loopSunshineDur = 0
-        threshold = event.packet.get('sunshineThreshold', None)
-        if threshold is None:
-            logerr("Calculation LOOP sunshineDur not possible, sunshineThreshold not present!")
-        else:
-            if threshold > 0 and radiation > threshold and radiation > self.radiation_min:
-                loopSunshineDur = to_int(loopInterval)
-        self.sunshineDur += loopSunshineDur
-        if self.debug >= 1:
-            logdbg("Version 1: LOOP dateTime=%d interval=%d threshold=%.2f radiation=%.2f LOOP sunshineDur=%d" % (
-                loopDate, loopInterval, threshold, radiation, int(self.sunshineDur)))
-
-        # Original Version
-        # https://github.com/Jterrettaz/sunduration
-        # https://github.com/hoetzgit/sunduration/tree/sunshineDur_seconds
-        loopSunshineDur = 0
-        threshold = event.packet.get('sunshineThresholdOriginal', None)
-        if threshold is None:
-            logerr("Calculation LOOP sunshineDurOriginal not possible, sunshineThresholdOriginal not present!")
-        else:
-            if threshold > 0 and radiation > threshold:
-                loopSunshineDur = to_int(loopInterval)
-        self.sunshineDurOriginal += loopSunshineDur
-        if self.debug >= 1:
-            logdbg("Version 2: LOOP dateTime=%d interval=%d threshold=%.2f radiation=%.2f LOOP sunshineDur=%d" % (
-                loopDate, loopInterval, threshold, radiation, int(self.sunshineDur)))
-
-        # Calculation LOOP sunshineDur
-        # Version with coeff per month
-        loopSunshineDur = 0
-        threshold = event.packet.get('sunshineThresholdMonth', None)
-        if threshold is None:
-            logerr("Calculation LOOP sunshineDurMonth not possible, sunshineThresholdMonth not present!")
-        else:
-            if threshold > 0 and radiation > threshold and radiation > self.radiation_min:
-                loopSunshineDur = to_int(loopInterval)
-        self.sunshineDurMonth += loopSunshineDur
-        if self.debug >= 1:
-            logdbg("Version 3: LOOP dateTime=%d interval=%d threshold=%.2f radiation=%.2f LOOP sunshineDur=%d" % (
-                loopDate, loopInterval, threshold, radiation, int(self.sunshineDur)))
-
+        radiation = event.packet.get('radiation')
+        if radiation is not None:
+            loopdateTime = event.packet.get('dateTime')
+            if self.lastdateTime == 0:
+                # It's the first LOOP packet, more is not to be done
+                # To calculate the time we wait for the next loop packet
+                self.lastdateTime = loopdateTime
+            else:
+                loopDuration = loopdateTime - self.lastdateTime
+                self.lastdateTime = event.packet.get('dateTime')
+                if radiation >= self.radiation_min:
+                    threshold = event.packet.get('sunshineThreshold')
+                    if threshold is None:
+                        logerr("Loop calculation not possible, sunshineThreshold not present!")
+                        raise weewx.CannotCalculate('sunshineDur')
+                    loopSunshineDur = 0
+                    sunshine = 0
+                    if threshold > 0.0 and radiation > threshold:
+                        loopSunshineDur = loopDuration
+                        sunshine = 1
+                    self.sunshineDur += loopSunshineDur
+                    if self.debug >= 1:
+                        logdbg("Loop sunshineDur=%d, based on radiation=%.2f threshold=%.2f loopDuration=%d loopSunshineDur=%d" % (
+                            self.sunshineDur, radiation, threshold, loopDuration, loopSunshineDur))
+                    if self.add_sunshine_to_loop:
+                        target_data = {}
+                        target_data['sunshine'] = sunshine
+                        # add sunshine to LOOP
+                        event.packet.update(target_data)
+                elif self.debug >= 1:
+                    logdbg("Loop calculation not done because radiation=%.2f is lower than radiation_min=%.2f" % (
+                        radiation, self.radiation_min))
 
     def newArchiveRecord(self, event):
         """Gets called on a new archive record event."""
         target_data = {}
-        target_data['sunshineDur'] = to_int(self.sunshineDur)
-        target_data['sunshineDurOriginal'] = to_int(self.sunshineDurOriginal)
-        target_data['sunshineDurMonth'] = to_int(self.sunshineDurMonth)
+        target_data['sunshineDur'] = 0.0
+        if self.lastdateTime == 0:
+            # LOOP packets with 'radiation' not yet captured
+            radiation = event.record.get('radiation')
+            if radiation is not None:
+                if radiation >= self.radiation_min:
+                    # We assume here that the radiation is an average value over the whole archive period.
+                    # If this value is higher than the threshold value, we assume that the sun shone during
+                    # the whole archive interval.
+                    archivInterval = event.record.get('interval') * 60 # seconds
+                    threshold = event.record.get('sunshineThreshold')
+                    if threshold is None:
+                        logerr("Archiv calculation not possible, sunshineThreshold not present!")
+                        raise weewx.CannotCalculate('sunshineDur')
+                    if threshold > 0.0 and radiation > threshold:
+                        target_data['sunshineDur'] = archivInterval 
+                    if self.debug >= 1:
+                        loginf("Archiv sunshineDur=%d, based on radiation=%.2f threshold=%.2f archivInterval=%d" % (
+                            target_data['sunshineDur'], radiation, threshold, archivInterval))
+                elif self.debug >= 1:
+                    logdbg("Archiv calculation not done because radiation=%.2f is lower than radiation_min=%.2f" % (
+                        radiation, self.radiation_min))
+            else:
+                logerr("Archiv Calculation not possible, radiation not present!")
+                raise weewx.CannotCalculate('sunshineDur')
+        else:
+            # sum from loop packets
+            target_data['sunshineDur']  = self.sunshineDur
+            if self.debug >= 1:
+                loginf("Archiv sunshineDur=%d, based on loop packets." % (target_data['sunshineDur']))
+
         event.record.update(target_data)
+        # reset internal sum
         self.sunshineDur = 0
-        self.sunshineDurOriginal = 0
-        self.sunshineDurMonth = 0
-        if self.debug >= 1:
-            logdbg("Version 1: ARCHIVE sunshineDur=%d" % (event.record['sunshineDur']))
-            logdbg("Version 2: ARCHIVE sunshineDurOriginal=%d" % (event.record['sunshineDurOriginal']))
-            logdbg("Version 3: ARCHIVE sunshineDurMonth=%d" % (event.record['sunshineDurMonth']))

@@ -60,7 +60,7 @@ from weewx.engine import StdService
 from weeutil.weeutil import to_int, to_float, to_bool
 from weewx.units import ValueTuple, CtoF, FtoC, INHG_PER_MBAR
 
-XWEIHERHAMMER_VERSION = '0.3.0'
+XWEIHERHAMMER_VERSION = '0.3.2'
 
 try:
     # Test for new-style weewx logging by trying to import weeutil.logger
@@ -360,30 +360,6 @@ def thswIndex_US(t_F, RH, ws_mph, rahes):
     # return round(thsw_F, 1) if thsw_F is not None else None
     return thsw_F if thsw_F is not None else None
 
-def sunshineThreshold(dateval, lat, lon, coeff):
-    utcdate = datetime.utcfromtimestamp(to_int(dateval))
-    dayofyear = to_int(time.strftime("%j",time.gmtime(to_int(dateval))))
-    theta = 360 * dayofyear / 365
-    equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
-        (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
-        2 * (pi / 180) * theta)
-    corrtemps = lon * 4
-    declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
-        (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
-        2 * (pi / 180) * theta)) * (180 / pi)
-    minutesjour = utcdate.hour * 60 + utcdate.minute
-    tempsolaire = (minutesjour + corrtemps + equatemps) / 60
-    angle_horaire = (tempsolaire - 12) * 15
-    hauteur_soleil = asin(sin((pi / 180) * lat) * sin((pi / 180) * declinaison) + cos(
-        (pi / 180) * lat) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
-    if hauteur_soleil > 3:
-        seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
-            (sin(pi / 180 * hauteur_soleil)), 1.25) * coeff
-    else:
-        seuil = 0.0
-    return ValueTuple(seuil, 'watt_per_meter_squared', 'group_radiation')
-
-
 class XWeiherhammer(weewx.xtypes.XType):
 
     def __init__(self, altitude, latitude, longitude,
@@ -504,23 +480,34 @@ class XWeiherhammer(weewx.xtypes.XType):
             u = 'degree_C'
         return ValueTuple(val, u, 'group_temperature')
 
-    # calculate sunshine threshold for sunshining yes/no with static coeff
-    def calc_sunshineThreshold(self, key, data, db_manager=None):
-        return sunshineThreshold(to_int(data['dateTime']), self.lat, self.lon, self.sunshine_coeff_default)
-
-    # calculate sunshine threshold for sunshining yes/no with coeff month based
-    def calc_sunshineThresholdMonth(self, key, data, db_manager=None):
-        monthofyear = to_int(time.strftime("%m",time.gmtime(int(data['dateTime']))))
-        coeff = self.sunshine_coeff_monthly.get(monthofyear, None)
-        if coeff is None:
-            logerr("Monthly based coeff is not valid, using coeff default instead!")
-            coeff = self.sunshine_coeff_default
-        return sunshineThreshold(to_int(data['dateTime']), self.lat, self.lon, coeff)
-
     # calculate sunshine threshold for sunshining yes/no
-    # Version https://github.com/Jterrettaz/sunduration
-    def calc_sunshineThresholdOriginal(self, key, data, db_manager=None):
-        return sunshineThreshold(to_int(data['dateTime']), self.lat, self.lon, 1.0)
+    def calc_sunshineThreshold(self, key, data, db_manager=None):
+        utcdate = datetime.utcfromtimestamp(int(data['dateTime']))
+        dayofyear = int(time.strftime("%j",time.gmtime(int(data['dateTime']))))
+        monthofyear = to_int(time.strftime("%m",time.gmtime(int(data['dateTime']))))
+        coeff = self.sunshine_coeff_monthly.get(monthofyear)
+        if coeff is None:
+            logerr("Monthly based coeff is not valid, using coeff_default instead!")
+            coeff = self.sunshine_coeff_default
+        theta = 360 * dayofyear / 365
+        equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
+            (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
+            2 * (pi / 180) * theta)
+        corrtemps = self.lon * 4
+        declinaison = asin(0.006918 - 0.399912 * cos((pi / 180) * theta) + 0.070257 * sin(
+            (pi / 180) * theta) - 0.006758 * cos(2 * (pi / 180) * theta) + 0.000908 * sin(
+            2 * (pi / 180) * theta)) * (180 / pi)
+        minutesjour = utcdate.hour * 60 + utcdate.minute
+        tempsolaire = (minutesjour + corrtemps + equatemps) / 60
+        angle_horaire = (tempsolaire - 12) * 15
+        hauteur_soleil = asin(sin((pi / 180) * self.lat) * sin((pi / 180) * declinaison) + cos(
+            (pi / 180) * self.lat) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
+        if hauteur_soleil > 3:
+            seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
+                sin((pi / 180) * hauteur_soleil), 1.25) * coeff
+        else:
+            seuil = 0.0
+        return ValueTuple(seuil, 'watt_per_meter_squared', 'group_radiation')
 
     @staticmethod
     def calc_airDensity(key, data, db_manager=None):

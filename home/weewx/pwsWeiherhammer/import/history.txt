@@ -1,0 +1,4 @@
+sudo /home/weewx/bin/wee_import --import-config=/home/weewx/pwsWeiherhammer/import/20221002_import.conf
+
+sudo /home/weewx/bin/wee_import --import-config=/home/weewx/pwsWeiherhammer/import/20221122_import.conf
+sudo /home/weewx/bin/wee_database --calc-missing --from=2022-11-22T16:10

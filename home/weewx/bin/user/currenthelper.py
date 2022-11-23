@@ -18,7 +18,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-VERSION = "0.2"
+VERSION = "0.3.1"
 
 import syslog
 from datetime import datetime
@@ -80,10 +80,10 @@ class CurrentHelper(StdService):
         self.debug = to_int(currenthelper_dict.get('debug', config_dict.get('debug', 0)))
         self.lat = to_float(config_dict.get('latitude', 49.632270))
         self.lon = to_float(config_dict.get('longitude', 12.056186))
-        self.radiation_min = to_int(currenthelper_dict.get('radiation_min', 50))
+        self.radiation_min = to_float(currenthelper_dict.get('radiation_min', 0))
         self.sunshine_coeff_default = to_float(currenthelper_dict.get('sunshine_coeff_default', 1.0))
 
-        sunshine_coeff_monthly = currenthelper_dict.get('sunshine_coeff_monthly', None)
+        sunshine_coeff_monthly = currenthelper_dict.get('sunshine_coeff_monthly')
         if sunshine_coeff_monthly is not None and not isinstance(sunshine_coeff_monthly, list):
             tmplist = []
             tmplist.append(sunshine_coeff_monthly)
@@ -122,7 +122,7 @@ class CurrentHelper(StdService):
                 maxlen = to_int(ti*60/self.loopinterval)
                 self.obsvalues[obs][ti] = deque(maxlen=(maxlen))
 
-        loginf("Radiation min is %d" % self.radiation_min)
+        loginf("radiation min threshold is %.2f" % self.radiation_min)
 
         # Start intercepting events:
         self.bind(weewx.NEW_LOOP_PACKET, self.newLoopPacket)
@@ -170,7 +170,7 @@ class CurrentHelper(StdService):
             (pi / 180) * lat) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
         if hauteur_soleil > 3:
             seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
-                (sin(pi / 180 * hauteur_soleil)), 1.25) * coeff
+                sin((pi / 180) * hauteur_soleil), 1.25) * coeff
         else:
             seuil = 0.0
         return seuil
@@ -186,7 +186,7 @@ class CurrentHelper(StdService):
         #################################
         # thunderstorm?
         #################################
-        strikes_total = event.packet.get('lightning_num', None)
+        strikes_total = event.packet.get('lightning_num')
         if strikes_total is not None:
             new_delta = self.delta_total(strikes_total, self.last_strikes_total)
             thunderstorm = 0
@@ -211,7 +211,7 @@ class CurrentHelper(StdService):
         #################################
         # rain?
         #################################
-        rain = event.packet.get('rain', None)
+        rain = event.packet.get('rain')
         if rain is not None:
             raining = 0
             if (rain > 0.0):
@@ -219,7 +219,7 @@ class CurrentHelper(StdService):
             # Add raining to loop packet
             target_data['raining'] = raining
             if self.debug >= 1:
-                logdbg("It's raining now: %s" % ("yes" if raining > 0 else "no"))
+                logdbg("Raining now: %s" % ("yes" if raining > 0 else "no"))
             for ti in self.timeintervals:
                 ti = to_int(ti)
                 self.obsvalues['raining'][ti].append(raining)
@@ -234,75 +234,37 @@ class CurrentHelper(StdService):
         #################################
         # sunshine?
         #################################
-        radiation = event.packet.get('radiation', None)
-        if radiation is not None:
-            loopDate = to_int(target_data.get('dateTime', to_int(datetime.now().timestamp())))
-            monthofyear = to_int(time.strftime("%m", time.gmtime(loopDate)))
-            # Test
-            # Version 1: static coeff over the year
-            coeff_1 = self.sunshine_coeff_default
-            # Version 2: coeff disabled, without radiation min (https://github.com/hoetzgit/sunduration/blob/master/sunduration.py)
-            coeff_2 = 1.0
-            # Version 3: coeff per month, fallback to static coeff
-            coeff_3 = self.sunshine_coeff_monthly.get(monthofyear, None) # coeff per month, fallback to static coeff
-            if coeff_3 is None:
-                logerr("Monthly based coeff is not valid, using coeff default instead!")
-                coeff_3 = self.sunshine_coeff_default
+        sunshine = event.packet.get('sunshine')
+        if sunshine is None:
+            radiation = event.packet.get('radiation')
+            if radiation is not None:
+                threshold = event.packet.get('sunshineThreshold')
+                if threshold is None:
+                    loopDate = to_int(target_data.get('dateTime', to_int(datetime.now().timestamp())))
+                    monthofyear = to_int(time.strftime("%m", time.gmtime(loopDate)))
+                    coeff = self.sunshine_coeff_monthly.get(monthofyear)
+                    if coeff is None:
+                        logerr("Monthly based coeff is not valid, using coeff_default instead!")
+                        coeff = self.sunshine_coeff_default
+                    threshold = float(self.sunshine_Threshold(loopDate, self.lat, self.lon, coeff))
 
-            threshold_1 = float(self.sunshine_Threshold(loopDate, self.lat, self.lon, coeff_1))
-            threshold_2 = float(self.sunshine_Threshold(loopDate, self.lat, self.lon, coeff_2))
-            threshold_3 = float(self.sunshine_Threshold(loopDate, self.lat, self.lon, coeff_3))
+                sunshine = 0
+                if threshold > 0.0 and radiation > threshold and radiation >= self.radiation_min:
+                    sunshine = 1
+            elif self.debug >= 3:
+                logdbg("radiation not present!")
 
-            # Debug Version 1 + 2 + 3
-            if self.debug >= 0:
-                sunshine = "no"
-                if threshold_1 > 0.0 and radiation > threshold_1 and radiation > self.radiation_min:
-                    sunshine = "yes"
-                logdbg(" >>> Version 1: dateTime=%d threshold=%.2f radiation=%.2f coeff=%.2f => sunshine=%s" % (loopDate, threshold_1, radiation, coeff_1, sunshine))
-                sunshine = "no"
-                if threshold_2 > 0.0 and radiation > threshold_2:
-                    sunshine = "yes"
-                logdbg(" >>> Version 2: dateTime=%d threshold=%.2f radiation=%.2f coeff=%.2f => sunshine=%s" % (loopDate, threshold_2, radiation, coeff_2, sunshine))
-                sunshine = "no"
-                if threshold_3 > 0.0 and radiation > threshold_3 and radiation > self.radiation_min:
-                    sunshine = "yes"
-                logdbg(" >>> Version 3: dateTime=%d threshold=%.2f radiation=%.2f coeff=%.2f => sunshine=%s" % (loopDate, threshold_3, radiation, coeff_3, sunshine))
+        if sunshine is not None:
+            if self.debug >= 1:
+                logdbg("Sun is shining now: %s" % ("yes" if sunshine > 0 else "no"))
 
-            # Version 1
-            sunshine = 0
-            if threshold_1 > 0.0 and radiation > threshold_1 and radiation > self.radiation_min:
-                sunshine = 1
-            target_data['sunshine1'] = sunshine
-            target_data['sunshineDurThreshold1'] = threshold_1
-
-            # Version 2
-            sunshine = 0
-            if threshold_2 > 0.0 and radiation > threshold_2:
-                sunshine = 1
-            target_data['sunshine2'] = sunshine
-            target_data['sunshineDurThreshold2'] = threshold_2
-
-            # Version 3
-            sunshine = 0
-            if threshold_3 > 0.0 and radiation > threshold_3 and radiation > self.radiation_min:
-                sunshine = 1
-            target_data['sunshine3'] = sunshine
-            target_data['sunshineDurThreshold3'] = threshold_3
-
-            # Result (i think Version 3 is the best)
-            target_data['sunshine'] = target_data['sunshine3']
-            target_data['sunshineDurThreshold'] = target_data['sunshineDurThreshold3']
             for ti in self.timeintervals:
                 ti = to_int(ti)
-                self.obsvalues['sunshine'][ti].append(target_data['sunshine'])
+                self.obsvalues['sunshine'][ti].append(sunshine)
                 avgvalname = 'sunshine_avg' + str(ti) + 'm'
                 target_data[avgvalname] = self.avg_Deque(self.obsvalues['sunshine'][ti])
                 if self.debug >= 3:
                     logdbg("%s=%s, len=%d, avg=%.2f" % (avgvalname, str(self.obsvalues['sunshine'][ti]),len(self.obsvalues['sunshine'][ti]),target_data[avgvalname]))
-        else:
-            if self.debug >= 3:
-                if radiation is None:
-                    logdbg("radiation not present!")
 
         #################################
         # Fog?
@@ -314,7 +276,6 @@ class CurrentHelper(StdService):
         #outTemp = event.packet.get('outTemp', None)
         #outHumidity = event.packet.get('outHumidity', None)
         #windSpeed = event.packet.get('windSpeed', None)
-
 
         # Add values to LOOP
         event.packet.update(target_data)
