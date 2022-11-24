@@ -84,9 +84,14 @@
     min-height: 95px;
 }
 
-.obs-row, .obs-row-middle, .tabs-row {
+.obs-row, .tabs-row {
     padding: 0px 15px 0px;
     margin: 0 -15px 0 -15px;
+}
+
+.obs-row-middle {
+    padding: 0px 15px 0px 10px;
+    margin: 0 -15px 0 -10px;
 }
 
 .current-obs-symbol, .dark .current-obs-symbol {
@@ -119,7 +124,7 @@
 /* station observations */
 
 .station-observations-label {
-    min-width: 130px;
+    min-width: 120px;
 }
 
 /* station observations Symbols */

@@ -34,6 +34,15 @@
         <td class="label">$gettext("Rain Today")</td>
         <td class="data">$day.rain.sum</td>
       </tr>
+    #elif $x == 'sunshine'
+      <tr>
+        <td class="label">$obs.label[$x]</td>
+        #if $current.sunshine.raw > 0.0
+          <td class="data">$gettext("YES")</td>
+        #else
+          <td class="data">$gettext("NO")</td>
+        #end if
+      </tr>
     #else
       <tr>
         <td class="label">$obs.label[$x]</td>
@@ -41,6 +50,25 @@
       </tr>
     #end if
   #end if
+
+  #if $getVar('current.%s.has_data' % $x)
+    #if $x == 'sunshine'
+      <tr>
+        <td class="label">$obs.label[$x]</td>
+        #if $current.sunshine.raw > 0.0
+          <td class="data">$gettext("YES")</td>
+        #else
+          <td class="data">$gettext("NO")</td>
+        #end if
+      </tr>
+    #elif $x == 'sunshineThreshold'
+      <tr>
+        <td class="label">$obs.label[$x]</td>
+        <td class="data">$getVar('current.' + $x)</td>
+      </tr>
+    #end if
+  #end if
+
 #end for
 
     </tbody>
