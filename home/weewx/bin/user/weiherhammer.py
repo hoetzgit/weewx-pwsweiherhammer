@@ -450,7 +450,7 @@ class getData(SearchList):
 
         # Set a default radar URL using station's lat/lon. Moved from skin.conf
         # so we can get station lat/lon from weewx.conf. A lot of stations out
-        # there with Weiherhammer 0.1 through 0.7 are showing the visitor's
+        # there with Belchertown 0.1 through 0.7 are showing the visitor's
         # location and not the proper station location because nobody edited
         # the radar_html which did not have lat/lon set previously.
         lat = self.generator.config_dict["Station"]["latitude"]
@@ -3171,7 +3171,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
         """
 
         if observation == "windRose":
-            # Special Weiherhammer wind rose with Highcharts aggregator Wind
+            # Special Belchertown wind rose with Highcharts aggregator Wind
             # speeds are split into the first 7 beaufort groups.
             # https://en.wikipedia.org/wiki/Beaufort_scale
 
@@ -3553,7 +3553,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             series = [group_0, group_1, group_2, group_3, group_4, group_5, group_6]
             return series
 
-        # Special Weiherhammer Weather Range (radial)
+        # Special Belchertown Weather Range (radial)
         # https://www.highcharts.com/blog/tutorials/209-the-art-of-the-chart-weather-radials/
         if observation == "weatherRange":
 
@@ -3724,7 +3724,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
 
             return data
 
-        # Special Weiherhammer Skin rain counter
+        # Special Belchertown Skin rain counter
         if observation == "rainTotal":
             obs_lookup = "rain"
             # Force sum on this observation
@@ -4019,7 +4019,10 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             for row in query:
                 xAxis_labels.append(row[0])
                 row_tuple = (row[1], obs_unit_from_target_unit, obs_group)
-                row_converted = self.converter.convert(row_tuple)
+                if row[1] is not None and special_target_unit:
+                    row_converted = weewx.units.convert(row_tuple, special_target_unit)
+                else:
+                    row_converted = self.converter.convert(row_tuple)
                 obsvalues.append(row_converted[0])
 
             # If the values are to be mirrored, we need to make them negative
