@@ -18,7 +18,8 @@
 DB=weewx
 DB_USER=weewx
 DB_PASSWD=weewx
-DB_HOST=192.168.0.182
+#DB_HOST=192.168.0.182
+DB_HOST=localhost
 STARTDATE=1564610400
 DB_EXPORT="/tmp/weewx-dump-$(date +"%Y%m%d%H%M").sql"
 WHAT="${DB}.archiv_day_xxx vor dem 01.08.2019"
@@ -104,6 +105,7 @@ TABLES=(
 "archive_day_gw1100_hourlyrain"
 "archive_day_gw1100_maxdailygust"
 "archive_day_gw1100_monthlyrain"
+"archive_day_gw1100_rain_total"
 "archive_day_gw1100_weeklyrain"
 "archive_day_gw1100_yearlyrain"
 "archive_day_hail"
@@ -208,7 +210,6 @@ TABLES=(
 "archive_day_solar_wetBulb"
 "archive_day_solar_windchill"
 "archive_day_sunshineDur"
-"archive_day_sunshineDurOriginal"
 "archive_day_supplyVoltage"
 "archive_day_thswIndex"
 "archive_day_thwIndex"
@@ -236,8 +237,10 @@ TABLES=(
 )
 
 echo ""
-read -r -p "Datenbank ${DB} vorher sichern? [j/N] " response
-if [[ "$response" =~ ^([yY]|[jJ])$ ]]; then
+read -r -p "Datenbank ${DB} vorher sichern? (y/n) [y]? " response
+if [[ "$response" =~ ^([nN])$ ]]; then
+    echo "Datenbank ${DB} wurde NICHT gesichert."
+else
     echo "Datenbank ${DB} wird in ${DB_EXPORT} gesichert..."
     sudo mysqldump --single-transaction -v -h${DB_HOST} -u${DB_USER} -p${DB_PASSWD} ${DB} >${DB_EXPORT}
     RET=$?
@@ -246,13 +249,11 @@ if [[ "$response" =~ ^([yY]|[jJ])$ ]]; then
         exit ${RET}
     fi
     echo "OK."
-else
-    echo "Datenbank ${DB} wurde NICHT gesichert."
 fi
 
 echo ""
 echo "Achtung! Werte in den Tabellen ${WHAT} werden auf NULL gesetzt."
-read -r -p "Weiter? [j/N] " response
+read -r -p "Weiter (y/n) [n]? " response
 if [[ "$response" =~ ^([yY]|[jJ])$ ]]; then
     echo "Update der Tabellen ${WHAT} wird gestartet..."
     for TABLE in "${TABLES[@]}"

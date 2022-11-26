@@ -14,7 +14,8 @@
 DB=weewx
 DB_USER=weewx
 DB_PASSWD=weewx
-DB_HOST=192.168.0.182
+#DB_HOST=192.168.0.182
+DB_HOST=localhost
 STARTDATE=1642633200
 DB_EXPORT="/tmp/weewx-dump-$(date +"%Y%m%d%H%M").sql"
 WHAT="${DB}.archive_day_lightning_* vor dem 20.01.2022"
@@ -29,8 +30,10 @@ TABLES=(
 )
 
 echo ""
-read -r -p "Datenbank ${DB} vorher sichern? [j/N] " response
-if [[ "$response" =~ ^([yY]|[jJ])$ ]]; then
+read -r -p "Datenbank ${DB} vorher sichern? (y/n) [y]? " response
+if [[ "$response" =~ ^([nN])$ ]]; then
+    echo "Datenbank ${DB} wurde NICHT gesichert."
+else
     echo "Datenbank ${DB} wird in ${DB_EXPORT} gesichert..."
     sudo mysqldump --single-transaction -v -h${DB_HOST} -u${DB_USER} -p${DB_PASSWD} ${DB} >${DB_EXPORT}
     RET=$?
@@ -39,13 +42,11 @@ if [[ "$response" =~ ^([yY]|[jJ])$ ]]; then
         exit ${RET}
     fi
     echo "OK."
-else
-    echo "Datenbank ${DB} wurde NICHT gesichert."
 fi
 
 echo ""
 echo "Achtung! Werte in den Tabellen ${WHAT} werden auf NULL gesetzt."
-read -r -p "Weiter? [j/N] " response
+read -r -p "Weiter (y/n) [n]? " response
 if [[ "$response" =~ ^([yY]|[jJ])$ ]]; then
     echo "Update der Tabellen ${WHAT} wird gestartet..."
     for TABLE in "${TABLES[@]}"

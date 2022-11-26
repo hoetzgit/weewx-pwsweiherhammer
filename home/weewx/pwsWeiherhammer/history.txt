@@ -1,0 +1,7 @@
+20221126 - sunshineDur backfill 01.2019 - 05.2022
+#sudo systemctl stop weewx
+#Datenbanksicherung
+#/home/weewx/pwsWeiherhammer/bin/backfill_sunshineDur /home/weewx/weewx.conf
+#/home/weewx/pwsWeiherhammer/scripts/rebuild_daily.sh
+#sudo systemctl restart weewx
+#sudo /home/weewx/bin/wee_reports --config=/home/weewx/weewx.conf

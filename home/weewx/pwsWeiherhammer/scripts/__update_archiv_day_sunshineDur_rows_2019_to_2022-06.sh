@@ -1,4 +1,7 @@
 #!/bin/bash
+
+#backfilled
+exit 0
 ##################################################################################################
 #
 # Die Wetterstation speichert Datensätze sunshineDur seit dem 06.06.2022 in der WeeWX Datenbank.

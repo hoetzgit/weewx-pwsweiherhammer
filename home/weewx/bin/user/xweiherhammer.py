@@ -364,8 +364,8 @@ class XWeiherhammer(weewx.xtypes.XType):
 
         loginf("Version is %s" % XWEIHERHAMMER_VERSION)
 
-    def sunshineThresholdCoeff(self, dateTime, key, debug=0):
-        monthofyear = to_int(time.strftime("%m",time.gmtime(to_int(dateTime))))
+    def sunshineThresholdCoeff(self, mydatetime, key, debug=0):
+        monthofyear = to_int(time.strftime("%m",time.gmtime(to_int(mydatetime))))
         coeff = self.sunshineThreshold_coeff_monthly.get(monthofyear)
         if coeff is None or coeff < 0.0:
             if self.sunshineThreshold_coeff_fallback is None:
@@ -490,7 +490,7 @@ class XWeiherhammer(weewx.xtypes.XType):
         if 'radiation' not in data:
             raise weewx.CannotCalculate(key)
         sunshine = 0
-        if data['radiation'] >= self.sunshine_radiation_min:
+        if data['radiation'] is not None and data['radiation'] >= self.sunshine_radiation_min:
             coeff = self.sunshineThresholdCoeff(to_int(data['dateTime']), key, self.sunshine_debug)
             threshold = sunshineThreshold(to_int(data['dateTime']), self.lat, self.lon, coeff)
             if threshold > 0.0 and data['radiation'] > threshold:

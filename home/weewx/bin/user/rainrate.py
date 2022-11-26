@@ -168,10 +168,6 @@ class RainRate(StdService):
         assert event.event_type == weewx.NEW_LOOP_PACKET
         log.debug(pkt)
 
-        # Log rain (to be used in simulation testing.
-        if 'rain' in pkt and pkt['rain'] is not None and pkt['rain'] > 0.0:
-            log.info('rain event: %d %f (%r)' % (pkt['dateTime'], pkt['rain'], pkt['rainRate']))
-
         # Process new packet.
         # Add rain (if any) to rain_entries, also delete expired entries.
         RainRate.add_packet(pkt, self.rain_entries)
