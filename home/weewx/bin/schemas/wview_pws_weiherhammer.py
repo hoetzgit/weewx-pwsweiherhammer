@@ -242,6 +242,7 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('outEquiTemp', 'REAL'),
 ('outHumAbs', 'REAL'),
 ('sunshineDur', 'REAL'),
+('sunshine', 'REAL'),
 #
 ('thswIndex', 'REAL'),
 ('thwIndex', 'REAL'),
