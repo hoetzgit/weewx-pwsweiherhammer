@@ -30,8 +30,6 @@ from weewx.engine import StdService
 from weeutil.weeutil import to_int, to_float, to_bool
 from weewx.units import ValueTuple, CtoF, FtoC, INHG_PER_MBAR
 
-XWEIHERHAMMER_VERSION = '0.2'
-
 try:
     # Test for new-style weewx logging by trying to import weeutil.logger
     import weeutil.logger
@@ -63,6 +61,8 @@ except ImportError:
     def logerr(msg):
         logmsg(syslog.LOG_ERR, msg)
 
+VERSION = '0.2.1'
+
 DEFAULTS_INI = """
 [XWeiherhammer]
     [[WXXTypes]]
@@ -70,7 +70,19 @@ DEFAULTS_INI = """
             algorithm = new
         [[[sunshineThreshold]]]
             debug = 0
-            coeff_monthly = '{1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0, 7: 1.0, 8: 1.0, 9: 1.0, 10: 1.0, 11: 1.0, 12: 1.0}'
+            [[[[coeff]]]]
+                1 = 1.0
+                2 = 1.0
+                3 = 1.0
+                4 = 1.0
+                5 = 1.0
+                6 = 1.0
+                7 = 1.0
+                8 = 1.0
+                9 = 1.0
+                10 = 1.0
+                11 = 1.0
+                12 = 1.0
         [[[sunshine]]]
             debug = 0
             radiation_min = 0.0
@@ -317,8 +329,8 @@ def thswIndex_US(t_F, RH, ws_mph, rahes):
 # calculate sunshine threshold for sunshine yes/no
 # https://github.com/Jterrettaz/sunduration
 def sunshineThreshold(mydatetime, lat, lon, coeff=1.0):
-    utcdate = datetime.utcfromtimestamp(to_int(mydatetime))
-    dayofyear = to_int(time.strftime("%j",time.gmtime(to_int(mydatetime))))
+    utcdate = datetime.utcfromtimestamp(mydatetime)
+    dayofyear = to_int(time.strftime("%j",time.gmtime(mydatetime)))
     theta = 360 * dayofyear / 365
     equatemps = 0.0172 + 0.4281 * cos((pi / 180) * theta) - 7.3515 * sin(
         (pi / 180) * theta) - 3.3495 * cos(2 * (pi / 180) * theta) - 9.3619 * sin(
@@ -333,11 +345,8 @@ def sunshineThreshold(mydatetime, lat, lon, coeff=1.0):
     hauteur_soleil = asin(sin((pi / 180) * lat) * sin((pi / 180) * declinaison) + cos(
         (pi / 180) * lat) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
     if hauteur_soleil > 3:
-        # original:
-        #seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
-        #    (sin(pi / 180 * hauteur_soleil)), 1.25) 
         seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
-            sin((pi / 180) * hauteur_soleil), 1.25) * to_float(coeff)
+            sin((pi / 180) * hauteur_soleil), 1.25) * coeff
     else:
         seuil = 0.0
     return seuil
@@ -346,36 +355,24 @@ class XWeiherhammer(weewx.xtypes.XType):
 
     def __init__(self, altitude, latitude, longitude,
                  sunshineThreshold_debug,
-                 sunshineThreshold_coeff_monthly,
-                 sunshineThreshold_coeff_fallback,
+                 sunshineThreshold_coeff_dict,
                  sunshine_debug,
                  sunshine_radiation_min,
-                 solar_heatindex_algo='new'
+                 solar_heatindex_algo
                  ):
         self.alt = altitude
         self.lat = latitude
         self.lon = longitude
         self.solar_heatindex_algo = solar_heatindex_algo.lower()
-        self.sunshineThreshold_debug = sunshineThreshold_debug
-        self.sunshineThreshold_coeff_fallback = sunshineThreshold_coeff_fallback
-        self.sunshineThreshold_coeff_monthly = sunshineThreshold_coeff_monthly
-        self.sunshine_debug = sunshine_debug
-        self.sunshine_radiation_min = sunshine_radiation_min
+        self.sunshineThreshold_debug = to_int(sunshineThreshold_debug)
+        self.sunshineThreshold_coeff_dict = sunshineThreshold_coeff_dict
+        self.sunshine_debug = to_int(sunshine_debug)
+        self.sunshine_radiation_min = to_float(sunshine_radiation_min)
 
-        loginf("Version is %s" % XWEIHERHAMMER_VERSION)
-
-    def sunshineThresholdCoeff(self, mydatetime, key, debug=0):
-        monthofyear = to_int(time.strftime("%m",time.gmtime(to_int(mydatetime))))
-        coeff = self.sunshineThreshold_coeff_monthly.get(monthofyear)
-        if coeff is None or coeff < 0.0:
-            if self.sunshineThreshold_coeff_fallback is None:
-                logerr("Default configured sunshineThreshold_coeff_monthly is not valid!")
-                raise weewx.CannotCalculate(key)
-            coeff = self.sunshineThreshold_coeff_fallback.get(monthofyear)
-            logerr("User configured sunshineThreshold_coeff_monthly month=%d is not valid! Using fallback coeff=%.2f instead." % (monthofyear, coeff))
-        if debug > 0:
-            logdbg("sunshineThreshold, using coeff=%.2f" % (coeff))
-        return coeff
+        if self.sunshineThreshold_debug > 0:
+            logdbg("sunshineThreshold, monthly coeff is %s" % str(self.sunshineThreshold_coeff_dict))
+        if self.sunshine_debug > 0:
+            logdbg("sunshine, radiation_min is %.2f" % self.sunshine_radiation_min)
 
     def get_scalar(self, obs_type, record, db_manager, **option_dict):
         """Invoke the proper method for the desired observation type."""
@@ -482,19 +479,43 @@ class XWeiherhammer(weewx.xtypes.XType):
         return ValueTuple(val, u, 'group_temperature')
 
     def calc_sunshineThreshold(self, key, data, db_manager=None):
-        coeff = self.sunshineThresholdCoeff(to_int(data['dateTime']), key, self.sunshineThreshold_debug)
-        threshold = sunshineThreshold(to_int(data['dateTime']), self.lat, self.lon, coeff)
+        if 'dateTime' not in data:
+            raise weewx.CannotCalculate(key)
+        monthofyear = to_int(time.strftime("%m",time.gmtime(data['dateTime'])))
+        coeff = to_float(self.sunshineThreshold_coeff_dict.get(str(monthofyear)))
+        if coeff is None:
+            coeff = 1.0
+            logerr("sunshineThreshold, user configured coeff month=%d is not valid! Using default coeff=1.0 instead." % (monthofyear))
+        if self.sunshineThreshold_debug >= 3:
+            logdbg("sunshineThreshold, month=%d coeff=%.2f" % (monthofyear, coeff)) 
+        threshold = sunshineThreshold(data['dateTime'], self.lat, self.lon, coeff)
+        if self.sunshineThreshold_debug >= 2:
+            logdbg("sunshineThreshold, threshold=%.2f" % threshold)
         return ValueTuple(threshold, 'watt_per_meter_squared', 'group_radiation')
 
     def calc_sunshine(self, key, data, db_manager=None):
-        if 'radiation' not in data:
+        if 'radiation' not in data or 'dateTime' not in data:
             raise weewx.CannotCalculate(key)
-        sunshine = 0
-        if data['radiation'] is not None and data['radiation'] >= self.sunshine_radiation_min:
-            coeff = self.sunshineThresholdCoeff(to_int(data['dateTime']), key, self.sunshine_debug)
-            threshold = sunshineThreshold(to_int(data['dateTime']), self.lat, self.lon, coeff)
-            if threshold > 0.0 and data['radiation'] > threshold:
-                sunshine = 1
+        sunshine = None
+        if data['radiation'] is not None:
+            if data['radiation'] >= self.sunshine_radiation_min:
+                sunshine = 0
+                monthofyear = to_int(time.strftime("%m",time.gmtime(data['dateTime'])))
+                coeff = to_float(self.sunshineThreshold_coeff_dict.get(str(monthofyear)))
+                if coeff is None:
+                    coeff = 1.0
+                    logerr("sunshine, user configured coeff month=%d is not valid! Using default coeff=1.0 instead." % (monthofyear))
+                if self.sunshine_debug >= 3:
+                    logdbg("sunshine, month=%d coeff=%.2f" % (monthofyear, coeff)) 
+                threshold = sunshineThreshold(data['dateTime'], self.lat, self.lon, coeff)
+                if threshold > 0.0 and data['radiation'] > threshold:
+                    sunshine = 1
+            elif self.sunshine_debug >= 2:
+                logdbg("sunshine, radiation=%.2f lower than radiation_min=%.2f" % (data['radiation'], self.sunshine_radiation_min))
+        elif self.sunshine_debug >= 3:
+            logdbg("sunshine, radiation is None")
+        if self.sunshine_debug >= 2:
+            logdbg("sunshine, sunshine=%s" % (str(sunshine) if sunshine is not None else 'None'))
         return ValueTuple(sunshine, 'count', 'group_count')
 
     @staticmethod
@@ -556,19 +577,11 @@ class XWeiherhammerService(StdService):
 
     def __init__(self, engine, config_dict):
         super(XWeiherhammerService, self).__init__(engine, config_dict)
+        loginf("Service version is %s" % VERSION)
 
         altitude = engine.stn_info.altitude_vt
         latitude = engine.stn_info.latitude_f
         longitude = engine.stn_info.longitude_f
-        loginf("latitude is %s" % str(latitude))
-        loginf("longitude is %s" % str(longitude))
-
-        sunshineThreshold_coeff_fallback = defaults_dict['XWeiherhammer']['WXXTypes']['sunshineThreshold']['coeff_monthly']
-        try:
-            sunshineThreshold_coeff_fallback = ast.literal_eval(sunshineThreshold_coeff_fallback)
-        except ValueError:
-            logerr("Default configured sunshineThreshold_coeff_monthly is not a valid dict!")
-            sunshineThreshold_coeff_fallback = None
 
         # Get any user-defined overrides
         try:
@@ -584,35 +597,16 @@ class XWeiherhammerService(StdService):
 
         # sunshine threshold related options
         sunshineThreshold_debug = to_int(option_dict['sunshineThreshold'].get('debug', 0))
-        sunshineThreshold_coeff_monthly = sunshineThreshold_coeff_fallback
-        coeff_monthly = option_dict['sunshineThreshold'].get('coeff_monthly', sunshineThreshold_coeff_fallback)
-        coeff_valid = True
-        if coeff_monthly is not None:
-            if isinstance(coeff_monthly, str):
-                try:
-                    coeff_monthly = ast.literal_eval(coeff_monthly)
-                except ValueError:
-                    coeff_valid = False
-            if not isinstance(coeff_monthly, dict):
-                coeff_valid = False
-
-            if coeff_valid:
-                sunshineThreshold_coeff_monthly = coeff_monthly
-                loginf("User configured sunshineThreshold_coeff_monthly is a valid dict. Using user defined sunshineThreshold_coeff_monthly.")
-            else:
-                logerr("User configured sunshineThreshold_coeff_monthly is not a valid dict! Using default sunshineThreshold_coeff_monthly instead.")
-
-        loginf("sunshineThreshold_coeff_monthly is %s." % str(sunshineThreshold_coeff_monthly))
+        sunshineThreshold_coeff_dict = option_dict['sunshineThreshold'].get('coeff', {})
 
         # sunshine related options
         sunshine_debug = to_int(option_dict['sunshine'].get('debug', 0))
-        sunshine_radiation_min = to_int(option_dict['sunshine'].get('radiation_min', 0))
+        sunshine_radiation_min = to_float(option_dict['sunshine'].get('radiation_min', 0.0))
 
         # Instantiate an instance of XWeiherhammer:
         self.XW = XWeiherhammer(altitude, latitude, longitude, 
                                 sunshineThreshold_debug,
-                                sunshineThreshold_coeff_monthly,
-                                sunshineThreshold_coeff_fallback,
+                                sunshineThreshold_coeff_dict,
                                 sunshine_debug,
                                 sunshine_radiation_min,
                                 solar_heatindex_algo
