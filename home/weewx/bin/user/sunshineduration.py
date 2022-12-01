@@ -1,7 +1,7 @@
 """
     Copyright (C) 2022 Henry Ott
     based on code from https://github.com/Jterrettaz/sunduration
-    Status: work in progress
+    Status: WORK IN PROGRESS
 
     Adds new observation fields containing sunshine duration
     Condition for calculation:
@@ -137,7 +137,7 @@ class SunshineDuration(StdService):
         archivedateTime = event.record.get('dateTime')
 
         if self.lastArchiv is not None and self.lastLoop is not None and self.lastLoop < self.lastArchiv:
-            # no loop packets with 'radiation' during the last archiv interval
+            # no loop packets with 'sunshine' during the last archiv interval
             # .L..L..L..L..A..........A
             if self.debug >= 3:
                 logdbg("No loop packets with valid 'sunshine' values during last archiv interval, disacard loop indicator.")

@@ -196,7 +196,7 @@ class SunDuration(StdService):
             elif self.debug >= 2:
                 logdbg("LOOP no calculation, radiation=%.2f lower than radiation_min=%.2f" % (radiation, self.radiation_min))
         elif self.debug >= 3:
-            logdbg("LOOP no calculation, radiation not in loop packet or is None.")
+            logdbg("LOOP no calculation, 'radiation' not in loop packet or is None.")
 
         if self.add_sunshine_to_loop:
             target_data = {}
@@ -213,10 +213,10 @@ class SunDuration(StdService):
         archivedateTime = event.record.get('dateTime')
 
         if self.lastArchiv is not None and self.lastLoop is not None and self.lastLoop < self.lastArchiv:
-            # no loop packets with 'radiation' during the last archiv interval
+            # No loop packets with values for 'radiation' or 'radiation' < min during the last archiv interval, discard loop indicator.
             # .L..L..L..L..A..........A
             if self.debug >= 3:
-                logdbg("No loop packets with values for 'radiation' or 'radiation' < min during the last archiv interval, disacard loop indicator.")
+                logdbg("No loop packets with values for 'radiation' or 'radiation' < min during the last archiv interval, discard loop indicator.")
             self.lastLoop = None
             self.sunshineDur = None
 
@@ -240,7 +240,7 @@ class SunDuration(StdService):
                 elif self.debug >= 2:
                     logdbg("ARCHIV no calculation, radiation=%.2f lower than radiation_min=%.2f" % (radiation, self.radiation_min))
             elif self.debug >= 3:
-                logdbg("ARCHIV no calculation, radiation not in archive record or is None.")
+                logdbg("ARCHIV no calculation, 'radiation' not in archive record or is None.")
         else:
             # sum from loop packets
             # .L..L..L..L..L..A

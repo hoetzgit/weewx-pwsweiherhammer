@@ -13,13 +13,17 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+    Threshold values:
+    https://www.tfa-dostmann.de/luftfeuchtigkeit/?utm_source=pocket_saves
 """
 import syslog
 from datetime import datetime
 import time
+
 import weewx
 from weewx.wxengine import StdService
-from weeutil.weeutil import to_bool, to_int, to_float
+from weeutil.weeutil import to_bool, to_int, to_float, to_list
 
 try:
     # Test for new-style weewx logging by trying to import weeutil.logger
@@ -52,54 +56,56 @@ except ImportError:
     def logerr(msg):
         logmsg(syslog.LOG_ERR, msg)
 
-VERSION = "0.1"
-
 DEFAULTS_INI = """
 [IndoorClimate]
     enable = true
     debug = 0
-    [[livingroom]]
-        [[[temperature]]]
-            observation = inTemp
-            unit = degree_C
-            min = 20.0
-            max = 23.0
-        [[[humidity]]]
-            observation = inHumidity
-            min = 40.0
-            max = 60.0
-    [[office]]
-        [[[temperature]]]
-            observation = extraTemp1
-            unit = degree_C
-            min = 20.0
-            max = 23.0
-        [[[humidity]]]
-            observation = extraHumid1
-            min = 40.0
-            max = 60.0
-    [[bathroom]]
-        [[[temperature]]]
-            observation = extraTemp2
-            unit = degree_C
-            min = 20.0
-            max = 23.0
-        [[[humidity]]]
-            observation = extraHumid2
-            min = 50.0
-            max = 70.0
-    [[bedroom]]
-        [[[temperature]]]
-            observation = extraTemp3
-            unit = degree_C
-            min = 17.0
-            max = 20.0
-        [[[humidity]]]
-            observation = extraHumid3
-            min = 40.0
-            max = 60.0
+    [[temperature]]
+        unit = degree_C
+        observation = inTemp
+        level = -2, -1, 0, 1, 2
+        level_opt = 0
+        max = 10, 20, 23, 30, 50
+        color = #EE82EE, #4169E1, #7CFC00, #FFD700, #FF7F50
+        name = very cold, cold, optimal, warm, very warm
+        action = heating, heating, nothing to do, cool, cool
+    [[humidity]]
+        observation = inHumidity
+        level = -2, -1, 0, 1, 2
+        level_opt = 0
+        max = 35, 40, 61, 65, 100
+        color = #EE82EE, #4169E1, #7CFC00, #FFD700, #FF7F50
+        name = very dry, dry, optimal, moist, very moist
+        action = humidify, humidify, nothing to do, airing, airing
+    [[rooms]]
+        level = 0, 1
+        level_opt = 0
+        color = #7CFC00, #FF7F50
+        name = optimal, action required
+        action = nothing to do, action required
+        [[[livingroom]]]
+        [[[office]]]
+            [[[[temperature]]]]
+                observation = extraTemp1
+            [[[[humidity]]]]
+                observation = extraHumid1
+        [[[bathroom]]]
+            [[[[temperature]]]]
+                observation = extraTemp2
+                max = 15, 20, 24, 26, 50
+            [[[[humidity]]]]
+                observation = extraHumid2
+                max = 35, 50, 71, 75, 100
+        [[[bedroom]]]
+            [[[[temperature]]]]
+                observation = extraTemp3
+                max = 12, 16, 19, 25, 50
+            [[[[humidity]]]]
+                observation = extraHumid3
 """
 defaults_dict = weeutil.config.config_from_str(DEFAULTS_INI)
+
+VERSION = "0.1"
 
 class IndoorClimate(StdService):
     def __init__(self, engine, config_dict):
@@ -119,53 +125,143 @@ class IndoorClimate(StdService):
         else:
             loginf("IndoorClimate is disabled. Enable it in the IndoorClimate section of weewx.conf.")
             return
-        self.debug = to_int(self.option_dict['debug'])
-        loginf("debug level is %d" % self.debug)
+        self.debug = to_int(self.option_dict.get('debug', 0))
+        if self.debug > 0:
+            logdbg("debug level is %d" % self.debug)
+
+        # defaults
+        self.temp_dict = self.option_dict.get('temperature', {})
+        self.humid_dict = self.option_dict.get('humidity', {})
 
         # Start intercepting events:
         self.bind(weewx.NEW_LOOP_PACKET, self.newLoopPacket)
 
     def newLoopPacket(self, event):
         """Gets called on a new loop packet event."""
-        if self.debug > 1:
+        if self.debug >= 3:
             logdbg("incomming loop packet: %s" % str(event.packet))
+
         target_data = {}
-        for room, room_dict in self.option_dict.items():
+        for room, room_dict in self.option_dict['rooms'].items():
             if isinstance(room_dict, dict):
-                room_opt = None
-                for check, check_dict in room_dict.items():
-                    if isinstance(check_dict, dict):
-                        check_obs = check_dict.get('observation')
-                        if check_obs is not None:
-                            check_unit = check_dict.get('unit')
-                            if check_unit is not None:
-                                obs_vt = weewx.units.as_value_tuple(event.packet, check_obs)
-                                if check_unit != obs_vt[1]:
-                                    check_val = weewx.units.convert(obs_vt,check_unit)[0]
-                                else:
-                                    check_val = obs_vt[0]
-                            else:
-                                check_val = to_float(event.packet.get(check_obs))
-                            if check_val is not None:
-                                check_min = to_float(check_dict.get('min'))
-                                check_max = to_float(check_dict.get('max'))
-                                if check_min is not None and check_max is not None:
-                                    check_opt = 1 if check_val >= check_min and check_val <= check_max else 0
-                                    res_key = str(room) + '_' + str(check) + '_opt'
-                                    target_data[res_key] = check_opt
-                                    if room_opt is None:
-                                        room_opt = check_opt
-                                    else:
-                                        room_opt = check_opt if check_opt < room_opt else room_opt
-                                    if self.debug > 0:
-                                        logdbg("room=%s check=%s obs=%s val=%.2f optimal=%s" % (str(room), str(check), str(check_obs), check_val, ('YES' if check_opt > 0 else 'NO')))
-                if room_opt is not None:
-                    res_key = str(room) + '_opt'
-                    target_data[res_key] = room_opt
-                    if self.debug > 0:
-                        logdbg("room=%s optimal=%s" % (str(room), ('YES' if room_opt > 0 else 'NO')))
+                # temperature
+                tqi = tqi_key = obs_val = None
+                room_temp_dict = self.temp_dict
+                room_temp_dict.merge(room_dict.get('temperature', {}))
+                tqi_opt = room_temp_dict.get('level_opt', 0)
+                obs = room_temp_dict.get('observation')
+                if obs in event.packet:
+                    unit = room_temp_dict.get('unit')
+                    if unit is not None:
+                        obs_vt = weewx.units.as_value_tuple(event.packet, obs)
+                        if unit != obs_vt[1]:
+                            obs_val = weewx.units.convert(obs_vt, unit)[0]
+                        else:
+                            obs_val = obs_vt[0]
+                    else:
+                        obs_val = event.packet[obs]
+                    max_lst = to_list(room_temp_dict.get('max'))
+                    level_lst = to_list(room_temp_dict.get('level'))
+                    for i in range(len(max_lst)):
+                        if to_float(obs_val) < to_float(max_lst[i]):
+                            tqi = level_lst[i]
+                            tqi_key = i
+                            break
+
+                # loop room temperature quality result
+                target_data[str(room) + '_tqi'] = tqi
+
+                if tqi is not None:
+                    name_lst = to_list(room_temp_dict.get('name'))
+                    action_lst = to_list(room_temp_dict.get('action'))
+                    tqi_name = name_lst[tqi_key]
+                    tqi_action = action_lst[tqi_key]
+                    obs_val = ("%.2f" % obs_val) # debug
+                else:
+                    tqi = 'N/A'
+                    tqi_name = 'N/A'
+                    tqi_action = 'N/A'
+                    obs_val = 'N/A'
+
+                if self.debug >= 2:
+                    logdbg("room=%s temperature=%s level=%s name=%s action=%s" % (str(room), str(obs_val), str(tqi), tqi_name, tqi_action))
+
+                # Humidity
+                hqi = hqi_key = obs_val = None
+                room_humid_dict = self.humid_dict
+                room_humid_dict.merge(room_dict.get('humidity', {}))
+                hqi_opt = room_humid_dict.get('level_opt', 0)
+                obs = room_humid_dict.get('observation')
+                if obs in event.packet:
+                    unit = room_humid_dict.get('unit')
+                    if unit is not None:
+                        obs_vt = weewx.units.as_value_tuple(event.packet, obs)
+                        if unit != obs_vt[1]:
+                            obs_val = weewx.units.convert(obs_vt, unit)[0]
+                        else:
+                            obs_val = obs_vt[0]
+                    else:
+                        obs_val = event.packet[obs]
+                    max_lst = to_list(room_humid_dict.get('max'))
+                    level_lst = to_list(room_humid_dict.get('level'))
+                    for i in range(len(max_lst)):
+                        if to_float(obs_val) < to_float(max_lst[i]):
+                            hqi = level_lst[i]
+                            hqi_key = i
+                            break
+
+                # loop room humidity quality result
+                target_data[str(room) + '_hqi'] = hqi
+
+                if hqi is not None:
+                    name_lst = to_list(room_humid_dict.get('name'))
+                    action_lst = to_list(room_humid_dict.get('action'))
+                    hqi_name = name_lst[hqi_key]
+                    hqi_action = action_lst[hqi_key]
+                    obs_val = ("%d" % obs_val) # debug
+                else:
+                    hqi = 'N/A'
+                    hqi_name = 'N/A'
+                    hqi_action = 'N/A'
+                    obs_val = 'N/A'
+
+                if self.debug >= 2:
+                    logdbg("room=%s humidity=%s level=%s name=%s action=%s" % (str(room), obs_val, str(hqi), hqi_name, hqi_action))
+
+                # room quality index
+                rqi = rqi_key = None
+                if tqi is not None and hqi is not None:
+                    level_lst = to_list(self.option_dict['rooms'].get('level'))
+                    rqi_opt = self.option_dict['rooms'].get('level_opt', 0)
+
+                    for i in range(len(level_lst)):
+                        if tqi != tqi_opt or hqi != hqi_opt:
+                            if level_lst[i] != rqi_opt:
+                                rqi = level_lst[i]
+                                rqi_key = i
+                                break
+                        elif level_lst[i] == rqi_opt:
+                            rqi = level_lst[i]
+                            rqi_key = i
+                            break
+
+                # loop room quality result
+                target_data[str(room) + '_qi'] = rqi
+
+                if rqi is not None:
+                    name_lst = to_list(self.option_dict['rooms'].get('name'))
+                    action_lst = to_list(self.option_dict['rooms'].get('action'))
+                    rqi_name = name_lst[rqi_key]
+                    rqi_action = action_lst[rqi_key]
+                else:
+                    rqi = 'N/A'
+                    rqi_name = 'N/A'
+                    rqi_action = 'N/A'
+
+                if self.debug >= 2:
+                    logdbg("room=%s level=%s name=%s action=%s" % (str(room), str(rqi), rqi_name, rqi_action))
 
         # add to LOOP
         event.packet.update(target_data)
-        if self.debug > 1:
+        if self.debug >= 3:
             logdbg("outgoing loop packet: %s" % str(event.packet))
