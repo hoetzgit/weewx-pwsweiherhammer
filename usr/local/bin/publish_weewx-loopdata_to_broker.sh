@@ -13,17 +13,11 @@ subtopic="${TOPIC}/json"
 # publish JSON values
 # https://stackoverflow.com/questions/25378013/how-to-convert-a-json-object-to-key-value-format-in-jq
 # https://stackoverflow.com/questions/26717277/accessing-a-json-object-in-bash-associative-array-list-another-model
-declare -A kvarray
 while IFS="=" read -r key value
 do
-  kvarray[$key]="$value"
-done < <(jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' "${SOURCEFILE}")
-
-for key in "${!kvarray[@]}"
-do
   subtopic="${TOPIC}/${key}"
-  message="${kvarray[$key]}"
+  message="${value}"
   #echo "${subtopic} = ${message}"
   /usr/bin/mosquitto_pub -h ${BROKER} -p ${PORT} -m "${message}" -t "${subtopic}" -q ${QOS} ${RETAIN}
-done
+done < <(jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' "${SOURCEFILE}")
 
