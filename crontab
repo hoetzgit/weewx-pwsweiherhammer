@@ -61,3 +61,8 @@
 */1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_luftdaten_airquality.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_luftdaten_airquality.log 2>&1
 */1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_luftdaten_airquality_local.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_luftdaten_airquality_local.log 2>&1
 */1 * * * * sleep 30; /usr/bin/python3 /usr/local/bin/weewx-API/api_luftdaten_airquality_local.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_luftdaten_airquality_local.log 2>&1
+#
+# Publish weewx-loopdata Datafile to MQTT Broker
+*/1 * * * * /bin/bash /usr/local/bin/publish_weewx-loopdata_to_broker.sh >/var/log/weewx/publish_weewx-loopdata_to_broker.log 2>&1
+*/1 * * * * sleep 20; /bin/bash /usr/local/bin/publish_weewx-loopdata_to_broker.sh >/var/log/weewx/publish_weewx-loopdata_to_broker.log 2>&1
+*/1 * * * * sleep 40; /bin/bash /usr/local/bin/publish_weewx-loopdata_to_broker.sh >/var/log/weewx/publish_weewx-loopdata_to_broker.log 2>&1
