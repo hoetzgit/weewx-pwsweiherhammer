@@ -120,9 +120,9 @@ class SunDuration(StdService):
 
         # dateTime from the last loop package with valid 'radiation'
         self.lastLoop = None
-        # dateTime from the last archiv record
-        self.lastArchiv = None
-        # sum sunshineDur within archiv interval
+        # dateTime from the last archive record
+        self.lastArchive = None
+        # sum sunshineDur within archive interval
         self.sunshineDur = None
 
         # Start intercepting events:
@@ -135,8 +135,8 @@ class SunDuration(StdService):
         monthofyear = to_int(time.strftime("%m", time.gmtime(mydatetime)))
         coeff = to_float(self.coeff_dict.get(str(monthofyear)))
         if coeff is None:
-            coeff = 1.0
-            logerr("User configured coeff month=%d is not valid! Using default coeff=1.0 instead." % (monthofyear))
+            coeff = to_float(defaults_dict.get(str(monthofyear), 1.0))
+            logerr("User configured coeff month=%d is not valid! Using default coeff instead." % (monthofyear))
         if self.debug >= 4:
             logdbg("sunshineThreshold, month=%d coeff=%.2f" % (monthofyear, coeff)) 
         theta = 360 * dayofyear / 365
@@ -158,7 +158,7 @@ class SunDuration(StdService):
             seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow(
                 sin((pi / 180) * hauteur_soleil), 1.25) * coeff
         else:
-            seuil = 0
+            seuil = 0.0
         return seuil
 
     def newLoopPacket(self, event):
@@ -179,7 +179,7 @@ class SunDuration(StdService):
                     # ..L
                     self.sunshineDur = 0
                     if self.debug >= 3:
-                        logdbg("first loop packet with 'radiation' during archiv interval received.")
+                        logdbg("first loop packet with 'radiation' during archive interval received.")
                 else:
                     # .L..L..L..L
                     loopDuration = loopdateTime - self.lastLoop
@@ -212,11 +212,11 @@ class SunDuration(StdService):
         target_data['sunshineDur'] = None
         archivedateTime = event.record.get('dateTime')
 
-        if self.lastArchiv is not None and self.lastLoop is not None and self.lastLoop < self.lastArchiv:
-            # No loop packets with values for 'radiation' or 'radiation' < min during the last archiv interval, discard loop indicator.
+        if self.lastArchive is not None and self.lastLoop is not None and self.lastLoop < self.lastArchive:
+            # No loop packets with values for 'radiation' or 'radiation' < min during the last archive interval, discard loop indicator.
             # .L..L..L..L..A..........A
             if self.debug >= 3:
-                logdbg("No loop packets with values for 'radiation' or 'radiation' < min during the last archiv interval, discard loop indicator.")
+                logdbg("No loop packets with values for 'radiation' or 'radiation' < min during the last archive interval, discard loop indicator.")
             self.lastLoop = None
             self.sunshineDur = None
 
@@ -235,12 +235,12 @@ class SunDuration(StdService):
                     if threshold > 0.0 and radiation > threshold:
                         target_data['sunshineDur'] = interval
                     if self.debug >= 2:
-                        logdbg("ARCHIV sunshineDur=%d, based on threshold=%.2f radiation=%.2f interval=%d" % (
+                        logdbg("ARCHIVE sunshineDur=%d, based on threshold=%.2f radiation=%.2f interval=%d" % (
                             target_data['sunshineDur'], threshold, radiation, interval))
                 elif self.debug >= 2:
-                    logdbg("ARCHIV no calculation, radiation=%.2f lower than radiation_min=%.2f" % (radiation, self.radiation_min))
+                    logdbg("ARCHIVE no calculation, radiation=%.2f lower than radiation_min=%.2f" % (radiation, self.radiation_min))
             elif self.debug >= 3:
-                logdbg("ARCHIV no calculation, 'radiation' not in archive record or is None.")
+                logdbg("ARCHIVE no calculation, 'radiation' not in archive record or is None.")
         else:
             # sum from loop packets
             # .L..L..L..L..L..A
@@ -248,10 +248,10 @@ class SunDuration(StdService):
             # reset loop sum
             self.sunshineDur = 0
             if self.debug >= 2:
-                logdbg("ARCHIV sunshineDur=%d, based on loop packets." % (target_data['sunshineDur']))
+                logdbg("ARCHIVE sunshineDur=%d, based on loop packets." % (target_data['sunshineDur']))
 
         event.record.update(target_data)
-        self.lastArchiv = archivedateTime
+        self.lastArchive = archivedateTime
     
 # Tell the unit system what group our new observation types, 'sunshineDur' and 'sunshine', belongs to:
 weewx.units.obs_group_dict['sunshineDur'] = "group_deltatime"

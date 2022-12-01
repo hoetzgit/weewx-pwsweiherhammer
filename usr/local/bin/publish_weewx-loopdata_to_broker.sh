@@ -11,6 +11,26 @@ if [ ! -f "$SOURCEFILE" ]; then
     exit 126 # Command invoked cannot execute
 fi
 
+# publish mod date
+subtopic="${TOPIC}/lastmod.loopdata.dateTime"
+# time of last data modification, seconds since Epoch
+message="$(/usr/bin/stat -c %Y ${SOURCEFILE})"
+/usr/bin/mosquitto_pub -h ${BROKER} -p ${PORT} -m "${message}" -t "${subtopic}" -q ${QOS} ${RETAIN}
+ret=$?
+if [ ${ret} -ne 0 ] ; then
+  echo "ERROR: mosquitto_pub, code=${ret}" >&2
+  exit ${ret}
+fi
+subtopic="${TOPIC}/lastmod.loopdata.dateTimeH"
+# time of last data modification, human-readable
+message="$(/usr/bin/stat -c %y ${SOURCEFILE})"
+/usr/bin/mosquitto_pub -h ${BROKER} -p ${PORT} -m "${message}" -t "${subtopic}" -q ${QOS} ${RETAIN}
+ret=$?
+if [ ${ret} -ne 0 ] ; then
+  echo "ERROR: mosquitto_pub, code=${ret}" >&2
+  exit ${ret}
+fi
+
 # publish JSON file
 subtopic="${TOPIC}/json"
 /usr/bin/mosquitto_pub -h ${BROKER} -p ${PORT} -f "${SOURCEFILE}" -t "${subtopic}" -q ${QOS} ${RETAIN}

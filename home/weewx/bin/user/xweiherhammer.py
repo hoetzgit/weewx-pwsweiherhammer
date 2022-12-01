@@ -484,8 +484,8 @@ class XWeiherhammer(weewx.xtypes.XType):
         monthofyear = to_int(time.strftime("%m",time.gmtime(data['dateTime'])))
         coeff = to_float(self.sunshineThreshold_coeff_dict.get(str(monthofyear)))
         if coeff is None:
-            coeff = 1.0
-            logerr("sunshineThreshold, user configured coeff month=%d is not valid! Using default coeff=1.0 instead." % (monthofyear))
+            coeff = to_float(defaults_dict.get(str(monthofyear), 1.0))
+            logerr("sunshineThreshold, user configured coeff month=%d is not valid! Using default coeff instead." % (monthofyear))
         if self.sunshineThreshold_debug >= 3:
             logdbg("sunshineThreshold, month=%d coeff=%.2f" % (monthofyear, coeff)) 
         threshold = sunshineThreshold(data['dateTime'], self.lat, self.lon, coeff)

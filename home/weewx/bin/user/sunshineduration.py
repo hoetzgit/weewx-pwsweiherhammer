@@ -92,9 +92,9 @@ class SunshineDuration(StdService):
 
         # dateTime from the last loop package with valid 'radiation'
         self.lastLoop = None
-        # dateTime from the last archiv record
-        self.lastArchiv = None
-        # sum sunshineDur within archiv interval
+        # dateTime from the last archive record
+        self.lastArchive = None
+        # sum sunshineDur within archive interval
         self.sunshineDur = None
 
         # Start intercepting events:
@@ -113,7 +113,7 @@ class SunshineDuration(StdService):
                 # ..L
                 self.sunshineDur = 0
                 if self.debug >= 3:
-                    logdbg("first loop packet with valid 'sunshine' during archiv interval received.")
+                    logdbg("first loop packet with valid 'sunshine' during archive interval received.")
             else:
                 # .L..L..L..L
                 loopDuration = loopdateTime - self.lastLoop
@@ -136,11 +136,11 @@ class SunshineDuration(StdService):
         target_data['sunshineDur'] = None
         archivedateTime = event.record.get('dateTime')
 
-        if self.lastArchiv is not None and self.lastLoop is not None and self.lastLoop < self.lastArchiv:
-            # no loop packets with 'sunshine' during the last archiv interval
+        if self.lastArchive is not None and self.lastLoop is not None and self.lastLoop < self.lastArchive:
+            # no loop packets with 'sunshine' during the last archive interval
             # .L..L..L..L..A..........A
             if self.debug >= 3:
-                logdbg("No loop packets with valid 'sunshine' values during last archiv interval, disacard loop indicator.")
+                logdbg("No loop packets with valid 'sunshine' values during last archive interval, disacard loop indicator.")
             self.lastLoop = None
             self.sunshineDur = None
 
@@ -149,7 +149,7 @@ class SunshineDuration(StdService):
             # reset loop sum
             self.sunshineDur = 0
             if self.debug >= 2:
-                logdbg("ARCHIV sunshineDur=%d, based on loop packets." % (target_data['sunshineDur']))
+                logdbg("ARCHIVE sunshineDur=%d, based on loop packets." % (target_data['sunshineDur']))
 
         event.record.update(target_data)
         self.lastArchiv = archivedateTime
