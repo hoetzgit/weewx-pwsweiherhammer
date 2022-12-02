@@ -349,6 +349,7 @@ def sunshineThreshold(mydatetime, lat, lon, coeff=1.0):
             sin((pi / 180) * hauteur_soleil), 1.25) * coeff
     else:
         seuil = 0.0
+
     return seuil
 
 class XWeiherhammer(weewx.xtypes.XType):
@@ -492,6 +493,9 @@ class XWeiherhammer(weewx.xtypes.XType):
         if self.sunshineThreshold_debug >= 2:
             logdbg("sunshineThreshold, threshold=%.2f" % threshold)
         return ValueTuple(threshold, 'watt_per_meter_squared', 'group_radiation')
+
+    def calc_sunshineRadiationMin(self, key, data, db_manager=None):
+        return ValueTuple(self.sunshine_radiation_min, 'watt_per_meter_squared', 'group_radiation')
 
     def calc_sunshine(self, key, data, db_manager=None):
         if 'radiation' not in data or 'dateTime' not in data:
