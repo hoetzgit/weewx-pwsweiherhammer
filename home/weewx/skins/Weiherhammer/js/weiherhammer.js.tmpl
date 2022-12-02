@@ -2384,7 +2384,8 @@ function update_current_wx(data) {
             sun_output += '<i class="fa fa-sun-o"></i>';
         }
     } else {
-        jQuery(".sunshineThreshold").html("keine Auswertung");
+        // TODO
+        jQuery(".sunshineThreshold").html("$gettext('No evaluation available')");
     }
     jQuery(".current-sunshine-symbol").html(sun_output);
 
@@ -2876,6 +2877,7 @@ function showChart(json_file, prepend_renderTo = false) {
                 // https://github.com/poblabs/weewx-belchertown/issues/682
                 // PM10 Umweltbundesamt LQI levels, labels and colors
                 // https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex
+                // TODO colors from config
                 if (s.obsType == "sds011_pm10_0") {
                     weiherhammer_debug('yAxis plotLines true');
 
@@ -2883,23 +2885,23 @@ function showChart(json_file, prepend_renderTo = false) {
 
                     const eaqi = [{
                         color: "#50F0E6",
-                        label: "sehr gut",
+                        label: "$gettext('very good')",
                         level: 20
                     }, {
                         color: "#50CDAA",
-                        label: "gut",
+                        label: "$gettext('good')",
                         level: 35
                     }, {
                         color: "#F0E641",
-                        label: "mäßig",
+                        label: "$gettext('moderate')",
                         level: 50
                     }, {
                         color: "#FF5050",
-                        label: "schlecht",
+                        label: "$gettext('poor')",
                         level: 100
                     }, {
                         color: "#960032",
-                        label: "sehr schlecht",
+                        label: "$gettext('very poor')",
                         level: 200
                     }];
 
@@ -2931,6 +2933,7 @@ function showChart(json_file, prepend_renderTo = false) {
                 // https://github.com/poblabs/weewx-belchertown/issues/682
                 // PM2.5 LQI levels, labels and colors
                 // https://de.euronews.com/wetter/copernicus-air-quality-index
+                // TODO colors from config
                 if (s.obsType == "sds011_pm2_5") {
                     weiherhammer_debug('yAxis plotLines true');
 
@@ -2938,23 +2941,23 @@ function showChart(json_file, prepend_renderTo = false) {
 
                     const eaqi = [{
                         color: "#50F0E6",
-                        label: "sehr gut",
+                        label: "$gettext('very good')",
                         level: 10
                     }, {
                         color: "#50CDAA",
-                        label: "gut",
+                        label: "$gettext('good')",
                         level: 20
                     }, {
                         color: "#F0E641",
-                        label: "mäßig",
+                        label: "$gettext('moderate')",
                         level: 25
                     }, {
                         color: "#FF5050",
-                        label: "schlecht",
+                        label: "$gettext('poor')",
                         level: 50
                     }, {
                         color: "#960032",
-                        label: "sehr schlecht",
+                        label: "$gettext('very poor')",
                         level: 200
                     }];
 
@@ -2986,6 +2989,7 @@ function showChart(json_file, prepend_renderTo = false) {
                 // https://github.com/poblabs/weewx-belchertown/issues/682
                 // NO2 Umweltbundesamt LQI levels, labels and colors
                 // https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex
+                // TODO colors from config
                 if (s.obsType == "uba_no2") {
                     weiherhammer_debug('yAxis plotLines true');
 
@@ -2993,23 +2997,23 @@ function showChart(json_file, prepend_renderTo = false) {
 
                     const eaqi = [{
                         color: "#50F0E6",
-                        label: "sehr gut",
+                        label: "$gettext('very good')",
                         level: 20
                     }, {
                         color: "#50CDAA",
-                        label: "gut",
+                        label: "$gettext('good')",
                         level: 40
                     }, {
                         color: "#F0E641",
-                        label: "mäßig",
+                        label: "$gettext('moderate')",
                         level: 100
                     }, {
                         color: "#FF5050",
-                        label: "schlecht",
+                        label: "$gettext('poor')",
                         level: 200
                     }, {
                         color: "#960032",
-                        label: "sehr schlecht",
+                        label: "$gettext('very poor')",
                         level: 300
                     }];
 
@@ -3041,6 +3045,7 @@ function showChart(json_file, prepend_renderTo = false) {
                 // https://github.com/poblabs/weewx-belchertown/issues/682
                 // O3 Umweltbundesamt LQI levels, labels and colors
                 // https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex
+                // TODO colors from config
                 if (s.obsType == "uba_o3") {
                     weiherhammer_debug('yAxis plotLines true');
 
@@ -3048,23 +3053,23 @@ function showChart(json_file, prepend_renderTo = false) {
 
                     const eaqi = [{
                         color: "#50F0E6",
-                        label: "sehr gut",
+                        label: "$gettext('very good')",
                         level: 60
                     }, {
                         color: "#50CDAA",
-                        label: "gut",
+                        label: "$gettext('good')",
                         level: 120
                     }, {
                         color: "#F0E641",
-                        label: "mäßig",
+                        label: "$gettext('moderate')",
                         level: 180
                     }, {
                         color: "#FF5050",
-                        label: "schlecht",
+                        label: "$gettext('poor')",
                         level: 240
                     }, {
                         color: "#960032",
-                        label: "sehr schlecht",
+                        label: "$gettext('very poor')",
                         level: 340
                     }];
 
@@ -3096,6 +3101,7 @@ function showChart(json_file, prepend_renderTo = false) {
                 // https://github.com/poblabs/weewx-belchertown/issues/682
                 // SO2 LQI levels, labels and colors
                 // https://de.euronews.com/wetter/copernicus-air-quality-index
+                // TODO colors from config
                 if (s.obsType == "aeris_so2") {
                     weiherhammer_debug('yAxis plotLines true');
 
@@ -3103,23 +3109,23 @@ function showChart(json_file, prepend_renderTo = false) {
 
                     const eaqi = [{
                         color: "#50F0E6",
-                        label: "sehr gut",
+                        label: "$gettext('very good')",
                         level: 100
                     }, {
                         color: "#50CDAA",
-                        label: "gut",
+                        label: "$gettext('good')",
                         level: 200
                     }, {
                         color: "#F0E641",
-                        label: "mäßig",
+                        label: "$gettext('moderate')",
                         level: 350
                     }, {
                         color: "#FF5050",
-                        label: "schlecht",
+                        label: "$gettext('poor')",
                         level: 500
                     }, {
                         color: "#960032",
-                        label: "sehr schlecht",
+                        label: "$gettext('very poor')",
                         level: 1250
                     }];
 
@@ -3151,6 +3157,7 @@ function showChart(json_file, prepend_renderTo = false) {
                 // https://github.com/poblabs/weewx-belchertown/issues/682
                 // equivalent temperature levels, labels and colors
                 // https://www.spektrum.de/lexikon/geographie/aequivalenttemperatur/437
+                // TODO colors from config
                 if (s.obsType == "outEquiTemp") {
                     weiherhammer_debug('yAxis plotLines true');
 
@@ -3158,7 +3165,7 @@ function showChart(json_file, prepend_renderTo = false) {
 
                     const stemp = [{
                         color: "#FF5733",
-                        label: "ab 50 &deg;C Schw&uuml;legrenze",
+                        label: "$pgettext('outEquiTempChart', 'Sultriness border')",
                         level: 50
                     }];
 
