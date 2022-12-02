@@ -17,13 +17,13 @@
 
 #include 'generators/jasoptions.gen'
 
-#set $skin_data_binding = $getVar("$Extras.data_binding", $data_binding)
-#if 'minmax' in $getVar('$Extras.pages.' + $page)
-    #set $minmax_data_binding = $getVar("$Extras.minmax.data_binding", $skin_data_binding)
-#end if
-#if 'thisdate' in $getVar('$Extras.pages.' + $page)
-    #set $thisdate_data_binding = $getVar("$Extras.thisdate.data_binding", $skin_data_binding)
-#end if
+##set $skin_data_binding = $getVar("$Extras.data_binding", $data_binding)
+##if 'minmax' in $getVar('$Extras.pages.' + $page)
+    ##set $minmax_data_binding = $getVar("$Extras.minmax.data_binding", $skin_data_binding)
+##end if
+##if 'thisdate' in $getVar('$Extras.pages.' + $page)
+    ##set $thisdate_data_binding = $getVar("$Extras.thisdate.data_binding", $skin_data_binding)
+##end if
 
 #if $interval_long_name_global
     #set $startDate = $interval_long_name_global + "startDate"
@@ -433,8 +433,10 @@ function updateMinMax(startTimestamp, endTimestamp) {
 
         min = minMaxObsData.minDataArray[minIndex];
         max = minMaxObsData.maxDataArray[maxIndex];
-        min = min.toFixed(0);
-        max = max.toFixed(0);
+        if (minMaxObsData.maxDecimals) {
+            min = min.toFixed(minMaxObsData.maxDecimals);
+            max = max.toFixed(minMaxObsData.maxDecimals);
+        }
         min = Number(min).toLocaleString(lang);
         max = Number(max).toLocaleString(lang);
         min = min + minMaxObsData.label;
@@ -464,9 +466,13 @@ function getObservation(timeStamp, observations) {
 function updateThisDate(timeStamp) {
     thisDateObsList.forEach(function(thisDateObs) {
         thisDateObs.forEach(function(thisDateObsDetail) {
-            obs = Number(getObservation(timeStamp, thisDateObsDetail.dataArray)).toLocaleString(lang);
+            obs = getObservation(timeStamp, thisDateObsDetail.dataArray);
+            if (thisDateObsDetail.maxDecimals) {
+                obs = obs.toFixed(thisDateObsDetail.maxDecimals);
+            }
+            obsValue = Number(obs).toLocaleString(lang);
             observation=document.getElementById(thisDateObsDetail.id);
-            observation.innerHTML = obs + thisDateObsDetail.label;                    
+            observation.innerHTML = obsValue + thisDateObsDetail.label;                    
         });
     });
 }

@@ -2383,6 +2383,8 @@ function update_current_wx(data) {
         if (parseInt(data["sunshine"]) > 0) {
             sun_output += '<i class="fa fa-sun-o"></i>';
         }
+    } else {
+        jQuery(".sunshineThreshold").html("keine Auswertung");
     }
     jQuery(".current-sunshine-symbol").html(sun_output);
 

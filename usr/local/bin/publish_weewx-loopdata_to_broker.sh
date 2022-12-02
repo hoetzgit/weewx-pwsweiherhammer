@@ -12,7 +12,8 @@ if [ ! -f "$SOURCEFILE" ]; then
 fi
 
 # publish mod date
-subtopic="${TOPIC}/lastmod.loopdata.dateTime"
+#subtopic="${TOPIC}/lastmod.loopdata.dateTime"
+subtopic="${TOPIC}/dateTime"
 # time of last data modification, seconds since Epoch
 message="$(/usr/bin/stat -c %Y ${SOURCEFILE})"
 /usr/bin/mosquitto_pub -h ${BROKER} -p ${PORT} -m "${message}" -t "${subtopic}" -q ${QOS} ${RETAIN}
@@ -21,7 +22,8 @@ if [ ${ret} -ne 0 ] ; then
   echo "ERROR: mosquitto_pub, code=${ret}" >&2
   exit ${ret}
 fi
-subtopic="${TOPIC}/lastmod.loopdata.dateTimeH"
+#subtopic="${TOPIC}/lastmod.loopdata.dateTimeH"
+subtopic="${TOPIC}/dateTimeHuman"
 # time of last data modification, human-readable
 message="$(/usr/bin/stat -c %y ${SOURCEFILE})"
 /usr/bin/mosquitto_pub -h ${BROKER} -p ${PORT} -m "${message}" -t "${subtopic}" -q ${QOS} ${RETAIN}

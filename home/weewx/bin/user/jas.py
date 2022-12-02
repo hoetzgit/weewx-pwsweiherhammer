@@ -171,7 +171,7 @@ except ImportError:
         logmsg(syslog.LOG_ERR, msg)
 
 
-VERSION = "0.3.1-rc03"
+VERSION = "0.3.1-rc05"
 
 class JAS(SearchList):
     """ Implement tags used by templates in the skin. """
@@ -743,18 +743,20 @@ class JAS(SearchList):
 
                 if 'min' not in observations[observation]['aggregate_types']:
                     observations[observation]['aggregate_types']['min'] = {}
+                if data_binding not in observations[observation]['aggregate_types']['min']:
                     observations[observation]['aggregate_types']['min'][data_binding] = {}
                 observations[observation]['aggregate_types']['min'][data_binding][unit] = {}
                 aggregate_types['min'] = {}
                 if 'max' not in observations[observation]['aggregate_types']:
                     observations[observation]['aggregate_types']['max'] = {}
+                if data_binding not in observations[observation]['aggregate_types']['max']:
                     observations[observation]['aggregate_types']['max'][data_binding] = {}
                 observations[observation]['aggregate_types']['max'][data_binding][unit] = {}
                 aggregate_types['max'] = {}
 
         thisdate_observations = self.skin_dict.get('Extras', {}).get('thisdate', {}).get('observations', {})
         thisdate_data_binding = self.skin_dict.get('Extras', {}).get('thisdate', {}).get('data_binding', skin_data_binding)
-        for observation in thisdate_observations:
+        for observation in  self.skin_dict['Extras']['thisdate']['observations'].sections:
             data_binding = thisdate_observations[observation].get('data_binding', thisdate_data_binding)
             if observation not in self.wind_observations:
                 unit = thisdate_observations[observation].get('unit', 'default')
@@ -764,11 +766,13 @@ class JAS(SearchList):
 
                 if 'min' not in observations[observation]['aggregate_types']:
                     observations[observation]['aggregate_types']['min'] = {}
+                if data_binding not in observations[observation]['aggregate_types']['min']:
                     observations[observation]['aggregate_types']['min'][data_binding] = {}
                 observations[observation]['aggregate_types']['min'][data_binding][unit] = {}
                 aggregate_types['min'] = {}
                 if 'max' not in observations[observation]['aggregate_types']:
                     observations[observation]['aggregate_types']['max'] = {}
+                if data_binding not in observations[observation]['aggregate_types']['max']:
                     observations[observation]['aggregate_types']['max'][data_binding] = {}
                 observations[observation]['aggregate_types']['max'][data_binding][unit] = {}
                 aggregate_types['max'] = {}

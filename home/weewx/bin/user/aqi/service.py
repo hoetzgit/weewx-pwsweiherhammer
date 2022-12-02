@@ -131,7 +131,7 @@ class AqiService(weewx.engine.StdService):
         [mqtt]                                -- Optional.
         enable = False                        -- Optional. Enable/Disable MQTT support
         server_url = mqtt://127.0.0.1:1883/   -- Optional, Required if enable = True, Message Broker
-        topic = aqiservice/aqi                -- Optional, default = aqiservice/aqi, Message Broker Topic
+        topic = weewx_aqi/json                -- Optional, default = weewx_aqi/json, Message Broker Topic
         qos = 1                               -- Optional, default = 0, Quality of Service
         retain = True                         -- Optional, default = False, Retained messages
         client_id = AqiService                -- Optional, default = AqiService, Client Id
@@ -199,7 +199,7 @@ class AqiService(weewx.engine.StdService):
         mqtt_config_dict = config_dict['AqiService']['mqtt']
         self.mqtt_enable = to_bool(mqtt_config_dict.get('enable',False))
         self.mqtt_server_url = mqtt_config_dict.get('server_url','mqtt://127.0.0.1:1883')
-        self.mqtt_topic = mqtt_config_dict.get('topic','aqiservice/aqi')
+        self.mqtt_topic = mqtt_config_dict.get('topic','weewx_aqi/json')
         self.mqtt_client_id = mqtt_config_dict.get('clientid','AqiService')
         self.mqtt_qos = int(mqtt_config_dict.get('qos',0))
         self.mqtt_retain = to_bool(mqtt_config_dict.get('retain',False))
