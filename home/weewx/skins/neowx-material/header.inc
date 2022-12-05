@@ -17,7 +17,11 @@
             #end if
             <span>
                 <strong>$station.location</strong><br>
+                #if $active_nav == 'archive'
+                <span class="font-small"></span>
+                #else 
                 <span class="font-small">$current.dateTime</span>
+                #end if
             </span>
         </span>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
@@ -134,7 +138,7 @@
             </ul>
         </div>
 
-        #if $active_nav != 'archive' and $Extras.Header.show_almanac == "yes"
+        #if $Extras.Header.show_almanac == "yes"
             #if $almanac.hasExtras
             <ul class="navbar-nav nav-flex-icons" style="line-height: 1.75; padding-top: .5rem">
                 <li class="nav-item mr-4 text-white">

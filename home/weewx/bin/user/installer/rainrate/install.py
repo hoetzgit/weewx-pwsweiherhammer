@@ -31,7 +31,7 @@ def loader():
 class RainRateInstaller(ExtensionInstaller):
     def __init__(self):
         super(RainRateInstaller, self).__init__(
-            version = "0.13",
+            version = "0.16",
             name = 'rainrate',
             description = 'Inserts/updates rainRate observations in loop packets.',
             author = "John A Kline",
