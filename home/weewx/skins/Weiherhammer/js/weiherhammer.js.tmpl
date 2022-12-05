@@ -233,6 +233,73 @@ function getURLvar(k) {
     return k ? p[k] : p;
 }
 
+// weewx-loopdata barometer trend
+// https://github.com/chaunceygardiner/weewx-loopdata
+function get_barometer_trend_deg (trend_code, returnRotation = false) {
+    var RISING_VERY_RAPIDLY = 4;
+    var RISING_QUICKLY = 3;
+    var RISING = 2;
+    var RISING_SLOWLY = 1;
+    var STEADY = 0;
+    var FALLING_SLOWLY = -1;
+    var FALLING = -2;
+    var FALLING_QUICKLY = -3;
+    var FALLING_VERY_RAPIDLY = -4;
+
+    trend_code = parseInt(trend_code);
+    trend_descr = "N/A"
+    var finalRotation = -1
+    if (trend_code == RISING_VERY_RAPIDLY) {
+        finalRotation = 0;
+        trend_descr = "$gettext('rising very rapidly')";
+    } else if (trend_code == RISING_QUICKLY) {
+        finalRotation = 22.5;
+        trend_descr = "$gettext('rising quickly')";
+    } else if (trend_code == RISING) {
+        finalRotation = 45;
+        trend_descr = "$gettext('rising')";
+    } else if (trend_code == RISING_SLOWLY) {
+        finalRotation = 67.5;
+        trend_descr = "$gettext('rising slowly')";
+    } else if (trend_code == STEADY) {
+        finalRotation = 90;
+        trend_descr = "$gettext('steady')";
+    } else if (trend_code == FALLING_SLOWLY) {
+        finalRotation = 112.5;
+        trend_descr = "$gettext('falling slowly')";
+    } else if (trend_code == FALLING) {
+        finalRotation = 135;
+        trend_descr = "$gettext('falling')";
+    } else if (trend_code == FALLING_QUICKLY) {
+        finalRotation = 157.5;
+        trend_descr = "$gettext('falling quickly')";
+    } else if (trend_code == FALLING_VERY_RAPIDLY) {
+        finalRotation = 180;
+        trend_descr = "$gettext('falling very rapidly')";
+    }
+
+    // Return the finalRotation value if requested, otherwise just rotate barometer trend
+    if (returnRotation) {
+        return finalRotation;
+    } else {
+        html_output = ''
+        if (finalRotation >= 0) {
+            html_output = '&nbsp;'
+            if (finalRotation == 0) {
+                html_output += '<i class="fa fa-long-arrow-up"';
+            } else if (finalRotation == 90) {
+                html_output += '<i class="fa fa-long-arrow-right"';
+            } else if (finalRotation == 180) {
+                html_output += '<i class="fa fa-long-arrow-down"';
+            } else {
+                html_output += '<i class="fa fa-long-arrow-up" style="transform:rotate(' + finalRotation + 'deg);"';
+            }
+            html_output += ' title="' + trend_descr + '"></i>';
+        }
+        jQuery(".pressure-trend").html(html_output);
+    }
+}
+
 // http://stackoverflow.com/a/14887961/1177153
 var weatherdirection = $obs.label.graphs_windDir_ordinals;
 
@@ -802,6 +869,7 @@ function update_weewx_data(data) {
     jQuery(".high").html(high);
     jQuery(".low").html(low);
 
+/*  //20221205,ho disabled
     try {
         // Barometer trending by finding a negative number
         count = (data["current"]["barometer_trend"].match(/-/g) || []).length
@@ -814,6 +882,7 @@ function update_weewx_data(data) {
     } else {
         jQuery(".pressure-trend").html('&nbsp;<i class="fa fa-long-arrow-up barometer-up"></i>');
     }
+*/
 
     // Daily max gust span
     jQuery(".dailymaxgust").html(parseFloat(data["day"]["wind"]["max"]).toFixed(1));
@@ -2391,21 +2460,27 @@ function update_current_wx(data) {
 
     // debug avg10m Symbols
     var avg10m_output = '';
-    if ((data.hasOwnProperty("thunderstorm_avg10m")) && (parseFloat(data["thunderstorm_avg10m"]) > 0.0)) {
+    if (data.hasOwnProperty("lightning_strike_count_sum10m") && parseFloat(data["lightning_strike_count_sum10m"]) > 0.0) {
         avg10m_output = '<i class="wi wi-lightning"></i>';
-    } else if ((data.hasOwnProperty("raining_avg10m")) && (parseFloat(data["raining_avg10m"]) > 0.0)) {
+    } else if (data.hasOwnProperty("rain_sum10m") && parseFloat(data["rain_sum10m"]) > 0.0) {
         avg10m_output = '<i class="wi wi-rain"></i>';
-    } else if ((data.hasOwnProperty("radiation")) && (parseFloat(data["radiation"]) >= 50.0) && (data.hasOwnProperty("sunshine_avg10m"))) {
-        var sunshine_avg10m = parseFloat(data["sunshine_avg10m"]).toFixed(2);
-        if (sunshine_avg10m == 0.0) {
-            avg10m_output = '<i class="wi wi-cloudy"></i>';
-        } else if (sunshine_avg10m == 1.0) {
-            avg10m_output = '<i class="wi wi-day-sunny"></i>';
-        } else if ((sunshine_avg10m > 0.0) && (sunshine_avg10m < 1.0)) {
-            avg10m_output = '<i class="wi wi-day-cloudy"></i>';
+    } else if (data.hasOwnProperty("radiation") && data.hasOwnProperty("sunshineRadiationMin") && data.hasOwnProperty("sunshine_avg10m")) {
+        if (parseFloat(data["radiation"]) >= parseFloat(data["sunshineRadiationMin"])) {
+            if (parseFloat(data["sunshine_avg10m"]).toFixed(1) == 0.0) {
+                avg10m_output = '<i class="wi wi-cloudy"></i>';
+            } else if (sunshine_avg10m == 1.0) {
+                avg10m_output = '<i class="wi wi-day-sunny"></i>';
+            } else if ((sunshine_avg10m > 0.0) && (sunshine_avg10m < 1.0)) {
+                avg10m_output = '<i class="wi wi-day-cloudy"></i>';
+            }
         }
     }
     jQuery(".avg10m-obs-symbols").html(avg10m_output);
+
+    // 20221205,ho update with weewx-loopdata Barometer Trend
+    if (data.hasOwnProperty("trendBarometerCode")) {
+        get_barometer_trend_deg(parseInt(data["trendBarometerCode"]));
+    }
 };
 #end if
 

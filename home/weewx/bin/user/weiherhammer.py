@@ -2160,25 +2160,27 @@ class getData(SearchList):
             if obs in ("barometer", "pressure", "altimeter"):
                 # Append the trend arrow to the pressure observation. Need this
                 # for non-mqtt pages
-                trend = weewx.tags.TrendObj(
-                    10800,
-                    300,
-                    db_lookup,
-                    None,
-                    current_stamp,
-                    self.generator.formatter,
-                    self.generator.converter,
-                )
-                obs_trend = getattr(trend, obs)
+                # 20221205,ho disabled
+                #trend = weewx.tags.TrendObj(
+                #    10800,
+                #    300,
+                #    db_lookup,
+                #    None,
+                #    current_stamp,
+                #    self.generator.formatter,
+                #    self.generator.converter,
+                #)
+                #obs_trend = getattr(trend, obs)
                 station_obs_html += (
                     '<span class="pressure-trend">'
                 )
-                if str(obs_trend) == "N/A":
-                    pass
-                elif "-" in str(obs_trend):
-                    station_obs_html += '<i class="fa fa-long-arrow-down barometer-down"></i>'
-                else:
-                    station_obs_html += '<i class="fa fa-long-arrow-up barometer-up"></i>'
+                # 20221205,ho disabled
+                #if str(obs_trend) == "N/A":
+                #    pass
+                #elif "-" in str(obs_trend):
+                #    station_obs_html += '<i class="fa fa-long-arrow-down barometer-down"></i>'
+                #else:
+                #    station_obs_html += '<i class="fa fa-long-arrow-up barometer-up"></i>'
                 station_obs_html += "</span>"  # Close the span
             # 20220622,ho sunshine debug symbol
             if obs == "radiation":
