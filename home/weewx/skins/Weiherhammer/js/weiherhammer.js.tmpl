@@ -246,34 +246,34 @@ function get_barometer_trend_deg (trend_code, returnRotation = false) {
     var FALLING_QUICKLY = -3;
     var FALLING_VERY_RAPIDLY = -4;
 
-    trend_code = parseInt(trend_code);
-    trend_descr = "N/A"
+    var ltrend_code = parseInt(trend_code);
+    var trend_descr = "N/A"
     var finalRotation = -1
-    if (trend_code == RISING_VERY_RAPIDLY) {
+    if (ltrend_code == RISING_VERY_RAPIDLY) {
         finalRotation = 0;
         trend_descr = "$gettext('rising very rapidly')";
-    } else if (trend_code == RISING_QUICKLY) {
+    } else if (ltrend_code == RISING_QUICKLY) {
         finalRotation = 22.5;
         trend_descr = "$gettext('rising quickly')";
-    } else if (trend_code == RISING) {
+    } else if (ltrend_code == RISING) {
         finalRotation = 45;
         trend_descr = "$gettext('rising')";
-    } else if (trend_code == RISING_SLOWLY) {
+    } else if (ltrend_code == RISING_SLOWLY) {
         finalRotation = 67.5;
         trend_descr = "$gettext('rising slowly')";
-    } else if (trend_code == STEADY) {
+    } else if (ltrend_code == STEADY) {
         finalRotation = 90;
         trend_descr = "$gettext('steady')";
-    } else if (trend_code == FALLING_SLOWLY) {
+    } else if (ltrend_code == FALLING_SLOWLY) {
         finalRotation = 112.5;
         trend_descr = "$gettext('falling slowly')";
-    } else if (trend_code == FALLING) {
+    } else if (ltrend_code == FALLING) {
         finalRotation = 135;
         trend_descr = "$gettext('falling')";
-    } else if (trend_code == FALLING_QUICKLY) {
+    } else if (ltrend_code == FALLING_QUICKLY) {
         finalRotation = 157.5;
         trend_descr = "$gettext('falling quickly')";
-    } else if (trend_code == FALLING_VERY_RAPIDLY) {
+    } else if (ltrend_code == FALLING_VERY_RAPIDLY) {
         finalRotation = 180;
         trend_descr = "$gettext('falling very rapidly')";
     }
