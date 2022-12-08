@@ -143,6 +143,7 @@ weewx.units.obs_group_dict['outEquiTemp'] = 'group_temperature'
 weewx.units.obs_group_dict['outHumAbs'] = 'group_concentration'
 weewx.units.obs_group_dict['rain2'] = 'group_rain'
 weewx.units.obs_group_dict['rain3'] = 'group_rain'
+weewx.units.obs_group_dict['rainRate2'] = 'group_rainrate'
 weewx.units.obs_group_dict['solarEnergy'] = 'group_radiation_energy'
 weewx.units.obs_group_dict['sunshine'] = 'group_count'
 weewx.units.obs_group_dict['sunshineThreshold'] = "group_radiation"

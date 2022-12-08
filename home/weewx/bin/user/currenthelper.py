@@ -79,7 +79,7 @@ class CurrentHelper(StdService):
         log.info("Service version is %s." % VERSION)
 
         # Get any user-defined overrides
-        override_dict = config_dict.get('IndoorClimate', {})
+        override_dict = config_dict.get('CurrentHelper', {})
         # Get the default values, then merge the user overrides into it
         option_dict = weeutil.config.deep_copy(defaults_dict['CurrentHelper'])
         option_dict.merge(override_dict)

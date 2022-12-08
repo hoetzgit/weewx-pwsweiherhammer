@@ -172,7 +172,7 @@ class RainRate(StdService):
         # Save the computed rain rates (to be used to compute archive rain rate.
         self.loop_rain_rates.append(LoopRainRate(
             timestamp = pkt['dateTime'],
-            rainRate  = pkt['rainRate']))
+            rainRate  = pkt['rainRate2']))
 
     def new_archive_record(self, event):
         """ Overwrite archive rainRate with current rainRate."""
@@ -202,7 +202,7 @@ class RainRate(StdService):
 
         # TODO: Verify that this archive record is received in the same units as loop data (i.e., before any conversion that might be needed).
 
-        record['rainRate'] = archive_rain_rate
+        record['rainRate2'] = archive_rain_rate
 
     @staticmethod
     def add_packet(pkt, rain_entries):
@@ -237,8 +237,8 @@ class RainRate(StdService):
         """Add/update rainRate in packet"""
 
         if len(rain_entries) < 2:
-            pkt['rainRate'] = 0.0
+            pkt['rainRate2'] = 0.0
         else:
-            pkt['rainRate'] = 3600 * rain_entries[0].amount / (pkt['dateTime'] - rain_entries[1].timestamp)
+            pkt['rainRate2'] = 3600 * rain_entries[0].amount / (pkt['dateTime'] - rain_entries[1].timestamp)
 
-        log.debug('new_loop(%d): Added/updated pkt[rainRate] of %f' % (pkt['dateTime'], pkt['rainRate']))
+        log.debug('new_loop(%d): Added/updated pkt[rainRate] of %f' % (pkt['dateTime'], pkt['rainRate2']))

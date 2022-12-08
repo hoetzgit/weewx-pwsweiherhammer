@@ -64,5 +64,6 @@
 #
 # Publish weewx-loopdata Datafile to MQTT Broker
 */1 * * * * /bin/bash /usr/local/bin/publish_weewx-loopdata_to_broker.sh >/var/log/weewx/publish_weewx-loopdata_to_broker.log 2>&1
-*/1 * * * * sleep 20; /bin/bash /usr/local/bin/publish_weewx-loopdata_to_broker.sh >/var/log/weewx/publish_weewx-loopdata_to_broker.log 2>&1
-*/1 * * * * sleep 40; /bin/bash /usr/local/bin/publish_weewx-loopdata_to_broker.sh >/var/log/weewx/publish_weewx-loopdata_to_broker.log 2>&1
+*/1 * * * * sleep 15; /bin/bash /usr/local/bin/publish_weewx-loopdata_to_broker.sh >/var/log/weewx/publish_weewx-loopdata_to_broker.log 2>&1
+*/1 * * * * sleep 30; /bin/bash /usr/local/bin/publish_weewx-loopdata_to_broker.sh >/var/log/weewx/publish_weewx-loopdata_to_broker.log 2>&1
+*/1 * * * * sleep 45; /bin/bash /usr/local/bin/publish_weewx-loopdata_to_broker.sh >/var/log/weewx/publish_weewx-loopdata_to_broker.log 2>&1
