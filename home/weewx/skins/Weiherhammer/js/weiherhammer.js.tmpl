@@ -2466,11 +2466,12 @@ function update_current_wx(data) {
         avg10m_output = '<i class="wi wi-rain"></i>';
     } else if (data.hasOwnProperty("radiation") && data.hasOwnProperty("sunshineRadiationMin") && data.hasOwnProperty("sunshine_avg10m")) {
         if (parseFloat(data["radiation"]) >= parseFloat(data["sunshineRadiationMin"])) {
-            if (parseFloat(data["sunshine_avg10m"]).toFixed(1) == 0.0) {
+            var sunshine_avg10m = parseFloat(data["sunshine_avg10m"]).toFixed(1);
+            if (sunshine_avg10m == 0.0) {
                 avg10m_output = '<i class="wi wi-cloudy"></i>';
             } else if (sunshine_avg10m == 1.0) {
                 avg10m_output = '<i class="wi wi-day-sunny"></i>';
-            } else if ((sunshine_avg10m > 0.0) && (sunshine_avg10m < 1.0)) {
+            } else if (sunshine_avg10m > 0.0 && sunshine_avg10m < 1.0) {
                 avg10m_output = '<i class="wi wi-day-cloudy"></i>';
             }
         }
