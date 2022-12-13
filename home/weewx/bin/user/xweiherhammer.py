@@ -500,7 +500,7 @@ class XWeiherhammer(weewx.xtypes.XType):
     def calc_sunshine(self, key, data, db_manager=None):
         if 'radiation' not in data or 'dateTime' not in data:
             raise weewx.CannotCalculate(key)
-        sunshine = None
+        sunshine = threshold = None
         if data['radiation'] is not None:
             if data['radiation'] >= self.sunshine_radiation_min:
                 sunshine = 0
@@ -519,7 +519,10 @@ class XWeiherhammer(weewx.xtypes.XType):
         elif self.sunshine_debug >= 3:
             logdbg("sunshine, radiation is None")
         if self.sunshine_debug >= 2:
-            logdbg("sunshine, sunshine=%s" % (str(sunshine) if sunshine is not None else 'None'))
+            logdbg("sunshine, sunshine=%s radiation=%s threshold=%s" % (
+                str(sunshine) if sunshine is not None else 'None',
+                str(data['radiation']) if data['radiation'] is not None else 'None',
+                str(threshold) if threshold is not None else 'None'))
         return ValueTuple(sunshine, 'count', 'group_count')
 
     @staticmethod

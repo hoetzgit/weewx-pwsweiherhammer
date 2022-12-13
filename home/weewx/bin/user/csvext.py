@@ -1,6 +1,9 @@
 # Copyright 2015-2021 Matthew Wall
 # Distributed under the terms of the GNU Public License (GPLv3)
+#
 # Copyright 2022 Henry Ott "extended" Version (Status: MVP)
+# LOOP packets with contents not previously stored in the CSV file trigger a restructuring of the existing CSV file.
+# TODO different Archive Records after user changes on DB Structure?
 import os
 import os.path
 import time
@@ -45,7 +48,7 @@ class CSVEXT(weewx.engine.StdService):
         # optional enable/disable service
         enable = weeutil.weeutil.to_bool(d.get('enable', True))
         if not enable:
-            loginf("Service is disabled. Enable it in the CSVEXT section of weewx.conf.")
+            loginf("Service is disabled. Enable it in the [CSVEXT] section of weewx.conf.")
             return
 
         # optional debug level
@@ -99,6 +102,27 @@ class CSVEXT(weewx.engine.StdService):
                 fields.append(str(record[k]))
         return fields
 
+    def sort_data_dict(self, to_sort_dict):
+        to_sort_dict = dict(sorted(sort_dict.items()))
+        if 'dateTime' in to_sort_dict:
+            # set dateTime as first element
+            tmp_dict = dict()
+            tmp_dict['dateTime'] = to_sort_dict['dateTime']
+            # remove dateTime from sorted dict
+            del to_sort_dict['dateTime']
+            # new sorted dict with dateTime as first element
+            tmp_dict.update(to_sort_dict)
+            to_sort_dict = tmp_dict
+        return to_sort_dict
+
+    def build_column_field_mapping(self, sorted_dict):
+        mapping_dict = dict()
+        col = 0
+        for k in sorted_dict:
+            mapping_dict[col] = k
+            col += 1
+        return mapping_dict
+
     def write_loop_csv(self, filename, loop_data):
         flag = "a" if self.mode == 'append' else "w"
         header = None
@@ -135,44 +159,49 @@ class CSVEXT(weewx.engine.StdService):
 
     def write_loop_restructured_csv(self, filename, loop_data):
         filenametmp = filename + '.tmp'
-        # init new structure with the last saved structure
+        # init new structure with the last saved csv structure
         new_csv_structure = self.csv_structure
-        # remove 'dateTime' before sorting
-        if 'dateTime' in new_csv_structure:
-            del new_csv_structure['dateTime']
         # add new fields to new csv structure
         for k in loop_data:
-            if k != 'dateTime':
-                if k not in new_csv_structure:
-                    new_csv_structure[k] = ""
-        # sort and save new structure
-        new_csv_structure = dict(sorted(new_csv_structure.items()))
-        self.csv_structure = dict()
-        # first element is 'dateTime',then the sorted rest
-        self.csv_structure['dateTime'] = ""
-        self.csv_structure.update(new_csv_structure)
-        new_csv_structure = self.csv_structure
+            if k not in new_csv_structure:
+                new_csv_structure[k] = ""
+        # sort new structure
+        new_csv_structure = self.sort_data_dict(new_csv_structure)
         header = '%s\n' % self.field_separator.join(self.sort_keys(new_csv_structure))
         with open (filename, 'r') as infile, open (filenametmp, 'w') as outfile:
             # write new header to tmp csv file
             outfile.write(header)
 
-            # read old data, convert old data to new header structure and write to tmp csv file
+            # read old data, convert old data to new csv header structure and write to tmp csv file
             csv_reader = csv.reader(infile, delimiter = self.field_separator)
             first_line = True
             for row in csv_reader:
                 # first line header
                 if not first_line:
-                    # init old data dict with new data structure dict
+                    # init old data dict with new csv data structure dict
                     old_data = new_csv_structure
                     # copy old data to new structure
                     col = 0
                     for data in row:
                         # get field name from mapping dict
-                        field = self.column_field_mapping[col]
-                        col += 1
+                        field = self.column_field_mapping.get(col)
+                        if field is None:
+                            # clean up
+                            infile.close()
+                            outfile.close()
+                            if os.path.exists(filenametmp):
+                                os.remove(filenametmp)
+                            logerr("Error during CSV restructuring, column-field-mapping is incorrect. Abort!")
+                            if self.debug > 0:
+                                logdbg("row: %s" % str(row))
+                                logdbg("field mapping: %s" % str(self.column_field_mapping))
+                                logdbg("old csv structure: %s" % str(self.csv_structure))
+                                logdbg("new csv structure: %s" % str(new_csv_structure))
+                            return
                         old_data[field] = data
-                    # now write the old data with new structure
+                        col += 1
+
+                    # now write the old data with new csv structure
                     fields = list()
                     for k in old_data:
                         fields.append(str(old_data[k]))
@@ -191,29 +220,31 @@ class CSVEXT(weewx.engine.StdService):
                 tstr = time.strftime(self.timestamp_format,
                                      time.gmtime(loop_data['dateTime']))
             fields = [tstr]
-            self.column_field_mapping = dict()
-            self.column_field_mapping[0] = 'dateTime'
-            col = 1
             for k in new_data:
                 if k != 'dateTime':
                     fields.append(str(new_data[k]) if new_data[k] is not None else "")
-                    self.column_field_mapping[col] = k
-                    col += 1
             outfile.write('%s\n' % self.field_separator.join(fields))
 
             # close infile/outfile
             infile.close()
             outfile.close()
 
-        # move temp file to original file
+        # save new csv structure
+        self.csv_structure = new_csv_structure
+        # build new field mapping with new csv data structure
+        self.column_field_mapping = self.build_column_field_mapping(self.csv_structure)
+
+        # move temp file to result csv file
         if os.path.exists(filenametmp):
             shutil.move(filenametmp, filename)
+        # clean up after previous failures?
+        if os.path.exists(filenametmp):
+            os.remove(filenametmp)
         if self.debug > 0:
             logdbg("LOOP data contained new fields. CSV file was restructured.")
 
     def init_loop_csv_structure_and_field_mapping(self, filename, loop_data):
         self.csv_structure = dict()
-        self.column_field_mapping = dict()
         if os.path.exists(filename):
             with open(filename, 'r') as f:
                 cols = list()
@@ -223,23 +254,15 @@ class CSVEXT(weewx.engine.StdService):
                     cols.append(row)
                     break;
                 f.close()
-                col = 0
                 for k in cols[0]:
                     self.csv_structure[k] = ""
-                    self.column_field_mapping[col] = k
-                    col += 1
         else:
-            tmp_dict = dict()
+            loop_dict = dict()
             for k in loop_data:
-                if k != 'dateTime':
-                    tmp_dict[k] = ""
-            tmp_dict = dict(sorted(tmp_dict.items()))
-            self.csv_structure['dateTime'] = ""
-            self.csv_structure.update(tmp_dict)
-            col = 0
-            for k in self.csv_structure:
-                self.column_field_mapping[col] = k
-                col += 1
+                loop_dict[k] = ""
+            self.csv_structure = self.sort_data_dict(loop_dict)
+        # build new field mapping with new data structure dict
+        self.column_field_mapping = self.build_column_field_mapping(self.csv_structure)
         if self.debug > 0:
             logdbg("CSV structure and the column field mapping is initialized.")
 
@@ -279,7 +302,7 @@ class CSVEXT(weewx.engine.StdService):
                     if not os.path.exists(filename):
                         logdbg("A new LOOP CSV file will be created.")
                     else:
-                        logdbg("LOOP data with previously stored fields only detected.")
+                        logdbg("LOOP data contains only previously stored values.")
                 self.write_loop_csv(filename, loop_data)
         else:
             if self.debug > 0:

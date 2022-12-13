@@ -38,12 +38,16 @@
       <tr>
         <td class="label">$obs.label[$x]</td>
         #if $current.sunshine.raw is None
-          <td class="data">$gettext("No evaluation available")</td>
+          <td class="data">$gettext("No evaluation available")
         #elif $current.sunshine.raw > 0.0
-          <td class="data">$gettext("YES")</td>
+          <td class="data">$gettext("YES")
         #else
-          <td class="data">$gettext("NO")</td>
+          <td class="data">$gettext("NO")
         #end if
+        #if $getVar('day.%s.has_data' % 'sunshineDur')
+          <br>$day.sunshineDur.sum.format('%(hour)d%(hour_label)s, %(minute)d%(minute_label)s')
+        #end if
+        </td>
       </tr>
     #else
       <tr>

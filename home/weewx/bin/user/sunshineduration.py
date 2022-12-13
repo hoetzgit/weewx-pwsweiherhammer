@@ -115,7 +115,7 @@ class SunshineDuration(StdService):
                 if self.debug >= 3:
                     logdbg("first loop packet with valid 'sunshine' during archive interval received.")
             else:
-                # .L..L..L..L
+                # .L....L....L....L
                 loopDuration = loopdateTime - self.lastLoop
                 loopSunshineDur = 0
                 if sunshine > 0:
@@ -138,14 +138,21 @@ class SunshineDuration(StdService):
 
         if self.lastArchive is not None and self.lastLoop is not None and self.lastLoop < self.lastArchive:
             # no loop packets with 'sunshine' during the last archive interval
-            # .L..L..L..L..A..........A
+            # ..L....L....L....L....A...........................A
+            #                  |????|
             if self.debug >= 3:
                 logdbg("No loop packets with valid 'sunshine' values during last archive interval, disacard loop indicator.")
             self.lastLoop = None
             self.sunshineDur = None
 
         if self.lastLoop is not None and self.sunshineDur is not None:
+            # sum from loop packets
+            # The period from the last loop packet before the archive time to the first loop packet after the archive time is calculated in the following run.
+            # L..A..L....L....L....L....L..A
+            # |<=======================>|           = self.sunshineDur
+            #                           |<====      = calculate on next loop
             target_data['sunshineDur'] = self.sunshineDur
+
             # reset loop sum
             self.sunshineDur = 0
             if self.debug >= 2:
