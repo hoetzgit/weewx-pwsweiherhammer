@@ -55,19 +55,42 @@ for i in 50 51 52 53 54; do
     if [[ i -eq 50 ]]; then
         sed -i 's/<\/strong>/&<\/p><p>/g' "${TMP}"
     elif [[ i -eq 54 ]]; then
+#echo -e " \
+#\nGLÄTTE/SCHNEE/GLÄTTE/SCHNEE: \
+#\nGLÄTTE/SCHNEE/GLÄTTE: \
+#\nGLÄTTE/SCHNEE: \
+#\nGLÄTTE: \
+#\nGLATTEIS (UNWETTER): \
+#\nGLATTEIS (teils UNWETTER): \
+#\nGLATTEIS/ÜBERFRIERENDE NÄSSE (UNWETTER): \
+#\n" >"${TMP}"
         sed -i 's/\<Uhr\><\/strong>/&<\/p><p>/g' "${TMP}"
         #TODO: sed zusammenfassen
         #TODO: UML2DUMMY/DUMMY2UML: bessere Lösung möglich? Grund: :upper: und Umlaute (z.B. SCHNEE/GLÄTTE:)
         ${UML2DUMMY} <"${TMP}" >"${TMP2}"
         ${MV} ${TMP2} ${TMP}
-        # XXX/XXX/XXX/XXX:
-        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\>\)\([\/]\)\([[:upper:]]\)\([[:upper:]]*\>\)\([\/]\)\([[:upper:]]\)\([[:upper:]]*\>\)\([\/]\)\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2\/\u\4\L\5\/\u\7\L\8\/\u\10\L\11:<\/strong>/g' "${TMP}"
-        # XXX/XXX/XXX:
-        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\>\)\([\/]\)\([[:upper:]]\)\([[:upper:]]*\>\)\([\/]\)\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2\/\u\4\L\5\/\u\7\L\8:<\/strong>/g' "${TMP}"
-        # XXX/XXX:
-        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\>\)\([\/]\)\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2\/\u\4\L\5:<\/strong>/g' "${TMP}"
-        # XXX:
-        sed -i 's/\b\([[:upper:]]\)\([[:upper:]]*\b\):/<\/p><p><strong>\u\1\L\2:<\/strong>/g' "${TMP}"
+
+        # XXX/XXX/XXX/XXX: ===> <\p><p><strong>Xxx/Xxx/Xxx/Xxx:<\strong>
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2\/\u\3\L\4\/\u\5\L\6\/\u\7\L\8:<\/strong>/g' "${TMP}"
+
+        # XXX/XXX/XXX: ===> <\p><p><strong>Xxx/Xxx/Xxx:<\strong>
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2\/\u\3\L\4\/\u\5\L\6:<\/strong>/g' "${TMP}"
+
+        # GLÄTTE/SCHNEE: ===> <\p><p><strong>Glätte/Schnee:<\strong>
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2\/\u\3\L\4:<\/strong>/g' "${TMP}"
+
+        # NEBEL: ===> <\p><p><strong>Nebel:<\strong>
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2:<\/strong>/g' "${TMP}"
+
+        # GLATTEIS (teils UNWETTER): ===> <\p><p><strong>Glatteis (teils Unwetter):<\strong>
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\) (\([[:lower:]]*\) \([[:upper:]]\)\([[:upper:]]*\)):/<\/p><p><strong>\u\1\L\2 (\L\3 \u\4\L\5):<\/strong>/g' "${TMP}"
+
+        # GLATTEIS/ÜBERFRIERENDE NÄSSE (UNWETTER): ===> <\p><p><strong>Glatteis/überfrierende Nässe (Unwetter):<\strong>
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\) \([[:upper:]]\)\([[:upper:]]*\) (\([[:upper:]]\)\([[:upper:]]*\)):/<\/p><p><strong>\u\1\L\2\/\L\3\L\4 \u\5\L\6 (\u\7\L\8):<\/strong>/g' "${TMP}"
+
+        # GLATTEIS (UNWETTER): ===> <\p><p><strong>Glatteis (Unwetter):<\strong>
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\) (\([[:upper:]]\)\([[:upper:]]*\)):/<\/p><p><strong>\u\1\L\2 (\u\3\L\4):<\/strong>/g' "${TMP}"
+
         ${DUMMY2UML} <"${TMP}" >"${TMP2}"
         ${MV} ${TMP2} ${TMP}
     fi

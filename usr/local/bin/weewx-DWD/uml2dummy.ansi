@@ -13,4 +13,7 @@
 sed -e 's/\Ä/AEAE/g' \
     -e 's/\Ö/OEOE/g' \
     -e 's/\Ü/UEUE/g' \
+    -e 's/\ä/aeae/g' \
+    -e 's/\ö/oeoe/g' \
+    -e 's/\ü/ueue/g' \
     -e 's/\ß/SZSZ/g'

@@ -543,6 +543,10 @@ a.history-table-body-year-nav-noaa, a.history-table-body-month-nav-noaa {
     color:#000;
 }
 
+.extreme-table-head-subheadline {
+    text-align:center;
+}
+
 .dark .extreme-table-head-headline {
     text-align:center;
     background:#D7D7D7;

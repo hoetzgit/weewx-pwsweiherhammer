@@ -14,7 +14,7 @@ sed -e 's/aeae/\ä/g' \
     -e 's/oeoe/\ö/g' \
     -e 's/ueue/\ü/g' \
     -e 's/szsz/\ß/g' \
-    -e 's/AEAE/\ß/g' \
-    -e 's/OEOE/\ß/g' \
-    -e 's/UEUE/\ß/g' \
-    -e 's/SZSZ/\ß/g'
+    -e 's/SZSZ/\ß/g' \
+    -e 's/AEAE/\Ä/g' \
+    -e 's/OEOE/\Ö/g' \
+    -e 's/UEUE/\Ü/g'

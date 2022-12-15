@@ -51,14 +51,6 @@
         jQuery("#at-windrun-max-ts").text( tzAdjustedMoment($alltime.windrun.maxsumtime.raw).format( "$obs.label.time_extreme_page_month_day_year" ) );
         #end if
         
-        jQuery("#year-rainiest-day-ts").text( tzAdjustedMoment($rainiest_day[0]).format( "$obs.label.time_extreme_page_month_day_year" ) );
-        jQuery("#at-rainiest-day-ts").text( tzAdjustedMoment($at_rainiest_day[0]).format( "$obs.label.time_extreme_page_month_day_year" ) );
-        
-        jQuery("#year-thunderstormiest-day-ts").text( tzAdjustedMoment($thunderstormiest_day[0]).format( "$obs.label.time_extreme_page_month_day_year" ) );
-        jQuery("#at-thunderstormiest-day-ts").text( tzAdjustedMoment($at_thunderstormiest_day[0]).format( "$obs.label.time_extreme_page_month_day_year" ) );
-        
-        jQuery("#year-rainRate-max-ts").text( tzAdjustedMoment($year.rainRate.maxtime.raw).format( "$obs.label.time_extreme_page_full_date" ) );
-        jQuery("#at-rainRate-max-ts").text( tzAdjustedMoment($alltime.rainRate.maxtime.raw).format( "$obs.label.time_extreme_page_full_date" ) );
         
         jQuery("#year-outHumidity-max-ts").text( tzAdjustedMoment($year.outHumidity.maxtime.raw).format( "$obs.label.time_extreme_page_full_date" ) );
         jQuery("#at-outHumidity-max-ts").text( tzAdjustedMoment($alltime.outHumidity.maxtime.raw).format( "$obs.label.time_extreme_page_full_date" ) );
@@ -88,53 +80,113 @@
         jQuery("#at-UV-max-ts").text( tzAdjustedMoment($alltime.UV.maxtime.raw).format( "$obs.label.time_extreme_page_full_date" ) );
         #end if
         
-        #if $year.lightning_strike_count.has_data
-        jQuery("#year-lightning_strike_count-max-ts").text( tzAdjustedMoment($year.lightning_strike_count.maxtime.raw).format( "$obs.label.time_extreme_page_full_date" ) );
-        jQuery("#at-lightning_strike_count-max-ts").text( tzAdjustedMoment($alltime.lightning_strike_count.maxtime.raw).format( "$obs.label.time_extreme_page_full_date" ) );
-        #end if
-        
+        // indoor
         jQuery("#year-inTemp-max-ts").text( moment.unix($year.inTemp.maxtime.raw).format( "$obs.label.time_records_page_full_date" ) );
         jQuery("#at-inTemp-max-ts").text( moment.unix($alltime.inTemp.maxtime.raw).format( "$obs.label.time_records_page_full_date" ) );
-
+        
         jQuery("#year-inTemp-min-ts").text( moment.unix($year.inTemp.mintime.raw).format( "$obs.label.time_records_page_full_date" ) );
         jQuery("#at-inTemp-min-ts").text( moment.unix($alltime.inTemp.mintime.raw).format( "$obs.label.time_records_page_full_date" ) );
         
+        jQuery("#year-extraTemp1-max-ts").text( moment.unix($year.extraTemp1.maxtime.raw).format( "$obs.label.time_records_page_full_date" ) );
+        jQuery("#at-extraTemp1-max-ts").text( moment.unix($alltime.extraTemp1.maxtime.raw).format( "$obs.label.time_records_page_full_date" ) );
+        
+        jQuery("#year-extraTemp1-min-ts").text( moment.unix($year.extraTemp1.mintime.raw).format( "$obs.label.time_records_page_full_date" ) );
+        jQuery("#at-extraTemp1-min-ts").text( moment.unix($alltime.extraTemp1.mintime.raw).format( "$obs.label.time_records_page_full_date" ) );
+        
+        jQuery("#year-extraTemp2-max-ts").text( moment.unix($year.extraTemp2.maxtime.raw).format( "$obs.label.time_records_page_full_date" ) );
+        jQuery("#at-extraTemp2-max-ts").text( moment.unix($alltime.extraTemp2.maxtime.raw).format( "$obs.label.time_records_page_full_date" ) );
+        
+        jQuery("#year-extraTemp2-min-ts").text( moment.unix($year.extraTemp2.mintime.raw).format( "$obs.label.time_records_page_full_date" ) );
+        jQuery("#at-extraTemp2-min-ts").text( moment.unix($alltime.extraTemp2.mintime.raw).format( "$obs.label.time_records_page_full_date" ) );
+        
+        jQuery("#year-extraTemp3-max-ts").text( moment.unix($year.extraTemp3.maxtime.raw).format( "$obs.label.time_records_page_full_date" ) );
+        jQuery("#at-extraTemp3-max-ts").text( moment.unix($alltime.extraTemp3.maxtime.raw).format( "$obs.label.time_records_page_full_date" ) );
+        
+        jQuery("#year-extraTemp3-min-ts").text( moment.unix($year.extraTemp3.mintime.raw).format( "$obs.label.time_records_page_full_date" ) );
+        jQuery("#at-extraTemp3-min-ts").text( moment.unix($alltime.extraTemp3.mintime.raw).format( "$obs.label.time_records_page_full_date" ) );
+        
+        // Rain
+        jQuery("#year-rainiest-day-ts").text( tzAdjustedMoment($rainiest_day[0]).format( "$obs.label.time_extreme_page_month_day_year" ) );
+        jQuery("#at-rainiest-day-ts").text( tzAdjustedMoment($at_rainiest_day[0]).format( "$obs.label.time_extreme_page_month_day_year" ) );
+        
+        jQuery("#year-rainRate-max-ts").text( tzAdjustedMoment($year.rainRate.maxtime.raw).format( "$obs.label.time_extreme_page_full_date" ) );
+        jQuery("#at-rainRate-max-ts").text( tzAdjustedMoment($alltime.rainRate.maxtime.raw).format( "$obs.label.time_extreme_page_full_date" ) );
+        
         jQuery("#year-days-with-rainfall-ts").text( tzAdjustedMoment($year_days_with_rain[1]).format( "$obs.label.time_extreme_page_month_day_year" ) );
-        // Take the number of days ($at_days_with_rain[0]) - 1 and multiply by 86400 (seconds in a day) to get total seconds. Then subtract from the end epoch to give you the epoch "days ago"
-        // Removed the year with ", YYYY, or "/YYYY" or ".YYYY" or "-YYYY"
-
+        
         if ($year_days_with_rain[1] > 0) {
             var start_day_epoch = $year_days_with_rain[1] - (($year_days_with_rain[0] - 1) * 86400);
             jQuery("#year-days-with-rainfall-range-ts").text( tzAdjustedMoment(start_day_epoch).format('$obs.label.time_extreme_page_rainfall_range_begin') + " " + '$obs.label.extreme_range_to' + " " + tzAdjustedMoment($year_days_with_rain[1]).format('$obs.label.time_extreme_page_rainfall_range_end') );
         } else {
             jQuery("#year-days-with-rainfall-range-ts").text("---");
         }
-
+        
         if ($at_days_with_rain[1] > 0) {
             var start_day_epoch = $at_days_with_rain[1] - (($at_days_with_rain[0] - 1) * 86400);
-            //jQuery("#at-days-with-rainfall-range-ts").text( tzAdjustedMoment(start_day_epoch).format('LL').replace(/([A-Z])|[, \/\-\.]+\b[0-9]{4}\b/g, '$1') + " " + '$obs.label.extreme_range_to' + " " + tzAdjustedMoment($at_days_with_rain[1]).format('LL') );
             jQuery("#at-days-with-rainfall-range-ts").text( tzAdjustedMoment(start_day_epoch).format('$obs.label.time_extreme_page_rainfall_range_begin') + " " + '$obs.label.extreme_range_to' + " " + tzAdjustedMoment($at_days_with_rain[1]).format('$obs.label.time_extreme_page_rainfall_range_end') );
         } else {
             jQuery("#at-days-with-rainfall-range-ts").text("---");
         }
         
         jQuery("#year-days-without-rainfall-ts").text( tzAdjustedMoment($year_days_without_rain[1]).format( "$obs.label.time_extreme_page_month_day_year" ) );
-        // Take the number of days ($at_days_without_rain[0]) - 1 and multiply by 86400 (seconds in a day) to get total seconds. Then subtract from the end epoch to give you the epoch "days ago"
-        // Removed the year with ", YYYY, or "/YYYY" or ".YYYY" or "-YYYY"
-
+        
         if ($year_days_without_rain[1] > 0) {
             var start_day_epoch = $year_days_without_rain[1] - (($year_days_without_rain[0] - 1) * 86400);
             jQuery("#year-days-without-rainfall-range-ts").text( tzAdjustedMoment(start_day_epoch).format('$obs.label.time_extreme_page_rainfall_range_begin') + " " + '$obs.label.extreme_range_to' + " " + tzAdjustedMoment($year_days_without_rain[1]).format('$obs.label.time_extreme_page_rainfall_range_end') );
         } else {
             jQuery("#year-days-without-rainfall-range-ts").text("---");
         }
-
+        
         if ($at_days_without_rain[1] > 0) {
             var start_day_epoch = $at_days_without_rain[1] - (($at_days_without_rain[0] - 1) * 86400);
-            //jQuery("#at-days-without-rainfall-range-ts").text( tzAdjustedMoment(start_day_epoch).format('LL').replace(/([A-Z])|[, \/\-\.]+\b[0-9]{4}\b/g, '$1') + " " + '$obs.label.extreme_range_to' + " " + tzAdjustedMoment($at_days_without_rain[1]).format('LL') );
             jQuery("#at-days-without-rainfall-range-ts").text( tzAdjustedMoment(start_day_epoch).format('$obs.label.time_extreme_page_rainfall_range_begin') + " " + '$obs.label.extreme_range_to' + " " + tzAdjustedMoment($at_days_without_rain[1]).format('$obs.label.time_extreme_page_rainfall_range_end') );
         } else {
             jQuery("#at-days-without-rainfall-range-ts").text("---");
+        }
+        
+        // thunderstorm
+        jQuery("#year-thunderstormiest-day-ts").text( tzAdjustedMoment($thunderstormiest_day[0]).format( "$obs.label.time_extreme_page_month_day_year" ) );
+        jQuery("#at-thunderstormiest-day-ts").text( tzAdjustedMoment($at_thunderstormiest_day[0]).format( "$obs.label.time_extreme_page_month_day_year" ) );
+        
+        #if $year.lightning_strike_count.has_data
+        jQuery("#year-lightning_strike_count-max-ts").text( tzAdjustedMoment($year.lightning_strike_count.maxtime.raw).format( "$obs.label.time_extreme_page_full_date" ) );
+        jQuery("#at-lightning_strike_count-max-ts").text( tzAdjustedMoment($alltime.lightning_strike_count.maxtime.raw).format( "$obs.label.time_extreme_page_full_date" ) );
+        #end if
+        
+        // sunshine
+        jQuery("#year-sunniest-day-ts").text( tzAdjustedMoment($sunniest_day[0]).format( "$obs.label.time_extreme_page_month_day_year" ) );
+        jQuery("#at-sunniest-day-ts").text( tzAdjustedMoment($at_sunniest_day[0]).format( "$obs.label.time_extreme_page_month_day_year" ) );
+        
+        jQuery("#year-days-with-sunshine-ts").text( tzAdjustedMoment($year_days_with_rain[1]).format( "$obs.label.time_extreme_page_month_day_year" ) );
+        
+        if ($year_days_with_sunshine[1] > 0) {
+            var start_day_epoch = $year_days_with_sunshine[1] - (($year_days_with_sunshine[0] - 1) * 86400);
+            jQuery("#year-days-with-sunshine-range-ts").text( tzAdjustedMoment(start_day_epoch).format('$obs.label.time_extreme_page_sunshine_range_begin') + " " + '$obs.label.extreme_range_to' + " " + tzAdjustedMoment($year_days_with_sunshine[1]).format('$obs.label.time_extreme_page_sunshine_range_end') );
+        } else {
+            jQuery("#year-days-with-sunshine-range-ts").text("---");
+        }
+        
+        if ($at_days_with_sunshine[1] > 0) {
+            var start_day_epoch = $at_days_with_sunshine[1] - (($at_days_with_sunshine[0] - 1) * 86400);
+            jQuery("#at-days-with-sunshine-range-ts").text( tzAdjustedMoment(start_day_epoch).format('$obs.label.time_extreme_page_sunshine_range_begin') + " " + '$obs.label.extreme_range_to' + " " + tzAdjustedMoment($at_days_with_sunshine[1]).format('$obs.label.time_extreme_page_sunshine_range_end') );
+        } else {
+            jQuery("#at-days-with-sunshine-range-ts").text("---");
+        }
+        
+        jQuery("#year-days-without-sunshine-ts").text( tzAdjustedMoment($year_days_without_sunshine[1]).format( "$obs.label.time_extreme_page_month_day_year" ) );
+        
+        if ($year_days_without_sunshine[1] > 0) {
+            var start_day_epoch = $year_days_without_sunshine[1] - (($year_days_without_sunshine[0] - 1) * 86400);
+            jQuery("#year-days-without-sunshine-range-ts").text( tzAdjustedMoment(start_day_epoch).format('$obs.label.time_extreme_page_sunshine_range_begin') + " " + '$obs.label.extreme_range_to' + " " + tzAdjustedMoment($year_days_without_sunshine[1]).format('$obs.label.time_extreme_page_sunshine_range_end') );
+        } else {
+            jQuery("#year-days-without-sunshine-range-ts").text("---");
+        }
+        
+        if ($at_days_without_sunshine[1] > 0) {
+            var start_day_epoch = $at_days_without_sunshine[1] - (($at_days_without_sunshine[0] - 1) * 86400);
+            jQuery("#at-days-without-sunshine-range-ts").text( tzAdjustedMoment(start_day_epoch).format('$obs.label.time_extreme_page_sunshine_range_begin') + " " + '$obs.label.extreme_range_to' + " " + tzAdjustedMoment($at_days_without_sunshine[1]).format('$obs.label.time_extreme_page_sunshine_range_end') );
+        } else {
+            jQuery("#at-days-without-sunshine-range-ts").text("---");
         }
     });
 </script>
@@ -368,7 +420,7 @@
             </thead>
             <tbody class="table-group-divider extreme-table-body">
                 <tr>
-                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_highest_daily_rainfall</th>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_highest_daily_rain</th>
                     <td class="extreme-table-body-obs-val-year">$rainiest_day[1] $unit.label.rain</td>
                     <td class="extreme-table-body-obs-ts-year" id="year-rainiest-day-ts"></td><!-- moment.js -->
                     <td class="extreme-table-body-obs-val-alltime">$at_rainiest_day[1] $unit.label.rain</td>
@@ -382,14 +434,14 @@
                     <td class="extreme-table-body-obs-ts-alltime" id="at-rainRate-max-ts"></td><!-- moment.js -->
                 </tr>
                 <tr>
-                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_month_high_rainfall</th>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_highest_monthly_rain</th>
                     <td class="extreme-table-body-obs-val-year">$year_rainiest_month[1] $unit.label.rain</td>
                     <td class="extreme-table-body-obs-ts-year">$year_rainiest_month[0]</td>
                     <td class="extreme-table-body-obs-val-alltime">$at_rainiest_month[1] $unit.label.rain</td>
                     <td class="extreme-table-body-obs-ts-alltime">$at_rainiest_month[0]</td>
                 </tr>
                 <tr>
-                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_total_rainfall</th>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_highest_yearly_rain</th>
                     <td class="extreme-table-body-obs-val-year">$year.rain.sum</td>
                     <td class="extreme-table-body-obs-ts-year">$current.dateTime.format("%Y")</td>
                     <td class="extreme-table-body-obs-val-alltime">$at_rain_highest_year[1] $unit.label.rain</td>
@@ -397,26 +449,18 @@
                 </tr>
             </tbody>
 
-            <!-- Aufeinanderfolgende Tage -->
-            <thead class="table-light extreme-table-head">
+            <!-- Regen - Aufeinanderfolgende Tage -->
+            <thead class="table-light extreme-table-subhead">
                 <tr>
-                    <th scope="col" class="extreme-table-head-headline" colspan=5>$obs.label.extreme_consec_days</th>
+                    <th scope="col" class="extreme-table-head-subheadline" colspan=5>$obs.label.extreme_consec_days</th>
                 </tr>
-                <tr>
-                    <th></th>
-                    <th scope="col" class="extreme-table-head-year" colspan=2>$current.dateTime.format("%Y")</th>
-                    <th scope="col" class="extreme-table-head-alltime" colspan=2>$obs.label.extreme_all_time</th>
-                </tr>
+##                <tr>
+##                    <th></th>
+##                    <th scope="col" class="extreme-table-head-year" colspan=2>$current.dateTime.format("%Y")</th>
+##                    <th scope="col" class="extreme-table-head-alltime" colspan=2>$obs.label.extreme_all_time</th>
+##                </tr>
             </thead>
             <tbody class="table-group-divider extreme-table-body">
-                ## TODO: Total
-                ##<tr>
-                ##    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_consec_days_with_rain</th>
-                ##    <td class="extreme-table-body-obs-val-year">$year_days_with_rain[0] $obs.label.extreme_days_text</td>
-                ##    <td class="extreme-table-body-obs-ts-year">$obs.label.extreme_ending <span id="year-days-with-rainfall-ts"></span></td><!-- moment.js -->
-                ##    <td class="extreme-table-body-obs-val-alltime">$at_days_with_rain[0] $obs.label.extreme_days_text</td>
-                ##    <td class="extreme-table-body-obs-ts-alltime" id="at-days-with-rainfall-range-ts"></td><!-- moment.js -->
-                ##</tr>
                 <tr>
                     <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_consec_days_with_rain</th>
                     <td class="extreme-table-body-obs-val-year">$year_days_with_rain[0] $obs.label.extreme_days_text</td>
@@ -470,7 +514,6 @@
                 </tr>
             </tbody>
 
-            #if $year.radiation.has_data or $year.UV.has_data
             <!-- Sonnenstrahlung -->
             <thead class="table-light extreme-table-head">
                 <tr>
@@ -483,7 +526,6 @@
                 </tr>
             </thead>
             <tbody class="table-group-divider extreme-table-body">
-                #if $year.radiation.has_data
                 <tr>
                     <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_high_solar_rad</th>
                     <td class="extreme-table-body-obs-val-year">$year.radiation.max</td>
@@ -491,8 +533,6 @@
                     <td class="extreme-table-body-obs-val-alltime">$alltime.radiation.max</td>
                     <td class="extreme-table-body-obs-ts-alltime" id="at-radiation-max-ts"></td><!-- moment.js -->
                 </tr>
-                #end if
-                #if $year.UV.has_data
                 <tr>
                     <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_high_uv</th>
                     <td class="extreme-table-body-obs-val-year">$year.UV.max</td>
@@ -500,9 +540,76 @@
                     <td class="extreme-table-body-obs-val-alltime">$alltime.UV.max</td>
                     <td class="extreme-table-body-obs-ts-alltime" id="at-UV-max-ts"></td><!-- moment.js -->
                 </tr>
-                #end if
             </tbody>
-            #end if
+
+            <!-- Sonnenschein -->
+            <thead class="table-light extreme-table-head">
+                <tr>
+                    <th scope="col" class="extreme-table-head-subheadline" colspan=5>$obs.label.extreme_sunshine_records</th>
+                </tr>
+##                <tr>
+##                    <th></th>
+##                    <th scope="col" class="extreme-table-head-year" colspan=2>$current.dateTime.format("%Y")</th>
+##                    <th scope="col" class="extreme-table-head-alltime" colspan=2>$obs.label.extreme_all_time</th>
+##                </tr>
+            </thead>
+            <tbody class="table-group-divider extreme-table-body">
+                <tr>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_highest_daily_sunshine</th>
+                    <td class="extreme-table-body-obs-val-year">$sunniest_day[1] $gettext('hours')</td>
+                    <td class="extreme-table-body-obs-ts-year" id="year-sunniest-day-ts"></td><!-- moment.js -->
+                    <td class="extreme-table-body-obs-val-alltime">$at_sunniest_day[1] $gettext('hours')</td>
+                    <td class="extreme-table-body-obs-ts-alltime" id="at-sunniest-day-ts"></td><!-- moment.js -->
+                </tr>
+                <tr>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_highest_monthly_sunshine</th>
+                    <td class="extreme-table-body-obs-val-year">$year_sunniest_month[1] $gettext('hours')</td>
+                    <td class="extreme-table-body-obs-ts-year">$year_sunniest_month[0]</td>
+                    <td class="extreme-table-body-obs-val-alltime">$at_sunniest_month[1] $gettext('hours')</td>
+                    <td class="extreme-table-body-obs-ts-alltime">$at_sunniest_month[0]</td>
+                </tr>
+                <tr>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_highest_yearly_sunshine</th>
+                    <td class="extreme-table-body-obs-val-year">$year_sunniest_year[0] $gettext('hours')</td>
+                    <td class="extreme-table-body-obs-ts-year">$current.dateTime.format("%Y")</td>
+                    <td class="extreme-table-body-obs-val-alltime">$at_sunniest_year[1] $gettext('hours')</td>
+                    <td class="extreme-table-body-obs-ts-alltime">$at_sunniest_year[0]</td>
+                </tr>
+            </tbody>
+
+            <!-- Sonnenschein - Aufeinanderfolgende Tage -->
+            <thead class="table-light extreme-table-subhead">
+                <tr>
+                    <th scope="col" class="extreme-table-head-subheadline" colspan=5>$obs.label.extreme_consec_sunshine_days</th>
+                </tr>
+##                <tr>
+##                    <th></th>
+##                    <th scope="col" class="extreme-table-head-year" colspan=2>$current.dateTime.format("%Y")</th>
+##                    <th scope="col" class="extreme-table-head-alltime" colspan=2>$obs.label.extreme_all_time</th>
+##                </tr>
+            </thead>
+            <tbody class="table-group-divider extreme-table-body">
+                <tr>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_consec_days_with_sunshine</th>
+                    <td class="extreme-table-body-obs-val-year">$year_days_with_sunshine[0] $obs.label.extreme_days_text</td>
+                    ##<td class="extreme-table-body-obs-ts-year">$obs.label.extreme_ending <span id="year-days-with-sunshine-ts"></span></td><!-- moment.js -->
+                    <td class="extreme-table-body-obs-ts-alltime" id="year-days-with-sunshine-range-ts"></td><!-- moment.js -->
+                    <td class="extreme-table-body-obs-val-alltime">$at_days_with_sunshine[0] $obs.label.extreme_days_text</td>
+                    <td class="extreme-table-body-obs-ts-alltime" id="at-days-with-sunshine-range-ts"></td><!-- moment.js -->
+                </tr>
+                <tr>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_consec_days_without_sunshine</th>
+                    <td class="extreme-table-body-obs-val-year">$year_days_without_sunshine[0] $obs.label.extreme_days_text</td>
+                    ##<td class="extreme-table-body-obs-ts-year">$obs.label.extreme_ending <span id="year-days-without-sunshine-ts"></span></td><!-- moment.js -->
+                    <td class="extreme-table-body-obs-ts-alltime" id="year-days-without-sunshine-range-ts"></td><!-- moment.js -->
+                    <td class="extreme-table-body-obs-val-alltime">$at_days_without_sunshine[0] $obs.label.extreme_days_text</td>
+                    <td class="extreme-table-body-obs-ts-alltime" id="at-days-without-sunshine-range-ts"></td><!-- moment.js -->
+                </tr>
+            </tbody>
+
+
+
+
 
             <!-- Innentemperaturen -->
             <thead class="table-light extreme-table-head">
@@ -529,6 +636,54 @@
                     <td class="extreme-table-body-obs-ts-year" id="year-inTemp-min-ts"></td><!-- moment.js -->
                     <td class="extreme-table-body-obs-val-alltime">$alltime.inTemp.min</td>
                     <td class="extreme-table-body-obs-ts-alltime" id="at-inTemp-min-ts"></td><!-- moment.js -->
+                </tr>
+                <tr>
+                    <th></th>
+##                    <th scope="col" class="extreme-table-head-year" colspan=2>$current.dateTime.format("%Y")</th>
+                    <th scope="col" colspan=2></th>
+                    <th scope="col" class="extreme-table-head-alltime" colspan=2>$obs.label.extreme_all_time_extraTemp</th>
+                </tr>
+                <tr>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_high_extraTemp1</th>
+                    <td class="extreme-table-body-obs-val-year">$year.extraTemp1.max</td>
+                    <td class="extreme-table-body-obs-ts-year" id="year-extraTemp1-max-ts"></td><!-- moment.js -->
+                    <td class="extreme-table-body-obs-val-alltime">$alltime.extraTemp1.max</td>
+                    <td class="extreme-table-body-obs-ts-alltime" id="at-extraTemp1-max-ts"></td><!-- moment.js -->
+                </tr>
+                <tr>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_low_extraTemp1</th>
+                    <td class="extreme-table-body-obs-val-year">$year.extraTemp1.min</td>
+                    <td class="extreme-table-body-obs-ts-year" id="year-extraTemp1-min-ts"></td><!-- moment.js -->
+                    <td class="extreme-table-body-obs-val-alltime">$alltime.extraTemp1.min</td>
+                    <td class="extreme-table-body-obs-ts-alltime" id="at-extraTemp1-min-ts"></td><!-- moment.js -->
+                </tr>
+                <tr>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_high_extraTemp2</th>
+                    <td class="extreme-table-body-obs-val-year">$year.extraTemp2.max</td>
+                    <td class="extreme-table-body-obs-ts-year" id="year-extraTemp2-max-ts"></td><!-- moment.js -->
+                    <td class="extreme-table-body-obs-val-alltime">$alltime.extraTemp2.max</td>
+                    <td class="extreme-table-body-obs-ts-alltime" id="at-extraTemp2-max-ts"></td><!-- moment.js -->
+                </tr>
+                <tr>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_low_extraTemp2</th>
+                    <td class="extreme-table-body-obs-val-year">$year.extraTemp2.min</td>
+                    <td class="extreme-table-body-obs-ts-year" id="year-extraTemp2-min-ts"></td><!-- moment.js -->
+                    <td class="extreme-table-body-obs-val-alltime">$alltime.extraTemp2.min</td>
+                    <td class="extreme-table-body-obs-ts-alltime" id="at-extraTemp2-min-ts"></td><!-- moment.js -->
+                </tr>
+                <tr>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_high_extraTemp3</th>
+                    <td class="extreme-table-body-obs-val-year">$year.extraTemp3.max</td>
+                    <td class="extreme-table-body-obs-ts-year" id="year-extraTemp3-max-ts"></td><!-- moment.js -->
+                    <td class="extreme-table-body-obs-val-alltime">$alltime.extraTemp3.max</td>
+                    <td class="extreme-table-body-obs-ts-alltime" id="at-extraTemp3-max-ts"></td><!-- moment.js -->
+                </tr>
+                <tr>
+                    <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_low_extraTemp3</th>
+                    <td class="extreme-table-body-obs-val-year">$year.extraTemp3.min</td>
+                    <td class="extreme-table-body-obs-ts-year" id="year-extraTemp3-min-ts"></td><!-- moment.js -->
+                    <td class="extreme-table-body-obs-val-alltime">$alltime.extraTemp3.min</td>
+                    <td class="extreme-table-body-obs-ts-alltime" id="at-extraTemp3-min-ts"></td><!-- moment.js -->
                 </tr>
             </tbody>
         </table>

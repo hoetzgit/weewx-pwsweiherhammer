@@ -26,8 +26,6 @@ WHAT="${DB}.archiv_day_xxx vor dem 01.08.2019"
 
 #TODO: sowas wie: SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'archiv_day_*';
 TABLES=(
-"archive_day_ET"
-"archive_day_UV"
 "archive_day_aeris_aqi"
 "archive_day_aeris_co"
 "archive_day_aeris_no2"
@@ -73,6 +71,7 @@ TABLES=(
 "archive_day_consBatteryVoltage"
 "archive_day_dewpoint"
 "archive_day_dewpoint1"
+"archive_day_ET"
 "archive_day_extraHumid1"
 "archive_day_extraHumid2"
 "archive_day_extraHumid3"
@@ -152,8 +151,8 @@ TABLES=(
 "archive_day_owm_pm2_5"
 "archive_day_owm_so2"
 "archive_day_pb"
-"archive_day_pm10_0"
 "archive_day_pm1_0"
+"archive_day_pm10_0"
 "archive_day_pm2_5"
 "archive_day_pressure"
 "archive_day_pws_aqi"
@@ -209,6 +208,7 @@ TABLES=(
 "archive_day_solar_voltage"
 "archive_day_solar_wetBulb"
 "archive_day_solar_windchill"
+"archive_day_sunshine"
 "archive_day_sunshineDur"
 "archive_day_supplyVoltage"
 "archive_day_thswIndex"
@@ -220,6 +220,7 @@ TABLES=(
 "archive_day_uba_no2_category"
 "archive_day_uba_o3"
 "archive_day_uba_o3_category"
+"archive_day_UV"
 "archive_day_uvBatteryStatus"
 "archive_day_vaporPressure"
 "archive_day_wetBulb"
@@ -227,13 +228,13 @@ TABLES=(
 "archive_day_wh65_batt"
 "archive_day_wind"
 "archive_day_windBatteryStatus"
+"archive_day_windchill"
 "archive_day_windDir"
 "archive_day_windGust"
 "archive_day_windGustDir"
 "archive_day_windPressure"
-"archive_day_windSpeed"
-"archive_day_windchill"
 "archive_day_windrun"
+"archive_day_windSpeed"
 )
 
 echo ""
@@ -259,7 +260,7 @@ if [[ "$response" =~ ^([yY]|[jJ])$ ]]; then
     for TABLE in "${TABLES[@]}"
     do
         echo "Update in ${DB}.${TABLE}..."
-        mysql -h${DB_HOST} -u${DB_USER} -p${DB_PASSWD} -v -e "UPDATE ${DB}.${TABLE} SET sum=NULL, count=NULL, wsum=NULL, sumtime=NULL WHERE dateTime<${STARTDATE};"
+        mysql -h${DB_HOST} -u${DB_USER} -p${DB_PASSWD} -v -e "UPDATE ${DB}.${TABLE} SET sum=NULL, count=0, wsum=NULL, sumtime=0 WHERE dateTime<${STARTDATE};"
         RET=$?
         if [ ${RET} -ne 0 ]; then
             echo "Fehler beim Update, Code=${RET}. Skript wird abgebrochen!"

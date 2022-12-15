@@ -52,7 +52,7 @@ if [[ "$response" =~ ^([yY]|[jJ])$ ]]; then
     for TABLE in "${TABLES[@]}"
     do
         echo "Update in ${DB}.${TABLE}..."
-        mysql -h${DB_HOST} -u${DB_USER} -p${DB_PASSWD} -v -e "UPDATE ${DB}.${TABLE} SET sum=NULL, count=NULL, wsum=NULL, sumtime=NULL WHERE dateTime<${STARTDATE};"
+        mysql -h${DB_HOST} -u${DB_USER} -p${DB_PASSWD} -v -e "UPDATE ${DB}.${TABLE} SET sum=NULL, count=0, wsum=NULL, sumtime=0 WHERE dateTime<${STARTDATE};"
         RET=$?
         if [ ${RET} -ne 0 ]; then
             echo "Fehler beim Update, Code=${RET}. Skript wird abgebrochen!"

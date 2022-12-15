@@ -103,7 +103,7 @@ class CSVEXT(weewx.engine.StdService):
         return fields
 
     def sort_data_dict(self, to_sort_dict):
-        to_sort_dict = dict(sorted(sort_dict.items()))
+        to_sort_dict = dict(sorted(to_sort_dict.items()))
         if 'dateTime' in to_sort_dict:
             # set dateTime as first element
             tmp_dict = dict()

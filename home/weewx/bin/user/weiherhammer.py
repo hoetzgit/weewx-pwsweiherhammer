@@ -59,7 +59,7 @@ if weewx.__version__ < "3.9":
 if weewx.__version__ < "4":
 
     def logmsg(level, msg):
-        syslog.syslog(level, "Weiherhammer Extension: %s" % msg)
+        syslog.syslog(level, "Weiherhammer Skin: %s" % msg)
 
     def logdbg(msg):
         logmsg(syslog.LOG_DEBUG, msg)
@@ -758,222 +758,6 @@ class getData(SearchList):
                 locale.format("%.1f", 0),
             ]
 
-        # Lightning Strike Count lookups
-        # Find the group_name for lightning_strike_count in database
-        # "lightning_strike_count" for variable names abbreviated with "lsc"
-        lsc_unit = converter.group_unit_dict["group_count"]
-
-        # Find the group_name for lightning_strike_count in the skin.conf
-        skin_lsc_unit = self.generator.converter.group_unit_dict["group_count"]
-
-        # Find the number of decimals to round the result based on the skin.conf
-        lsc_round = self.generator.skin_dict["Units"]["StringFormats"].get(
-            skin_lsc_unit, "%.0f"
-        )
-
-        # Thunderstormiest Day
-        thunderstormiest_day_query = wx_manager.getSql(
-            "SELECT dateTime, sum FROM archive_day_lightning_strike_count WHERE dateTime >= %s ORDER BY sum DESC LIMIT 1;"
-            % year_start_epoch
-        )
-        if thunderstormiest_day_query is not None:
-            thunderstormiest_day_tuple = (thunderstormiest_day_query[1], lsc_unit, "group_count")
-            thunderstormiest_day_converted = (
-                lsc_round % self.generator.converter.convert(thunderstormiest_day_tuple)[0]
-            )
-            thunderstormiest_day = [
-                thunderstormiest_day_query[0],
-                locale.format("%g", float(thunderstormiest_day_converted)),
-            ]
-        else:
-            thunderstormiest_day = [calendar.timegm(time.gmtime()), locale.format("%.0f", 0)]
-
-        # All Time Thunderstormiest Day
-        at_thunderstormiest_day_query = wx_manager.getSql(
-            "SELECT dateTime, sum FROM archive_day_lightning_strike_count ORDER BY sum DESC LIMIT 1"
-        )
-        at_thunderstormiest_day_tuple = (at_thunderstormiest_day_query[1], lsc_unit, "group_count")
-        at_thunderstormiest_day_converted = (
-            lsc_round % self.generator.converter.convert(at_thunderstormiest_day_tuple)[0]
-        )
-        at_thunderstormiest_day = [
-            at_thunderstormiest_day_query[0],
-            locale.format("%g", float(at_thunderstormiest_day_converted)),
-        ]
-
-        # Find what kind of database we're working with and specify the
-        # correctly tailored SQL Query for each type of database
-        data_binding = self.generator.config_dict["StdArchive"]["data_binding"]
-        database = self.generator.config_dict["DataBindings"][data_binding]["database"]
-        database_type = self.generator.config_dict["Databases"][database][
-            "database_type"
-        ]
-        driver = self.generator.config_dict["DatabaseTypes"][database_type]["driver"]
-        if driver == "weedb.sqlite":
-            year_thunderstormiest_month_sql = (
-                'SELECT strftime("%%m", datetime(dateTime, "unixepoch", "localtime")) as month, SUM( sum ) as total FROM archive_day_lightning_strike_count WHERE strftime("%%Y", datetime(dateTime, "unixepoch", "localtime")) = "%s" GROUP BY month ORDER BY total DESC LIMIT 1;'
-                % time.strftime("%Y", time.localtime(time.time()))
-            )
-            at_thunderstormiest_month_sql = 'SELECT strftime("%m", datetime(dateTime, "unixepoch", "localtime")) as month, strftime("%Y", datetime(dateTime, "unixepoch", "localtime")) as year, SUM( sum ) as total FROM archive_day_lightning_strike_count GROUP BY month, year ORDER BY total DESC LIMIT 1;'
-            year_lsc_data_sql = (
-                'SELECT dateTime, sum FROM archive_day_lightning_strike_count WHERE strftime("%%Y", datetime(dateTime, "unixepoch", "localtime")) = "%s" AND count > 0;'
-                % time.strftime("%Y", time.localtime(time.time()))
-            )
-            # The all stats from http://www.weewx.com/docs/customizing.htm
-            # doesn't seem to calculate "Total Rainfall for" all time stat
-            # correctly.
-            at_thunderstormiest_year_sql = 'SELECT strftime("%Y", datetime(dateTime, "unixepoch", "localtime")) as year, SUM( sum ) as total FROM archive_day_lightning_strike_count GROUP BY year ORDER BY total DESC LIMIT 1;'
-        elif driver == "weedb.mysql":
-            year_thunderstormiest_month_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%m" ) AS month, ROUND( SUM( sum ), 2 ) AS total FROM archive_day_lightning_strike_count WHERE year( FROM_UNIXTIME( dateTime ) ) = "{0}" GROUP BY month ORDER BY total DESC LIMIT 1;'.format(
-                time.strftime("%Y", time.localtime(time.time()))
-            )  # Why does this one require .format() but the other's don't?
-            at_thunderstormiest_month_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%m" ) AS month, FROM_UNIXTIME( dateTime, "%%Y" ) AS year, ROUND( SUM( sum ), 2 ) AS total FROM archive_day_lightning_strike_count GROUP BY month, year ORDER BY total DESC LIMIT 1;'
-            year_lsc_data_sql = (
-                'SELECT dateTime, ROUND( sum, 2 ) FROM archive_day_lightning_strike_count WHERE year( FROM_UNIXTIME( dateTime ) ) = "%s" AND count > 0;'
-                % time.strftime("%Y", time.localtime(time.time()))
-            )
-            # The all stats from http://www.weewx.com/docs/customizing.htm
-            # doesn't seem to calculate "Total Rainfall for" all time stat
-            # correctly.
-            at_thunderstormiest_year_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%Y" ) AS year, ROUND( SUM( sum ), 2 ) AS total FROM archive_day_lightning_strike_count GROUP BY year ORDER BY total DESC LIMIT 1;'
-
-        # Thunderstormiest month
-        year_thunderstormiest_month_query = wx_manager.getSql(year_thunderstormiest_month_sql)
-        if year_thunderstormiest_month_query is not None:
-            year_thunderstormiest_month_tuple = (
-                year_thunderstormiest_month_query[1],
-                lsc_unit,
-                "group_count",
-            )
-            year_thunderstormiest_month_converted = (
-                lsc_round
-                % self.generator.converter.convert(year_thunderstormiest_month_tuple)[0]
-            )
-            year_thunderstormiest_month_name = calendar.month_name[
-                int(year_thunderstormiest_month_query[0])
-            ]
-            year_thunderstormiest_month = [
-                year_thunderstormiest_month_name,
-                locale.format("%g", float(year_thunderstormiest_month_converted)),
-            ]
-        else:
-            year_thunderstormiest_month = ["N/A", 0.0]
-
-        # All time thunderstormiest month
-        at_thunderstormiest_month_query = wx_manager.getSql(at_thunderstormiest_month_sql)
-        at_thunderstormiest_month_tuple = (at_thunderstormiest_month_query[2], lsc_unit, "group_count")
-        at_thunderstormiest_month_converted = (
-            lsc_round % self.generator.converter.convert(at_thunderstormiest_month_tuple)[0]
-        )
-        at_thunderstormiest_month_name = calendar.month_name[int(at_thunderstormiest_month_query[0])]
-        at_thunderstormiest_month = [
-            "%s, %s" % (at_thunderstormiest_month_name, at_thunderstormiest_month_query[1]),
-            locale.format("%g", float(at_thunderstormiest_month_converted)),
-        ]
-
-        # All time thunderstormiest year
-        at_thunderstormiest_year_query = wx_manager.getSql(at_thunderstormiest_year_sql)
-        at_thunderstormiest_year_tuple = (
-            at_thunderstormiest_year_query[1],
-            lsc_unit,
-            "group_count",
-        )
-        at_thunderstormiest_year_converted = (
-            lsc_round % self.generator.converter.convert(at_thunderstormiest_year_tuple)[0]
-        )
-        at_thunderstormiest_year = [
-            at_thunderstormiest_year_query[0],
-            locale.format("%g", float(at_thunderstormiest_year_converted)),
-        ]
-
-        # Consecutive days with/without Thunderstorm
-        # dateTime needs to be epoch. Conversion done in the template using #echo
-        year_days_with_lsc_total = 0
-        year_days_without_lsc_total = 0
-        year_days_with_lsc_output = {}
-        year_days_without_lsc_output = {}
-        year_lsc_query = wx_manager.genSql(year_lsc_data_sql)
-        for row in year_lsc_query:
-            # Original MySQL way: CASE WHEN sum!=0 THEN @total+1 ELSE 0 END
-            if row[1] != 0:
-                year_days_with_lsc_total += 1
-            else:
-                year_days_with_lsc_total = 0
-
-            # Original MySQL way: CASE WHEN sum=0 THEN @total+1 ELSE 0 END
-            if row[1] == 0:
-                year_days_without_lsc_total += 1
-            else:
-                year_days_without_lsc_total = 0
-
-            year_days_with_lsc_output[row[0]] = year_days_with_lsc_total
-            year_days_without_lsc_output[row[0]] = year_days_without_lsc_total
-
-        if year_days_with_lsc_output:
-            year_days_with_lsc = max(
-                zip(
-                    year_days_with_lsc_output.values(),
-                    year_days_with_lsc_output.keys(),
-                )
-            )
-        else:
-            year_days_with_lsc = [
-                locale.format("%.1f", 0),
-                calendar.timegm(time.gmtime()),
-            ]
-
-        if year_days_without_lsc_output:
-            year_days_without_lsc = max(
-                zip(
-                    year_days_without_lsc_output.values(),
-                    year_days_without_lsc_output.keys(),
-                )
-            )
-        else:
-            year_days_without_lsc = [
-                locale.format("%.1f", 0),
-                calendar.timegm(time.gmtime()),
-            ]
-
-        at_days_with_lsc_total = 0
-        at_days_without_lsc_total = 0
-        at_days_with_lsc_output = {}
-        at_days_without_lsc_output = {}
-        at_lsc_query = wx_manager.genSql(
-            "SELECT dateTime, ROUND( sum, 2 ) FROM archive_day_lightning_strike_count WHERE count > 0;"
-        )
-        for row in at_lsc_query:
-            # Original MySQL way: CASE WHEN sum!=0 THEN @total+1 ELSE 0 END
-            if row[1] != 0:
-                at_days_with_lsc_total += 1
-            else:
-                at_days_with_lsc_total = 0
-
-            # Original MySQL way: CASE WHEN sum=0 THEN @total+1 ELSE 0 END
-            if row[1] == 0:
-                at_days_without_lsc_total += 1
-            else:
-                at_days_without_lsc_total = 0
-
-            at_days_with_lsc_output[row[0]] = at_days_with_lsc_total
-            at_days_without_lsc_output[row[0]] = at_days_without_lsc_total
-
-        if len(at_days_with_lsc_output) > 0:
-            at_days_with_lsc = max(
-                zip(at_days_with_lsc_output.values(), at_days_with_lsc_output.keys())
-            )
-        else:
-            at_days_with_lsc = (0, 0)
-        if len(at_days_without_lsc_output) > 0:
-            at_days_without_lsc = max(
-                zip(
-                    at_days_without_lsc_output.values(),
-                    at_days_without_lsc_output.keys(),
-                )
-            )
-        else:
-            at_days_without_lsc = (0, 0)
-
         # Rain lookups
         # Find the group_name for rain in database
         rain_unit = converter.group_unit_dict["group_rain"]
@@ -988,7 +772,7 @@ class getData(SearchList):
 
         # Rainiest Day
         rainiest_day_query = wx_manager.getSql(
-            "SELECT dateTime, sum FROM archive_day_rain WHERE dateTime >= %s ORDER BY sum DESC LIMIT 1;"
+            "SELECT dateTime, COALESCE(sum, 0.0) as sum FROM archive_day_rain WHERE dateTime >= %s ORDER BY sum DESC LIMIT 1;"
             % year_start_epoch
         )
         if rainiest_day_query is not None:
@@ -1005,7 +789,7 @@ class getData(SearchList):
 
         # All Time Rainiest Day
         at_rainiest_day_query = wx_manager.getSql(
-            "SELECT dateTime, sum FROM archive_day_rain ORDER BY sum DESC LIMIT 1"
+            "SELECT dateTime, COALESCE(sum, 0.0) as sum FROM archive_day_rain ORDER BY sum DESC LIMIT 1"
         )
         at_rainiest_day_tuple = (at_rainiest_day_query[1], rain_unit, "group_rain")
         at_rainiest_day_converted = (
@@ -1026,31 +810,31 @@ class getData(SearchList):
         driver = self.generator.config_dict["DatabaseTypes"][database_type]["driver"]
         if driver == "weedb.sqlite":
             year_rainiest_month_sql = (
-                'SELECT strftime("%%m", datetime(dateTime, "unixepoch", "localtime")) as month, SUM( sum ) as total FROM archive_day_rain WHERE strftime("%%Y", datetime(dateTime, "unixepoch", "localtime")) = "%s" GROUP BY month ORDER BY total DESC LIMIT 1;'
+                'SELECT strftime("%%m", datetime(dateTime, "unixepoch", "localtime")) as month, SUM( COALESCE(sum, 0.0) ) as total FROM archive_day_rain WHERE strftime("%%Y", datetime(dateTime, "unixepoch", "localtime")) = "%s" GROUP BY month ORDER BY total DESC LIMIT 1;'
                 % time.strftime("%Y", time.localtime(time.time()))
             )
-            at_rainiest_month_sql = 'SELECT strftime("%m", datetime(dateTime, "unixepoch", "localtime")) as month, strftime("%Y", datetime(dateTime, "unixepoch", "localtime")) as year, SUM( sum ) as total FROM archive_day_rain GROUP BY month, year ORDER BY total DESC LIMIT 1;'
+            at_rainiest_month_sql = 'SELECT strftime("%m", datetime(dateTime, "unixepoch", "localtime")) as month, strftime("%Y", datetime(dateTime, "unixepoch", "localtime")) as year, SUM( COALESCE(sum, 0.0) ) as total FROM archive_day_rain GROUP BY month, year ORDER BY total DESC LIMIT 1;'
             year_rain_data_sql = (
-                'SELECT dateTime, sum FROM archive_day_rain WHERE strftime("%%Y", datetime(dateTime, "unixepoch", "localtime")) = "%s" AND count > 0;'
+                'SELECT dateTime, COALESCE(sum, 0.0) FROM archive_day_rain WHERE strftime("%%Y", datetime(dateTime, "unixepoch", "localtime")) = "%s";'
                 % time.strftime("%Y", time.localtime(time.time()))
             )
             # The all stats from http://www.weewx.com/docs/customizing.htm
             # doesn't seem to calculate "Total Rainfall for" all time stat
             # correctly.
-            at_rain_highest_year_sql = 'SELECT strftime("%Y", datetime(dateTime, "unixepoch", "localtime")) as year, SUM( sum ) as total FROM archive_day_rain GROUP BY year ORDER BY total DESC LIMIT 1;'
+            at_rain_highest_year_sql = 'SELECT strftime("%Y", datetime(dateTime, "unixepoch", "localtime")) as year, SUM( COALESCE(sum, 0.0) ) as total FROM archive_day_rain GROUP BY year ORDER BY total DESC LIMIT 1;'
         elif driver == "weedb.mysql":
-            year_rainiest_month_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%m" ) AS month, ROUND( SUM( sum ), 2 ) AS total FROM archive_day_rain WHERE year( FROM_UNIXTIME( dateTime ) ) = "{0}" GROUP BY month ORDER BY total DESC LIMIT 1;'.format(
+            year_rainiest_month_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%m" ) AS month, ROUND( SUM( COALESCE(sum, 0.0) ), 2 ) AS total FROM archive_day_rain WHERE year( FROM_UNIXTIME( dateTime ) ) = "{0}" GROUP BY month ORDER BY total DESC LIMIT 1;'.format(
                 time.strftime("%Y", time.localtime(time.time()))
             )  # Why does this one require .format() but the other's don't?
-            at_rainiest_month_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%m" ) AS month, FROM_UNIXTIME( dateTime, "%%Y" ) AS year, ROUND( SUM( sum ), 2 ) AS total FROM archive_day_rain GROUP BY month, year ORDER BY total DESC LIMIT 1;'
+            at_rainiest_month_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%m" ) AS month, FROM_UNIXTIME( dateTime, "%%Y" ) AS year, SUM( COALESCE(sum, 0.0) ) AS total FROM archive_day_rain GROUP BY month, year ORDER BY total DESC LIMIT 1;'
             year_rain_data_sql = (
-                'SELECT dateTime, ROUND( sum, 2 ) FROM archive_day_rain WHERE year( FROM_UNIXTIME( dateTime ) ) = "%s" AND count > 0;'
+                'SELECT dateTime, ROUND( COALESCE(sum, 0.0), 2 ) FROM archive_day_rain WHERE year( FROM_UNIXTIME( dateTime ) ) = "%s";'
                 % time.strftime("%Y", time.localtime(time.time()))
             )
             # The all stats from http://www.weewx.com/docs/customizing.htm
             # doesn't seem to calculate "Total Rainfall for" all time stat
             # correctly.
-            at_rain_highest_year_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%Y" ) AS year, ROUND( SUM( sum ), 2 ) AS total FROM archive_day_rain GROUP BY year ORDER BY total DESC LIMIT 1;'
+            at_rain_highest_year_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%Y" ) AS year, SUM( COALESCE(sum, 0.0) ) AS total FROM archive_day_rain GROUP BY year ORDER BY total DESC LIMIT 1;'
 
         # Rainiest month
         year_rainiest_month_query = wx_manager.getSql(year_rainiest_month_sql)
@@ -1155,7 +939,7 @@ class getData(SearchList):
         at_days_with_rain_output = {}
         at_days_without_rain_output = {}
         at_rain_query = wx_manager.genSql(
-            "SELECT dateTime, ROUND( sum, 2 ) FROM archive_day_rain WHERE count > 0;"
+            "SELECT dateTime, COALESCE(sum, 0.0) FROM archive_day_rain;"
         )
         for row in at_rain_query:
             # Original MySQL way: CASE WHEN sum!=0 THEN @total+1 ELSE 0 END
@@ -1188,6 +972,488 @@ class getData(SearchList):
             )
         else:
             at_days_without_rain = (0, 0)
+
+        # Lightning Strike Count lookups
+        # Find the group_name for lightning_strike_count in database
+        # "lightning_strike_count" for variable names abbreviated with "lsc"
+        lsc_unit = converter.group_unit_dict["group_count"]
+
+        # Find the group_name for lightning_strike_count in the skin.conf
+        skin_lsc_unit = self.generator.converter.group_unit_dict["group_count"]
+
+        # Find the number of decimals to round the result based on the skin.conf
+        lsc_round = self.generator.skin_dict["Units"]["StringFormats"].get(
+            skin_lsc_unit, "%.0f"
+        )
+
+        # Thunderstormiest Day
+        thunderstormiest_day_query = wx_manager.getSql(
+            "SELECT dateTime, COALESCE(sum, 0.0) as sum FROM archive_day_lightning_strike_count WHERE dateTime >= %s ORDER BY sum DESC LIMIT 1;"
+            % year_start_epoch
+        )
+        if thunderstormiest_day_query is not None:
+            thunderstormiest_day_tuple = (thunderstormiest_day_query[1], lsc_unit, "group_count")
+            thunderstormiest_day_converted = (
+                lsc_round % self.generator.converter.convert(thunderstormiest_day_tuple)[0]
+            )
+            thunderstormiest_day = [
+                thunderstormiest_day_query[0],
+                locale.format("%g", float(thunderstormiest_day_converted)),
+            ]
+        else:
+            thunderstormiest_day = [calendar.timegm(time.gmtime()), locale.format("%.0f", 0)]
+
+        # All Time Thunderstormiest Day
+        at_thunderstormiest_day_query = wx_manager.getSql(
+            "SELECT dateTime, COALESCE(sum, 0.0) as sum FROM archive_day_lightning_strike_count ORDER BY sum DESC LIMIT 1"
+        )
+        at_thunderstormiest_day_tuple = (at_thunderstormiest_day_query[1], lsc_unit, "group_count")
+        at_thunderstormiest_day_converted = (
+            lsc_round % self.generator.converter.convert(at_thunderstormiest_day_tuple)[0]
+        )
+        at_thunderstormiest_day = [
+            at_thunderstormiest_day_query[0],
+            locale.format("%g", float(at_thunderstormiest_day_converted)),
+        ]
+
+        if driver == "weedb.sqlite":
+            year_thunderstormiest_month_sql = (
+                'SELECT strftime("%%m", datetime(dateTime, "unixepoch", "localtime")) as month, SUM( COALESCE(sum, 0.0) ) as total FROM archive_day_lightning_strike_count WHERE strftime("%%Y", datetime(dateTime, "unixepoch", "localtime")) = "%s" GROUP BY month ORDER BY total DESC LIMIT 1;'
+                % time.strftime("%Y", time.localtime(time.time()))
+            )
+            at_thunderstormiest_month_sql = 'SELECT strftime("%m", datetime(dateTime, "unixepoch", "localtime")) as month, strftime("%Y", datetime(dateTime, "unixepoch", "localtime")) as year, SUM( COALESCE(sum, 0.0) ) as total FROM archive_day_lightning_strike_count GROUP BY month, year ORDER BY total DESC LIMIT 1;'
+            year_lsc_data_sql = (
+                'SELECT dateTime, COALESCE(sum, 0.0) FROM archive_day_lightning_strike_count WHERE strftime("%%Y", datetime(dateTime, "unixepoch", "localtime")) = "%s";'
+                % time.strftime("%Y", time.localtime(time.time()))
+            )
+            # The all stats from http://www.weewx.com/docs/customizing.htm
+            # doesn't seem to calculate "Total Rainfall for" all time stat
+            # correctly.
+            at_thunderstormiest_year_sql = 'SELECT strftime("%Y", datetime(dateTime, "unixepoch", "localtime")) as year, SUM( COALESCE(sum, 0.0) ) as total FROM archive_day_lightning_strike_count GROUP BY year ORDER BY total DESC LIMIT 1;'
+        elif driver == "weedb.mysql":
+            year_thunderstormiest_month_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%m" ) AS month, SUM( COALESCE(sum, 0.0) ) AS total FROM archive_day_lightning_strike_count WHERE year( FROM_UNIXTIME( dateTime ) ) = "{0}" GROUP BY month ORDER BY total DESC LIMIT 1;'.format(
+                time.strftime("%Y", time.localtime(time.time()))
+            )  # Why does this one require .format() but the other's don't?
+            at_thunderstormiest_month_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%m" ) AS month, FROM_UNIXTIME( dateTime, "%%Y" ) AS year, SUM( COALESCE(sum, 0.0) ) AS total FROM archive_day_lightning_strike_count GROUP BY month, year ORDER BY total DESC LIMIT 1;'
+            year_lsc_data_sql = (
+                'SELECT dateTime, COALESCE(sum, 0.0) FROM archive_day_lightning_strike_count WHERE year( FROM_UNIXTIME( dateTime ) ) = "%s";'
+                % time.strftime("%Y", time.localtime(time.time()))
+            )
+            # The all stats from http://www.weewx.com/docs/customizing.htm
+            # doesn't seem to calculate "Total Rainfall for" all time stat
+            # correctly.
+            at_thunderstormiest_year_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%Y" ) AS year, SUM( COALESCE(sum, 0.0) ) AS total FROM archive_day_lightning_strike_count GROUP BY year ORDER BY total DESC LIMIT 1;'
+
+        # Thunderstormiest month
+        year_thunderstormiest_month_query = wx_manager.getSql(year_thunderstormiest_month_sql)
+        if year_thunderstormiest_month_query is not None:
+            year_thunderstormiest_month_tuple = (
+                year_thunderstormiest_month_query[1],
+                lsc_unit,
+                "group_count",
+            )
+            year_thunderstormiest_month_converted = (
+                lsc_round
+                % self.generator.converter.convert(year_thunderstormiest_month_tuple)[0]
+            )
+            year_thunderstormiest_month_name = calendar.month_name[
+                int(year_thunderstormiest_month_query[0])
+            ]
+            year_thunderstormiest_month = [
+                year_thunderstormiest_month_name,
+                locale.format("%g", float(year_thunderstormiest_month_converted)),
+            ]
+        else:
+            year_thunderstormiest_month = ["N/A", 0.0]
+
+        # All time thunderstormiest month
+        at_thunderstormiest_month_query = wx_manager.getSql(at_thunderstormiest_month_sql)
+        at_thunderstormiest_month_tuple = (at_thunderstormiest_month_query[2], lsc_unit, "group_count")
+        at_thunderstormiest_month_converted = (
+            lsc_round % self.generator.converter.convert(at_thunderstormiest_month_tuple)[0]
+        )
+        at_thunderstormiest_month_name = calendar.month_name[int(at_thunderstormiest_month_query[0])]
+        at_thunderstormiest_month = [
+            "%s, %s" % (at_thunderstormiest_month_name, at_thunderstormiest_month_query[1]),
+            locale.format("%g", float(at_thunderstormiest_month_converted)),
+        ]
+
+        # All time thunderstormiest year
+        at_thunderstormiest_year_query = wx_manager.getSql(at_thunderstormiest_year_sql)
+        at_thunderstormiest_year_tuple = (
+            at_thunderstormiest_year_query[1],
+            lsc_unit,
+            "group_count",
+        )
+        at_thunderstormiest_year_converted = (
+            lsc_round % self.generator.converter.convert(at_thunderstormiest_year_tuple)[0]
+        )
+        at_thunderstormiest_year = [
+            at_thunderstormiest_year_query[0],
+            locale.format("%g", float(at_thunderstormiest_year_converted)),
+        ]
+
+        # Consecutive days with/without Thunderstorm
+        # dateTime needs to be epoch. Conversion done in the template using #echo
+        year_days_with_lsc_total = 0
+        year_days_without_lsc_total = 0
+        year_days_with_lsc_output = {}
+        year_days_without_lsc_output = {}
+        year_lsc_query = wx_manager.genSql(year_lsc_data_sql)
+        for row in year_lsc_query:
+            # Original MySQL way: CASE WHEN sum!=0 THEN @total+1 ELSE 0 END
+            if row[1] != 0:
+                year_days_with_lsc_total += 1
+            else:
+                year_days_with_lsc_total = 0
+
+            # Original MySQL way: CASE WHEN sum=0 THEN @total+1 ELSE 0 END
+            if row[1] == 0:
+                year_days_without_lsc_total += 1
+            else:
+                year_days_without_lsc_total = 0
+
+            year_days_with_lsc_output[row[0]] = year_days_with_lsc_total
+            year_days_without_lsc_output[row[0]] = year_days_without_lsc_total
+
+        if year_days_with_lsc_output:
+            year_days_with_lsc = max(
+                zip(
+                    year_days_with_lsc_output.values(),
+                    year_days_with_lsc_output.keys(),
+                )
+            )
+        else:
+            year_days_with_lsc = [
+                locale.format("%.1f", 0),
+                calendar.timegm(time.gmtime()),
+            ]
+
+        if year_days_without_lsc_output:
+            year_days_without_lsc = max(
+                zip(
+                    year_days_without_lsc_output.values(),
+                    year_days_without_lsc_output.keys(),
+                )
+            )
+        else:
+            year_days_without_lsc = [
+                locale.format("%.1f", 0),
+                calendar.timegm(time.gmtime()),
+            ]
+
+        at_days_with_lsc_total = 0
+        at_days_without_lsc_total = 0
+        at_days_with_lsc_output = {}
+        at_days_without_lsc_output = {}
+        at_lsc_query = wx_manager.genSql(
+            "SELECT dateTime, COALESCE(sum, 0.0) FROM archive_day_lightning_strike_count;"
+        )
+        for row in at_lsc_query:
+            # Original MySQL way: CASE WHEN sum!=0 THEN @total+1 ELSE 0 END
+            if row[1] != 0:
+                at_days_with_lsc_total += 1
+            else:
+                at_days_with_lsc_total = 0
+
+            # Original MySQL way: CASE WHEN sum=0 THEN @total+1 ELSE 0 END
+            if row[1] == 0:
+                at_days_without_lsc_total += 1
+            else:
+                at_days_without_lsc_total = 0
+
+            at_days_with_lsc_output[row[0]] = at_days_with_lsc_total
+            at_days_without_lsc_output[row[0]] = at_days_without_lsc_total
+
+        if len(at_days_with_lsc_output) > 0:
+            at_days_with_lsc = max(
+                zip(at_days_with_lsc_output.values(), at_days_with_lsc_output.keys())
+            )
+        else:
+            at_days_with_lsc = (0, 0)
+        if len(at_days_without_lsc_output) > 0:
+            at_days_without_lsc = max(
+                zip(
+                    at_days_without_lsc_output.values(),
+                    at_days_without_lsc_output.keys(),
+                )
+            )
+        else:
+            at_days_without_lsc = (0, 0)
+
+        # Sunshine lookups
+        # Find the group_name for sunshineDur in database
+        sunshineDur_unit = converter.group_unit_dict["group_deltatime"]
+
+        # Find the group_name for sunshineDur in the skin.conf
+        skin_sunshineDur_unit = self.generator.converter.group_unit_dict["extreme_group_deltatime"]
+
+        # Find the number of decimals to round the result based on the skin.conf
+        sunshineDur_round = self.generator.skin_dict["Units"]["StringFormats"].get(
+            skin_sunshineDur_unit, "%.2f"
+        )
+
+        # sunniest Day
+        sunniest_day_query = wx_manager.getSql(
+            "SELECT dateTime, COALESCE(sum, 0.0) as sum FROM archive_day_sunshineDur WHERE dateTime >= %s ORDER BY sum DESC LIMIT 1;"
+            % year_start_epoch
+        )
+        if sunniest_day_query is not None:
+            sunniest_day_tuple = (sunniest_day_query[1], sunshineDur_unit, "group_deltatime")
+            if skin_sunshineDur_unit != sunshineDur_unit:
+                sunniest_day_tuple = weewx.units.convert(sunniest_day_tuple, skin_sunshineDur_unit)
+                sunniest_day_converted = (
+                    sunshineDur_round % sunniest_day_tuple[0]
+                )
+            else:
+                sunniest_day_converted = (
+                    sunshineDur_round % self.generator.converter.convert(sunniest_day_tuple)[0]
+                )
+
+            sunniest_day = [
+                sunniest_day_query[0],
+                locale.format("%g", float(sunniest_day_converted)),
+            ]
+        else:
+            sunniest_day = [calendar.timegm(time.gmtime()), locale.format("%.2f", 0)]
+
+        # All Time sunniest Day
+        at_sunniest_day_query = wx_manager.getSql(
+            "SELECT dateTime, COALESCE(sum, 0.0) as sum FROM archive_day_sunshineDur ORDER BY sum DESC LIMIT 1"
+        )
+        at_sunniest_day_tuple = (at_sunniest_day_query[1], sunshineDur_unit, "group_deltatime")
+        if skin_sunshineDur_unit != sunshineDur_unit:
+            at_sunniest_day_tuple = weewx.units.convert(at_sunniest_day_tuple, skin_sunshineDur_unit)
+            at_sunniest_day_converted = (
+                sunshineDur_round % at_sunniest_day_tuple[0]
+            )
+        else:
+            at_sunniest_day_converted = (
+                sunshineDur_round % self.generator.converter.convert(at_sunniest_day_tuple)[0]
+            )
+        at_sunniest_day = [
+            at_sunniest_day_query[0],
+            locale.format("%g", float(at_sunniest_day_converted)),
+        ]
+
+        if driver == "weedb.sqlite":
+            year_sunniest_month_sql = (
+                'SELECT strftime("%%m", datetime(dateTime, "unixepoch", "localtime")) as month, SUM( COALESCE(sum, 0.0) ) as total FROM archive_day_sunshineDur WHERE strftime("%%Y", datetime(dateTime, "unixepoch", "localtime")) = "%s" GROUP BY month ORDER BY total DESC LIMIT 1;'
+                % time.strftime("%Y", time.localtime(time.time()))
+            )
+            at_sunniest_month_sql = 'SELECT strftime("%m", datetime(dateTime, "unixepoch", "localtime")) as month, strftime("%Y", datetime(dateTime, "unixepoch", "localtime")) as year, SUM( COALESCE(sum, 0.0) ) as total FROM archive_day_sunshineDur GROUP BY month, year ORDER BY total DESC LIMIT 1;'
+            year_sunshineDur_data_sql = (
+                'SELECT dateTime, COALESCE(sum, 0.0) FROM archive_day_sunshineDur WHERE strftime("%%Y", datetime(dateTime, "unixepoch", "localtime")) = "%s";'
+                % time.strftime("%Y", time.localtime(time.time()))
+            )
+            # The all stats from http://www.weewx.com/docs/customizing.htm
+            # doesn't seem to calculate "Total Sunshine for" all time stat
+            # correctly.
+            at_sunniest_year_sql = 'SELECT strftime("%Y", datetime(dateTime, "unixepoch", "localtime")) as year, SUM( COALESCE(sum, 0.0) ) as total FROM archive_day_sunshineDur GROUP BY year ORDER BY total DESC LIMIT 1;'
+        elif driver == "weedb.mysql":
+            year_sunniest_month_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%m" ) AS month, SUM( COALESCE(sum, 0.0) ) AS total FROM archive_day_sunshineDur WHERE year( FROM_UNIXTIME( dateTime ) ) = "{0}" GROUP BY month ORDER BY total DESC LIMIT 1;'.format(
+                time.strftime("%Y", time.localtime(time.time()))
+            )  # Why does this one require .format() but the other's don't?
+            at_sunniest_month_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%m" ) AS month, FROM_UNIXTIME( dateTime, "%%Y" ) AS year, SUM( COALESCE(sum, 0.0) ) AS total FROM archive_day_sunshineDur GROUP BY month, year ORDER BY total DESC LIMIT 1;'
+            year_sunshineDur_data_sql = (
+                'SELECT dateTime, COALESCE(sum, 0.0) FROM archive_day_sunshineDur WHERE year( FROM_UNIXTIME( dateTime ) ) = "%s";'
+                % time.strftime("%Y", time.localtime(time.time()))
+            )
+            # The all stats from http://www.weewx.com/docs/customizing.htm
+            # doesn't seem to calculate "Total Sunshine for" all time stat
+            # correctly.
+            at_sunniest_year_sql = 'SELECT FROM_UNIXTIME( dateTime, "%%Y" ) AS year, SUM( COALESCE(sum, 0.0) ) AS total FROM archive_day_sunshineDur GROUP BY year ORDER BY total DESC LIMIT 1;'
+
+        # sunniest month
+        year_sunniest_month_query = wx_manager.getSql(year_sunniest_month_sql)
+        if year_sunniest_month_query is not None:
+            year_sunniest_month_tuple = (
+                year_sunniest_month_query[1],
+                sunshineDur_unit,
+                "group_deltatime",
+            )
+            if skin_sunshineDur_unit != sunshineDur_unit:
+                year_sunniest_month_tuple = weewx.units.convert(year_sunniest_month_tuple, skin_sunshineDur_unit)
+                year_sunniest_month_converted = (
+                    sunshineDur_round % year_sunniest_month_tuple[0]
+                )
+            else:
+                year_sunniest_month_converted = (
+                    sunshineDur_round
+                    % self.generator.converter.convert(year_sunniest_month_tuple)[0]
+                )
+            year_sunniest_month_name = calendar.month_name[
+                int(year_sunniest_month_query[0])
+            ]
+            year_sunniest_month = [
+                year_sunniest_month_name,
+                locale.format("%g", float(year_sunniest_month_converted)),
+            ]
+        else:
+            year_sunniest_month = ["N/A", 0.0]
+
+        # All time sunniest month
+        at_sunniest_month_query = wx_manager.getSql(at_sunniest_month_sql)
+        at_sunniest_month_tuple = (at_sunniest_month_query[2], sunshineDur_unit, "group_deltatime")
+        if skin_sunshineDur_unit != sunshineDur_unit:
+            at_sunniest_month_tuple = weewx.units.convert(at_sunniest_month_tuple, skin_sunshineDur_unit)
+            at_sunniest_month_converted = (
+                sunshineDur_round % at_sunniest_month_tuple[0]
+            )
+        else:
+            at_sunniest_month_converted = (
+                sunshineDur_round % self.generator.converter.convert(at_sunniest_month_tuple)[0]
+            )
+        at_sunniest_month_name = calendar.month_name[int(at_sunniest_month_query[0])]
+        at_sunniest_month = [
+            "%s, %s" % (at_sunniest_month_name, at_sunniest_month_query[1]),
+            locale.format("%g", float(at_sunniest_month_converted)),
+        ]
+
+        # sushine sum year
+        year_sunniest_year_sql = (
+                'SELECT SUM( COALESCE(sum, 0.0) ) FROM archive_day_sunshineDur WHERE year( FROM_UNIXTIME( dateTime ) ) = "%s";'
+                % time.strftime("%Y", time.localtime(time.time()))
+            )
+        year_sunniest_year_query = wx_manager.getSql(year_sunniest_year_sql)
+        logdbg("SKINWEIHERHAMMER %s" % str(year_sunniest_year_sql))
+        logdbg("SKINWEIHERHAMMER %s" % str(year_sunniest_year_query))
+        if year_sunniest_year_query is not None:
+            year_sunniest_year_tuple = (
+                year_sunniest_year_query[0],
+                sunshineDur_unit,
+                "group_deltatime",
+            )
+            if skin_sunshineDur_unit != sunshineDur_unit:
+                year_sunniest_year_tuple = weewx.units.convert(year_sunniest_year_tuple, skin_sunshineDur_unit)
+                year_sunniest_year_converted = (
+                    sunshineDur_round % year_sunniest_year_tuple[0]
+                )
+            else:
+                year_sunniest_year_converted = (
+                    sunshineDur_round
+                    % self.generator.converter.convert(year_sunniest_year_tuple)[0]
+                )
+            year_sunniest_year = [
+                locale.format("%g", float(year_sunniest_year_converted)),
+            ]
+        else:
+            year_sunniest_year = [0.0]
+
+        # All time sunniest year
+        at_sunniest_year_query = wx_manager.getSql(at_sunniest_year_sql)
+        at_sunniest_year_tuple = (
+            at_sunniest_year_query[1],
+            sunshineDur_unit,
+            "group_deltatime",
+        )
+        if skin_sunshineDur_unit != sunshineDur_unit:
+            at_sunniest_year_tuple = weewx.units.convert(at_sunniest_year_tuple, skin_sunshineDur_unit)
+            at_sunniest_year_converted = (
+                sunshineDur_round % at_sunniest_year_tuple[0]
+            )
+        else:
+            at_sunniest_year_converted = (
+                sunshineDur_round % self.generator.converter.convert(at_sunniest_year_tuple)[0]
+            )
+        at_sunniest_year = [
+            at_sunniest_year_query[0],
+            locale.format("%g", float(at_sunniest_year_converted)),
+        ]
+
+        # Consecutive days with/without sunshine
+        # dateTime needs to be epoch. Conversion done in the template using #echo
+        sunshine_mintime = 300.0
+        year_days_with_sunshine_total = 0
+        year_days_without_sunshine_total = 0
+        year_days_with_sunshine_output = {}
+        year_days_without_sunshine_output = {}
+        year_sunshineDur_query = wx_manager.genSql(year_sunshineDur_data_sql)
+        for row in year_sunshineDur_query:
+            # Original MySQL way: CASE WHEN sum!=0 THEN @total+1 ELSE 0 END
+            #if row[1] != 0:
+            if float(row[1]) >= sunshine_mintime:
+                year_days_with_sunshine_total += 1
+            else:
+                year_days_with_sunshine_total = 0
+
+            # Original MySQL way: CASE WHEN sum=0 THEN @total+1 ELSE 0 END
+            #if row[1] == 0:
+            if float(row[1]) < sunshine_mintime:
+                year_days_without_sunshine_total += 1
+            else:
+                year_days_without_sunshine_total = 0
+
+            year_days_with_sunshine_output[row[0]] = year_days_with_sunshine_total
+            year_days_without_sunshine_output[row[0]] = year_days_without_sunshine_total
+
+        if year_days_with_sunshine_output:
+            year_days_with_sunshine = max(
+                zip(
+                    year_days_with_sunshine_output.values(),
+                    year_days_with_sunshine_output.keys(),
+                )
+            )
+        else:
+            year_days_with_sunshine = [
+                locale.format("%.1f", 0),
+                calendar.timegm(time.gmtime()),
+            ]
+
+        if year_days_without_sunshine_output:
+            year_days_without_sunshine = max(
+                zip(
+                    year_days_without_sunshine_output.values(),
+                    year_days_without_sunshine_output.keys(),
+                )
+            )
+        else:
+            year_days_without_sunshine = [
+                locale.format("%.1f", 0),
+                calendar.timegm(time.gmtime()),
+            ]
+
+        at_days_with_sunshine_total = 0
+        at_days_without_sunshine_total = 0
+        at_days_with_sunshine_output = {}
+        at_days_without_sunshine_output = {}
+        at_sunshine_query = wx_manager.genSql(
+            "SELECT dateTime, COALESCE(sum, 0.0) FROM archive_day_sunshineDur;"
+        )
+        for row in at_sunshine_query:
+            # Original MySQL way: CASE WHEN sum!=0 THEN @total+1 ELSE 0 END
+            #if row[1] != 0:
+            if float(row[1]) >= sunshine_mintime:
+                at_days_with_sunshine_total += 1
+            else:
+                at_days_with_sunshine_total = 0
+
+            # Original MySQL way: CASE WHEN sum=0 THEN @total+1 ELSE 0 END
+            #if row[1] == 0:
+            if float(row[1]) < sunshine_mintime:
+                at_days_without_sunshine_total += 1
+            else:
+                at_days_without_sunshine_total = 0
+
+            at_days_with_sunshine_output[row[0]] = at_days_with_sunshine_total
+            at_days_without_sunshine_output[row[0]] = at_days_without_sunshine_total
+
+        if len(at_days_with_sunshine_output) > 0:
+            at_days_with_sunshine = max(
+                zip(at_days_with_sunshine_output.values(), at_days_with_sunshine_output.keys())
+            )
+        else:
+            at_days_with_sunshine = (0, 0)
+        if len(at_days_without_sunshine_output) > 0:
+            at_days_without_sunshine = max(
+                zip(
+                    at_days_without_sunshine_output.values(),
+                    at_days_without_sunshine_output.keys(),
+                )
+            )
+        else:
+            at_days_without_sunshine = (0, 0)
+
 
         # This portion is right from the weewx sample
         # http://www.weewx.com/docs/customizing.htm
@@ -2372,6 +2638,7 @@ class getData(SearchList):
             "year_outTemp_range_min": year_outTemp_range_min,
             "at_outTemp_range_max": at_outTemp_range_max,
             "at_outTemp_range_min": at_outTemp_range_min,
+
             "rainiest_day": rainiest_day,
             "at_rainiest_day": at_rainiest_day,
             "year_rainiest_month": year_rainiest_month,
@@ -2381,6 +2648,7 @@ class getData(SearchList):
             "year_days_without_rain": year_days_without_rain,
             "at_days_with_rain": at_days_with_rain,
             "at_days_without_rain": at_days_without_rain,
+
             "thunderstormiest_day": thunderstormiest_day,
             "at_thunderstormiest_day": at_thunderstormiest_day,
             "year_thunderstormiest_month": year_thunderstormiest_month,
@@ -2390,6 +2658,18 @@ class getData(SearchList):
             "year_days_without_lsc": year_days_without_lsc,
             "at_days_with_lsc": at_days_with_lsc,
             "at_days_without_lsc": at_days_without_lsc,
+
+            "sunniest_day": sunniest_day,
+            "at_sunniest_day": at_sunniest_day,
+            "year_sunniest_month": year_sunniest_month,
+            "at_sunniest_month": at_sunniest_month,
+            "year_sunniest_year": year_sunniest_year,
+            "at_sunniest_year": at_sunniest_year,
+            "year_days_with_sunshine": year_days_with_sunshine,
+            "year_days_without_sunshine": year_days_without_sunshine,
+            "at_days_with_sunshine": at_days_with_sunshine,
+            "at_days_without_sunshine": at_days_without_sunshine,
+
             "windSpeedUnitLabel": windSpeed_unit_label,
             "noaa_header_html": noaa_header_html,
             "default_noaa_file": default_noaa_file,
