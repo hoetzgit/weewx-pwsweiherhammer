@@ -2442,7 +2442,6 @@ class EcowittClient(Consumer):
             'rainyear': 'rainyear',
             'stationtype':  'stationtype',
             'model': 'model',
-            'brightness': 'foshk_brightness',
             'cloudf': 'foshk_cloudbase',
             'dewptf': 'foshk_dewpoint',
             'feelslikef': 'foshk_feelslike',
@@ -2461,7 +2460,7 @@ class EcowittClient(Consumer):
             'PASSKEY', 'dateutc', 'freq',
             # FOSHKplugin
             'ptrend1', 'pchange1', 'ptrend3', 'pchange3', 'runtime',
-            'isintvl10', 'osunhours', 'nsunhours'
+            'isintvl10', 'osunhours', 'nsunhours', 'brightness'
         ]
 
         def __init__(self):
@@ -2571,13 +2570,6 @@ class EcowittClient(Consumer):
                     pkt['lightning_strike_count'] = new_delta
                     logdbg("Lightning strikes Delta: %s" % str(pkt['lightning_strike_count']))
                     self._last_strikes_total = new_strikes_total
-
-                # calculate luminosity
-                if ('solar_radiation' in pkt):
-                    luminosity = None
-                    if pkt['solar_radiation'] is not None:
-                        luminosity = float(pkt['solar_radiation']) * 126.7
-                    pkt['luminosity'] = luminosity
 
             except ValueError as e:
                 logerr("parse failed for %s: %s" % (s, e))

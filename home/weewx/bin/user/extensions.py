@@ -46,7 +46,6 @@ weewx.units.obs_group_dict['asky_dome_heatindex'] = 'group_temperature'
 weewx.units.obs_group_dict['asky_dome_temperature'] = 'group_temperature'
 #
 # FOSHKplugin AddOns
-weewx.units.obs_group_dict['foshk_brightness'] = 'group_illuminance'
 weewx.units.obs_group_dict['foshk_cloudbase'] = 'group_altitude'
 weewx.units.obs_group_dict['foshk_dewpoint'] = 'group_temperature'
 weewx.units.obs_group_dict['foshk_feelslike'] = 'group_temperature'
@@ -134,6 +133,7 @@ weewx.units.obs_group_dict['uba_o3_category'] = 'group_count'
 #
 # TODO: additional Values, Groups, Units, Formats ...
 weewx.units.obs_group_dict['airDensity'] = 'group_pressure3'
+weewx.units.obs_group_dict['boilingTemp'] = 'group_temperature'
 weewx.units.obs_group_dict['dayET'] = 'group_rain'
 weewx.units.obs_group_dict['dayRain'] = 'group_rain'
 weewx.units.obs_group_dict['dayRain2'] = 'group_rain'

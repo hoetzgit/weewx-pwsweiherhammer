@@ -2945,21 +2945,19 @@ function showChart(json_file, prepend_renderTo = false) {
                 }
 
                 // Run yAxis customizations
+                // yAxis AQI PlotLines
+                // https://github.com/poblabs/weewx-belchertown/issues/682
+                // TODO external config
+
                 this_yAxis = s.yAxis;
 
-                weiherhammer_debug(options.chart.renderTo + ": " + s.obsType + " is on yAxis " + this_yAxis);
-
                 // yAxis AQI PlotLines PM10
-                // https://github.com/poblabs/weewx-belchertown/issues/682
                 // PM10 Umweltbundesamt LQI levels, labels and colors
                 // https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex
-                // TODO colors from config
                 if (s.obsType == "sds011_pm10_0") {
-                    weiherhammer_debug('yAxis plotLines true');
-
                     var yAxis_plotlines = [];
 
-                    const eaqi = [{
+                    const plconf = [{
                         color: "#50F0E6",
                         label: "$gettext('very good')",
                         level: 20
@@ -2981,41 +2979,35 @@ function showChart(json_file, prepend_renderTo = false) {
                         level: 200
                     }];
 
-                    for (i = 0; i < eaqi.length; i++) {
+                    for (i = 0; i < plconf.length; i++) {
                         yAxis_plotlines.push({
-                            color: eaqi[i].color,
-                            value: eaqi[i].level,
+                            color: plconf[i].color,
+                            value: plconf[i].level,
                             label: {
-                                text: eaqi[i].label,
+                                text: plconf[i].label,
                                 x: 0,
                                 y: 15,
                                 style: {
-                                    color: eaqi[i].color,
-                                    //fontWeight: 'bold'
+                                    color: plconf[i].color
                                 }
                             },
                             width: 1,
-                            dashStyle: 'longdashdot',
+                            dashStyle: 'Solid',
                             zIndex : 3
                         });
                     }
 
                     // Add plotlines to yAxis options
                     options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
-                    weiherhammer_debug(yAxis_plotlines);
                 }
 
                 // yAxis AQI PlotLines PM2.5
-                // https://github.com/poblabs/weewx-belchertown/issues/682
                 // PM2.5 LQI levels, labels and colors
                 // https://de.euronews.com/wetter/copernicus-air-quality-index
-                // TODO colors from config
                 if (s.obsType == "sds011_pm2_5") {
-                    weiherhammer_debug('yAxis plotLines true');
-
                     var yAxis_plotlines = [];
 
-                    const eaqi = [{
+                    const plconf = [{
                         color: "#50F0E6",
                         label: "$gettext('very good')",
                         level: 10
@@ -3037,41 +3029,35 @@ function showChart(json_file, prepend_renderTo = false) {
                         level: 200
                     }];
 
-                    for (i = 0; i < eaqi.length; i++) {
+                    for (i = 0; i < plconf.length; i++) {
                         yAxis_plotlines.push({
-                            color: eaqi[i].color,
-                            value: eaqi[i].level,
+                            color: plconf[i].color,
+                            value: plconf[i].level,
                             label: {
-                                text: eaqi[i].label,
+                                text: plconf[i].label,
                                 x: 0,
                                 y: 15,
                                 style: {
-                                    color: eaqi[i].color,
-                                    //fontWeight: 'bold'
+                                    color: plconf[i].color
                                 }
                             },
                             width: 1,
-                            dashStyle: 'longdashdot',
+                            dashStyle: 'Solid',
                             zIndex : 3
                         });
                     }
 
                     // Add plotlines to yAxis options
                     options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
-                    weiherhammer_debug(yAxis_plotlines);
                 }
 
                 // yAxis AQI PlotLines NO2
-                // https://github.com/poblabs/weewx-belchertown/issues/682
                 // NO2 Umweltbundesamt LQI levels, labels and colors
                 // https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex
-                // TODO colors from config
                 if (s.obsType == "uba_no2") {
-                    weiherhammer_debug('yAxis plotLines true');
-
                     var yAxis_plotlines = [];
 
-                    const eaqi = [{
+                    const plconf = [{
                         color: "#50F0E6",
                         label: "$gettext('very good')",
                         level: 20
@@ -3093,41 +3079,35 @@ function showChart(json_file, prepend_renderTo = false) {
                         level: 300
                     }];
 
-                    for (i = 0; i < eaqi.length; i++) {
+                    for (i = 0; i < plconf.length; i++) {
                         yAxis_plotlines.push({
-                            color: eaqi[i].color,
-                            value: eaqi[i].level,
+                            color: plconf[i].color,
+                            value: plconf[i].level,
                             label: {
-                                text: eaqi[i].label,
+                                text: plconf[i].label,
                                 x: 0,
                                 y: 15,
                                 style: {
-                                    color: eaqi[i].color,
-                                    //fontWeight: 'bold'
+                                    color: plconf[i].color
                                 }
                             },
                             width: 1,
-                            dashStyle: 'longdashdot',
+                            dashStyle: 'Solid',
                             zIndex : 3
                         });
                     }
 
                     // Add plotlines to yAxis options
                     options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
-                    weiherhammer_debug(yAxis_plotlines);
                 }
 
                 // yAxis AQI PlotLines O3
-                // https://github.com/poblabs/weewx-belchertown/issues/682
                 // O3 Umweltbundesamt LQI levels, labels and colors
                 // https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex
-                // TODO colors from config
                 if (s.obsType == "uba_o3") {
-                    weiherhammer_debug('yAxis plotLines true');
-
                     var yAxis_plotlines = [];
 
-                    const eaqi = [{
+                    const plconf = [{
                         color: "#50F0E6",
                         label: "$gettext('very good')",
                         level: 60
@@ -3149,41 +3129,35 @@ function showChart(json_file, prepend_renderTo = false) {
                         level: 340
                     }];
 
-                    for (i = 0; i < eaqi.length; i++) {
+                    for (i = 0; i < plconf.length; i++) {
                         yAxis_plotlines.push({
-                            color: eaqi[i].color,
-                            value: eaqi[i].level,
+                            color: plconf[i].color,
+                            value: plconf[i].level,
                             label: {
-                                text: eaqi[i].label,
+                                text: plconf[i].label,
                                 x: 0,
                                 y: 15,
                                 style: {
-                                    color: eaqi[i].color,
-                                    //fontWeight: 'bold'
+                                    color: plconf[i].color
                                 }
                             },
                             width: 1,
-                            dashStyle: 'longdashdot',
+                            dashStyle: 'Solid',
                             zIndex : 3
                         });
                     }
 
                     // Add plotlines to yAxis options
                     options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
-                    weiherhammer_debug(yAxis_plotlines);
                 }
 
                 // yAxis AQI PlotLines SO2
-                // https://github.com/poblabs/weewx-belchertown/issues/682
                 // SO2 LQI levels, labels and colors
                 // https://de.euronews.com/wetter/copernicus-air-quality-index
-                // TODO colors from config
                 if (s.obsType == "aeris_so2") {
-                    weiherhammer_debug('yAxis plotLines true');
-
                     var yAxis_plotlines = [];
 
-                    const eaqi = [{
+                    const plconf = [{
                         color: "#50F0E6",
                         label: "$gettext('very good')",
                         level: 100
@@ -3205,68 +3179,94 @@ function showChart(json_file, prepend_renderTo = false) {
                         level: 1250
                     }];
 
-                    for (i = 0; i < eaqi.length; i++) {
+                    for (i = 0; i < plconf.length; i++) {
                         yAxis_plotlines.push({
-                            color: eaqi[i].color,
-                            value: eaqi[i].level,
+                            color: plconf[i].color,
+                            value: plconf[i].level,
                             label: {
-                                text: eaqi[i].label,
+                                text: plconf[i].label,
                                 x: 0,
                                 y: 15,
                                 style: {
-                                    color: eaqi[i].color,
-                                    //fontWeight: 'bold'
+                                    color: plconf[i].color
                                 }
                             },
                             width: 1,
-                            dashStyle: 'longdashdot',
+                            dashStyle: 'Solid',
                             zIndex : 3
                         });
                     }
 
                     // Add plotlines to yAxis options
                     options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
-                    weiherhammer_debug(yAxis_plotlines);
                 }
 
                 // yAxis PlotLines equivalent temperature "Schwüle"
-                // https://github.com/poblabs/weewx-belchertown/issues/682
+                // https://github.com/roe-dl/weewx-GTS
                 // equivalent temperature levels, labels and colors
                 // https://www.spektrum.de/lexikon/geographie/aequivalenttemperatur/437
-                // TODO colors from config
                 if (s.obsType == "outEquiTemp") {
-                    weiherhammer_debug('yAxis plotLines true');
-
                     var yAxis_plotlines = [];
 
-                    const stemp = [{
+                    const plconf = [{
                         color: "#FF5733",
                         label: "$pgettext('chart_equivalentTemperature', 'Sultriness border')",
                         level: 50
                     }];
 
-                    for (i = 0; i < stemp.length; i++) {
+                    for (i = 0; i < plconf.length; i++) {
                         yAxis_plotlines.push({
-                            color: stemp[i].color,
-                            value: stemp[i].level,
+                            color: plconf[i].color,
+                            value: plconf[i].level,
                             label: {
-                                text: stemp[i].label,
+                                text: plconf[i].label,
                                 x: 0,
                                 y: 15,
                                 style: {
-                                    color: stemp[i].color,
-                                    //fontWeight: 'bold'
+                                    color: plconf[i].color
                                 }
                             },
                             width: 1,
-                            dashStyle: 'longdashdot',
+                            dashStyle: 'Solid',
                             zIndex : 3
                         });
                     }
 
                     // Add plotlines to yAxis options
                     options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
-                    weiherhammer_debug(yAxis_plotlines);
+                }
+
+                // yAxis PlotLines GTS, beginning of real spring
+                // https://github.com/roe-dl/weewx-GTS
+                if (s.obsType == "GTS") {
+                    var yAxis_plotlines = [];
+
+                    const plconf = [{
+                        color: "#00FF7F",
+                        label: "$pgettext('chart_Vegetation', 'springtime border')",
+                        level: 200
+                    }];
+
+                    for (i = 0; i < plconf.length; i++) {
+                        yAxis_plotlines.push({
+                            color: plconf[i].color,
+                            value: plconf[i].level,
+                            label: {
+                                text: plconf[i].label,
+                                x: 0,
+                                y: 15,
+                                style: {
+                                    color: plconf[i].color
+                                }
+                            },
+                            width: 1,
+                            dashStyle: 'Solid',
+                            zIndex : 3
+                        });
+                    }
+
+                    // Add plotlines to yAxis options
+                    options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
                 }
 
                 // Some charts may require a defined min/max on the yAxis

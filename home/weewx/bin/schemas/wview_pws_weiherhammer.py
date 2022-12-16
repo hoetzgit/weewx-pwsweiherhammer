@@ -152,7 +152,6 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('asky_dome_temperature', 'REAL'),
 #
 # FOSHKplugin Added values
-('foshk_brightness', 'REAL'),
 ('foshk_cloudbase', 'REAL'),
 ('foshk_dewpoint', 'REAL'),
 ('foshk_feelslike', 'REAL'),

@@ -33,7 +33,7 @@ import sys
 import time
 
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import weewx
 import weewx.manager
@@ -48,7 +48,7 @@ from weewx.engine import StdService
 # get a logger object
 log = logging.getLogger(__name__)
 
-RAINRATE_VERSION = '0.16'
+RAINRATE_VERSION = '0.17'
 
 if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 7):
     raise weewx.UnsupportedFeature(
@@ -183,22 +183,17 @@ class RainRate(StdService):
 
         # Consume the loop rain rates in loop_rain_rates that
         # are for this archive record's period.
-        rates: List[float] = []
+        # Pick the highest rain rate for the archive record.
+        archive_rain_rate: Optional[float] = None
         while len(self.loop_rain_rates) != 0 and self.loop_rain_rates[0].timestamp <= record['dateTime']:
-            rates.append(self.loop_rain_rates[0].rainRate)
+            if archive_rain_rate is None or self.loop_rain_rates[0].rainRate > archive_rain_rate:
+                archive_rain_rate = self.loop_rain_rates[0].rainRate
             self.loop_rain_rates.pop(0)
 
-        archive_rain_rate: float = 0.0
-        if len(rates) > 0:
-            # Report the average of the rainRates reported in loops
-            rain_rate_sum: float = 0.0
-            for rate in rates:
-                rain_rate_sum += rate
-            archive_rain_rate = rain_rate_sum / float(len(rates))
-        else:
-            # We have no help from loop records (probably, we're catching up when WeeWX restarted).
-            # The best we can do is average the rain reported in the archive record over 15m.
-            archive_rain_rate = record['rain'] / 900.0
+            if archive_rain_rate is None:
+                # We have no help from loop records (it's probably an archive record during catchup (when WeeWX restarted).
+                # We'll average the rain reported in the archive record over 15m.
+                archive_rain_rate = record['rain'] / 900.0
 
         # TODO: Verify that this archive record is received in the same units as loop data (i.e., before any conversion that might be needed).
 

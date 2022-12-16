@@ -1311,34 +1311,32 @@ class getData(SearchList):
         ]
 
         # sushine sum year
-        year_sunniest_year_sql = (
+        sunshine_sum_year_sql = (
                 'SELECT SUM( COALESCE(sum, 0.0) ) FROM archive_day_sunshineDur WHERE year( FROM_UNIXTIME( dateTime ) ) = "%s";'
                 % time.strftime("%Y", time.localtime(time.time()))
             )
-        year_sunniest_year_query = wx_manager.getSql(year_sunniest_year_sql)
-        logdbg("SKINWEIHERHAMMER %s" % str(year_sunniest_year_sql))
-        logdbg("SKINWEIHERHAMMER %s" % str(year_sunniest_year_query))
-        if year_sunniest_year_query is not None:
-            year_sunniest_year_tuple = (
-                year_sunniest_year_query[0],
+        sunshine_sum_year_query = wx_manager.getSql(sunshine_sum_year_sql)
+        if sunshine_sum_year_query is not None:
+            sunshine_sum_year_tuple = (
+                sunshine_sum_year_query[0],
                 sunshineDur_unit,
                 "group_deltatime",
             )
             if skin_sunshineDur_unit != sunshineDur_unit:
-                year_sunniest_year_tuple = weewx.units.convert(year_sunniest_year_tuple, skin_sunshineDur_unit)
-                year_sunniest_year_converted = (
-                    sunshineDur_round % year_sunniest_year_tuple[0]
+                sunshine_sum_year_tuple = weewx.units.convert(sunshine_sum_year_tuple, skin_sunshineDur_unit)
+                sunshine_sum_year_converted = (
+                    sunshineDur_round % sunshine_sum_year_tuple[0]
                 )
             else:
-                year_sunniest_year_converted = (
+                sunshine_sum_year_converted = (
                     sunshineDur_round
-                    % self.generator.converter.convert(year_sunniest_year_tuple)[0]
+                    % self.generator.converter.convert(sunshine_sum_year_tuple)[0]
                 )
-            year_sunniest_year = [
-                locale.format("%g", float(year_sunniest_year_converted)),
+            sunshine_sum_year = [
+                locale.format("%g", float(sunshine_sum_year_converted)),
             ]
         else:
-            year_sunniest_year = [0.0]
+            sunshine_sum_year = [0.0]
 
         # All time sunniest year
         at_sunniest_year_query = wx_manager.getSql(at_sunniest_year_sql)
@@ -2663,7 +2661,7 @@ class getData(SearchList):
             "at_sunniest_day": at_sunniest_day,
             "year_sunniest_month": year_sunniest_month,
             "at_sunniest_month": at_sunniest_month,
-            "year_sunniest_year": year_sunniest_year,
+            "sunshine_sum_year": sunshine_sum_year,
             "at_sunniest_year": at_sunniest_year,
             "year_days_with_sunshine": year_days_with_sunshine,
             "year_days_without_sunshine": year_days_without_sunshine,

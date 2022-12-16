@@ -570,7 +570,7 @@
                 </tr>
                 <tr>
                     <th scope="row" class="extreme-table-body-obs">$obs.label.extreme_highest_yearly_sunshine</th>
-                    <td class="extreme-table-body-obs-val-year">$year_sunniest_year[0] $gettext('hours')</td>
+                    <td class="extreme-table-body-obs-val-year">$sunshine_sum_year[0] $gettext('hours')</td>
                     <td class="extreme-table-body-obs-ts-year">$current.dateTime.format("%Y")</td>
                     <td class="extreme-table-body-obs-val-alltime">$at_sunniest_year[1] $gettext('hours')</td>
                     <td class="extreme-table-body-obs-ts-alltime">$at_sunniest_year[0]</td>

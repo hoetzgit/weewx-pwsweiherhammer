@@ -89,7 +89,6 @@ TABLES=(
 "archive_day_extraTemp7"
 "archive_day_extraTemp8"
 "archive_day_forecast"
-"archive_day_foshk_brightness"
 "archive_day_foshk_cloudbase"
 "archive_day_foshk_dewpoint"
 "archive_day_foshk_feelslike"

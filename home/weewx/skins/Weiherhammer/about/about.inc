@@ -282,7 +282,7 @@
                 <li>WeeWX Service <a href="https://github.com/bellrichm/weewx-mqttpublish" target="_blank" rel="noreferrer">weewx-mqttpublish</a> zum Upload der WeeWX Daten per MQTT in den MQTT Broker, Version: 0.2.0-rc02a</li>
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-mqtt" target="_blank" rel="noreferrer">weewx-mqtt</a>, angepasste <a href="https://github.com/roe-dl/weewx-mqtt/tree/aggregate_values" target="_blank" rel="noreferrer">Version</a> zum Upload der WeeWX Daten per MQTT in den MQTT Broker, Version: 0.25</li>
                 <li>Erweiterungen <a href="https://github.com/roe-dl/weewx-DWD" target="_blank" rel="noreferrer">weewx-DWD</a>, um Daten vom DWD und dem UBA zu laden und aufzubereiten (zum Experimentieren mit anderen Wetter-Anbietern angepasst)</li>
-                <li>Erweiterung <a href="https://github.com/roe-dl/weewx-GTS" target="_blank" rel="noreferrer">weewx-GTS</a>, generiert die <a href="https://de.wikipedia.org/wiki/Gr%C3%BCnlandtemperatursumme" target="_blank" rel="noreferrer">Grünlandtemperatursumme</a> und viele weitere Daten, Version: 0.8</li>
+                <li>Erweiterung <a href="https://github.com/roe-dl/weewx-GTS" target="_blank" rel="noreferrer">weewx-GTS</a>, generiert die <a href="https://de.wikipedia.org/wiki/Gr%C3%BCnlandtemperatursumme" target="_blank" rel="noreferrer">Grünlandtemperatursumme</a> und viele weitere Daten, Version: 0.9a1</li>
                 ##<li>Die Meteogramm-Visualisierung der DWD Vorhersage erfolgt mit dem Meteogramm von <a href="http://tools.wettersoftware.de" target="_blank" rel="noreferrer">wettersoftware.de</a></li>
                 <li>Erweiterung <a href="https://github.com/jonathankoren/weewx-aqi" target="_blank" rel="noreferrer">weewx-aqi</a>, angepasste <a href="https://github.com/hoetzgit/weewx-aqi/tree/CustomAirQualityIndex" target="_blank" rel="noreferrer">Version</a>, diese orientiert sich an den <a href="https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex" target="_blank" rel="noreferrer">Berechnungsgrundlagen Luftqualit&auml;tsindex</a> des Umweltbundesamtes</li>
                 <li>Erweiterung <a href="https://github.com/Jterrettaz/sunduration" target="_blank" rel="noreferrer">sunduration</a>, angepasste <a href="https://github.com/hoetzgit/sunduration/tree/dev" target="_blank" rel="noreferrer">Version</a>, Berechnung der Sonnenscheindauer in Sekunden pro Archiv Intervall</li>
@@ -384,7 +384,7 @@
         <div class="col-sm-12">
             <h2>Tipps</h2>
             <p>Wer eine tolle Wetterseite im deutschsprachigen Raum sucht, kann mal die Webseite <a href="https://www.woellsdorf-wetter.de" target="_blank" rel="noreferrer">Wetterstation D&ouml;beln-W&ouml;llsdorf</a> besuchen. 
-            Dort findet man u.a. viele <a href="https://www.woellsdorf-wetter.de/info/" target="_blank" rel="noreferrer">hilfreiche Beitr&auml;ge</a> rund um das Wetter und die Konfiguration von WeeWX. 
+            Dort findet man sehr viele <a href="https://www.woellsdorf-wetter.de/info/" target="_blank" rel="noreferrer">hilfreiche Beitr&auml;ge</a> rund um das Wetter und die Konfiguration von WeeWX. 
             Die Betreiberinnen erstellen auch WeeWX Extensions und stellen diese auf <a href="https://github.com/roe-dl?tab=repositories" target="_blank" rel="noreferrer">GitHub</a> zur Verf&uuml;gung.</p>
             <p>Vielen Dank an dieser Stelle f&uuml;r Inspirationen und Hilfestellungen bei Fragen und Problemen.</p>
         </div>
