@@ -246,7 +246,7 @@ class IndoorClimate(StdService):
                             break
 
                 # loop room quality result
-                target_data[str(room) + '_qi'] = rqi
+                target_data[str(room) + '_rqi'] = rqi
 
                 if rqi is not None:
                     name_lst = to_list(self.option_dict['rooms'].get('name'))
