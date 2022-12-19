@@ -3474,6 +3474,8 @@ function showChart(json_file, prepend_renderTo = false) {
                         },
                     }
                 }
+
+                /*
                 if (get_gauge_label(options.series[0].data[1]["y"], options.series[0])) {
                     options.plotOptions.solidgauge.dataLabels.format = "<span style='text-align:center'>{y:.#f}</span><br><span style='font-size:14px;text-align:center'>" + get_gauge_label(options.series[0].data[1]["y"], options.series[0]) + '</span>'
                     options.plotOptions.solidgauge.dataLabels.y = -25
@@ -3483,6 +3485,20 @@ function showChart(json_file, prepend_renderTo = false) {
                     options.plotOptions.solidgauge.dataLabels.format = "<span style='text-align:center'>{y:.#f}</span><br><span style='font-size:20px;text-align:center'>" + unit_label_array[observation_type] + '</span>'
                     options.plotOptions.solidgauge.dataLabels.y = -25
                 }
+                */
+
+                var dataLabel = '<div style="text-align:center;">';
+                dataLabel += '<span style="font-size:35px;lineHeight:0.9;">{y:.#f}';
+                if (unit_label_array[observation_type] != null) {
+                    dataLabel += '</span><span style="font-size:30px;"><sup>' + '&nbsp;' + unit_label_array[observation_type].trim() +'</sup>';
+                }
+                if (get_gauge_label(options.series[0].data[1]["y"], options.series[0])) {
+                    dataLabel +='</span><br/><span style="font-size:18px;opacity:0.5;">' + get_gauge_label(options.series[0].data[1]["y"], options.series[0]);
+                }
+                dataLabel += '</span></div>';
+                options.plotOptions.solidgauge.dataLabels.format = dataLabel;
+                options.plotOptions.solidgauge.dataLabels.y = -25;
+
                 options.yAxis = {
                     min: 0,
                     max: 100,
@@ -3498,6 +3514,7 @@ function showChart(json_file, prepend_renderTo = false) {
                 }
                 options.tooltip.enabled = false
                 options.xAxis.crosshair = false
+                options.credits.enabled = false;
             }
 
             // If AQI chart is present, configure a special chart

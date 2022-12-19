@@ -65,22 +65,34 @@ DEFAULTS_INI = """
         observation = inTemp
         level = -2, -1, 0, 1, 2
         level_opt = 0
-        max = 10, 20, 23, 30, 50
-        color = #EE82EE, #4169E1, #7CFC00, #FFD700, #FF7F50
+        # Temperatur (Wohnzimmer, Arbeitszimmer)
+        # -2 = sehr kalt  = blau     = #0000FF = <=12
+        # -1 = kalt       = hellblau = #0088FF = <=20
+        #  0 = optimal    = grün     = #84D862 = <=22
+        # +1 = warm       = orange   = #FF8800 = <=30
+        # +2 = sehr warm  = rot      = #FF0000 = <=70
+        max = 12, 20, 22, 30, 70
+        color = #0000FF, #0088FF, #84D862, #FF8800, #FF0000
         name = very cold, cold, optimal, warm, very warm
         action = heating, heating, nothing to do, cool, cool
     [[humidity]]
         observation = inHumidity
         level = -2, -1, 0, 1, 2
         level_opt = 0
-        max = 35, 40, 61, 65, 100
-        color = #EE82EE, #4169E1, #7CFC00, #FFD700, #FF7F50
+        # Luftfeuchte (Wohnzimmer, Arbeitszimmer, Schlafzimmer)
+        # -2 = sehr trocken = orange    = #FF8800 = <=35
+        # -1 = trocken      = hellgrün  = #B2DF8A = <=40
+        #  0 = optimal      = grün      = #84D862 = <=60
+        # +1 = feucht       = hellgrün  = #B2DF8A = <=65
+        # +2 = sehr feucht  = blau      = #0077FF = <=100
+        max = 35, 40, 60, 65, 100
+        color = #FF8800, #B2DF8A, #84D862, #B2DF8A, #0077FF
         name = very dry, dry, optimal, moist, very moist
         action = humidify, humidify, nothing to do, airing, airing
     [[rooms]]
         level = 0, 1
         level_opt = 0
-        color = #7CFC00, #FF7F50
+        color = #84D862, #FF0000
         name = optimal, action required
         action = nothing to do, action required
         [[[livingroom]]]
@@ -92,14 +104,32 @@ DEFAULTS_INI = """
         [[[bathroom]]]
             [[[[temperature]]]]
                 observation = extraTemp2
-                max = 15, 20, 24, 26, 50
+                # Temperatur (Bad)
+                # -2 = sehr kalt  = blau     = #0000FF = <=15
+                # -1 = kalt       = hellblau = #0088FF = <=20
+                #  0 = optimal    = grün     = #84D862 = <=23
+                # +1 = warm       = orange   = #FF8800 = <=30
+                # +2 = sehr warm  = rot      = #FF0000 = <=70
+                max = 15, 20, 23, 30, 70
             [[[[humidity]]]]
                 observation = extraHumid2
-                max = 35, 50, 71, 75, 100
+                # Luftfeuchte (Bad)
+                # -2 = sehr trocken = orange    = #FF8800 = <=40
+                # -1 = trocken      = hellgrün  = #B2DF8A = <=50
+                #  0 = optimal      = grün      = #84D862 = <=70
+                # +1 = feucht       = hellgrün  = #B2DF8A = <=80
+                # +2 = sehr feucht  = blau      = #0077FF = <=100
+                max = 40, 50, 70, 80, 100
         [[[bedroom]]]
             [[[[temperature]]]]
                 observation = extraTemp3
-                max = 12, 16, 19, 25, 50
+                # Temperatur (Schlafzimmer)
+                # -2 = sehr kalt  = blau     = #0000FF = <=10
+                # -1 = kalt       = hellblau = #0088FF = <=16
+                #  0 = optimal    = grün     = #84D862 = <=18
+                # +1 = warm       = orange   = #FF8800 = <=25
+                # +2 = sehr warm  = rot      = #FF0000 = <=70
+                max = 10, 16, 18, 25, 70
             [[[[humidity]]]]
                 observation = extraHumid3
 """
@@ -163,7 +193,7 @@ class IndoorClimate(StdService):
                     max_lst = to_list(room_temp_dict.get('max'))
                     level_lst = to_list(room_temp_dict.get('level'))
                     for i in range(len(max_lst)):
-                        if to_float(obs_val) < to_float(max_lst[i]):
+                        if to_float(obs_val) <= to_float(max_lst[i]):
                             tqi = level_lst[i]
                             tqi_key = i
                             break
@@ -205,7 +235,7 @@ class IndoorClimate(StdService):
                     max_lst = to_list(room_humid_dict.get('max'))
                     level_lst = to_list(room_humid_dict.get('level'))
                     for i in range(len(max_lst)):
-                        if to_float(obs_val) < to_float(max_lst[i]):
+                        if to_float(obs_val) <= to_float(max_lst[i]):
                             hqi = level_lst[i]
                             hqi_key = i
                             break

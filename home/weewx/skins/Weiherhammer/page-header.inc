@@ -11,26 +11,26 @@
         </div>
         <div class="col-sm-8">
             <div class="wx-stn-name">
-        #if $page == "forecast"
+                #if $page == "forecast"
                 <h1>$obs.label.page_header_forecast</h1>
-        #else if $page == "graphs"
+                #else if $page == "graphs"
                 <h1>$obs.label.page_header_graphs</h1>
-        #else if $page == "records"
+                #else if $page == "records"
                 <h1>$obs.label.page_header_records</h1>
-        #else if $page == "reports"
+                #else if $page == "reports"
                 <h1>$obs.label.page_header_reports</h1>
-        #else if $page == "about"
+                #else if $page == "about"
                 <h1>$obs.label.page_header_about</h1>
-        #else if $page == "webcam"
+                #else if $page == "webcam"
                 <h1>$obs.label.page_header_webcam</h1>
-        #else if $page == "imprint"
+                #else if $page == "imprint"
                 <h1>$obs.label.page_header_imprint</h1>
-        #else if $page == "privacy"
+                #else if $page == "privacy"
                 <h1>$obs.label.page_header_privacy</h1>
-        #else if $page == "extreme"
+                #else if $page == "extreme"
                 <h1>$obs.label.page_header_extreme</h1>
-        #end if
-        </div>
+                #end if
+            </div>
         </div>
         <div class="col-sm-3" style="float:right;">
             <div class="wx-stn-info">
