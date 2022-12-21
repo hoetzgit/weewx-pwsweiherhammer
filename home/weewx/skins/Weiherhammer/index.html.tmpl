@@ -418,6 +418,28 @@
                                     $station_obs_html
                                 </tbody>
                             </table>
+                            #if $Extras.has_key("station_observation_extras") and $Extras.station_observation_extras == '1'
+                            <!-- Additional Station Observations -->
+                            <div class="station-observation-extras-modal"><a href="#station-observation-extras" data-toggle="modal" data-target="#station-observation-extras">$gettext('more values')</a></div>
+                            <div class="modal fade" id="station-observation-extras" tabindex="-1" role="dialog" aria-labelledby="station-observation-extras" aria-hidden="true">
+                                <div class="modal-dialog modal-lg" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                            <h4 class="modal-title" id="station-observation-extras">$gettext('more station observations')</h4>
+                                        </div>
+                                        <div class="station-observation-extras-modal-body modal-body">
+                                            #include "station-observation-extras/station-observation-extras.inc"
+                                        </div><!-- AJAX -->
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-primary" data-dismiss="modal">$gettext('close')</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            #end if
                             <!-- Station Observations Hook -->
                             #if os.path.exists("index_hook_after_station_observations.inc")
                             <!-- Start of index_hook_after_station_observations -->

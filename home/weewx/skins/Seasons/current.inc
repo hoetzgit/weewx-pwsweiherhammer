@@ -18,7 +18,6 @@
 #set $observations = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
 
 #for $x in $observations
-  #if $getVar('year.%s.has_data' % $x)
     #if $x == 'barometer'
       <tr>
         <td class="label">$obs.label.barometer</td>
@@ -50,30 +49,22 @@
         $day.sunshineDur.sum.format('%(hour)d%(hour_label)s, %(minute)d%(minute_label)s')
         </td>
       </tr>
+    #elif $x == 'sunshineThreshold'
+      <tr>
+        <td class="label">$obs.label[$x]</td>
+        <td class="data">$getVar('current.%s' % $x)</td>
+      </tr>
+    #elif $x == 'lastRain'
+      <tr>
+        <td class="label">$gettext("Last rain")</td>
+        <td class="data">$last_rain<br>$time_since_last_rain</td>
+      </tr>
     #else
       <tr>
         <td class="label">$obs.label[$x]</td>
         <td class="data">$getVar('current.' + $x)</td>
       </tr>
     #end if
-  #end if
-
-  #if $getVar('current.%s.has_data' % $x)
-    #if $x == 'sunshineThreshold'
-      <tr>
-        <td class="label">$obs.label[$x]</td>
-        <td class="data">$getVar('current.' + $x)</td>
-      </tr>
-    #end if
-  #end if
-
-  #if $x == 'lastRain'
-    <tr>
-      <td class="label">$gettext("Last rain")</td>
-      <td class="data">$last_rain<br>$time_since_last_rain</td>
-    </tr>
-  #end if
-
 #end for
 
     </tbody>

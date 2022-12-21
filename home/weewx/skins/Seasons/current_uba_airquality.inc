@@ -38,7 +38,7 @@
     #else
       <tr>
         <td class="label">$obs.label[$x]</td>
-        <td class="data">$getVar('current.' + $x)</td>
+        <td class="data">$getVar('current.%s' % $x)</td>
       </tr>
     #end if
   #end if

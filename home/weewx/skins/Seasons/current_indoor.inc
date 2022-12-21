@@ -22,7 +22,7 @@
   #if $getVar('current.%s.has_data' % $x)
       <tr>
         <td class="label">$obs.label[$x]</td>
-        <td class="data">$getVar('current.' + $x)</td>
+        <td class="data">$getVar('current.%s' % $x)</td>
       </tr>
   #end if
 #end for

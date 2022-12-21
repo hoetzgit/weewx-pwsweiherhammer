@@ -121,6 +121,34 @@
     padding-bottom: 10px;
 }
 
+/* additional station observations */
+
+.station-observation-extras-modal {
+    width: 100%;
+    text-align: center;
+    margin: 0 auto;
+    display: block;
+}
+
+.page .station-observation-extras-modal a {
+    text-decoration:none;
+}
+
+.observation-extras-row {
+    padding: 0px 10px 10px 0px;
+    margin: 0 -10px 0 -10px;
+}
+
+.observation-extras-title {
+    text-align: left;
+    font-size: calc(14px + 0.3vw);
+    font-weight: 500;
+}
+
+.observations-extras-label {
+    min-width: 260px;
+}
+
 /* station observations */
 
 .station-observations-label {
@@ -1018,6 +1046,10 @@ sub { top: 0.4em; }
     /* forecast */
     .forecast-conditions {
         min-height: 110px;
+    }
+    /* Additional Station Observations */
+    .page .station-observation-extras-modal a {
+        font-size: 20px;
     }
 }
 

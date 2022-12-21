@@ -1597,7 +1597,6 @@ function update_forecast_data(data) {
 
         try {
             visibility_output = parseFloat(parseFloat(visibility)).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["visibility"], maximumFractionDigits: unit_rounding_array["visibility"]}) + " " + unit_label_array["visibility"];
-
             jQuery(".station-observations .visibility").html(visibility_output);
         } catch (err) {
             // Visibility not in the station observation table or any of the unit arrays, so silently exit

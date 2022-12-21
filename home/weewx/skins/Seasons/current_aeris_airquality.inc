@@ -18,27 +18,10 @@
 #if 'observations_aeris_airquality' in $DisplayOptions
 #for $x in $DisplayOptions.observations_aeris_airquality
   #if $getVar('year.%s.has_data' % $x)
-    #if $x == 'barometer'
-      <tr>
-        <td class="label">$obs.label.barometer</td>
-        <td class="data">$current.barometer ($trend.barometer.formatted)</td>
-      </tr>
-    #elif $x == 'windSpeed'
-      <tr>
-        <td class="label">$obs.label.wind</td>
-        <td class="data">$current.windSpeed $current.windDir.ordinal_compass ($current.windDir)</td>
-      </tr>
-    #elif $x == 'rain'
-      <tr>
-        <td class="label">$gettext("Rain Today")</td>
-        <td class="data">$day.rain.sum</td>
-      </tr>
-    #else
       <tr>
         <td class="label">$obs.label[$x]</td>
-        <td class="data">$getVar('current.' + $x)</td>
+        <td class="data">$getVar('current.%s' % $x)</td>
       </tr>
-    #end if
   #end if
 #end for
 #else

@@ -20,36 +20,36 @@
   #if $getVar('year.%s.has_data' % $x)
     #if $x == 'lightning_last_time'
       <tr>
-        <td class="label">$gettext("Lightning last time")</td>
-        <td class="data">$current.lightning_last_time</td>
+        <td class="label">$obs.label[$x]</td>
+        <td class="data">$getVar('current.%s' % $x)</td>
       </tr>
     #elif $x == 'lightning_strike_count'
       <tr>
         <td class="label">$gettext("Lightning strike sum")</td>
-        <td class="data">$day.lightning_strike_count.sum</td>
+        <td class="data">$getVar('day.%s.%s' % ($x,'sum'))</td>
       </tr>
     #elif $x == 'lightning'
       <tr>
-        <td class="label">$gettext("Lightning distance")</td>
-        <td class="data">$current.lightning</td>
+        <td class="label">$obs.label[$x]</td>
+        <td class="data">$getVar('current.%s' % $x)</td>
       </tr>
     #elif $x == 'lightning_distance'
       <tr>
         <td class="label">$gettext("Lightning distance min")</td>
-        <td class="data">$day.lightning_distance.min</td>
+        <td class="data">$getVar('day.%s.%s' % ($x,'min'))</td>
       </tr>
       <tr>
         <td class="label">$gettext("Lightning distance avg")</td>
-        <td class="data">$day.lightning_distance.avg</td>
+        <td class="data">$getVar('day.%s.%s' % ($x,'avg'))</td>
       </tr>
       <tr>
         <td class="label">$gettext("Lightning distance max")</td>
-        <td class="data">$day.lightning_distance.max</td>
+        <td class="data">$getVar('day.%s.%s' % ($x,'max'))</td>
       </tr>
     #else
       <tr>
         <td class="label">$obs.label[$x]</td>
-        <td class="data">$getVar('day.' + $x)</td>
+        <td class="data">$getVar('day.%s' % $x)</td>
       </tr>
     #end if
   #end if

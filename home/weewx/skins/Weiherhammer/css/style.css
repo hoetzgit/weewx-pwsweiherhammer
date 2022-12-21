@@ -1699,14 +1699,14 @@ p.entry-meta {
 	padding-bottom: 10px;
 }
 
-.sun-moon-modal {
+.station-obs-extras-modal {
     width: 100%;
     text-align: center;
     margin: 0 auto;
     display: block;
 }
 
-.page .sun-moon-modal a {
+.page .station-obs-extras-modal a {
     text-decoration:none;
 }
 
