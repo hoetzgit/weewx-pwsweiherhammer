@@ -353,27 +353,27 @@
                 <li>WeeWX Server uptime: $station.os_uptime</li>
                 <li>WeeWX Service uptime: $station.uptime</li>
                 #if $current.wh65_batt.has_data and $current.wh65_batt.raw < 1.0
-                <li>Batteriestatus Sainlogic Station: <span style="color:green;">OK</span> (Wert: $current.wh65_batt)</li>
-                #else if $current.wh65_batt.has_data and $current.wh65_batt.raw > 0.0  
-                <li>Batteriestatus Sainlogic Station: <span style="color:red;">NIEDRIG</span> (Wert: $current.wh65_batt)</li>
+                <li>Batteriestatus Sainlogic Station: <span class="status_ok">$gettext('ok')</span> (Wert: $current.wh65_batt)</li>
+                #else if $current.wh65_batt.has_data and $current.wh65_batt.raw > 0.0
+                <li>Batteriestatus Sainlogic Station: <span class="status_low">$gettext('low')</span> (Wert: $current.wh65_batt)</li>
                 #else
-                <li>Batteriestatus Sainlogic Station: UNBEKANNT</li>
+                <li>Batteriestatus Sainlogic Station: <span class="status_unknown">$gettext('unknown')</span></li>
                 #end if
                 #if $current.wh57_batt.has_data and $current.wh57_batt.raw > 3.0
-                <li>Batteriestatus Blitzsensor: <span style="color:green;">OK</span> (Wert: $current.wh57_batt)</li>
+                <li>Batteriestatus Blitzsensor: <span class="status_ok">$gettext('ok')</span> (Wert: $current.wh57_batt)</li>
                 #else if $current.wh57_batt.has_data and $current.wh57_batt.raw > 1.0
-                <li>Batteriestatus Blitzsensor: <span style="color:orange;">MITTEL</span> (Wert: $current.wh57_batt)</li>
+                <li>Batteriestatus Blitzsensor: <span class="status_middle">$gettext('middle')</span> (Wert: $current.wh57_batt)</li>
                 #else if $current.wh57_batt.has_data and $current.wh57_batt.raw >= 0.0
-                <li>Batteriestatus Blitzsensor: <span style="color:red;">NIEDRIG</span> (Wert: $current.wh57_batt)</li>
+                <li>Batteriestatus Blitzsensor: <span class="status_low">$gettext('low')</span> (Wert: $current.wh57_batt)</li>
                 #else
-                <li>Batteriestatus Blitzsensor: <span style="color:red;">UNBEKANNT</span></li>
+                <li>Batteriestatus Blitzsensor: <span class="status_unknown">$gettext('unknown')</span></li>
                 #end if
                 #if $current.solar_voltage.has_data and $current.solar_voltage.raw > 3.8
-                <li>Batteriestatus Solar Station: <span style="color:green;">$current.solar_voltage</span></li>
+                <li>Batteriestatus Solar Station: <span class="status_ok">$current.solar_voltage</span></li>
                 #else if $current.solar_voltage.has_data and $current.solar_voltage.raw <= 3.8
-                <li>Batteriestatus Solar Station: <span style="color:red;">$current.solar_voltage</span></li>
+                <li>Batteriestatus Solar Station: <span class="status_low">$current.solar_voltage</span></li>
                 #else
-                <li>Batteriestatus Solar Station: <span style="color:red;">UNBEKANNT</span></li>
+                <li>Batteriestatus Solar Station: <span class="status_unknown">$gettext('unknown')</span></li>
                 #end if
             </ul>
         </div>

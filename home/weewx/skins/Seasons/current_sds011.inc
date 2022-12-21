@@ -18,7 +18,7 @@
 #if 'observations_sds011' in $DisplayOptions
 #for $x in $DisplayOptions.observations_sds011
   #if $getVar('year.%s.has_data' % $x)
-    #if $x == 'barometer'
+    #if $x == 'sds011_barometer'
       <tr>
         <td class="label">$obs.label.barometer</td>
         <td class="data">$current.barometer ($trend.barometer.formatted)</td>

@@ -41,10 +41,10 @@
 #if 'observations_allskycam01' in $DisplayOptions
 #for $x in $DisplayOptions.observations_allskycam01
   #if $getVar('year.%s.has_data' % $x)
-    #if $x == 'barometer'
+    #if $x == 'asky_box_barometer'
       <tr>
-        <td class="label">$obs.label.barometer</td>
-        <td class="data">$current.barometer ($trend.barometer.formatted)</td>
+        <td class="label">>$obs.label[$x]</td>
+        <td class="data">$getVar('current.%s' % $x) ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
       </tr>
     #else
       <tr>

@@ -1,6 +1,84 @@
+:root {
+    --hival-color:#aa4444;
+    --loval-color:#4444aa;
+    /* --ok-color:#44aa44; */
+    --ok-color:#84D862;
+    /* --ok-on-color:#aa4444; */
+    --ok-on-color:#FF0000;
+    /* --ok-off-color:#44aa44; */
+    --ok-off-color:#84D862;
+    /* --low-color:#aa4444; */
+    --low-color:#FF0000;
+    --middle-color:#FF8800;
+    /* --unknown-color:#dfdfdf; */
+    --unknown-color:#FF0000;
+    --indoor-temp-very-cold:#0000FF;
+    --indoor-temp-cold:#0088FF;
+    --indoor-temp-optimal:#84D862;
+    --indoor-temp-warm:#FF8800;
+    --indoor-temp-very-warm:#FF0000;
+    --indoor-humidity-very-dry:#FF8800;
+    --indoor-humidity-dry:#B2DF8A;
+    --indoor-humidity-optimal:#84D862;
+    --indoor-humidity-moist:#B2DF8A;
+    --indoor-humidity-very-moist:#0077FF;
+}
+
 /* Nav tabs */
 .nav-tabs {
     border-bottom: 1px solid transparent;
+}
+
+/* Status */
+.status_ok {
+    color: var(--ok-color);
+}
+.status_ok_on {
+    color: var(--ok-on-color);
+}
+.status_ok_off {
+    color: var(--ok-off-color);
+}
+.status_low {
+    color: var(--low-color);
+}
+.status_middle {
+    color: var(--middle-color);
+}
+.status_unknown {
+    color: var(--unknown-color);
+}
+
+/* Indoor Temperature and Humidity Quality */
+.indoor_temp_very_cold {
+    color: var(--indoor-temp-very-cold);
+}
+.indoor_temp_cold {
+    color: var(--indoor-temp-cold);
+}
+.indoor_temp_optimal {
+    color: var(--indoor-temp-optimal);
+}
+.indoor_temp_warm {
+    color: var(--indoor-temp-warm);
+}
+.indoor_temp_very_warm {
+    color: var(--indoor-temp-very-warm);
+}
+.indoor_humidity_very_dry {
+    color: var(--indoor-humidity-very-dry);
+}
+.indoor_humidity_dry {
+    color: var(--indoor-humidity-dry);
+}
+.indoor_humidity_optimal {
+    color: var(--indoor-humidity-optimal);
+}
+.indoor_humidity_moist {
+    color: var(--indoor-humidity-moist);
+}
+.indoor_humidity_very_moist {
+    color: var(--indoor-humidity-very-moist);
 }
 
 /* Page Header */
