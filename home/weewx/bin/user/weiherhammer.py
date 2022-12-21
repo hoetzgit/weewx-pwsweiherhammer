@@ -2407,9 +2407,9 @@ class getData(SearchList):
             # Build the HTML for the front page
             station_obs_html += "<tr>"
             station_obs_html += (
-                "<td class='station-observations-label'>%s</td>" % label_dict[obs]
+                '<td class="station-observations-label">%s</td>' % label_dict[obs]
             )
-            station_obs_html += "<td>"
+            station_obs_html += '<td class="station-observations-data">'
             if obs == "rainWithRainRate":
                 # Add special rain + rainRate one liner
                 station_obs_html += obs_rain_output
@@ -2417,7 +2417,7 @@ class getData(SearchList):
                 # Add special rel + abs humidity
                 station_obs_html += obs_humidity_output
             else:
-                station_obs_html += "<span class=%s>%s</span><!-- AJAX -->" % (
+                station_obs_html += '<span class="%s">%s</span><!-- AJAX -->' % (
                     obs,
                     obs_output,
                 )

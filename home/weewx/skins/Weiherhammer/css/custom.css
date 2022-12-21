@@ -213,8 +213,8 @@
 }
 
 .observation-extras-row {
-    padding: 0px 10px 10px 0px;
-    margin: 0 -10px 0 -10px;
+    padding: 0px 15px 15px 0px;
+    margin: 0 -15px 0 -15px;
 }
 
 .observation-extras-title {
@@ -227,10 +227,18 @@
     min-width: 260px;
 }
 
+.observations-extras-data {
+    text-align: right;
+}
+
 /* station observations */
 
 .station-observations-label {
     min-width: 120px;
+}
+
+.station-observations-data {
+    text-align: right;
 }
 
 /* station observations Symbols */
@@ -1128,6 +1136,9 @@ sub { top: 0.4em; }
     /* Additional Station Observations */
     .page .station-observation-extras-modal a {
         font-size: 20px;
+    }
+    .observations-extras-label {
+        min-width: 170px;
     }
 }
 

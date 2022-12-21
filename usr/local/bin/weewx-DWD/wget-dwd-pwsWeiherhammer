@@ -55,15 +55,19 @@ for i in 50 51 52 53 54; do
     if [[ i -eq 50 ]]; then
         sed -i 's/<\/strong>/&<\/p><p>/g' "${TMP}"
     elif [[ i -eq 54 ]]; then
-#echo -e " \
-#\nGLÄTTE/SCHNEE/GLÄTTE/SCHNEE: \
-#\nGLÄTTE/SCHNEE/GLÄTTE: \
-#\nGLÄTTE/SCHNEE: \
-#\nGLÄTTE: \
-#\nGLATTEIS (UNWETTER): \
-#\nGLATTEIS (teils UNWETTER): \
-#\nGLATTEIS/ÜBERFRIERENDE NÄSSE (UNWETTER): \
-#\n" >"${TMP}"
+# echo -e " \
+# \nGLÄTTE/SCHNEE/GLÄTTE/SCHNEE: \
+# \nGLÄTTE/SCHNEE/GLÄTTE: \
+# \nGLÄTTE/SCHNEE: \
+# \nGLÄTTE: \
+# \nDAUERREGEN/TAUWETTER (teils UNWETTER): \
+# \nGLATTEIS (teils UNWETTER): \
+# \nGLATTEIS/ÜBERFRIERENDE NÄSSE (UNWETTER): \
+# \nDAUERREGEN/TAUWETTER (UNWETTER im ALLGÄU): \
+# \nGLATTEIS/ÜBERFRIERENDE NÄSSE (UNWETTER im ALLGÄU): \
+# \nGLATTEIS(Unwettergefahr):  \
+# \nGLATTEIS (UNWETTER):  \
+# #\n" >"${TMP}"
         sed -i 's/\<Uhr\><\/strong>/&<\/p><p>/g' "${TMP}"
         #TODO: sed zusammenfassen
         #TODO: UML2DUMMY/DUMMY2UML: bessere Lösung möglich? Grund: :upper: und Umlaute (z.B. SCHNEE/GLÄTTE:)
@@ -82,11 +86,23 @@ for i in 50 51 52 53 54; do
         # NEBEL: ===> <\p><p><strong>Nebel:<\strong>
         sed -i 's/\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2:<\/strong>/g' "${TMP}"
 
+        # DAUERREGEN/TAUWETTER (teils UNWETTER): ===> <\p><p><strong>Dauerregen/Tauwetter (teils Unwetter):<\strong>
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\) (\([[:lower:]]*\) \([[:upper:]]\)\([[:upper:]]*\)):/<\/p><p><strong>\u\1\L\2\/\u\3\L\4 (\L\5 \u\6\L\7):<\/strong>/g' "${TMP}"
+
         # GLATTEIS (teils UNWETTER): ===> <\p><p><strong>Glatteis (teils Unwetter):<\strong>
         sed -i 's/\([[:upper:]]\)\([[:upper:]]*\) (\([[:lower:]]*\) \([[:upper:]]\)\([[:upper:]]*\)):/<\/p><p><strong>\u\1\L\2 (\L\3 \u\4\L\5):<\/strong>/g' "${TMP}"
 
         # GLATTEIS/ÜBERFRIERENDE NÄSSE (UNWETTER): ===> <\p><p><strong>Glatteis/überfrierende Nässe (Unwetter):<\strong>
         sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\) \([[:upper:]]\)\([[:upper:]]*\) (\([[:upper:]]\)\([[:upper:]]*\)):/<\/p><p><strong>\u\1\L\2\/\L\3\L\4 \u\5\L\6 (\u\7\L\8):<\/strong>/g' "${TMP}"
+
+        # DAUERREGEN/TAUWETTER (UNWETTER im ALLGÄU): ===> <\p><p><strong>Dauerregen/Tauwetter (Unwetter im Allgäu):<\strong>
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\) (\([[:upper:]]\)\([[:upper:]]*\) \([[:lower:]]*\) \([[:upper:]]\)\([[:upper:]]*\)):/<\/p><p><strong>\u\1\L\2\/\u\3\L\4 (\u\5\L\6 \L\7 \u\8\L\9):<\/strong>/g' "${TMP}"
+
+        # GLATTEIS/ÜBERFRIERENDE NÄSSE (UNWETTER im ALLGÄU): ===> <\p><p><strong>Glatteis/überfrierende Nässe (Unwetter im Allgäu):<\strong>
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\) \([[:upper:]]\)\([[:upper:]]*\) (\([[:upper:]]\)\([[:upper:]]*\) \([[:lower:]]*\) \([[:upper:]]\)\([[:upper:]]*\)):/<\/p><p><strong>\u\1\L\2\/\L\3\L\4 \u\5\L\6 (\u\7\L\8 \L\9 \u\10\L\11):<\/strong>/g' "${TMP}"
+
+        # GLATTEIS(Unwettergefahr): ===> <\p><p><strong>Glatteis (Unwettergefahr):<\strong>
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)(\([[:upper:]]\)\([[:lower:]]*\)):/<\/p><p><strong>\u\1\L\2 (\u\3\L\4):<\/strong>/g' "${TMP}"
 
         # GLATTEIS (UNWETTER): ===> <\p><p><strong>Glatteis (Unwetter):<\strong>
         sed -i 's/\([[:upper:]]\)\([[:upper:]]*\) (\([[:upper:]]\)\([[:upper:]]*\)):/<\/p><p><strong>\u\1\L\2 (\u\3\L\4):<\/strong>/g' "${TMP}"

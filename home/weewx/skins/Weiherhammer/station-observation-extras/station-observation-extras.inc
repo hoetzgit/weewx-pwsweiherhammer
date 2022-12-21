@@ -117,30 +117,30 @@
                             #if $x == 'barometer'
                             <tr>
                                 <td class="observations-extras-label">$obs.label[$x]</td>
-                                <td class="data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
+                                <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
                             </tr>
                             #elif $x == 'windSpeed'
                             <tr>
                                 <td class="observations-extras-label">$obs.label.wind</td>
-                                <td class="data"><span class="$x">$getVar('current.%s' % $x)</span> $getVar('current.windDir.ordinal_compass') ($getVar('current.windDir'))</td>
+                                <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> $getVar('current.windDir.ordinal_compass') ($getVar('current.windDir'))</td>
                             </tr>
                             #elif $x == 'rain'
                             <tr>
                                 <td class="observations-extras-label">$gettext("Rain Today")</td>
-                                <td class="data"><span class="$x">$getVar('day.%s.%s' % ($x,'sum'))</span></td>
+                                <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'sum'))</span></td>
                             </tr>
                             #elif $x == 'sunshine'
                             <tr>
                                 <td class="observations-extras-label">$obs.label[$x]</td>
                                 #if $current.sunshine.raw is not None
                                     #if $current.sunshine.raw > 0.0
-                                    <td class="data">$gettext("YES")
+                                    <td class="observations-extras-data">$gettext("YES")
                                     #else
-                                    <td class="data">$gettext("NO")
+                                    <td class="observations-extras-data">$gettext("NO")
                                     #end if
                                     <br>
                                 #else
-                                   <td class="data">
+                                   <td class="observations-extras-data">
                                 #end if
                                 $day.sunshineDur.sum.format('%(hour)d%(hour_label)s, %(minute)d%(minute_label)s')
                                 </td>
@@ -148,12 +148,12 @@
                             #elif $x == 'lastRain'
                             <tr>
                                 <td class="observations-extras-label">$gettext("last rain")</td>
-                                <td class="data">$last_rain<br>$time_since_last_rain</td>
+                                <td class="observations-extras-data">$last_rain<br>$time_since_last_rain</td>
                             </tr>
                             #else
                             <tr>
                                 <td class="observations-extras-label">$obs.label[$x]</td>
-                                <td class="data"><span class="$x">$getVar('current.%s' % $x)</span></td>
+                                <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
                             </tr>
                             #end if
                         #end for
@@ -175,23 +175,23 @@
                             <td class="observations-extras-label">$obs.label[$x]</td>
                             ##TODO AJAX
                             #if $x == 'inTemp'
-                            <td class="data">$get_indoor_temp_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'livingroom')</td>
+                            <td class="observations-extras-data">$get_indoor_temp_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'livingroom')</td>
                             #elif $x == 'extraTemp1'
-                            <td class="data">$get_indoor_temp_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'office')</td>
+                            <td class="observations-extras-data">$get_indoor_temp_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'office')</td>
                             #elif $x == 'extraTemp2'
-                            <td class="data">$get_indoor_temp_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'bathroom')</td>
+                            <td class="observations-extras-data">$get_indoor_temp_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'bathroom')</td>
                             #elif $x == 'extraTemp3'
-                            <td class="data">$get_indoor_temp_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'bedroom')</td>
+                            <td class="observations-extras-data">$get_indoor_temp_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'bedroom')</td>
                             #elif $x == 'inHumidity'
-                            <td class="data">$get_indoor_humidity_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'livingroom')</td>
+                            <td class="observations-extras-data">$get_indoor_humidity_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'livingroom')</td>
                             #elif $x == 'extraHumid1'
-                            <td class="data">$get_indoor_humidity_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'office')</td>
+                            <td class="observations-extras-data">$get_indoor_humidity_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'office')</td>
                             #elif $x == 'extraHumid2'
-                            <td class="data">$get_indoor_humidity_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'bathroom')</td>
+                            <td class="observations-extras-data">$get_indoor_humidity_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'bathroom')</td>
                             #elif $x == 'extraHumid3'
-                            <td class="data">$get_indoor_humidity_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'bedroom')</td>
+                            <td class="observations-extras-data">$get_indoor_humidity_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'bedroom')</td>
                             #else
-                            <td class="data"><span class="$x">$getVar('current.%s' % $x)</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
                             #end if
                         </tr>
                         #end for
@@ -214,12 +214,12 @@
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'solar_barometer'
-                            <td class="data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
                             #elif $x == 'solar_voltage'
                             ##TODO AJAX
-                            <td class="data">$get_voltage_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x))</td>
+                            <td class="observations-extras-data">$get_voltage_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x))</td>
                             #else
-                            <td class="data"><span class="$x">$getVar('current.%s' % $x)</td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</td>
                             #end if
                         </tr>
                         #end for
@@ -240,9 +240,9 @@
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'sds011_barometer'
-                            <td class="data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
                             #else
-                            <td class="data"><span class="$x">$getVar('current.%s' % $x)</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
                             #end if
                         </tr>
                         #end for
@@ -263,12 +263,12 @@
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'asky_box_barometer'
-                            <td class="data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
                             #elif $x == 'asky_dome_heater' or $x == 'asky_box_fan' or $x == 'asky_cpu_fan'
                             ##TODO AJAX
-                            <td class="data">$get_boolean_status($getVar('current.%s.raw' % $x))</td>
+                            <td class="observations-extras-data">$get_boolean_status($getVar('current.%s.raw' % $x))</td>
                             #else
-                            <td class="data"><span class="$x">$getVar('current.%s' % $x)</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
                             #end if
                         </tr>
                         #end for
@@ -289,37 +289,37 @@
                         #if $x == 'lightning_last_time'
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
-                            <td class="data">$getVar('current.%s' % $x)</td>
-                            ##TODO AJAX <td class="data"><span class="$x">$getVar('current.%s' % $x)</span></td>
+                            <td class="observations-extras-data">$getVar('current.%s' % $x)</td>
+                            ##TODO AJAX <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
                         </tr>
                         #elif $x == 'lightning_strike_count'
                         <tr>
                             <td class="observations-extras-label">$gettext("Lightning strike sum")</td>
-                            <td class="data"><span class="$x">$getVar('day.%s.%s' % ($x,'sum'))</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'sum'))</span></td>
                         </tr>
                         #elif $x == 'lightning'
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
-                            ##TODO AJAX  <td class="data"><span class="$x">$getVar('current.%s' % $x)</span></td>
-                            <td class="data">$getVar('current.%s' % $x)</td>
+                            ##TODO AJAX  <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
+                            <td class="observations-extras-data">$getVar('current.%s' % $x)</td>
                         </tr>
                         #elif $x == 'lightning_distance'
                         <tr>
                             <td class="observations-extras-label">$gettext("Lightning distance min")</td>
-                            <td class="data"><span class="$x">$getVar('day.%s.%s' % ($x,'min'))</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'min'))</span></td>
                         </tr>
                         <tr>
                             <td class="observations-extras-label">$gettext("Lightning distance avg")</td>
-                            <td class="data"><span class="$x">$getVar('day.%s.%s' % ($x,'avg'))</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'avg'))</span></td>
                         </tr>
                         <tr>
                             <td class="observations-extras-label">$gettext("Lightning distance max")</td>
-                            <td class="data"><span class="$x">$getVar('day.%s.%s' % ($x,'max'))</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'max'))</span></td>
                         </tr>
                         #else
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
-                            <td class="data"><span class="$x">$getVar('day.%s' % $x)</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s' % $x)</span></td>
                         </tr>
                         #end if
                     #end for
