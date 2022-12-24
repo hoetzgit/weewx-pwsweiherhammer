@@ -1,3 +1,4 @@
+#errorCatcher Echo
 #encoding "UTF-8"
 #import datetime
 
@@ -411,6 +412,144 @@ function get_outTemp_color(unit, outTemp, returnColor = false) {
     }
 }
 
+// Change the color of the indoor climate variable
+// TODO necessary at all? configurable?
+function reset_indoorclimate_color() {
+    const resetContainer = ['.inTemp', '.extraTemp1', '.extraTemp2', '.extraTemp3', '.inHumidity', '.extraHumid1', '.extraHumid2', '.extraHumid3'];
+    const resetColor = '';
+    const resetTitle = "$gettext('unknown')";
+    resetContainer.forEach(function(container) {
+        jQuery(container).css('color', resetColor);
+        jQuery(container).attr('title', resetTitle);
+    });
+}
+
+// Change the color of the indoor temperature variable
+function set_indoorclimate_color(data) {
+    try {
+        //console.log('set_indoorclimate_color');
+        for (const [obs, obsConf] of Object.entries(indoorclimate_config['observations'])) {
+            if (data.hasOwnProperty(obs)) {
+                var obsVal = parseFloat(data[obs]).toFixed(1);
+                var tLen = obsConf['threshold'].length;
+                for (var i = 0; i < tLen; i++) {
+                    tVal = parseFloat(obsConf['threshold'][i]).toFixed(1);
+                    if (obsVal < tVal) {
+                        var group = obsConf['group'];
+                        //console.log(obs,group,obsVal,tVal,color[i],indoorclimate_config['group'][group]['name'][i]);
+                        jQuery('.' + obs).css('color', indoorclimate_config['group'][group]['color'][i]);
+                        jQuery('.' + obs).attr('title', indoorclimate_config['group'][group]['name'][i]);
+                        break;
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.error("ERROR set_indoorclimate_color", e);
+    }
+}
+
+// Change the color of the "boolean" (0,1) represented values
+function set_boolean_color(boolVal, container, mode) {
+    if (mode != 'reset') {
+        boolVal = parseFloat(boolVal).toFixed(0);
+        if (boolVal > 0) {
+            if (mode == 'onoff-ok') {
+                var txt = "$gettext('on')";
+                var color = '#84D862';
+            } else if (mode == 'onoff-nok') {
+                var txt = "$gettext('on')";
+                var color = '#FF0000';
+            } else if (mode == 'yesno-ok') {
+                var txt = "$gettext('yes')";
+                var color = '#84D862';
+            } else if (mode == 'yesno-nok') {
+                var txt = "$gettext('off')";
+                var color = '#FF0000';
+            } else if (mode == 'yesno-neutral') {
+                var txt = "$gettext('yes')";
+                var color = '';
+            } else if (mode == 'oklow-ok') {
+                var txt = "$gettext('ok')";
+                var color = '#84D862';
+            } else if (mode == 'oklow-nok') {
+                var txt = "$gettext('low')";
+                var color = '#FF0000';
+            } else {
+                var txt = "$gettext('unknown')";
+                var color = '#FF0000';
+            }
+        } else {
+            if (mode == 'onoff-ok') {
+                var txt = "$gettext('off')";
+                var color = '#FF0000';
+            } else if (mode == 'onoff-nok') {
+                var txt = "$gettext('off')";
+                var color = '#84D862';
+            } else if (mode == 'yesno-ok') {
+                var txt = "$gettext('no')";
+                var color = '#84D862';
+            } else if (mode == 'yesno-nok') {
+                var txt = "$gettext('no')";
+                var color = '#FF0000';
+            } else if (mode == 'yesno-neutral') {
+                var txt = "$gettext('no')";
+                var color = '';
+            } else if (mode == 'oklow-ok') {
+                var txt = "$gettext('low')";
+                var color = '#FF0000';
+            } else if (mode == 'oklow-nok') {
+                var txt = "$gettext('ok')";
+                var color = '#84D862';
+            } else {
+                var txt = "$gettext('unknown')";
+                var color = '#FF0000';
+            }
+        }
+    } else {
+        var txt = '';
+        var color = '';
+    }
+    jQuery(container).html(txt);
+    jQuery(container).css('color', color);
+}
+
+// Change the color of the voltage values
+function set_voltage_color(voltVal, container, mode, threshold=[3.0,1.0]) {
+    if (mode != 'reset') {
+        voltVal = parseFloat(voltVal).toFixed(2);
+        if (mode == 'hml') {
+            if (voltVal > threshold[0]) {
+                var color = '#84D862';
+                var txt = "$gettext('ok')";
+            } else if (voltVal > threshold[1]) {
+                var color = '#FF8800';
+                var txt = "$gettext('middle')";
+            } else {
+                var color = '#FF0000';
+                var txt = "$gettext('low')";
+            }
+        } else if (mode == 'hl') {
+            if (voltVal > threshold[0]) {
+                var color = '#84D862';
+                var txt = "$gettext('ok')";
+            } else {
+                var color = '#FF0000';
+                var txt = "$gettext('low')";
+            }
+        } else {
+            var color = '#FF0000';
+            var txt = "$gettext('unknown')";
+        }
+    } else {
+        var color = '';
+        var txt = '';
+    }
+
+    jQuery(container + '-text').html(txt);
+    jQuery(container).css('color', color);
+}
+
 // Change the color of the aqi variable according to US-EPA standards
 // (adjusted to match skin colors better)
 function get_aqi_color(aqi, returnColor = false) {
@@ -437,7 +576,7 @@ function get_aqi_color(aqi, returnColor = false) {
 }
 
 // Change the color of the aqi variable according to Umweltbundesamt standards
-function change_aqi_color(aqi_category, container, property="background-color") {
+function set_aqi_color(aqi_category, container, property="background-color") {
     aqi_category = parseFloat(aqi_category).toFixed(0);
     if (aqi_category >= 4) {
         var aqi_color = "#960032";
@@ -462,7 +601,7 @@ function change_aqi_color(aqi_category, container, property="background-color") 
 }
 
 // Change the label of the aqi variable according to Umweltbundesamt standards
-function change_aqi_label(aqi_category, container=".pws-aqi-category") {
+function set_aqi_label(aqi_category, container=".pws-aqi-category") {
     aqi_category = parseFloat(aqi_category).toFixed(0);
     if (aqi_category >= 4) {
         var aqi_label = "$obs.label.pws_aqi_very_poor";
@@ -881,6 +1020,7 @@ async function ajaxweewx() {
 var unit_rounding_array = "";
 var unit_label_array = "";
 var weewx_data = "";
+var indoorclimate_config = "";
 function update_weewx_data(data) {
     weiherhammer_debug("Updating weewx data");
     weewx_data = data;
@@ -964,38 +1104,6 @@ function update_weewx_data(data) {
     }
     #end if
 
-    // PWS Airquality
-    try {
-        change_aqi_color(data["current"]["pws_aqi_category"], ".pws-aqi-category");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        change_aqi_color(-1, ".pws-aqi-category"); //Reset to default
-    }
-    try {
-        change_aqi_color(data["current"]["pws_aqi_pm2_5_category"], ".pws_aqi_pm2_5_dot");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        change_aqi_color(-1, ".pws_aqi_pm2_5_dot"); //Reset to default
-    }
-    try {
-        change_aqi_color(data["current"]["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        change_aqi_color(-1, ".pws_aqi_pm10_0_dot"); //Reset to default
-    }
-    try {
-        change_aqi_color(data["current"]["pws_aqi_o3_category"], ".pws_aqi_o3_dot");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        change_aqi_color(-1, ".pws_aqi_o3_dot"); //Reset to default
-    }
-    try {
-        change_aqi_color(data["current"]["pws_aqi_no2_category"], ".pws_aqi_no2_dot");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        change_aqi_color(-1, ".pws_aqi_no2_dot"); //Reset to default
-    }
-
     try {
         // Barometer trending by finding a negative number
         count = (data["current"]["barometer_trend"].match(/-/g) || []).length
@@ -1003,6 +1111,46 @@ function update_weewx_data(data) {
         // Returned "current" data does not have this value
     }
 
+    // PWS Airquality
+    try {
+        set_aqi_color(data["current"]["pws_aqi_category"], ".pws-aqi-category");
+    } catch (err) {
+        // Returned "current" data does not have this value
+        set_aqi_color(-1, ".pws-aqi-category"); //Reset to default
+    }
+    try {
+        set_aqi_color(data["current"]["pws_aqi_pm2_5_category"], ".pws_aqi_pm2_5_dot");
+    } catch (err) {
+        // Returned "current" data does not have this value
+        set_aqi_color(-1, ".pws_aqi_pm2_5_dot"); //Reset to default
+    }
+    try {
+        set_aqi_color(data["current"]["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot");
+    } catch (err) {
+        // Returned "current" data does not have this value
+        set_aqi_color(-1, ".pws_aqi_pm10_0_dot"); //Reset to default
+    }
+    try {
+        set_aqi_color(data["current"]["pws_aqi_o3_category"], ".pws_aqi_o3_dot");
+    } catch (err) {
+        // Returned "current" data does not have this value
+        set_aqi_color(-1, ".pws_aqi_o3_dot"); //Reset to default
+    }
+    try {
+        set_aqi_color(data["current"]["pws_aqi_no2_category"], ".pws_aqi_no2_dot");
+    } catch (err) {
+        // Returned "current" data does not have this value
+        set_aqi_color(-1, ".pws_aqi_no2_dot"); //Reset to default
+    }
+
+    // PWS indoor climate config
+    if (data.hasOwnProperty('indoorclimate_config')) {
+        indoorclimate_config = data['indoorclimate_config'];
+    } else {
+        // reset all indoor climate fields to default
+        reset_indoorclimate_color();
+        indoorclimate_config = "";
+    }
 }
 
 //  function returns html for moon-icon according to moonphase value and currentTheme setting
@@ -2448,45 +2596,71 @@ function update_current_wx(data) {
 
     // PWS Weiherhammer Airquality
     if (data.hasOwnProperty("pws_aqi_category")) {
-        change_aqi_label(data["pws_aqi_category"]);
-        change_aqi_color(data["pws_aqi_category"], ".pws-aqi-category");
+        set_aqi_label(data["pws_aqi_category"]);
+        set_aqi_color(data["pws_aqi_category"], ".pws-aqi-category");
     }
     if (data.hasOwnProperty("sds011_pm2_5")) {
         jQuery(".sds011-pm2_5").html(parseFloat(parseFloat(data["sds011_pm2_5"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["sds011_pm2_5"], maximumFractionDigits: unit_rounding_array["sds011_pm2_5"]}) + " $unit.label.sds011_pm2_5");
     }
     if (data.hasOwnProperty("pws_aqi_pm2_5_category")) {
-        change_aqi_color(data["pws_aqi_pm2_5_category"], ".pws_aqi_pm2_5_dot");
+        set_aqi_color(data["pws_aqi_pm2_5_category"], ".pws_aqi_pm2_5_dot");
     }
     if (data.hasOwnProperty("sds011_pm10_0")) {
         jQuery(".sds011-pm10_0").html(parseFloat(parseFloat(data["sds011_pm10_0"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["sds011_pm10_0"], maximumFractionDigits: unit_rounding_array["sds011_pm10_0"]}) + " $unit.label.sds011_pm10_0");
     }
     if (data.hasOwnProperty("pws_aqi_pm10_0_category")) {
-        change_aqi_color(data["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot");
+        set_aqi_color(data["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot");
     }
     if (data.hasOwnProperty("uba_o3")) {
         jQuery(".uba-o3").html(parseFloat(parseFloat(data["uba_o3"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["uba_o3"], maximumFractionDigits: unit_rounding_array["uba_o3"]}) + " $unit.label.uba_o3");
     }
     if (data.hasOwnProperty("pws_aqi_o3_category")) {
-        change_aqi_color(data["pws_aqi_o3_category"], ".pws_aqi_o3_dot");
+        set_aqi_color(data["pws_aqi_o3_category"], ".pws_aqi_o3_dot");
     }
     if (data.hasOwnProperty("uba_no2")) {
         jQuery(".uba-no2").html(parseFloat(parseFloat(data["uba_no2"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["uba_no2"], maximumFractionDigits: unit_rounding_array["uba_no2"]}) + " $unit.label.uba_no2");
     }
     if (data.hasOwnProperty("pws_aqi_no2_category")) {
-        change_aqi_color(data["pws_aqi_no2_category"], ".pws_aqi_no2_dot");
+        set_aqi_color(data["pws_aqi_no2_category"], ".pws_aqi_no2_dot");
     }
 
-    // debug current Sunshine Symbol
-    var sun_output = '';
+    // PWS battery status
+    if (data.hasOwnProperty("wh65_batt")) {
+        set_voltage_color(data["wh65_batt"], ".wh65_batt", 'hl', [1.0]);
+    }
+    if (data.hasOwnProperty("wh57_batt")) {
+        set_voltage_color(data["wh57_batt"], ".wh57_batt", 'hml', [3.0,1.0]);
+    }
+    if (data.hasOwnProperty("solar_voltage")) {
+        set_voltage_color(data["solar_voltage"], ".solar_voltage", 'hl', [3.8]);
+    }
+
+    // AllSky Heater/Fans
+    if (data.hasOwnProperty("asky_dome_heater")) {
+        set_boolean_color(data["asky_dome_heater"], ".asky_dome_heater", 'onoff-nok');
+    }
+    if (data.hasOwnProperty("asky_box_fan")) {
+        set_boolean_color(data["asky_box_fan"], ".asky_box_fan", 'onoff-nok');
+    }
+    if (data.hasOwnProperty("asky_cpu_fan")) {
+        set_boolean_color(data["asky_cpu_fan"], ".asky_cpu_fan", 'onoff-nok');
+    }
+
+    // current Sunshine Text
+    if (data.hasOwnProperty("sunshine")) {
+        set_boolean_color(data["sunshine"], ".current-sunshine-text", 'yesno-neutral');
+    }
+
+    // current Sunshine Symbol
     if (data.hasOwnProperty("sunshine")) {
         if (parseInt(data["sunshine"]) > 0) {
-            sun_output += '<i class="fa fa-sun-o"></i>';
+            jQuery(".current-sunshine-symbol").html('<i class="fa fa-sun-o"></i>');
+        } else {
+            jQuery(".current-sunshine-symbol").html("");
         }
     } else {
-        // TODO
         jQuery(".sunshineThreshold").html("$gettext('No evaluation available')");
     }
-    jQuery(".current-sunshine-symbol").html(sun_output);
 
     // debug avg10m Symbols
     var avg10m_output = '';
@@ -2512,6 +2686,10 @@ function update_current_wx(data) {
     if (data.hasOwnProperty("trendBarometerCode")) {
         get_barometer_trend_deg(parseInt(data["trendBarometerCode"]));
     }
+
+    // PWS indoor room quality
+    set_indoorclimate_color(data);
+
 };
 #end if
 
@@ -3409,6 +3587,7 @@ function showChart(json_file, prepend_renderTo = false) {
                 }
                 // Reset the tooltip
                 options.tooltip = {}
+                options.tooltip.outside = true; // https://github.com/poblabs/weewx-belchertown/issues/850
                 options.tooltip.shared = true;
                 options.tooltip.valueSuffix = '%';
                 options.tooltip.followPointer = true;

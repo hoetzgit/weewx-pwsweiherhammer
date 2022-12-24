@@ -191,6 +191,9 @@
     },
     "unit_rounding": $all_obs_rounding_json,
     "unit_label": $all_obs_unit_labels_json,
+    #if $Extras.has_key("indoorclimate_section") and $Extras.indoorclimate_section != ''
+    "indoorclimate_config": $indoorclimate_config,
+    #end if
     "current": {
         "datetime": "$current.dateTime",
         "datetime_raw": "$current.dateTime.raw",

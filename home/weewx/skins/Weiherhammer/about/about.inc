@@ -352,28 +352,14 @@
                 <li>Backend- und WebServer: Diverse virtuelle VMware ESXi basierende Rechner mit Ubuntu 22.04.1 LTS, Webseite self hosted</li>
                 <li>WeeWX Server uptime: $station.os_uptime</li>
                 <li>WeeWX Service uptime: $station.uptime</li>
-                #if $current.wh65_batt.has_data and $current.wh65_batt.raw < 1.0
-                <li>Batteriestatus Sainlogic Station: <span class="status_ok">$gettext('ok')</span> (Wert: $current.wh65_batt)</li>
-                #else if $current.wh65_batt.has_data and $current.wh65_batt.raw > 0.0
-                <li>Batteriestatus Sainlogic Station: <span class="status_low">$gettext('low')</span> (Wert: $current.wh65_batt)</li>
-                #else
-                <li>Batteriestatus Sainlogic Station: <span class="status_unknown">$gettext('unknown')</span></li>
+                #if $current.wh65_batt.has_data
+                <li>Batteriestatus Sainlogic Station: <span class="wh65_batt">$current.wh65_batt</span> <span class="wh65_batt-text"></span></li>
                 #end if
-                #if $current.wh57_batt.has_data and $current.wh57_batt.raw > 3.0
-                <li>Batteriestatus Blitzsensor: <span class="status_ok">$gettext('ok')</span> (Wert: $current.wh57_batt)</li>
-                #else if $current.wh57_batt.has_data and $current.wh57_batt.raw > 1.0
-                <li>Batteriestatus Blitzsensor: <span class="status_middle">$gettext('middle')</span> (Wert: $current.wh57_batt)</li>
-                #else if $current.wh57_batt.has_data and $current.wh57_batt.raw >= 0.0
-                <li>Batteriestatus Blitzsensor: <span class="status_low">$gettext('low')</span> (Wert: $current.wh57_batt)</li>
-                #else
-                <li>Batteriestatus Blitzsensor: <span class="status_unknown">$gettext('unknown')</span></li>
+                #if $current.wh57_batt.has_data
+                <li>Batteriestatus Blitzsensor: <span class="wh57_batt">$current.wh57_batt</span> <span class="wh65_batt-text"></span></li>
                 #end if
-                #if $current.solar_voltage.has_data and $current.solar_voltage.raw > 3.8
-                <li>Batteriestatus Solar Station: <span class="status_ok">$current.solar_voltage</span></li>
-                #else if $current.solar_voltage.has_data and $current.solar_voltage.raw <= 3.8
-                <li>Batteriestatus Solar Station: <span class="status_low">$current.solar_voltage</span></li>
-                #else
-                <li>Batteriestatus Solar Station: <span class="status_unknown">$gettext('unknown')</span></li>
+                #if $current.solar_voltage.has_data
+                <li>Spannung Solar Station: <span class="solar_voltage">$current.solar_voltage</span> <span class="solar_voltage-text"></span></li>
                 #end if
             </ul>
         </div>

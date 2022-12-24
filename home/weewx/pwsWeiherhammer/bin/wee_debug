@@ -79,6 +79,7 @@ OBFUSCATE_MAP = {
         "station_country"
         ,"station_name"
         ,"station_observations"
+        ,"station_observation_extras"
         ,"station_state"
         ,"station_type"
         ,"station_url"

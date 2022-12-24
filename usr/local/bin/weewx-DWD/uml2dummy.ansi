@@ -10,10 +10,10 @@
 # Michael Luthardt 2007
 # http://dr-luthardt.de/
 
-sed -e 's/\Ä/AEAE/g' \
-    -e 's/\Ö/OEOE/g' \
-    -e 's/\Ü/UEUE/g' \
-    -e 's/\ä/aeae/g' \
-    -e 's/\ö/oeoe/g' \
-    -e 's/\ü/ueue/g' \
-    -e 's/\ß/SZSZ/g'
+sed -e 's/\Ä/AAEE/g' \
+    -e 's/\Ö/OOEE/g' \
+    -e 's/\Ü/UUEE/g' \
+    -e 's/\ä/aaee/g' \
+    -e 's/\ö/ooee/g' \
+    -e 's/\ü/uuee/g' \
+    -e 's/\ß/SSZZ/g'

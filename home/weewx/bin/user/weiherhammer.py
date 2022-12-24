@@ -18,6 +18,7 @@ import os.path
 import sys
 import syslog
 import time
+import copy
 from collections import OrderedDict
 from math import asin, atan2, cos, degrees, pi, radians, sin, sqrt
 from re import match
@@ -109,6 +110,7 @@ class getData(SearchList):
 
     def __init__(self, generator):
         SearchList.__init__(self, generator)
+        self.indoorclimate_dict = None
 
     def get_gps_distance(self, pointA, pointB, distance_unit):
         """
@@ -2608,6 +2610,18 @@ class getData(SearchList):
         custom_css_exists = os.path.isfile(custom_css_file)
         custom_css_min_exists = os.path.isfile(custom_css_min_file)
 
+        #==============================================================================
+        # indoor climate settings
+        #==============================================================================
+        indoorclimate_dict = {}
+        if self.indoorclimate_dict is None:
+            indoorclimate_section = self.generator.skin_dict['Extras'].get('indoorclimate_section')
+            if indoorclimate_section is not None:
+                indoorclimate_dict = self.generator.config_dict.get(indoorclimate_section, {})
+                self.indoorclimate_dict = copy.deepcopy(indoorclimate_dict)
+        else:
+            indoorclimate_dict = self.indoorclimate_dict
+
         # Build the search list with the new values
         search_list_extension = {
             "weiherhammer_version": VERSION,
@@ -2716,6 +2730,7 @@ class getData(SearchList):
             "mqtt_websockets_ssl_kiosk": mqtt_websockets_ssl_kiosk,
             "mqtt_websockets_port_console": mqtt_websockets_port_console,
             "mqtt_websockets_ssl_console": mqtt_websockets_ssl_console,
+            "indoorclimate_config": json.dumps(indoorclimate_dict),
         }
         # Finally, return our extension as a list:
         return [search_list_extension]

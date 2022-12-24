@@ -1,7 +1,7 @@
 """
 loopdata.py
 
-Copyright (C)2020 by John A Kline (john@johnkline.com)
+Copyright (C)2022 by John A Kline (john@johnkline.com)
 Distributed under the terms of the GNU Public License (GPLv3)
 
 LoopData is a WeeWX service that generates a json file (loop-data.txt)
@@ -58,7 +58,7 @@ if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] 
 
 if weewx.__version__ < "4":
     raise weewx.UnsupportedFeature(
-        "weewx-loopdata requires WeeWX, found %s" % weewx.__version__)
+        "weewx-loopdata requires WeeWX 4, found %s" % weewx.__version__)
 
 windrun_bucket_suffixes: List[str] = [ 'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
                                        'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW' ]

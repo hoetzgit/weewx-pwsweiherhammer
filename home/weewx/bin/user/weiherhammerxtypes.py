@@ -50,7 +50,7 @@ except ImportError:
     import syslog
 
     def logmsg(level, msg):
-        syslog.syslog(level, 'xweiherhammer: %s' % msg)
+        syslog.syslog(level, 'weiherhammerxtypes: %s' % msg)
 
     def logdbg(msg):
         logmsg(syslog.LOG_DEBUG, msg)
@@ -61,10 +61,10 @@ except ImportError:
     def logerr(msg):
         logmsg(syslog.LOG_ERR, msg)
 
-VERSION = '0.2.1'
+VERSION = '0.3'
 
 DEFAULTS_INI = """
-[XWeiherhammer]
+[WeiherhammerWXCalculate]
     [[WXXTypes]]
         [[[solar_heatindex]]]
             algorithm = new
@@ -86,6 +86,10 @@ DEFAULTS_INI = """
         [[[sunshine]]]
             debug = 0
             radiation_min = 0.0
+    [[PressureCooker]]
+        max_delta_12h = 1800
+        [[[altimeter]]]
+            algorithm = aaASOS    # Case-sensitive!
 """
 defaults_dict = weeutil.config.config_from_str(DEFAULTS_INI)
 
@@ -352,7 +356,8 @@ def sunshineThreshold(mydatetime, lat, lon, coeff=1.0):
 
     return seuil
 
-class XWeiherhammer(weewx.xtypes.XType):
+class WXXTypes(weewx.xtypes.XType):
+    """Weiherhammer weather extensions to the WeeWX xtype system"""
 
     def __init__(self, altitude, latitude, longitude,
                  sunshineThreshold_debug,
@@ -577,13 +582,225 @@ class XWeiherhammer(weewx.xtypes.XType):
             u = 'degree_C'
         return ValueTuple(val, u, 'group_temperature')
 
-class XWeiherhammerService(StdService):
-    """ WeeWX service whose job is to register the XTypes extension XWeiherhammer with the
-    XType system.
-    """
+
+#
+# ######################## Class PressureCooker ##############################
+#
+
+class PressureCooker(weewx.xtypes.XType):
+    """Pressure related extensions to the WeeWX type system. """
+
+    def __init__(self, altitude_vt,
+                 max_delta_12h=1800,
+                 altimeter_algorithm='aaASOS'):
+
+        # Algorithms can be abbreviated without the prefix 'aa':
+        if not altimeter_algorithm.startswith('aa'):
+            altimeter_algorithm = 'aa%s' % altimeter_algorithm
+
+        self.altitude_vt = altitude_vt
+        self.max_delta_12h = max_delta_12h
+        self.altimeter_algorithm = altimeter_algorithm
+
+        # Timestamp (roughly) 12 hours ago
+        self.ts_12h = None
+        # AllSky Box Temperature 12 hours ago as a ValueTuple
+        self.asky_box_temp_12h_vt = None
+        # Solar Station Temperature 12 hours ago as a ValueTuple
+        self.solar_temp_12h_vt = None
+
+    def _get_asky_box_temp_12h(self, ts, dbmanager):
+        """Get the temperature as a ValueTuple from 12 hours ago.  The value will
+         be None if no temperature is available.
+         """
+
+        ts_12h = ts - 12 * 3600
+
+        # Look up the temperature 12h ago if this is the first time through,
+        # or we don't have a usable temperature, or the old temperature is too stale.
+        if self.ts_12h is None \
+                or self.asky_box_temp_12h_vt is None \
+                or abs(self.ts_12h - ts_12h) < self.max_delta_12h:
+            # Hit the database to get a newer temperature.
+            record = dbmanager.getRecord(ts_12h, max_delta=self.max_delta_12h)
+            if record and 'outTemp' in record:
+                # Figure out what unit the record is in ...
+                unit = weewx.units.getStandardUnitType(record['usUnits'], 'outTemp')
+                # ... then form a ValueTuple.
+                self.asky_box_temp_12h_vt = weewx.units.ValueTuple(record['outTemp'], *unit)
+            else:
+                # Invalidate the temperature ValueTuple from 12h ago
+                self.asky_box_temp_12h_vt = None
+            # Save the timestamp
+            self.ts_12h = ts_12h
+
+        return self.asky_box_temp_12h_vt
+
+    def _get_solar_temp_12h(self, ts, dbmanager):
+        """Get the temperature as a ValueTuple from 12 hours ago.  The value will
+         be None if no temperature is available.
+         """
+
+        ts_12h = ts - 12 * 3600
+
+        # Look up the temperature 12h ago if this is the first time through,
+        # or we don't have a usable temperature, or the old temperature is too stale.
+        if self.ts_12h is None \
+                or self.solar_temp_12h_vt is None \
+                or abs(self.ts_12h - ts_12h) < self.max_delta_12h:
+            # Hit the database to get a newer temperature.
+            record = dbmanager.getRecord(ts_12h, max_delta=self.max_delta_12h)
+            if record and 'outTemp' in record:
+                # Figure out what unit the record is in ...
+                unit = weewx.units.getStandardUnitType(record['usUnits'], 'outTemp')
+                # ... then form a ValueTuple.
+                self.solar_temp_12h_vt = weewx.units.ValueTuple(record['outTemp'], *unit)
+            else:
+                # Invalidate the temperature ValueTuple from 12h ago
+                self.solar_temp_12h_vt = None
+            # Save the timestamp
+            self.ts_12h = ts_12h
+
+        return self.solar_temp_12h_vt
+
+    def get_scalar(self, key, record, dbmanager, **option_dict):
+        if key == 'asky_box_pressure' or key == 'solar_pressure':
+            return self.pressure(record, dbmanager, key)
+        elif key == 'asky_box_altimeter' or key == 'solar_altimeter':
+            return self.altimeter(record, key)
+        elif key == 'asky_box_barometer' or key == 'solar_barometer':
+            return self.barometer(record, key)
+        else:
+            raise weewx.UnknownType(key)
+
+    def pressure(self, record, dbmanager, obs):
+        """Calculate the observation type 'xxx_pressure'."""
+
+        # All of the following keys are required:
+        if obs == 'asky_box_pressure':
+            if any(key not in record for key in ['usUnits', 'asky_box_temperature', 'asky_box_barometer', 'asky_box_humidity']):
+                raise weewx.CannotCalculate(obs)
+        if key == 'solar_pressure':
+            if any(key not in record for key in ['usUnits', 'solar_temperature', 'solar_barometer', 'solar_humidity']):
+                raise weewx.CannotCalculate(obs)
+
+        # Get the temperature in Fahrenheit from 12 hours ago
+        if obs == 'asky_box_pressure':
+            temp_12h_vt = self._get_asky_box_temp_12h(record['dateTime'], dbmanager)
+            if temp_12h_vt is None \
+                    or temp_12h_vt[0] is None \
+                    or record['asky_box_temperature'] is None \
+                    or record['asky_box_barometer'] is None \
+                    or record['asky_box_humidity'] is None:
+                pressure = None
+            else:
+                # The following requires everything to be in US Customary units.
+                # Rather than convert the whole record, just convert what we need:
+                record_US = weewx.units.to_US({'usUnits': record['usUnits'],
+                                               'asky_box_temperature': record['asky_box_temperature'],
+                                               'asky_box_barometer': record['asky_box_barometer'],
+                                               'asky_box_humidity': record['asky_box_humidity']})
+                # Get the altitude in feet
+                altitude_ft = weewx.units.convert(self.altitude_vt, "foot")
+                # The outside temperature in F.
+                temp_12h_F = weewx.units.convert(temp_12h_vt, "degree_F")
+                pressure = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(
+                    record_US['asky_box_barometer'],
+                    altitude_ft[0],
+                    record_US['asky_box_temperature'],
+                    temp_12h_F[0],
+                    record_US['asky_box_humidity']
+                )
+        if obs == 'solar_pressure':
+            temp_12h_vt = self._get_solar_temp_12h(record['dateTime'], dbmanager)
+            if temp_12h_vt is None \
+                    or temp_12h_vt[0] is None \
+                    or record['solar_temperature'] is None \
+                    or record['solar_barometer'] is None \
+                    or record['solar_humidity'] is None:
+                pressure = None
+            else:
+                # The following requires everything to be in US Customary units.
+                # Rather than convert the whole record, just convert what we need:
+                record_US = weewx.units.to_US({'usUnits': record['usUnits'],
+                                               'solar_temperature': record['solar_temperature'],
+                                               'solar_barometer': record['solar_barometer'],
+                                               'solar_humidity': record['solar_humidity']})
+                # Get the altitude in feet
+                altitude_ft = weewx.units.convert(self.altitude_vt, "foot")
+                # The outside temperature in F.
+                temp_12h_F = weewx.units.convert(temp_12h_vt, "degree_F")
+                pressure = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(
+                    record_US['solar_barometer'],
+                    altitude_ft[0],
+                    record_US['solar_temperature'],
+                    temp_12h_F[0],
+                    record_US['solar_humidity']
+                )
+
+        return ValueTuple(pressure, 'inHg', 'group_pressure')
+
+    def altimeter(self, record, obs):
+        """Calculate the observation type 'xxx_altimeter'."""
+        if obs == 'asky_box_altimeter':
+            if 'asky_box_pressure' not in record:
+                raise weewx.CannotCalculate(obs)
+        if obs == 'solar_altimeter':
+            if 'solar_pressure' not in record:
+                raise weewx.CannotCalculate(obs)
+
+        # Convert altitude to same unit system of the incoming record
+        altitude = weewx.units.convertStd(self.altitude_vt, record['usUnits'])
+
+        # Figure out which altimeter formula to use, and what unit the results will be in:
+        if record['usUnits'] == weewx.US:
+            formula = weewx.wxformulas.altimeter_pressure_US
+            u = 'inHg'
+        else:
+            formula = weewx.wxformulas.altimeter_pressure_Metric
+            u = 'mbar'
+        # Apply the formula
+        if obs == 'asky_box_altimeter':
+            altimeter = formula(record['asky_box_pressure'], altitude[0], self.altimeter_algorithm)
+        if obs == 'solar_altimeter':
+            altimeter = formula(record['solar_pressure'], altitude[0], self.altimeter_algorithm)
+
+        return ValueTuple(altimeter, u, 'group_pressure')
+
+    def barometer(self, record, obs):
+        """Calculate the observation type 'xxx_barometer'"""
+        if obs == 'asky_box_barometer':
+            if 'asky_box_pressure' not in record or 'asky_box_temperature' not in record:
+                raise weewx.CannotCalculate(obs)
+        if obs == 'solar_barometer':
+            if 'solar_pressure' not in record or 'solar_temperature' not in record:
+                raise weewx.CannotCalculate(obs)
+
+        # Convert altitude to same unit system of the incoming record
+        altitude = weewx.units.convertStd(self.altitude_vt, record['usUnits'])
+
+        # Figure out what barometer formula to use:
+        if record['usUnits'] == weewx.US:
+            formula = weewx.wxformulas.sealevel_pressure_US
+            u = 'inHg'
+        else:
+            formula = weewx.wxformulas.sealevel_pressure_Metric
+            u = 'mbar'
+        # Apply the formula
+        if obs == 'asky_box_barometer':
+            barometer = formula(record['asky_box_pressure'], altitude[0], record['asky_box_temperature'])
+        if obs == 'solar_barometer':
+            barometer = formula(record['solar_pressure'], altitude[0], record['solar_temperature'])
+
+        return ValueTuple(barometer, u, 'group_pressure')
+
+
+
+class WeiherhammerXTypes(StdService):
+    """Instantiate and register the Weiherhammer xtype extension WXXTypes."""
 
     def __init__(self, engine, config_dict):
-        super(XWeiherhammerService, self).__init__(engine, config_dict)
+        super(WeiherhammerXTypes, self).__init__(engine, config_dict)
         loginf("Service version is %s" % VERSION)
 
         altitude = engine.stn_info.altitude_vt
@@ -592,11 +809,11 @@ class XWeiherhammerService(StdService):
 
         # Get any user-defined overrides
         try:
-            override_dict = config_dict['XWeiherhammer']['WXXTypes']
+            override_dict = config_dict['WeiherhammerWXCalculate']['WXXTypes']
         except KeyError:
             override_dict = {}
         # Get the default values, then merge the user overrides into it
-        option_dict = weeutil.config.deep_copy(defaults_dict['XWeiherhammer']['WXXTypes'])
+        option_dict = weeutil.config.deep_copy(defaults_dict['WeiherhammerWXCalculate']['WXXTypes'])
         option_dict.merge(override_dict)
 
         # solar-heatindex-related options
@@ -610,46 +827,50 @@ class XWeiherhammerService(StdService):
         sunshine_debug = to_int(option_dict['sunshine'].get('debug', 0))
         sunshine_radiation_min = to_float(option_dict['sunshine'].get('radiation_min', 0.0))
 
-        # Instantiate an instance of XWeiherhammer:
-        self.XW = XWeiherhammer(altitude, latitude, longitude, 
-                                sunshineThreshold_debug,
-                                sunshineThreshold_coeff_dict,
-                                sunshine_debug,
-                                sunshine_radiation_min,
-                                solar_heatindex_algo
-                                )
+        # Instantiate an instance of WXXTypes:
+        self.wxxtypes = WXXTypes(altitude, latitude, longitude, 
+                                 sunshineThreshold_debug,
+                                 sunshineThreshold_coeff_dict,
+                                 sunshine_debug,
+                                 sunshine_radiation_min,
+                                 solar_heatindex_algo
+                                 )
         # Register it:
-        weewx.xtypes.xtypes.append(self.XW)
+        weewx.xtypes.xtypes.append(self.wxxtypes)
 
     def shutDown(self):
         # Remove the registered instance:
-        weewx.xtypes.xtypes.remove(self.XW)
+        weewx.xtypes.xtypes.remove(self.wxxtypes)
 
-# unit system new observations
-#    def calc_airDensity(key, data, db_manager=None):
-#    def calc_solar_appTemp(key, data, db_manager=None):
-#    def calc_solar_dewpoint(key, data, db_manager=None):
-#    def calc_solar_heatindex(self, key, data, db_manager=None):
-#    def calc_solar_humidex(key, data, db_manager=None):
-#    def calc_solar_wetBulb(key, data, db_manager=None):
-#    def calc_solar_windchill(key, data, db_manager=None):
-#    def calc_sunshineThreshold(self, key, data, db_manager=None):
-#    def calc_sunshine(self, key, data, db_manager=None):
-#    def calc_thswIndex(key, data, db_manager=None):
-#    def calc_thwIndex(key, data, db_manager=None):
-#    def calc_wetBulb(key, data, db_manager=None):
-#    def calc_windPressure(key, data, db_manager=None):
 
-weewx.units.obs_group_dict['airDensity'] = "group_temperature"
-weewx.units.obs_group_dict['solar_appTemp'] = "group_temperature"
-weewx.units.obs_group_dict['solar_dewpoint'] = "group_temperature"
-weewx.units.obs_group_dict['solar_heatindex'] = "group_temperature"
-weewx.units.obs_group_dict['solar_humidex'] = "group_temperature"
-weewx.units.obs_group_dict['solar_wetBulb'] = "group_temperature"
-weewx.units.obs_group_dict['solar_windchill'] = "group_temperature"
-weewx.units.obs_group_dict['sunshineThreshold'] = "group_radiation"
-weewx.units.obs_group_dict['sunshine'] = "group_count"
-weewx.units.obs_group_dict['thswIndex'] = "group_temperature"
-weewx.units.obs_group_dict['thwIndex'] = "group_temperature"
-weewx.units.obs_group_dict['wetBulb'] = "group_temperature"
-weewx.units.obs_group_dict['windPressure'] = "group_pressure2"
+
+class WeiherhammerPressureCooker(weewx.engine.StdService):
+    """Instantiate and register the Weiherhammer XTypes extension PressureCooker"""
+
+    def __init__(self, engine, config_dict):
+        """Initialize the PressureCooker. """
+        super(WeiherhammerPressureCooker, self).__init__(engine, config_dict)
+
+        try:
+            override_dict = config_dict['WeiherhammerWXCalculate']['PressureCooker']
+        except KeyError:
+            override_dict = {}
+
+        # Get the default values, then merge the user overrides into it
+        option_dict = weeutil.config.deep_copy(defaults_dict['WeiherhammerWXCalculate']['PressureCooker'])
+        option_dict.merge(override_dict)
+
+        max_delta_12h = to_float(option_dict.get('max_delta_12h', 1800))
+        altimeter_algorithm = option_dict['altimeter'].get('algorithm', 'aaASOS')
+
+        self.pressure_cooker = PressureCooker(engine.stn_info.altitude_vt,
+                                              max_delta_12h,
+                                              altimeter_algorithm)
+
+        # Add pressure_cooker to the XTypes system
+        weewx.xtypes.xtypes.append(self.pressure_cooker)
+
+    def shutDown(self):
+        """Engine shutting down. """
+        weewx.xtypes.xtypes.remove(self.pressure_cooker)
+

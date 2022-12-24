@@ -4,102 +4,20 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-#def get_boolean_status($val)
+#def get_boolean_status($val, $mode)
 #if $val is None
-<span class="status_unknown">$gettext('unknown')</span>
-#elif $val > 0.0
-<span class="status_ok_on">$gettext('on')</span>
-#else
-<span class="status_ok_off">$gettext('off')</span>
+$gettext('unknown')
+#elif $val == '1'
+#if $mode == 'onoff'
+$gettext('on')
+#elif $mode == 'yesno'
+$gettext('yes')
 #end if
-#end def
-
-#def get_voltage_status($rawval, $val)
-#if $rawval is None
-<span class="status_unknown">$gettext('unknown')</span>
-#elif rawval > 3.8
-<span class="status_ok">$val</span>
 #else
-<span class="status_low">$val</span>
-#end if
-#end def
-
-#def get_indoor_temp_status($rawval, $val, $room)
-#if $rawval is None
-<span class="status_unknown">$gettext('unknown')</span>
-#else
-#if $room == 'livingroom' or $room == 'office'
-  #if rawval <= 12.0
-  <span class="indoor_temp_very_cold" title="$gettext('very cold')">$val</span>
-  #elif rawval <= 20.0
-  <span class="indoor_temp_cold" title="$gettext('cold')">$val</span>
-  #elif rawval <= 22.0
-  <span class="indoor_temp_optimal" title="$gettext('optimal')">$val</span>
-  #elif rawval <= 30.0
-  <span class="indoor_temp_warm" title="$gettext('warm')">$val</span>
-  #else
-  <span class="indoor_temp_very_warm" title="$gettext('very warm')">$val</span>
-  #end if
-#elif $room == 'bedroom'
-  #if rawval <= 10.0
-  <span class="indoor_temp_very_cold" title="$gettext('very cold')">$val</span>
-  #elif rawval <= 16.0
-  <span class="indoor_temp_cold" title="$gettext('cold')">$val</span>
-  #elif rawval <= 18.0
-  <span class="indoor_temp_optimal" title="$gettext('optimal')">$val</span>
-  #elif rawval <= 25.0
-  <span class="indoor_temp_warm" title="$gettext('warm')">$val</span>
-  #else
-  <span class="indoor_temp_very_warm" title="$gettext('very warm')">$val</span>
-  #end if
-#elif $room == 'bathroom'
-  #if rawval <= 15.0
-  <span class="indoor_temp_very_cold" title="$gettext('very cold')">$val</span>
-  #elif rawval <= 20.0
-  <span class="indoor_temp_cold" title="$gettext('cold')">$val</span>
-  #elif rawval <= 23.0
-  <span class="indoor_temp_optimal" title="$gettext('optimal')">$val</span>
-  #elif rawval <= 30.0
-  <span class="indoor_temp_warm" title="$gettext('warm')">$val</span>
-  #else
-  <span class="indoor_temp_very_warm" title="$gettext('very warm')">$val</span>
-  #end if
-#else
-<span class="status_unknown">$gettext('unknown')</span>
-#end if
-#end if
-#end def
-
-#def get_indoor_humidity_status($rawval, $val, $room)
-#if $rawval is None
-<span class="status_unknown">$gettext('unknown')</span>
-#else
-#if $room == 'livingroom' or $room == 'office' or $room == 'bedroom'
-  #if rawval <= 35.0
-  <span class="indoor_humidity_very_dry" title="$gettext('very dry')">$val</span>
-  #elif rawval <= 40.0
-  <span class="indoor_humidity_dry" title="$gettext('dry')">$val</span>
-  #elif rawval <= 60.0
-  <span class="indoor_humidity_optimal" title="$gettext('optimal')">$val</span>
-  #elif rawval <= 65.0
-  <span class="indoor_humidity_moist" title="$gettext('moist')">$val</span>
-  #else
-  <span class="indoor_humidity_very_moist" title="$gettext('very moist')">$val</span>
-  #end if
-#elif $room == 'bathroom'
-  #if rawval <= 40.0
-  <span class="indoor_humidity_very_dry" title="$gettext('very dry')">$val</span>
-  #elif rawval <= 50.0
-  <span class="indoor_humidity_dry" title="$gettext('dry')">$val</span>
-  #elif rawval <= 70.0
-  <span class="indoor_humidity_optimal" title="$gettext('optimal')">$val</span>
-  #elif rawval <= 80.0
-  <span class="indoor_humidity_moist" title="$gettext('moist')">$val</span>
-  #else
-  <span class="indoor_humidity_very_moist" title="$gettext('very moist')">$val</span>
-  #end if
-#else
-<span class="status_unknown">$gettext('unknown')</span>
+#if $mode == 'onoff'
+$gettext('off')
+#elif $mode == 'yesno'
+$gettext('no')
 #end if
 #end if
 #end def
@@ -108,7 +26,7 @@
     <div class="col-lg-6">
         #if 'observations_current' in $Extras
         <!-- Additional Weather Station Observations-->
-        <div class="row observation-extras-row">
+        <div class="row observation-extras-row observation-extras-row-left">
             <div class="observation-extras-title">$gettext("Current Conditions")</div>
             <div class="observation-extras-body">
                 <table cellpadding="0" cellspacing="0">
@@ -117,36 +35,35 @@
                             #if $x == 'barometer'
                             <tr>
                                 <td class="observations-extras-label">$obs.label[$x]</td>
+                                ##TODO AJAX Trend
                                 <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
                             </tr>
                             #elif $x == 'windSpeed'
                             <tr>
                                 <td class="observations-extras-label">$obs.label.wind</td>
-                                <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> $getVar('current.windDir.ordinal_compass') ($getVar('current.windDir'))</td>
+                                <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> (<span class="curwinddir">$getVar('current.windDir.ordinal_compass')</span>/<span class="curwinddeg">$getVar('current.windDir')</span>)</td>
                             </tr>
                             #elif $x == 'rain'
                             <tr>
                                 <td class="observations-extras-label">$gettext("Rain Today")</td>
-                                <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'sum'))</span></td>
+                                <td class="observations-extras-data"><span class="dayRain">$getVar('day.%s.%s' % ($x,'sum'))</span></td>
                             </tr>
                             #elif $x == 'sunshine'
                             <tr>
                                 <td class="observations-extras-label">$obs.label[$x]</td>
-                                #if $current.sunshine.raw is not None
-                                    #if $current.sunshine.raw > 0.0
-                                    <td class="observations-extras-data">$gettext("YES")
-                                    #else
-                                    <td class="observations-extras-data">$gettext("NO")
-                                    #end if
+                                #if $current.sunshine is not None
+                                    <td class="observations-extras-data"><span class="current-sunshine-text">$get_boolean_status($getVar('current.%s' % $x), 'yesno')</span>
                                     <br>
                                 #else
                                    <td class="observations-extras-data">
                                 #end if
+                                ##TODO AJAX
                                 $day.sunshineDur.sum.format('%(hour)d%(hour_label)s, %(minute)d%(minute_label)s')
                                 </td>
                             </tr>
                             #elif $x == 'lastRain'
                             <tr>
+                                ##TODO AJAX?
                                 <td class="observations-extras-label">$gettext("last rain")</td>
                                 <td class="observations-extras-data">$last_rain<br>$time_since_last_rain</td>
                             </tr>
@@ -165,7 +82,7 @@
 
         #if 'observations_indoor' in $Extras
         <!-- Indoor Obbservations -->
-        <div class="row observation-extras-row">
+        <div class="row observation-extras-row observation-extras-row-right">
             <div class="observation-extras-title">$gettext("Indoor Conditions")</div>
             <div class="observation-extras-body">
                 <table cellpadding="0" cellspacing="0">
@@ -173,26 +90,7 @@
                         #for $x in $Extras.observations_indoor
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
-                            ##TODO AJAX
-                            #if $x == 'inTemp'
-                            <td class="observations-extras-data">$get_indoor_temp_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'livingroom')</td>
-                            #elif $x == 'extraTemp1'
-                            <td class="observations-extras-data">$get_indoor_temp_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'office')</td>
-                            #elif $x == 'extraTemp2'
-                            <td class="observations-extras-data">$get_indoor_temp_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'bathroom')</td>
-                            #elif $x == 'extraTemp3'
-                            <td class="observations-extras-data">$get_indoor_temp_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'bedroom')</td>
-                            #elif $x == 'inHumidity'
-                            <td class="observations-extras-data">$get_indoor_humidity_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'livingroom')</td>
-                            #elif $x == 'extraHumid1'
-                            <td class="observations-extras-data">$get_indoor_humidity_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'office')</td>
-                            #elif $x == 'extraHumid2'
-                            <td class="observations-extras-data">$get_indoor_humidity_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'bathroom')</td>
-                            #elif $x == 'extraHumid3'
-                            <td class="observations-extras-data">$get_indoor_humidity_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x), 'bedroom')</td>
-                            #else
                             <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
-                            #end if
                         </tr>
                         #end for
                     </tbody>
@@ -214,10 +112,8 @@
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'solar_barometer'
-                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
-                            #elif $x == 'solar_voltage'
                             ##TODO AJAX
-                            <td class="observations-extras-data">$get_voltage_status($getVar('current.%s.raw' % $x), $getVar('current.%s' % $x))</td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
                             #else
                             <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</td>
                             #end if
@@ -240,6 +136,7 @@
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'sds011_barometer'
+                            ##TODO AJAX
                             <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
                             #else
                             <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
@@ -263,10 +160,11 @@
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'asky_box_barometer'
+                            ##TODO AJAX
                             <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
                             #elif $x == 'asky_dome_heater' or $x == 'asky_box_fan' or $x == 'asky_cpu_fan'
                             ##TODO AJAX
-                            <td class="observations-extras-data">$get_boolean_status($getVar('current.%s.raw' % $x))</td>
+                            <td class="observations-extras-data"><span class="$x">$get_boolean_status($getVar('current.%s' % $x), 'onoff')</span></td>
                             #else
                             <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
                             #end if
@@ -286,22 +184,16 @@
                 <table cellpadding="0" cellspacing="0">
                     <tbody>
                     #for $x in $Extras.observations_wh57
-                        #if $x == 'lightning_last_time'
+                        #if $x == 'lightning_last_time' or $x == 'lightning'
                         <tr>
+                            ##TODO AJAX
                             <td class="observations-extras-label">$obs.label[$x]</td>
                             <td class="observations-extras-data">$getVar('current.%s' % $x)</td>
-                            ##TODO AJAX <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
                         </tr>
                         #elif $x == 'lightning_strike_count'
                         <tr>
                             <td class="observations-extras-label">$gettext("Lightning strike sum")</td>
                             <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'sum'))</span></td>
-                        </tr>
-                        #elif $x == 'lightning'
-                        <tr>
-                            <td class="observations-extras-label">$obs.label[$x]</td>
-                            ##TODO AJAX  <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
-                            <td class="observations-extras-data">$getVar('current.%s' % $x)</td>
                         </tr>
                         #elif $x == 'lightning_distance'
                         <tr>

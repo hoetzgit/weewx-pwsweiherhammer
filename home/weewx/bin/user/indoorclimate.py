@@ -22,6 +22,7 @@ from datetime import datetime
 import time
 
 import weewx
+import weewx.units
 from weewx.wxengine import StdService
 from weeutil.weeutil import to_bool, to_int, to_float, to_list
 
@@ -59,83 +60,94 @@ except ImportError:
 DEFAULTS_INI = """
 [IndoorClimate]
     enable = true
-    debug = 0
-    [[temperature]]
-        unit = degree_C
-        observation = inTemp
-        level = -2, -1, 0, 1, 2
-        level_opt = 0
-        # Temperatur (Wohnzimmer, Arbeitszimmer)
-        # -2 = sehr kalt  = blau     = #0000FF = <=12
-        # -1 = kalt       = hellblau = #0088FF = <=20
-        #  0 = optimal    = grün     = #84D862 = <=22
-        # +1 = warm       = orange   = #FF8800 = <=30
-        # +2 = sehr warm  = rot      = #FF0000 = <=70
-        max = 12, 20, 22, 30, 70
-        color = #0000FF, #0088FF, #84D862, #FF8800, #FF0000
-        name = very cold, cold, optimal, warm, very warm
-        action = heating, heating, nothing to do, cool, cool
-    [[humidity]]
-        observation = inHumidity
-        level = -2, -1, 0, 1, 2
-        level_opt = 0
-        # Luftfeuchte (Wohnzimmer, Arbeitszimmer, Schlafzimmer)
-        # -2 = sehr trocken = orange    = #FF8800 = <=35
-        # -1 = trocken      = hellgrün  = #B2DF8A = <=40
-        #  0 = optimal      = grün      = #84D862 = <=60
-        # +1 = feucht       = hellgrün  = #B2DF8A = <=65
-        # +2 = sehr feucht  = blau      = #0077FF = <=100
-        max = 35, 40, 60, 65, 100
-        color = #FF8800, #B2DF8A, #84D862, #B2DF8A, #0077FF
-        name = very dry, dry, optimal, moist, very moist
-        action = humidify, humidify, nothing to do, airing, airing
-    [[rooms]]
-        level = 0, 1
-        level_opt = 0
-        color = #84D862, #FF0000
-        name = optimal, action required
-        action = nothing to do, action required
-        [[[livingroom]]]
-        [[[office]]]
-            [[[[temperature]]]]
-                observation = extraTemp1
-            [[[[humidity]]]]
-                observation = extraHumid1
-        [[[bathroom]]]
-            [[[[temperature]]]]
-                observation = extraTemp2
-                # Temperatur (Bad)
-                # -2 = sehr kalt  = blau     = #0000FF = <=15
-                # -1 = kalt       = hellblau = #0088FF = <=20
-                #  0 = optimal    = grün     = #84D862 = <=23
-                # +1 = warm       = orange   = #FF8800 = <=30
-                # +2 = sehr warm  = rot      = #FF0000 = <=70
-                max = 15, 20, 23, 30, 70
-            [[[[humidity]]]]
-                observation = extraHumid2
-                # Luftfeuchte (Bad)
-                # -2 = sehr trocken = orange    = #FF8800 = <=40
-                # -1 = trocken      = hellgrün  = #B2DF8A = <=50
-                #  0 = optimal      = grün      = #84D862 = <=70
-                # +1 = feucht       = hellgrün  = #B2DF8A = <=80
-                # +2 = sehr feucht  = blau      = #0077FF = <=100
-                max = 40, 50, 70, 80, 100
-        [[[bedroom]]]
-            [[[[temperature]]]]
-                observation = extraTemp3
-                # Temperatur (Schlafzimmer)
-                # -2 = sehr kalt  = blau     = #0000FF = <=10
-                # -1 = kalt       = hellblau = #0088FF = <=16
-                #  0 = optimal    = grün     = #84D862 = <=18
-                # +1 = warm       = orange   = #FF8800 = <=25
-                # +2 = sehr warm  = rot      = #FF0000 = <=70
-                max = 10, 16, 18, 25, 70
-            [[[[humidity]]]]
-                observation = extraHumid3
+    debug = 2
+    [[observations]]
+        [[[inTemp]]]
+            unit = degree_C
+            group = temperature
+            location = livingroom
+            threshold = 12, 20, 23, 30, 70
+        [[[extraTemp1]]]
+            unit = degree_C
+            group = temperature
+            location = office
+            threshold = 12, 20, 23, 30, 70
+        [[[extraTemp2]]]
+            unit = degree_C
+            group = temperature
+            location = bathroom
+            threshold = 15, 20, 24, 30, 70
+        [[[extraTemp3]]]
+            unit = degree_C
+            group = temperature
+            location = bedroom
+            threshold = 10, 16, 19, 25, 70
+        [[[inHumidity]]]
+            unit = percent
+            group = humidity
+            location = livingroom
+            threshold = 35, 40, 61, 65, 100
+        [[[extraHumid1]]]
+            unit = percent
+            group = humidity
+            location = office
+            threshold = 35, 40, 61, 65, 100
+        [[[extraHumid2]]]
+            unit = percent
+            group = humidity
+            location = bathroom
+            threshold = 40, 50, 71, 80, 100
+        [[[extraHumid3]]]
+            unit = percent
+            group = humidity
+            location = bedroom
+            threshold = 35, 40, 61, 65, 100
+    [[group]]
+        [[[temperature]]]
+            level = -2, -1, 0, 1, 2
+            level_optimal = 0
+            color = "#0000FF", "#0088FF", "#84D862", "#FF8800", "#FF0000"
+            name = very cold, cold, optimal, warm, very warm
+            action = heating, heating, nothing to do, cool, cool
+        [[[humidity]]]
+            level = -2, -1, 0, 1, 2
+            level_optimal = 0
+            color = "#FF8800", "#B2DF8A", "#84D862", "#B2DF8A", "#0077FF"
+            name = very dry, dry, optimal, moist, very moist
+            action = humidify, humidify, nothing to do, airing, airing
+        [[[room]]]
+            level = 0, 1
+            level_optimal = 0
+            color = "#84D862", "#FF0000"
+            name = optimal, action required
+            action = nothing to do, action required
 """
 defaults_dict = weeutil.config.config_from_str(DEFAULTS_INI)
 
-VERSION = "0.1"
+# unit system new observations
+# xxx_tqi = Temperature Quality Index
+# xxx_hqi = Humidity Quality Index
+# xxx_rqi = Room Quality Index
+weewx.units.obs_group_dict['bathroom_tqi'] = "group_count"
+weewx.units.obs_group_dict['bathroom_hqi'] = "group_count"
+weewx.units.obs_group_dict['bathroom_rqi'] = "group_count"
+weewx.units.obs_group_dict['bedroom_tqi'] = "group_count"
+weewx.units.obs_group_dict['bedroom_hqi'] = "group_count"
+weewx.units.obs_group_dict['bedroom_rqi'] = "group_count"
+weewx.units.obs_group_dict['livingroom_tqi'] = "group_count"
+weewx.units.obs_group_dict['livingroom_hqi'] = "group_count"
+weewx.units.obs_group_dict['livingroom_rqi'] = "group_count"
+weewx.units.obs_group_dict['office_tqi'] = "group_count"
+weewx.units.obs_group_dict['office_hqi'] = "group_count"
+weewx.units.obs_group_dict['office_rqi'] = "group_count"
+
+def list_get (l, idx, default):
+    try:
+        return l[idx]
+    except IndexError:
+        return default
+
+VERSION = "0.2"
 
 class IndoorClimate(StdService):
     def __init__(self, engine, config_dict):
@@ -158,10 +170,8 @@ class IndoorClimate(StdService):
         self.debug = to_int(self.option_dict.get('debug', 0))
         if self.debug > 0:
             logdbg("debug level is %d" % self.debug)
-
-        # defaults
-        self.temp_dict = self.option_dict.get('temperature', {})
-        self.humid_dict = self.option_dict.get('humidity', {})
+        if self.debug >= 3:
+            logdbg("IndoorClimate conf is %s" % str(self.option_dict))
 
         # Start intercepting events:
         self.bind(weewx.NEW_LOOP_PACKET, self.newLoopPacket)
@@ -172,98 +182,56 @@ class IndoorClimate(StdService):
             logdbg("incomming loop packet: %s" % str(event.packet))
 
         target_data = {}
-        for room, room_dict in self.option_dict['rooms'].items():
-            if isinstance(room_dict, dict):
-                # temperature
-                tqi = tqi_key = obs_val = None
-                room_temp_dict = self.temp_dict
-                room_temp_dict.merge(room_dict.get('temperature', {}))
-                tqi_opt = room_temp_dict.get('level_opt', 0)
-                obs = room_temp_dict.get('observation')
-                if obs in event.packet:
-                    unit = room_temp_dict.get('unit')
-                    if unit is not None:
-                        obs_vt = weewx.units.as_value_tuple(event.packet, obs)
-                        if unit != obs_vt[1]:
-                            obs_val = weewx.units.convert(obs_vt, unit)[0]
-                        else:
-                            obs_val = obs_vt[0]
+        result_dict = dict()
+        for obs, obs_dict in self.option_dict['observations'].items():
+            if obs in event.packet:
+                unit = obs_dict.get('unit')
+                if unit is not None:
+                    obs_vt = weewx.units.as_value_tuple(event.packet, obs)
+                    if unit != obs_vt[1]:
+                        obs_val = weewx.units.convert(obs_vt, unit)[0]
                     else:
-                        obs_val = event.packet[obs]
-                    max_lst = to_list(room_temp_dict.get('max'))
-                    level_lst = to_list(room_temp_dict.get('level'))
-                    for i in range(len(max_lst)):
-                        if to_float(obs_val) <= to_float(max_lst[i]):
-                            tqi = level_lst[i]
-                            tqi_key = i
-                            break
-
-                # loop room temperature quality result
-                target_data[str(room) + '_tqi'] = tqi
-
-                if tqi is not None:
-                    name_lst = to_list(room_temp_dict.get('name'))
-                    action_lst = to_list(room_temp_dict.get('action'))
-                    tqi_name = name_lst[tqi_key]
-                    tqi_action = action_lst[tqi_key]
-                    obs_val = ("%.2f" % obs_val) # debug
+                        obs_val = obs_vt[0]
                 else:
-                    tqi = 'N/A'
-                    tqi_name = 'N/A'
-                    tqi_action = 'N/A'
-                    obs_val = 'N/A'
-
-                if self.debug >= 2:
-                    logdbg("room=%s temperature=%s level=%s name=%s action=%s" % (str(room), str(obs_val), str(tqi), tqi_name, tqi_action))
-
-                # Humidity
-                hqi = hqi_key = obs_val = None
-                room_humid_dict = self.humid_dict
-                room_humid_dict.merge(room_dict.get('humidity', {}))
-                hqi_opt = room_humid_dict.get('level_opt', 0)
-                obs = room_humid_dict.get('observation')
-                if obs in event.packet:
-                    unit = room_humid_dict.get('unit')
-                    if unit is not None:
-                        obs_vt = weewx.units.as_value_tuple(event.packet, obs)
-                        if unit != obs_vt[1]:
-                            obs_val = weewx.units.convert(obs_vt, unit)[0]
-                        else:
-                            obs_val = obs_vt[0]
-                    else:
-                        obs_val = event.packet[obs]
-                    max_lst = to_list(room_humid_dict.get('max'))
-                    level_lst = to_list(room_humid_dict.get('level'))
-                    for i in range(len(max_lst)):
-                        if to_float(obs_val) <= to_float(max_lst[i]):
-                            hqi = level_lst[i]
-                            hqi_key = i
+                    obs_val = event.packet[obs]
+                threshold_lst = obs_dict.get('threshold')
+                group = obs_dict.get('group')
+                room = obs_dict.get('location')
+                if threshold_lst is not None and group is not None and room is not None:
+                    for i in range(len(threshold_lst)):
+                        if to_float(obs_val) < to_float(threshold_lst[i]):
+                            if group == 'temperature':
+                                # room temperature quality index
+                                tqi = list_get(self.option_dict['group']['temperature']['level'], i, -99)
+                                tqi_key = i
+                                target_data[room + '_tqi'] = tqi
+                            if group == 'humidity':
+                                # room humidity quality index
+                                hqi = list_get(self.option_dict['group']['humidity']['level'], i, -99)
+                                hqi_key = i
+                                target_data[room + '_hqi'] = hqi
                             break
+                    if result_dict.get(room) is None:
+                        result_dict[room] = dict()
+                    if result_dict[room].get('tqi') is None:
+                        result_dict[room]['tqi'] = tqi
+                        result_dict[room]['tqi_key'] = tqi_key
+                    if result_dict[room].get('hqi') is None:
+                        result_dict[room]['hqi'] = tqi
+                        result_dict[room]['hqi_key'] = tqi_key
 
-                # loop room humidity quality result
-                target_data[str(room) + '_hqi'] = hqi
+        tqi_opt = self.option_dict['group']['temperature'].get('level_optimal', 0)
+        hqi_opt = self.option_dict['group']['humidity'].get('level_optimal', 0)
+        rqi_opt = self.option_dict['group']['room'].get('level_optimal', 0)
+        level_lst = to_list(self.option_dict['group']['room'].get('level'))
 
-                if hqi is not None:
-                    name_lst = to_list(room_humid_dict.get('name'))
-                    action_lst = to_list(room_humid_dict.get('action'))
-                    hqi_name = name_lst[hqi_key]
-                    hqi_action = action_lst[hqi_key]
-                    obs_val = ("%d" % obs_val) # debug
-                else:
-                    hqi = 'N/A'
-                    hqi_name = 'N/A'
-                    hqi_action = 'N/A'
-                    obs_val = 'N/A'
-
-                if self.debug >= 2:
-                    logdbg("room=%s humidity=%s level=%s name=%s action=%s" % (str(room), obs_val, str(hqi), hqi_name, hqi_action))
-
+        if level_lst is not None:
+            for room, room_dict in result_dict.items():
                 # room quality index
                 rqi = rqi_key = None
+                tqi = result_dict[room].get('tqi')
+                hqi = result_dict[room].get('tqi')
                 if tqi is not None and hqi is not None:
-                    level_lst = to_list(self.option_dict['rooms'].get('level'))
-                    rqi_opt = self.option_dict['rooms'].get('level_opt', 0)
-
                     for i in range(len(level_lst)):
                         if tqi != tqi_opt or hqi != hqi_opt:
                             if level_lst[i] != rqi_opt:
@@ -274,24 +242,12 @@ class IndoorClimate(StdService):
                             rqi = level_lst[i]
                             rqi_key = i
                             break
-
-                # loop room quality result
-                target_data[str(room) + '_rqi'] = rqi
-
-                if rqi is not None:
-                    name_lst = to_list(self.option_dict['rooms'].get('name'))
-                    action_lst = to_list(self.option_dict['rooms'].get('action'))
-                    rqi_name = name_lst[rqi_key]
-                    rqi_action = action_lst[rqi_key]
-                else:
-                    rqi = 'N/A'
-                    rqi_name = 'N/A'
-                    rqi_action = 'N/A'
-
-                if self.debug >= 2:
-                    logdbg("room=%s level=%s name=%s action=%s" % (str(room), str(rqi), rqi_name, rqi_action))
+                    # loop room quality result
+                    target_data[str(room) + '_rqi'] = rqi
 
         # add to LOOP
         event.packet.update(target_data)
+        if self.debug >=2:
+            logdbg("outgoing loop data: %s" % str(target_data))
         if self.debug >= 3:
             logdbg("outgoing loop packet: %s" % str(event.packet))
