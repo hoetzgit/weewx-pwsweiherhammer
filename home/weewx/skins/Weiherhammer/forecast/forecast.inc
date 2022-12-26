@@ -111,7 +111,7 @@
     <!-- DWD Meteogramm -->
     <script type='text/javascript'>
         showChart("DWD");
-        setTimeout(showChart, 60000, "DWD"); // Load updated charts.
+        setInterval(showChart, 60000, "DWD"); // Load updated charts.
     </script>
 
     <div class="row" style="margin-top:15px;">
