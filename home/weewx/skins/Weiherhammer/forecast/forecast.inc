@@ -109,7 +109,10 @@
     #end if
 
     <!-- DWD Meteogramm -->
-    <script type='text/javascript'>showChart("DWD");</script>
+    <script type='text/javascript'>
+        showChart("DWD");
+        setTimeout(showChart, 60000, "DWD"); // Load updated charts.
+    </script>
 
     <div class="row" style="margin-top:15px;">
         <div class="col-md-12" id="meteogramm1"></div>

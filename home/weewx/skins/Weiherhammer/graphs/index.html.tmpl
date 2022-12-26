@@ -63,7 +63,7 @@
                                     
                                     // Render the charts with the prepend_renderTo set to true
                                     showChart(graphgroup, true);
-                                    
+                                    setTimeout(showChart, 30000, graphgroup); // Load updated charts.
                                     i++;
                                 };
                             } else {
@@ -82,6 +82,7 @@
                                     
                                     // Render the charts
                                     showChart(graph);
+                                    setTimeout(showChart, 30000, graph); // Load updated charts.
                                 } catch(err) {
                                     console.log("ERROR: Cannot add graphs from [" + graph + "] graph group: " + err.message);
                                 }

@@ -2402,7 +2402,7 @@ function update_current_wx(data) {
     #end if
 
     // This message is a weewx archive update. Update weewx data, forecast data and highcharts graphs
-    if (data.hasOwnProperty("interval_minute")) {
+    if (data.hasOwnProperty("interval_minute") || data.hasOwnProperty("interval")) {
         // Delays are recommended to allow the other skins to complete processing
         weiherhammer_debug("MQTT: MQTT message indicates this is an archive interval.");
         if (pageName == "pi" || pageName == "kiosk.html" || pageName == "console.html") {
