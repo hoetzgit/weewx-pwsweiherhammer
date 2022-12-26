@@ -118,29 +118,6 @@
         </div>
     </div>
 
-##    <!-- AS3935 Franklin Lightning sensor -->
-##    <div class="row about-row">
-##        <div class="col-sm-12">
-##            <h3>AS3935 Franklin Blitzsensor</h3>
-##            <p>Seit Januar 2022 ...</p>
-##        </div>
-
-##        <div class="col-sm-4">
-##            <img src="$relative_url/images/as3935.jpg" alt="AS3935 Franklin Blitzsensor der Wetterstation in Weiherhammer" title="AS3935 Franklin Blitzsensor der Wetterstation in Weiherhammer" style="horizontal-align: middle;"/>
-##            <p><small>Testweiser Aufbau des AS3935 Blitzsensors</small></p>
-##        </div>
-
-##        <div class="col-sm-8">
-##            <h4>Messwerte AS3935 Franklin Blitzsensor</h4>
-##            <ul>
-##                <li>Anzahl Gewitterblitze</li>
-##                <li>Entfernung des Blitzes (40 km Reichweite mit einer Genauigkeit von 1 km)</li>
-##                <li>Einen Energiewert des Blitzes</li>
-##            </ul>
-##            <p>Die Ergebnisse k&ouml;nnen <a href="https://www.weiherhammer-wetter.de/graphs/?graph=AS3935" target="_blank" rel="noreferrer">hier</a> angesehen werden.</p>
-##        </div>
-##    </div>
-##
     <!-- AllSky Kamera -->
     <div class="row about-row">
         <div class="col-sm-12">

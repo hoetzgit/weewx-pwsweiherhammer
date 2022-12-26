@@ -22,14 +22,6 @@ locale.setlocale(locale.LC_ALL, '')
 #
 import weewx.units
 #
-# AS3935 Lightning Sensor
-weewx.units.obs_group_dict['as3935_lightning_distance'] = 'group_distance'
-weewx.units.obs_group_dict['as3935_lightning_disturber_count'] = 'group_count'
-weewx.units.obs_group_dict['as3935_lightning_energy'] = 'group_count'
-weewx.units.obs_group_dict['as3935_lightning_noise_count'] = 'group_count'
-weewx.units.obs_group_dict['as3935_lightning_strike_count'] = 'group_count'
-weewx.units.obs_group_dict['as3935_lightning_last_time'] = 'group_time'
-#
 # Allsky 01 Kamera (BME280 und DS18B20)
 weewx.units.obs_group_dict['asky_box_barometer'] = 'group_pressure'
 weewx.units.obs_group_dict['asky_box_dewpoint'] = 'group_temperature'

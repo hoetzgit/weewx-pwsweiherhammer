@@ -5,8 +5,8 @@
     "datasource_version":"28.09.2022 16:01",
     "datasource_url":"https://de.wikipedia.org/wiki/Liste_von_Bauernregeln",
     "file_creator":"Henry Ott",
-    "file_version":"1.0.2",
-    "file_modification":"04.10.2022 12:51",
+    "file_version":"1.0.3",
+    "file_modification":"26.12.2022 12:00",
     "months":{
         "1":{
             "general":{
@@ -2921,6 +2921,7 @@
                 },
                 "24":{
                     "name":"Heiliger Abend",
+                    "anchor": "#24._/_25._Dezember:_Heiliger_Abend,_Weihnachten",
                     "rules":[
                         "Wie die Witterung an Adam und Eva (24.12.), so bleibt sie bis Ende des Monats.",
                         "Wenn es Weihnachten flockt auf allen Wegen, das bringt den Feldern Segen.",
@@ -2939,6 +2940,7 @@
                 },
                 "25":{
                     "name":"Weihnachten",
+                    "anchor": "#24._/_25._Dezember:_Heiliger_Abend,_Weihnachten",
                     "rules":[
                         "Wie die Witterung an Adam und Eva (24.12.), so bleibt sie bis Ende des Monats.",
                         "Wenn es Weihnachten flockt auf allen Wegen, das bringt den Feldern Segen.",
@@ -2957,6 +2959,7 @@
                 },
                 "26":{
                     "name":"St. Stefan, 2. Weihnachtsfeiertag",
+                    "anchor": "#26._Dezember:_St._Stefan",
                     "rules":[
                         "Bringt Sankt Stephan Wind, die Winzer nicht erfreuet sind.",
                         "Scheint am Stephanstag die Sonne, so gerät der Flachs zur Wonne.",

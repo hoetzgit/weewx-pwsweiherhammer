@@ -128,14 +128,6 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
          ('windrun',              'REAL'),
          ('windSpeed',            'REAL'),
 #
-# AS3935 Lightning Sensor
-('as3935_lightning_distance', 'REAL'),
-('as3935_lightning_disturber_count', 'REAL'),
-('as3935_lightning_energy', 'REAL'),
-('as3935_lightning_noise_count', 'REAL'),
-('as3935_lightning_strike_count', 'REAL'),
-('as3935_lightning_last_time', 'INTEGER'),
-#
 # Allsky 01 Kamera (BME280 und DS18B20)
 ('asky_box_barometer', 'REAL'),
 ('asky_box_dewpoint', 'REAL'),
@@ -252,7 +244,7 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 
 day_summaries = [(e[0], 'scalar') for e in table
                  if e[0] not in ('dateTime', 'usUnits', 'interval'
-                   ,'as3935_lightning_last_time',  'lightning_last_time'
+                   ,'lightning_last_time'
                    ,'asky_box_fan', 'asky_dome_heater', 'asky_cpu_fan'
                    ,'aeris_aqi', 'owm_aqi'
                    ,'pws_aqi', 'pws_aqi_category', 'pws_aqi_no2_category', 'pws_aqi_o3_category', 'pws_aqi_pm10_0_category', 'pws_aqi_pm2_5_category'
