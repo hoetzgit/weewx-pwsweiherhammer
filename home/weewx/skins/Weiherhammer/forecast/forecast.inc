@@ -51,6 +51,9 @@
 
     <!-- DWD Vorhersage -->
     #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1' and (($Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours != '0') or not ($Extras.has_key("forecast_interval_hours")))
+    <script type='text/javascript'>
+        setInterval(ajaxforecast, 60000); // Update forecast data
+    </script>
     <div class="row border-bottom forecast-source-container">
         <div class="row col-sm-12 forecast-source">$obs.label.forecast_issueTime_dwd <span class="forecast-issueTime-dwd"></span><!-- moment.js --></div>
         <div class="rom col-sm-12 forecast-source">$obs.label.forecast_source_dwd</div>

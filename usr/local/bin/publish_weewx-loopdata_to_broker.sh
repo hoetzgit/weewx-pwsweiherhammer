@@ -1,10 +1,13 @@
 #!/bin/bash
 QOS=1
-BROKER="mqtt.fritz.box"
+BROKER="${HOSTNAME}.fritz.box"
+USER=""
+PW=""
 PORT=1883
 TOPIC="weewx_loopdata"
 SOURCEFILE="/home/weewx/public_html/loopdata/loopdata.json"
 RETAIN="-r"
+CLIENTID="${HOSTNAME}-weewx-loopdata-publisher"
 
 if [ ! -f "$SOURCEFILE" ]; then
     echo "ERROR: weewx-loopata file [${SOURCEFILE}] does not exist! Abort." >&2
@@ -16,7 +19,7 @@ fi
 subtopic="${TOPIC}/dateTime"
 # time of last data modification, seconds since Epoch
 message="$(/usr/bin/stat -c %Y ${SOURCEFILE})"
-/usr/bin/mosquitto_pub -h ${BROKER} -p ${PORT} -m "${message}" -t "${subtopic}" -q ${QOS} ${RETAIN}
+/usr/bin/mosquitto_pub -h ${BROKER} ${USER} ${PW} -p ${PORT} -m "${message}" -t "${subtopic}" -i ${CLIENTID} -q ${QOS} ${RETAIN}
 ret=$?
 if [ ${ret} -ne 0 ] ; then
   echo "ERROR: mosquitto_pub, code=${ret}" >&2
@@ -26,7 +29,7 @@ fi
 subtopic="${TOPIC}/dateTimeHuman"
 # time of last data modification, human-readable
 message="$(/usr/bin/stat -c %y ${SOURCEFILE})"
-/usr/bin/mosquitto_pub -h ${BROKER} -p ${PORT} -m "${message}" -t "${subtopic}" -q ${QOS} ${RETAIN}
+/usr/bin/mosquitto_pub -h ${BROKER} ${USER} ${PW} -p ${PORT} -m "${message}" -t "${subtopic}" -i ${CLIENTID} -q ${QOS} ${RETAIN}
 ret=$?
 if [ ${ret} -ne 0 ] ; then
   echo "ERROR: mosquitto_pub, code=${ret}" >&2
@@ -35,7 +38,7 @@ fi
 
 # publish JSON file
 subtopic="${TOPIC}/json"
-/usr/bin/mosquitto_pub -h ${BROKER} -p ${PORT} -f "${SOURCEFILE}" -t "${subtopic}" -q ${QOS} ${RETAIN}
+/usr/bin/mosquitto_pub -h ${BROKER} ${USER} ${PW} -p ${PORT} -f "${SOURCEFILE}" -t "${subtopic}" -i ${CLIENTID} -q ${QOS} ${RETAIN}
 ret=$?
 if [ ${ret} -ne 0 ] ; then
   echo "ERROR: mosquitto_pub, code=${ret}" >&2
@@ -50,7 +53,7 @@ do
   subtopic="${TOPIC}/${key}"
   message="${value}"
   #echo "${subtopic} = ${message}"
-  /usr/bin/mosquitto_pub -h ${BROKER} -p ${PORT} -m "${message}" -t "${subtopic}" -q ${QOS} ${RETAIN}
+  /usr/bin/mosquitto_pub -h ${BROKER} ${USER} ${PW} -p ${PORT} -m "${message}" -t "${subtopic}" -i ${CLIENTID} -q ${QOS} ${RETAIN}
   ret=$?
   if [ ${ret} -ne 0 ] ; then
     echo "ERROR: mosquitto_pub, code=${ret}" >&2
