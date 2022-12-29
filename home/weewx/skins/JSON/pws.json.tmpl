@@ -6,6 +6,24 @@
 #set $lts = $len($timespans)
 #set $lobsii = 0
 #set $ltsii = 0
+#if $almanac.hasExtras
+  ## Pick a "None string" on the basis of whether the sun is above or below the horizon
+  #set $sun_altitude = $almanac.sun.alt
+  #if $sun_altitude < 0
+    #set $sun_None='<i>%s</i>' % $gettext("Always down")
+  #else
+    #set $sun_None='<i>%s</i>' % $gettext("Always up")
+  #end if
+
+  ## For the change in daylight, pick a string to indicate whether it is more or
+  ## less than yesterday:
+  #set $sun_visible_change = $almanac.sun.visible_change
+  #if $sun_visible_change.raw < 0
+    #set $change_str = $gettext("less than yesterday")
+  #else
+    #set $change_str = $gettext("more than yesterday")
+  #end if
+#end if
 {
     "station": {
         "location": "$station.location",
@@ -21,20 +39,16 @@
         "time": "$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")",
         "generator": "weewx $station.version"
     },
-    "sunshine": {
+    "test": {
         "rawSunshineDur": "$day.sunshineDur.sum.raw",
         "daySunshineDur": "$day.sunshineDur.sum.format('%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s')",
         "currentSunshine": "$current.sunshine",
         "rawSunshine": "$current.sunshine.raw",
-        "formattedSunshine": "$current.sunshine.formatted"
-    },
-    "test": {
+        "formattedSunshine": "$current.sunshine.formatted",
         "outHumAbs": "$current.outHumAbs.gram_per_meter_cubed",
         "lastRain": "$last_rain",
         "timeSinceLastRain": "$time_since_last_rain",
-        "GTSdate" : $day.GTSdate.last.format("%d.%m.%Y")
-    },
-    "trend": {
+        "GTSdate" : $day.GTSdate.last.format("%d.%m.%Y"),
         "outTemp": "$trend.outTemp",
         "barometer": "$trend.barometer",
         "rawBarometer": "$trend.barometer.raw",
@@ -42,12 +56,12 @@
         "asky_box_temperature": "$trend.asky_box_temperature",
         "asky_box_barometer": "$trend.asky_box_barometer",
         "solar_temperature": "$trend.solar_temperature",
-        "solar_barometer": "$trend.solar_barometer"
-    },
-    "batt": {
+        "solar_barometer": "$trend.solar_barometer",
         "wh65_batt": "$current.wh65_batt",
         "raw_wh65_batt": "$current.wh65_batt.raw",
-        "formatted_wh65_batt": "$current.wh65_batt.formatted"
+        "formatted_wh65_batt": "$current.wh65_batt.formatted",
+        "$gettext('Total daylight')": "$almanac.sun.visible"
+        "$sun_visible_change": "$change_str"
     },
     #for $ts in $timespans
     #set $ltsii += 1

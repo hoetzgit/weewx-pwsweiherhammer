@@ -4,6 +4,25 @@
 #errorCatcher Echo
 #encoding UTF-8
 
+#if $almanac.hasExtras
+  ## Pick a "None string" on the basis of whether the sun is above or below the horizon
+  #set $sun_altitude = $almanac.sun.alt
+  #if $sun_altitude < 0
+    #set $sun_None='<i>%s</i>' % $gettext("Always down")
+  #else
+    #set $sun_None='<i>%s</i>' % $gettext("Always up")
+  #end if
+
+  ## For the change in daylight, pick a string to indicate whether it is more or
+  ## less than yesterday:
+  #set $sun_visible_change = $almanac.sun.visible_change
+  #if $sun_visible_change.raw < 0
+    #set $change_str = $gettext("less than yesterday")
+  #else
+    #set $change_str = $gettext("more than yesterday")
+  #end if
+#end if
+
 <div id='current_widget' class="widget">
   <div class="widget_title">
     $gettext("Current Conditions")
@@ -33,6 +52,11 @@
         <td class="label">$gettext("Rain Today")</td>
         <td class="data">$day.rain.sum</td>
       </tr>
+    ###elif $x == 'outHumAbs'
+    ##  <tr>
+    ##    <td class="label">$obs.label.outHumAbs</td>
+    ##    <td class="data">$current.outHubAbs.formatted.gram_per_meter_cubed</td>
+    ##  </tr>
     #elif $x == 'sunshine'
       <tr>
         <td class="label">$obs.label[$x]</td>
@@ -66,7 +90,12 @@
       </tr>
     #end if
 #end for
-
+#if $almanac.hasExtras
+     <tr>
+       <td class="label">$gettext("Total daylight")</td>
+       <td class="data">$almanac.sun.visible<br/>$sun_visible_change $change_str</td>
+     </tr>
+#end if
     </tbody>
   </table>
   </div>
