@@ -4353,14 +4353,14 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             )
         except Exception as e:
             raise Warning(
-                "Error trying to use database binding %s to graph observation %s. Error was: %s."
-                % (binding, obs_lookup, e)
+                "Error trying to use database binding %s to graph observation %s. STS: %d ETS: %d AGGT: %s AGGI: %s - Error was: %s."
+                % (binding, obs_lookup, int(start_ts), int(end_ts), str(aggregate_type), str(aggregate_interval),  e)
             )
 
         self.insert_null_value_timestamps_to_end_ts(time_start_vt, time_stop_vt, obs_vt, start_ts, end_ts, aggregate_interval)
         
         if special_target_unit:
-            logdbg("unit_group=%s source_unit=%s special_target_unit=%s" % (obs_vt[2],obs_vt[1],special_target_unit))
+            # logdbg("unit_group=%s source_unit=%s special_target_unit=%s" % (obs_vt[2],obs_vt[1],special_target_unit))
             obs_vt = weewx.units.Converter({obs_vt[2]:special_target_unit}).convert(obs_vt)
         else:
             obs_vt = self.converter.convert(obs_vt)

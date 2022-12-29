@@ -9,12 +9,13 @@ import os.path
 import time
 import csv
 import shutil
+from copy import deepcopy
 
 import weewx
 import weewx.engine
-import weeutil.weeutil
+from weeutil.weeutil import to_bool, to_int
 
-VERSION = "0.1"
+VERSION = "0.1.1"
 
 try:
     import weeutil.logger
@@ -46,19 +47,19 @@ class CSVEXT(weewx.engine.StdService):
         loginf("Service version is %s" % VERSION)
         d = config_dict.get('CSVEXT', {})
         # optional enable/disable service
-        enable = weeutil.weeutil.to_bool(d.get('enable', True))
+        enable = to_bool(d.get('enable', True))
         if not enable:
             loginf("Service is disabled. Enable it in the [CSVEXT] section of weewx.conf.")
             return
 
         # optional debug level
-        self.debug = weeutil.weeutil.to_int(d.get('debug', 0))
+        self.debug = to_int(d.get('debug', 0))
         # location of the output file
         filedir = d.get('filedir', '/var/tmp')
         # mode can be append or overwrite
         self.mode = d.get('mode', 'append')
         # optionally append a datestamp to the filename
-        self.append_datestamp = weeutil.weeutil.to_bool(d.get('append_datestamp', True))
+        self.append_datestamp = to_bool(d.get('append_datestamp', True))
         # format for the filename datestamp
         self.datestamp_format = d.get('datestamp_format', '%Y-%m')
         # format for the per-record timestamp
@@ -95,7 +96,7 @@ class CSVEXT(weewx.engine.StdService):
         tstr = str(record['dateTime'])
         if self.timestamp_format is not None:
             tstr = time.strftime(self.timestamp_format,
-                                 time.gmtime(record['dateTime']))
+                                 time.gmtime(to_int(record['dateTime'])))
         fields = [tstr]
         for k in sorted(record):
             if k != 'dateTime':
@@ -112,7 +113,7 @@ class CSVEXT(weewx.engine.StdService):
             del to_sort_dict['dateTime']
             # new sorted dict with dateTime as first element
             tmp_dict.update(to_sort_dict)
-            to_sort_dict = tmp_dict
+            to_sort_dict = deepcopy(tmp_dict)
         return to_sort_dict
 
     def build_column_field_mapping(self, sorted_dict):
@@ -128,14 +129,14 @@ class CSVEXT(weewx.engine.StdService):
         header = None
         if not os.path.exists(filename) or flag == "w":
             header = '%s\n' % self.field_separator.join(self.sort_keys(loop_data))
-        new_csv_structure = self.csv_structure
+        new_csv_structure = deepcopy(self.csv_structure)
         with open(filename, flag) as outfile:
             if header is not None:
                 outfile.write(header)
 
             if flag == "a":
                 # init new data with new data structure dict
-                new_data = new_csv_structure
+                new_data = deepcopy(new_csv_structure)
             
                 for k in loop_data:
                     new_data[k] = loop_data[k]
@@ -143,7 +144,7 @@ class CSVEXT(weewx.engine.StdService):
                 tstr = str(loop_data['dateTime'])
                 if self.timestamp_format is not None:
                     tstr = time.strftime(self.timestamp_format,
-                                         time.gmtime(loop_data['dateTime']))
+                                         time.gmtime(to_int(loop_data['dateTime'])))
                 fields = [tstr]
                 for k in new_data:
                     if k != 'dateTime':
@@ -152,15 +153,17 @@ class CSVEXT(weewx.engine.StdService):
                 if self.debug > 0:
                     logdbg("New LOOP data appended to CSV file.")
             else:
-                outfile.write('%s\n' % ','.join(self.sort_data(loop_data)))
+                outfile.write('%s\n' % self.field_separator.join(self.sort_data(loop_data)))
                 if self.debug > 0:
                     logdbg("New LOOP data saved to CSV file.")
             outfile.close()
 
     def write_loop_restructured_csv(self, filename, loop_data):
         filenametmp = filename + '.tmp'
+        filenameerr = filename.replace('.csv','.err')
         # init new structure with the last saved csv structure
-        new_csv_structure = self.csv_structure
+        new_csv_structure = dict()
+        new_csv_structure = deepcopy(self.csv_structure)
         # add new fields to new csv structure
         for k in loop_data:
             if k not in new_csv_structure:
@@ -168,7 +171,7 @@ class CSVEXT(weewx.engine.StdService):
         # sort new structure
         new_csv_structure = self.sort_data_dict(new_csv_structure)
         header = '%s\n' % self.field_separator.join(self.sort_keys(new_csv_structure))
-        with open (filename, 'r') as infile, open (filenametmp, 'w') as outfile:
+        with open(filename, 'r') as infile, open(filenametmp, 'w') as outfile, open(filenameerr, 'a') as errfile:
             # write new header to tmp csv file
             outfile.write(header)
 
@@ -179,46 +182,57 @@ class CSVEXT(weewx.engine.StdService):
                 # first line header
                 if not first_line:
                     # init old data dict with new csv data structure dict
-                    old_data = new_csv_structure
+                    old_data = dict()
+                    old_data = deepcopy(new_csv_structure)
+                    old_error = False
                     # copy old data to new structure
                     col = 0
                     for data in row:
                         # get field name from mapping dict
                         field = self.column_field_mapping.get(col)
                         if field is None:
-                            # clean up
-                            infile.close()
-                            outfile.close()
-                            if os.path.exists(filenametmp):
-                                os.remove(filenametmp)
-                            logerr("Error during CSV restructuring, column-field-mapping is incorrect. Abort!")
-                            if self.debug > 0:
-                                logdbg("row: %s" % str(row))
-                                logdbg("field mapping: %s" % str(self.column_field_mapping))
-                                logdbg("old csv structure: %s" % str(self.csv_structure))
-                                logdbg("new csv structure: %s" % str(new_csv_structure))
-                            return
-                        old_data[field] = data
-                        col += 1
+                            old_error = True
+                            #TODO Why does such an error happen? Better error handling?
+                            logerr("**** Error during CSV restructuring, column-field-mapping is incorrect!")
+                            logerr("**** We lose now previously saved but not mapped data!")
+                            logerr("**** Append old data to File %s" % (filenameerr))
+                            old_data = dict()
+                            col = 0
+                            for data in row:
+                                field = self.column_field_mapping.get(col)
+                                if field is None:
+                                    old_data['unmapped_col_%02d' % str(col)] = data
+                                else:
+                                    old_data[field] = data
+                                col += 1
+                            errfile.write('%s\n' % ("ERROR: unmapped old data."))
+                            errfile.write('%s\n' % self.field_separator.join(self.sort_keys(old_data)))
+                            errfile.write('%s\n\n' % self.field_separator.join(self.sort_data(old_data)))
+                            break
+                        else:
+                            old_data[field] = data
+                            col += 1
 
                     # now write the old data with new csv structure
-                    fields = list()
-                    for k in old_data:
-                        fields.append(str(old_data[k]))
-                    outfile.write('%s\n' % self.field_separator.join(fields))
+                    if not old_error:
+                        fields = list()
+                        for k in old_data:
+                            fields.append(str(old_data[k]))
+                        outfile.write('%s\n' % self.field_separator.join(fields))
                 else:
                     first_line = False
 
             # write now the new loop data
             # init new data dict with new data structure dict
-            new_data = new_csv_structure
+            new_data = dict()
+            new_data = deepcopy(new_csv_structure)
             for k in loop_data:
                 new_data[k] = loop_data[k]
 
             tstr = str(loop_data['dateTime'])
             if self.timestamp_format is not None:
                 tstr = time.strftime(self.timestamp_format,
-                                     time.gmtime(loop_data['dateTime']))
+                                     time.gmtime(to_int(loop_data['dateTime'])))
             fields = [tstr]
             for k in new_data:
                 if k != 'dateTime':
@@ -228,11 +242,12 @@ class CSVEXT(weewx.engine.StdService):
             # close infile/outfile
             infile.close()
             outfile.close()
+            errfile.close()
 
         # save new csv structure
-        self.csv_structure = new_csv_structure
+        self.csv_structure = deepcopy(new_csv_structure)
         # build new field mapping with new csv data structure
-        self.column_field_mapping = self.build_column_field_mapping(self.csv_structure)
+        self.column_field_mapping = deepcopy(self.build_column_field_mapping(self.csv_structure))
 
         # move temp file to result csv file
         if os.path.exists(filenametmp):
@@ -260,11 +275,13 @@ class CSVEXT(weewx.engine.StdService):
             loop_dict = dict()
             for k in loop_data:
                 loop_dict[k] = ""
-            self.csv_structure = self.sort_data_dict(loop_dict)
+            self.csv_structure = deepcopy(self.sort_data_dict(loop_dict))
         # build new field mapping with new data structure dict
-        self.column_field_mapping = self.build_column_field_mapping(self.csv_structure)
+        self.column_field_mapping = deepcopy(self.build_column_field_mapping(self.csv_structure))
         if self.debug > 0:
             logdbg("CSV structure and the column field mapping is initialized.")
+        if self.debug >= 1:
+            logdbg("field_mapping: %s" % str(self.column_field_mapping))
 
     def new_loop_data(self, loop_data):
         flag = "a" if self.mode == 'append' else "w"
@@ -277,7 +294,7 @@ class CSVEXT(weewx.engine.StdService):
                 basename = filename[:idx]
                 ext = filename[idx:]
             tstr = time.strftime(self.datestamp_format,
-                                 time.gmtime(loop_data['dateTime']))
+                                 time.gmtime(to_int(loop_data['dateTime'])))
             filename = "%s_%s%s" % (basename, tstr, ext)
 
         if flag == "a":
@@ -320,16 +337,17 @@ class CSVEXT(weewx.engine.StdService):
                 basename = filename[:idx]
                 ext = filename[idx:]
             tstr = time.strftime(self.datestamp_format,
-                                 time.gmtime(data['dateTime']))
+                                 time.gmtime(to_int(data['dateTime'])))
             filename = "%s_%s%s" % (basename, tstr, ext)
         header = None
         if not os.path.exists(filename) or flag == "w":
-            header = '%s\n' % ','.join(self.sort_keys(data))
-            logdbg("A new Archive CSV file will be created.")
+            header = '%s\n' % self.field_separator.join(self.sort_keys(data))
+            if self.debug > 0:
+                logdbg("A new Archive CSV file will be created.")
         with open(filename, flag) as f:
             if header is not None:
                 f.write(header)
-            f.write('%s\n' % ','.join(self.sort_data(data)))
+            f.write('%s\n' % self.field_separator.join(self.sort_data(data)))
         if self.debug > 0:
             if flag == "a":
                 logdbg("New Archive data appended to the CSV file.")

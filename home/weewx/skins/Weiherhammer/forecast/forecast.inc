@@ -141,7 +141,7 @@
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_warnings_new
         </div>  
-        <div class="col-md-12">
+        <div class="col-md-12 forecast-content">
             #include "dwd/warn-NEW.inc"
         </div>
     </div>
@@ -152,7 +152,7 @@
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_warnings_whm
         </div>
-        <div class="col-md-12">
+        <div class="col-md-12 forecast-content">
             #include raw "dwd/warn-WEIHERHAMMER.inc"
         </div>
     </div>
@@ -166,6 +166,10 @@
     #if $act > $start and $act < $end
     <div class="row">
         #include "dwd/wbx_tab_BY.inc"
+    #else
+        <!-- DWD Waldbrandgefahrenindex -->
+        <div class="col-xs-12 wbx-headline">$obs.label.forecast_header_wbx <span class="issued-DWD">$obs.label.forecast_issuedWBX_dwd_paused</span></div>
+        <div class="col-md-12 forecast-content"><p>zur Zeit keine Warnungen (Daten werden vom DWD im Zeitraum <b>M&auml;rz</b> bis <b>Oktober</b> zur Verf&uuml;gung gestellt.)</p></div>
     </div>
     #end if
     #end if

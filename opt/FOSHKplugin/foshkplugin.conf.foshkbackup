@@ -77,7 +77,7 @@ FWD_MQTTCYCLE = 0
 FWD_EXEC = 
 
 [Forward-3]
-FWD_ENABLE = False
+FWD_ENABLE = True
 FWD_CMT = PWS Weiherhammer Ecowitt Protokoll an WeeWX 03 Entwicklung
 FWD_URL = http://weewx03.fritz.box:8080/data/report/
 FWD_INTERVAL = 
@@ -133,9 +133,9 @@ FWD_MQTTCYCLE = 0
 FWD_EXEC = 
 
 [Forward-10]
-FWD_ENABLE = False
+FWD_ENABLE = True
 FWD_CMT = Export realtime.txt to filesystem
-FWD_URL = /home/weewx/public_html/file/
+FWD_URL = /home/weewx/public_html/data/
 FWD_INTERVAL = 
 FWD_IGNORE = 
 FWD_TYPE = REALTIMETXT
@@ -147,37 +147,9 @@ FWD_MQTTCYCLE = 0
 FWD_EXEC = 
 
 [Forward-11]
-FWD_ENABLE = False
+FWD_ENABLE = True
 FWD_CMT = Export clientraw.txt to filesystem
-FWD_URL = /home/weewx/public_html/file/
-FWD_INTERVAL = 
-FWD_IGNORE = 
-FWD_TYPE = CLIENTRAWTXT
-FWD_SID = 
-FWD_PWD = 
-FWD_REMAP = 
-FWD_STATUS = False
-FWD_MQTTCYCLE = 0
-FWD_EXEC = 
-
-[Forward-12]
-FWD_ENABLE = True
-FWD_CMT = Export realtime.txt to belchertown skin
-FWD_URL = /home/weewx/public_html/belchertown/
-FWD_INTERVAL = 
-FWD_IGNORE = 
-FWD_TYPE = REALTIMETXT
-FWD_SID = 
-FWD_PWD = 
-FWD_REMAP = 
-FWD_STATUS = False
-FWD_MQTTCYCLE = 0
-FWD_EXEC = 
-
-[Forward-13]
-FWD_ENABLE = True
-FWD_CMT = Export clientraw.txt to belchertown skin
-FWD_URL = /home/weewx/public_html/belchertown/
+FWD_URL = /home/weewx/public_html/data/
 FWD_INTERVAL = 
 FWD_IGNORE = 
 FWD_TYPE = CLIENTRAWTXT
@@ -189,7 +161,7 @@ FWD_MQTTCYCLE = 0
 FWD_EXEC = 
 
 [Forward-20]
-FWD_ENABLE = False
+FWD_ENABLE = True
 FWD_CMT = export via MQTT (metric)
 FWD_URL = 192.168.0.182:1883@foshk
 FWD_INTERVAL = 
@@ -254,11 +226,12 @@ LON = 12.056186
 
 [Sunduration]
 SUN_CALC = True
-SUN_MIN = 20
+SUN_MIN = 50
 SUN_COEF = 0.79
+SUN_UNIT = second
 
 [Status]
-StopTime = 1658931908
-last_lightning_time = 1658784682
-last_lightning = 27
+StopTime = 1672258493
+last_lightning_time = 1666600280
+last_lightning = 31
 

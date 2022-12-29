@@ -614,7 +614,7 @@ def calcSunduration(sr, interval, currtime):                   ## Werner Krenn
     #print("hateur: ", str(hauteur_soleil), " sr: ", str(sr), " sun_min: ", str(SUN_MIN))
     if float(hauteur_soleil) > 3 and float(sr) > float(SUN_MIN):
       try:
-        seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) *1080 * pow((sin(pi / 180) * hauteur_soleil), 1.25) * float(SUN_COEF)
+        seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) *1080 * pow(sin((pi / 180) * hauteur_soleil), 1.25) * float(SUN_COEF)
       except:
         logPrint("<DEBUG> except in calcSunduration seuil")
         seuil = 0.0
