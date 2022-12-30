@@ -204,7 +204,7 @@ class CSVEXT(weewx.engine.StdService):
                             for data in row:
                                 field = self.column_field_mapping.get(col)
                                 if field is None:
-                                    old_data['unmapped_col_%02d' % str(col)] = data
+                                    old_data['unmapped_col_%02d' % col] = data
                                 else:
                                     old_data[field] = data
                                 col += 1
