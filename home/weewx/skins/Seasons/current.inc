@@ -52,11 +52,11 @@
         <td class="label">$gettext("Rain Today")</td>
         <td class="data">$day.rain.sum</td>
       </tr>
-    ###elif $x == 'outHumAbs'
-    ##  <tr>
-    ##    <td class="label">$obs.label.outHumAbs</td>
-    ##    <td class="data">$current.outHubAbs.formatted.gram_per_meter_cubed</td>
-    ##  </tr>
+    #elif $x == 'outHumAbs'
+      <tr>
+        <td class="label">$obs.label.outHumAbs</td>
+        <td class="data">$current.outHumAbs.gram_per_meter_cubed</td>
+      </tr>
     #elif $x == 'sunshine'
       <tr>
         <td class="label">$obs.label[$x]</td>

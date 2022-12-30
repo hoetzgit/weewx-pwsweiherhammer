@@ -3,7 +3,10 @@
 #
 # Copyright 2022 Henry Ott "extended" Version (Status: MVP)
 # LOOP packets with contents not previously stored in the CSV file trigger a restructuring of the existing CSV file.
+#
 # TODO different Archive Records after user changes on DB Structure?
+# TODO try catch file operations
+#
 import os
 import os.path
 import time
@@ -171,7 +174,7 @@ class CSVEXT(weewx.engine.StdService):
         # sort new structure
         new_csv_structure = self.sort_data_dict(new_csv_structure)
         header = '%s\n' % self.field_separator.join(self.sort_keys(new_csv_structure))
-        with open(filename, 'r') as infile, open(filenametmp, 'w') as outfile, open(filenameerr, 'a') as errfile:
+        with open(filename, 'r') as infile, open(filenametmp, 'w') as outfile:
             # write new header to tmp csv file
             outfile.write(header)
 
@@ -205,9 +208,11 @@ class CSVEXT(weewx.engine.StdService):
                                 else:
                                     old_data[field] = data
                                 col += 1
-                            errfile.write('%s\n' % ("ERROR: unmapped old data."))
-                            errfile.write('%s\n' % self.field_separator.join(self.sort_keys(old_data)))
-                            errfile.write('%s\n\n' % self.field_separator.join(self.sort_data(old_data)))
+                            with open(filenameerr, 'a') as errfile:
+                                errfile.write('%s\n' % ("ERROR: unmapped old data."))
+                                errfile.write('%s\n' % self.field_separator.join(self.sort_keys(old_data)))
+                                errfile.write('%s\n\n' % self.field_separator.join(self.sort_data(old_data)))
+                                errfile.close()
                             break
                         else:
                             old_data[field] = data
@@ -242,7 +247,6 @@ class CSVEXT(weewx.engine.StdService):
             # close infile/outfile
             infile.close()
             outfile.close()
-            errfile.close()
 
         # save new csv structure
         self.csv_structure = deepcopy(new_csv_structure)
