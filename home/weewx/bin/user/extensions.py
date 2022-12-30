@@ -23,6 +23,7 @@ locale.setlocale(locale.LC_ALL, '')
 import weewx.units
 #
 # Allsky 01 Kamera (BME280 und DS18B20)
+weewx.units.obs_group_dict['asky_box_altimeter'] = 'group_pressure'
 weewx.units.obs_group_dict['asky_box_barometer'] = 'group_pressure'
 weewx.units.obs_group_dict['asky_box_dewpoint'] = 'group_temperature'
 weewx.units.obs_group_dict['asky_box_fan'] = 'group_count'
@@ -63,6 +64,7 @@ weewx.units.obs_group_dict['wh57_batt'] = 'group_count'
 weewx.units.obs_group_dict['wh65_batt'] = 'group_count'
 #
 # Solar Station (BME280)
+weewx.units.obs_group_dict['solar_altimeter'] = 'group_pressure'
 weewx.units.obs_group_dict['solar_appTemp'] = 'group_temperature'
 weewx.units.obs_group_dict['solar_barometer'] = 'group_pressure'
 weewx.units.obs_group_dict['solar_dewpoint'] = 'group_temperature'
@@ -71,6 +73,8 @@ weewx.units.obs_group_dict['solar_humidex'] = 'group_temperature'
 weewx.units.obs_group_dict['solar_humidity'] = 'group_percent'
 weewx.units.obs_group_dict['solar_pressure'] = 'group_pressure'
 weewx.units.obs_group_dict['solar_temperature'] = 'group_temperature'
+weewx.units.obs_group_dict['solar_thswIndex'] = 'group_temperature'
+weewx.units.obs_group_dict['solar_thwIndex'] = 'group_temperature'
 weewx.units.obs_group_dict['solar_voltage'] = 'group_volt'
 weewx.units.obs_group_dict['solar_wetBulb'] = 'group_temperature'
 weewx.units.obs_group_dict['solar_windchill'] = 'group_temperature'
@@ -124,27 +128,26 @@ weewx.units.obs_group_dict['uba_o3'] = 'group_concentration'
 weewx.units.obs_group_dict['uba_o3_category'] = 'group_count'
 #
 # TODO: additional Values, Groups, Units, Formats ...
-weewx.units.obs_group_dict['airDensity'] = 'group_pressure3'
 weewx.units.obs_group_dict['boilingTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['dayET'] = 'group_rain'
+weewx.units.obs_group_dict['dayET'] = 'group_rain' #test
 weewx.units.obs_group_dict['dayRain'] = 'group_rain'
-weewx.units.obs_group_dict['dayRain2'] = 'group_rain'
-weewx.units.obs_group_dict['lightning_strike_count1'] = 'group_count'
-weewx.units.obs_group_dict['lightning_strike_count2'] = 'group_count'
+weewx.units.obs_group_dict['dayRain2'] = 'group_rain' #test
+weewx.units.obs_group_dict['daySunshineDur'] = 'group_deltatime' #test
+weewx.units.obs_group_dict['dayWindrun'] = 'group_distance' #test
+weewx.units.obs_group_dict['lightning_strike_count1'] = 'group_count' #test
+weewx.units.obs_group_dict['lightning_strike_count2'] = 'group_count' #test
 weewx.units.obs_group_dict['outEquiTemp'] = 'group_temperature'
 weewx.units.obs_group_dict['outHumAbs'] = 'group_concentration'
-weewx.units.obs_group_dict['rain2'] = 'group_rain'
-weewx.units.obs_group_dict['rain3'] = 'group_rain'
-weewx.units.obs_group_dict['rainRate2'] = 'group_rainrate'
+weewx.units.obs_group_dict['rain2'] = 'group_rain' #test
+weewx.units.obs_group_dict['rainRate2'] = 'group_rainrate' #test
 weewx.units.obs_group_dict['solarEnergy'] = 'group_radiation_energy'
 weewx.units.obs_group_dict['sunshine'] = 'group_count'
+weewx.units.obs_group_dict['sunshineRadiationMin'] = "group_radiation"
 weewx.units.obs_group_dict['sunshineThreshold'] = "group_radiation"
+weewx.units.obs_group_dict['sunshineThresholdMin'] = "group_radiation"
 weewx.units.obs_group_dict['thswIndex'] = 'group_temperature'
 weewx.units.obs_group_dict['thwIndex'] = 'group_temperature'
-weewx.units.obs_group_dict['vaporPressure'] = 'group_pressure2'
-weewx.units.obs_group_dict['vaporPressure2'] = 'group_pressure'
 weewx.units.obs_group_dict['wetBulb'] = 'group_temperature'
-weewx.units.obs_group_dict['windPressure'] = 'group_pressure2'
 #
 weewx.units.USUnits['group_pressure2'] = 'N_per_meter_squared'
 weewx.units.USUnits['group_pressure3'] = 'kg_per_meter_qubic'

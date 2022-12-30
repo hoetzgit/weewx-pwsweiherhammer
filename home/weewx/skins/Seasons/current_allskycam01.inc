@@ -43,7 +43,7 @@
   #if $getVar('year.%s.has_data' % $x)
     #if $x == 'asky_box_barometer'
       <tr>
-        <td class="label">>$obs.label[$x]</td>
+        <td class="label">$obs.label[$x]</td>
         <td class="data">$getVar('current.%s' % $x) ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
       </tr>
     #else
