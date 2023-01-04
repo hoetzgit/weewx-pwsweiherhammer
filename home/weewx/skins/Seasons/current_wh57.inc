@@ -17,23 +17,23 @@
 
 #if 'observations_wh57' in $DisplayOptions
 #for $x in $DisplayOptions.observations_wh57
-  #if $getVar('year.%s.has_data' % $x)
-    #if $x == 'lightning_last_time'
-      <tr>
-        <td class="label">$obs.label[$x]</td>
-        <td class="data">$getVar('current.%s' % $x)</td>
-      </tr>
-    #elif $x == 'lightning_strike_count'
+    #if $x == 'lightning_strike_count'
       <tr>
         <td class="label">$gettext("Lightning strike sum")</td>
         <td class="data">$getVar('day.%s.%s' % ($x,'sum'))</td>
       </tr>
-    #elif $x == 'lightning'
+    #elif $x == 'wh57_lightning_time'
+      <tr>
+        <td class="label">$obs.label[$x]</td>
+        <td class="data">$getVar('current.%s' % $x)</td>
+      </tr>
+    #elif $x == 'wh57_lightning_distance'
       <tr>
         <td class="label">$obs.label[$x]</td>
         <td class="data">$getVar('current.%s' % $x)</td>
       </tr>
     #elif $x == 'lightning_distance'
+      #if $getVar('day.%s.has_data' % $x)
       <tr>
         <td class="label">$gettext("Lightning distance min")</td>
         <td class="data">$getVar('day.%s.%s' % ($x,'min'))</td>
@@ -46,13 +46,13 @@
         <td class="label">$gettext("Lightning distance max")</td>
         <td class="data">$getVar('day.%s.%s' % ($x,'max'))</td>
       </tr>
+      #end if
     #else
       <tr>
         <td class="label">$obs.label[$x]</td>
         <td class="data">$getVar('day.%s' % $x)</td>
       </tr>
     #end if
-  #end if
 #end for
 #else
     <tr><td>No observations specified</td></tr>

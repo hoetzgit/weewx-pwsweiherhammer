@@ -142,7 +142,7 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('asky_cpu_fan', 'INTEGER'),
 ('asky_cpu_temperature', 'REAL'),
 #
-# FOSHKplugin Added values
+# FOSHKplugin added obervations
 ('foshk_cloudbase', 'REAL'),
 ('foshk_dewpoint', 'REAL'),
 ('foshk_feelslike', 'REAL'),
@@ -153,18 +153,37 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('foshk_windgust_max10m', 'REAL'),
 ('foshk_windspeed_avg10m', 'REAL'),
 #
-# Ecowitt GW1100 (WH65, WH57)
-('gw1100_dailyrain', 'REAL'),
-('gw1100_eventrain', 'REAL'),
-('gw1100_hourlyrain', 'REAL'),
-('gw1100_maxdailygust', 'REAL'),
-('gw1100_monthlyrain', 'REAL'),
-('gw1100_rain_total', 'REAL'),
-('gw1100_weeklyrain', 'REAL'),
-('gw1100_yearlyrain', 'REAL'),
-('lightning_last_time', 'INTEGER'),
-('wh57_batt', 'REAL'),
+# Ecowitt GW1100 Sainlogic WS3500 WH65
+('dayRain', 'REAL'),
+('gainRain', 'REAL'),
+('hourRain', 'REAL'),
+('monthRain', 'REAL'),
+('stormRain', 'REAL'),
+('totalRain', 'REAL'),
+('weekRain', 'REAL'),
+('yearRain', 'REAL'),
+('daymaxwind', 'REAL'),
+('uvradiation', 'REAL'),
 ('wh65_batt', 'REAL'),
+('wh65_sig', 'REAL'),
+#
+# Ecowitt WH31
+('wh31_ch1_batt', 'REAL'),
+('wh31_ch2_batt', 'REAL'),
+('wh31_ch3_batt', 'REAL'),
+('wh31_ch1_sig', 'REAL'),
+('wh31_ch2_sig', 'REAL'),
+('wh31_ch3_sig', 'REAL'),
+#
+# Ecowitt Bodenfeuchte WH51
+('wh51_ch1_batt', 'REAL'),
+('wh51_ch1_sig', 'REAL'),
+#
+# Ecowitt Blitzsensor WH57
+('wh57_batt', 'REAL'),
+('wh57_sig', 'REAL'),
+('wh57_lightning_time', 'REAL'),
+('wh57_lightning_distance', 'REAL'),
 #
 # Solar Station (BME280)
 ('solar_altimeter', 'REAL'),
@@ -231,22 +250,17 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('uba_o3_category', 'REAL'),
 #
 # additional Values 
-('airDensity', 'REAL'),
 ('outEquiTemp', 'REAL'),
 ('outHumAbs', 'REAL'),
-('sunshineDur', 'REAL'),
 ('sunshine', 'REAL'),
-#
+('sunshineDur', 'REAL'),
 ('thswIndex', 'REAL'),
 ('thwIndex', 'REAL'),
-('vaporPressure', 'REAL'),
 ('wetBulb', 'REAL'),
-('windPressure', 'REAL'),
 ]
 
 day_summaries = [(e[0], 'scalar') for e in table
                  if e[0] not in ('dateTime', 'usUnits', 'interval'
-                   ,'lightning_last_time'
                    ,'asky_box_fan', 'asky_dome_heater', 'asky_cpu_fan'
                    ,'aeris_aqi', 'owm_aqi'
                    ,'pws_aqi', 'pws_aqi_category', 'pws_aqi_no2_category', 'pws_aqi_o3_category', 'pws_aqi_pm10_0_category', 'pws_aqi_pm2_5_category'

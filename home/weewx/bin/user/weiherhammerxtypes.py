@@ -28,6 +28,11 @@ from weewx.units import ValueTuple, CtoK, CtoF, FtoC, mph_to_knot, kph_to_knot, 
 
 # user imports
 import user.weiherhammerformulas
+# external Routines
+# Source: https://github.com/smartlixx/WetBulb
+#import user.external.WetBulb
+# Source: https://github.com/hoetzgit/weatherlink-python/blob/master/weatherlink/utils.py
+#import user.external.weatherlink
 
 try:
     # Test for new-style weewx logging by trying to import weeutil.logger
@@ -95,8 +100,11 @@ defaults_dict = weeutil.config.config_from_str(DEFAULTS_INI)
 
 # unit system new observations
 weewx.units.obs_group_dict['thswIndex'] = "group_temperature"
+weewx.units.obs_group_dict['thswIndex2'] = "group_temperature"#test
 weewx.units.obs_group_dict['thwIndex'] = "group_temperature"
+weewx.units.obs_group_dict['thwIndex2'] = "group_temperature" #test
 weewx.units.obs_group_dict['wetBulb'] = "group_temperature"
+weewx.units.obs_group_dict['wetBulb2'] = "group_temperature" #test
 weewx.units.obs_group_dict['sunshine'] = "group_count"
 weewx.units.obs_group_dict['sunshineRadiationMin'] = "group_radiation"
 weewx.units.obs_group_dict['sunshineThreshold'] = "group_radiation"
@@ -110,8 +118,11 @@ weewx.units.obs_group_dict['solar_heatindex'] = "group_temperature"
 weewx.units.obs_group_dict['solar_humidex'] = "group_temperature"
 weewx.units.obs_group_dict['solar_pressure'] = "group_pressure"
 weewx.units.obs_group_dict['solar_thswIndex'] = "group_temperature"
+weewx.units.obs_group_dict['solar_thswIndex2'] = "group_temperature" #test
 weewx.units.obs_group_dict['solar_thwIndex'] = "group_temperature"
+weewx.units.obs_group_dict['solar_thwIndex2'] = "group_temperature" #test
 weewx.units.obs_group_dict['solar_wetBulb'] = "group_temperature"
+weewx.units.obs_group_dict['solar_wetBulb2'] = "group_temperature" #test
 weewx.units.obs_group_dict['solar_windchill'] = "group_temperature"
 # AllSky camera
 weewx.units.obs_group_dict['asky_box_altimeter'] = 'group_pressure'
@@ -333,6 +344,9 @@ class WXXTypes(weewx.xtypes.XType):
         return ValueTuple(val, u, 'group_temperature')
 
     def calc_sunshineThreshold(self, key, data, db_manager=None):
+        # TypeError: argument of type 'NoneType' is not iterable
+        if data is None:
+            raise weewx.CannotCalculate(key)
         if 'dateTime' not in data:
             raise weewx.CannotCalculate(key)
         monthofyear = to_int(time.strftime("%m",time.gmtime(data['dateTime'])))

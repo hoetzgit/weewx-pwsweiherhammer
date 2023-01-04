@@ -25,11 +25,13 @@
 }
 
 /* Nav tabs */
+
 .nav-tabs {
     border-bottom: 1px solid transparent;
 }
 
 /* Status */
+
 .status_ok {
     color: var(--ok-color);
 }
@@ -49,7 +51,17 @@
     color: var(--unknown-color);
 }
 
+/* Almanac */
+
+table.celestial td.label {
+    min-width: 160px !important;
+    display: inline-block;
+    text-align: left;
+    font-size: initial;
+}
+
 /* Indoor Temperature and Humidity Quality */
+
 .indoor_temp_very_cold {
     color: var(--indoor-temp-very-cold);
 }
@@ -82,12 +94,14 @@
 }
 
 /* Page Header */
+
 .obs-header-outtemp {
     font-size: calc(12px + 0.4vw);
     line-height: 1.0;
 }
 
 /* Online Marker */
+
 .onlineMarkerOuter {
     padding: 6px 0 0 15px;
     float: left;

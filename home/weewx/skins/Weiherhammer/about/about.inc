@@ -252,10 +252,10 @@
                 <li>MQTT Broker <a href="https://obrienlabs.net/go/mqttbroker" target="_blank" rel="noreferrer">Mosquitto</a> zur Aufnahme von Nachrichten per MQTT</li>
                 <li>Visualisierung dieser Webseite mit der <a href="https://github.com/poblabs/weewx-belchertown" target="_blank" rel="noreferrer">Belchertown skin</a>, angepasst, Basis Version: 1.3b2</li>
                 <li>Erweiterung <a href="https://www.highcharts.com" target="_blank" rel="noreferrer">HighCharts</a> zur Erstellung von Charts auf dieser Webseite</li>
-                <li>Das <a href="https://wiki.loxberry.de/plugins/foshkplugin/start" target="_blank" rel="noreferrer">FOSHKplugin</a> (<a href="https://wiki.loxberry.de/plugins/foshkplugin/foshkplugin_generic_version" target="_blank" rel="noreferrer">generic Version</a>) zum Empfang der GW1100 Daten, deren Aufbereitung und Weiterleitung zu WeeWX und weiteren Zielen, Version: 0.09</li>
-                <li>DWD Meteogramm von <a href="http://tools.wettersoftware.de" target="_blank" rel="noreferrer">wettersoftware.de</a></li>
+                <li>Das <a href="https://wiki.loxberry.de/plugins/foshkplugin/start" target="_blank" rel="noreferrer">FOSHKplugin</a> (<a href="https://wiki.loxberry.de/plugins/foshkplugin/foshkplugin_generic_version" target="_blank" rel="noreferrer">generic Version</a>) zum Empfang der GW1100 Daten per HTTP, deren Aufbereitung und Weiterleitung zu WeeWX und weiteren Zielen, Version: 0.09</li>
                 <li>WeeWX Treiber <a href="https://github.com/matthewwall/weewx-interceptor" target="_blank" rel="noreferrer">weewx-interceptor</a> (ecowitt-client) zum Empfang der Daten von FOSHKplugin per HTTP, Version: 0.60, an eigene Sensoren angepasst</li>
-                <li>WeeWX Service <a href="https://github.com/bellrichm/WeeWX-MQTTSubscribe" target="_blank" rel="noreferrer">WeeWX-MQTTSubscribe</a> zum Empfang von zusätzlichen Daten (Solar Station, Wetter API's u.s.w.) per MQTT, Version: 2.2.2</li>
+                <li>WeeWX Service <a href="https://github.com/gjr80/weewx-gw1000" target="_blank" rel="noreferrer">Ecowitt Gateway</a> (weewx-gw1000) zum direkten Auslesen des GW1100 f&uuml;r weitere Daten (Batteriestatus, Signalst&auml;rken), Version: 0.5.0b6</li>
+                <li>WeeWX Service <a href="https://github.com/bellrichm/WeeWX-MQTTSubscribe" target="_blank" rel="noreferrer">WeeWX-MQTTSubscribe</a> zum Empfang weiterer Daten (Solar Station, Wetter API's u.s.w.) per MQTT, Version: 2.2.2</li>
                 <li>WeeWX Service <a href="https://github.com/bellrichm/weewx-mqttpublish" target="_blank" rel="noreferrer">weewx-mqttpublish</a> zum Upload der WeeWX Daten per MQTT in den MQTT Broker, Version: 0.2.0-rc02a</li>
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-mqtt" target="_blank" rel="noreferrer">weewx-mqtt</a>, angepasste <a href="https://github.com/roe-dl/weewx-mqtt/tree/aggregate_values" target="_blank" rel="noreferrer">Version</a> zum Upload der WeeWX Daten per MQTT in den MQTT Broker, Version: 0.25</li>
                 <li>Erweiterungen <a href="https://github.com/roe-dl/weewx-DWD" target="_blank" rel="noreferrer">weewx-DWD</a>, um Daten vom DWD und dem UBA zu laden und aufzubereiten (zum Experimentieren mit anderen Wetter-Anbietern angepasst)</li>
@@ -270,6 +270,7 @@
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-owm" target="_blank" rel="noreferrer">weewx-owm</a>, angepasste <a href="https://github.com/hoetzgit/weewx-owm/tree/pws-weiherhammer" target="_blank" rel="noreferrer">Version</a>, Upload zu <a href="https://openweathermap.org" target="_blank" rel="noreferrer">OpenWeatherMap</a>, Version: 0.9</li>
                 <li>Erweiterung <a href="https://github.com/sbsrouteur/weewx-opensensemap" target="_blank" rel="noreferrer">weewx-opensensemap</a>, Upload zu <a href="https://opensensemap.org" target="_blank" rel="noreferrer">openSenseMap</a>, Version: 0.3</li>
                 <li>Erweiterung <a href="https://github.com/hoetzgit/weewx-meteoservices/tree/master" target="_blank" rel="noreferrer">weewx-meteoservices</a>, angepasste <a href="https://github.com/hoetzgit/weewx-meteoservices/tree/enable-disable-service" target="_blank" rel="noreferrer">Version</a>, Upload zu <a href="https://meteo-services.com" target="_blank" rel="noreferrer">MeteoServices</a>, Version: 3.2 - <a href="https://stations.meteo-services.com/wxupdates/Downloads/meteoservices-3.2.zip" target="_blank" rel="noreferrer">Download</a> der originalen Erweiterung direkt beim Anbieter MeteoServices</li>
+                <li>DWD Meteogramm von <a href="http://tools.wettersoftware.de" target="_blank" rel="noreferrer">wettersoftware.de</a></li>
             </ul>
         </div>
     </div>
@@ -328,15 +329,6 @@
                 <li>Backend- und WebServer: Diverse virtuelle VMware ESXi basierende Rechner mit Ubuntu 22.04.1 LTS, Webseite self hosted</li>
                 <li>WeeWX Server uptime: $station.os_uptime</li>
                 <li>WeeWX Service uptime: $station.uptime</li>
-                #if $current.wh65_batt.has_data
-                <li>Batteriestatus Sainlogic Station: <span class="wh65_batt">$current.wh65_batt</span> <span class="wh65_batt-text"></span></li>
-                #end if
-                #if $current.wh57_batt.has_data
-                <li>Batteriestatus Blitzsensor: <span class="wh57_batt">$current.wh57_batt</span> <span class="wh65_batt-text"></span></li>
-                #end if
-                #if $current.solar_voltage.has_data
-                <li>Spannung Solar Station: <span class="solar_voltage">$current.solar_voltage</span> <span class="solar_voltage-text"></span></li>
-                #end if
             </ul>
         </div>
     </div>
@@ -358,7 +350,7 @@
             <h2>GitHub</h2>
             <p>Meine Anpassungen und Konfigurationen als Sicherung bei GitHub</p>
             <ul>
-                <li>Anpassungen <a href="https://github.com/hoetzgit/weewx-pwsweiherhammer" target="_blank" rel="noreferrer">WeeWX</a> PWS Weiherhammer</li>
+                <li>GitHub <a href="https://github.com/hoetzgit/weewx-pwsweiherhammer" target="_blank" rel="noreferrer">WeeWX PWS Weiherhammer</a></li>
             </ul>
         </div>
     </div>
