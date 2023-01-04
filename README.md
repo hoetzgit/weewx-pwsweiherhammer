@@ -1,2 +1,2 @@
 # weewx-pwsweiherhammer
-Anpassungen WeeWX PWS Weiherhammer. Backup of my WeeWX installation.
+Modifications and backup WeeWX PWS Weiherhammer. Anpassungen und Sicherung WeeWX PWS Weiherhammer.
