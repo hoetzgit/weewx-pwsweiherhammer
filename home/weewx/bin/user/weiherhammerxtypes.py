@@ -30,9 +30,9 @@ from weewx.units import ValueTuple, CtoK, CtoF, FtoC, mph_to_knot, kph_to_knot, 
 import user.weiherhammerformulas
 # external Routines
 # Source: https://github.com/smartlixx/WetBulb
-#import user.external.WetBulb
+import user.external.WetBulb
 # Source: https://github.com/hoetzgit/weatherlink-python/blob/master/weatherlink/utils.py
-#import user.external.weatherlink
+import user.external.weatherlink
 
 try:
     # Test for new-style weewx logging by trying to import weeutil.logger

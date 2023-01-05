@@ -54,6 +54,10 @@
 #14,29,44,59 * * * * sleep 5; /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --html --daily --hide-placemark 10688 >/var/log/weewx/forecast-pwsWeiherhammer-html-daily-10688.log 2>&1
 #14,29,44,59 * * * * sleep 10; /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --html --hourly --hide-placemark 10688 >/var/log/weewx/forecast-pwsWeiherhammer-html-hourly-10688.log 2>&1
 #
+# BBK warnings
+# Weiherhammer skin TODO conf file
+14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/bbk-warnings-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose >/var/log/weewx/bbk-warnings-pwsWeiherhammer.log 2>&1
+#
 # API to MQTT
 */1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_aeris_airquality.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_aeris_airquality.log 2>&1
 */1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_owm_airquality.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_owm_airquality.log 2>&1
@@ -64,6 +68,4 @@
 #
 # Publish weewx-loopdata Datafile to MQTT Broker
 */1 * * * * /bin/bash /usr/local/bin/publish_weewx-loopdata_to_broker.sh >/var/log/weewx/publish_weewx-loopdata_to_broker.log 2>&1
-*/1 * * * * sleep 15; /bin/bash /usr/local/bin/publish_weewx-loopdata_to_broker.sh >/var/log/weewx/publish_weewx-loopdata_to_broker.log 2>&1
 */1 * * * * sleep 30; /bin/bash /usr/local/bin/publish_weewx-loopdata_to_broker.sh >/var/log/weewx/publish_weewx-loopdata_to_broker.log 2>&1
-*/1 * * * * sleep 45; /bin/bash /usr/local/bin/publish_weewx-loopdata_to_broker.sh >/var/log/weewx/publish_weewx-loopdata_to_broker.log 2>&1

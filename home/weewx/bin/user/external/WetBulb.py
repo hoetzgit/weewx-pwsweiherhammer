@@ -1,5 +1,6 @@
 #
 # https://github.com/smartlixx/WetBulb
+# Python 3 numpy install: pip3 install numpy
 #
 # [Twb,Teq,epott]=WetBulb(TemperatureC,Pressure,Humidity,[HumidityMode])
 #

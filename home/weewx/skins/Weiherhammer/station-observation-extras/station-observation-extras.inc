@@ -23,7 +23,7 @@ $gettext('no')
 #end def
 
 <div class="row">
-    <div class="col-lg-6">
+    <div class="col-lg-6  border-right">
         #if 'observations_current' in $Extras
         <!-- Additional Weather Station Observations-->
         <div class="row observation-extras-row observation-extras-row-left">
@@ -106,7 +106,7 @@ $gettext('no')
         #end if
     </div>
 
-    <div class="col-lg-6 border-left">
+    <div class="col-lg-6">
         #if 'observations_solar' in $Extras
         <!-- Solar Weather Station -->
         <div class="row observation-extras-row">

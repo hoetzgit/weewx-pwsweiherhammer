@@ -15,5 +15,6 @@ allskycam0*.down
 **/dwd/warn-*
 **/dwd/wbx*
 **/dwd/*.json
+**/dwd/*.inc
 **/csv/*.csv
 home/weewx/skins/Belchertown/forecast/wettersoftware-meteogramm.yes
