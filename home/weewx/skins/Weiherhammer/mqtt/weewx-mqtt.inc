@@ -1,5 +1,5 @@
                                         <!-- Generator: generate_weiherhammer_mqtt_inc.sh -->
-                                        <!-- generated: 07.01.2023 13:41:34 -->
+                                        <!-- generated: 07.01.2023 15:03:22 -->
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="aeris_aqi-mqtt-rec-dot"></div>&nbsp;aeris_aqi</th>
                                             <td class="mqtt-table-body-obs-val"><span class="aeris_aqi" data-mqttrec="0">---</span></td><!-- AJAX -->
@@ -881,6 +881,10 @@
                                             <td class="mqtt-table-body-obs-val"><span class="wh31_ch1_sig" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
                                         <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="wh31_ch1_sig_percent-mqtt-rec-dot"></div>&nbsp;wh31_ch1_sig_percent</th>
+                                            <td class="mqtt-table-body-obs-val"><span class="wh31_ch1_sig_percent" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="wh31_ch2_batt-mqtt-rec-dot"></div>&nbsp;wh31_ch2_batt</th>
                                             <td class="mqtt-table-body-obs-val"><span class="wh31_ch2_batt" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
@@ -891,6 +895,10 @@
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="wh31_ch2_sig-mqtt-rec-dot"></div>&nbsp;wh31_ch2_sig</th>
                                             <td class="mqtt-table-body-obs-val"><span class="wh31_ch2_sig" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="wh31_ch2_sig_percent-mqtt-rec-dot"></div>&nbsp;wh31_ch2_sig_percent</th>
+                                            <td class="mqtt-table-body-obs-val"><span class="wh31_ch2_sig_percent" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="wh31_ch3_batt-mqtt-rec-dot"></div>&nbsp;wh31_ch3_batt</th>
@@ -905,6 +913,10 @@
                                             <td class="mqtt-table-body-obs-val"><span class="wh31_ch3_sig" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
                                         <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="wh31_ch3_sig_percent-mqtt-rec-dot"></div>&nbsp;wh31_ch3_sig_percent</th>
+                                            <td class="mqtt-table-body-obs-val"><span class="wh31_ch3_sig_percent" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="wh51_ch1_batt-mqtt-rec-dot"></div>&nbsp;wh51_ch1_batt</th>
                                             <td class="mqtt-table-body-obs-val"><span class="wh51_ch1_batt" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
@@ -915,6 +927,10 @@
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="wh51_ch1_sig-mqtt-rec-dot"></div>&nbsp;wh51_ch1_sig</th>
                                             <td class="mqtt-table-body-obs-val"><span class="wh51_ch1_sig" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="wh51_ch1_sig_percent-mqtt-rec-dot"></div>&nbsp;wh51_ch1_sig_percent</th>
+                                            <td class="mqtt-table-body-obs-val"><span class="wh51_ch1_sig_percent" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="wh57_batt-mqtt-rec-dot"></div>&nbsp;wh57_batt</th>
@@ -941,6 +957,10 @@
                                             <td class="mqtt-table-body-obs-val"><span class="wh57_sig" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
                                         <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="wh57_sig_percent-mqtt-rec-dot"></div>&nbsp;wh57_sig_percent</th>
+                                            <td class="mqtt-table-body-obs-val"><span class="wh57_sig_percent" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="wh65_batt-mqtt-rec-dot"></div>&nbsp;wh65_batt</th>
                                             <td class="mqtt-table-body-obs-val"><span class="wh65_batt" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
@@ -951,6 +971,10 @@
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="wh65_sig-mqtt-rec-dot"></div>&nbsp;wh65_sig</th>
                                             <td class="mqtt-table-body-obs-val"><span class="wh65_sig" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="wh65_sig_percent-mqtt-rec-dot"></div>&nbsp;wh65_sig_percent</th>
+                                            <td class="mqtt-table-body-obs-val"><span class="wh65_sig_percent" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="windchill-mqtt-rec-dot"></div>&nbsp;windchill</th>

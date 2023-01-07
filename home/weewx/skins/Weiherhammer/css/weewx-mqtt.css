@@ -1,6 +1,6 @@
 /*
 Generator: generate_weiherhammer_mqtt_inc.sh
-generated: 07.01.2023 13:41:34
+generated: 07.01.2023 15:03:22
 */
 
 :root {
@@ -1769,6 +1769,14 @@ generated: 07.01.2023 13:41:34
   display: inline-block;
 }
 
+.wh31_ch1_sig_percent-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
 .wh31_ch2_batt-mqtt-rec-dot {
   height: 8px;
   width: 8px;
@@ -1786,6 +1794,14 @@ generated: 07.01.2023 13:41:34
 }
 
 .wh31_ch2_sig-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh31_ch2_sig_percent-mqtt-rec-dot {
   height: 8px;
   width: 8px;
   background-color: var(--mqtt-rec-none);
@@ -1817,6 +1833,14 @@ generated: 07.01.2023 13:41:34
   display: inline-block;
 }
 
+.wh31_ch3_sig_percent-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
 .wh51_ch1_batt-mqtt-rec-dot {
   height: 8px;
   width: 8px;
@@ -1834,6 +1858,14 @@ generated: 07.01.2023 13:41:34
 }
 
 .wh51_ch1_sig-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh51_ch1_sig_percent-mqtt-rec-dot {
   height: 8px;
   width: 8px;
   background-color: var(--mqtt-rec-none);
@@ -1889,6 +1921,14 @@ generated: 07.01.2023 13:41:34
   display: inline-block;
 }
 
+.wh57_sig_percent-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
 .wh65_batt-mqtt-rec-dot {
   height: 8px;
   width: 8px;
@@ -1906,6 +1946,14 @@ generated: 07.01.2023 13:41:34
 }
 
 .wh65_sig-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh65_sig_percent-mqtt-rec-dot {
   height: 8px;
   width: 8px;
   background-color: var(--mqtt-rec-none);
