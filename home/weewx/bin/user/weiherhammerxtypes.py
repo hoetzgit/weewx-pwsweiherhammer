@@ -109,6 +109,13 @@ weewx.units.obs_group_dict['sunshine'] = "group_count"
 weewx.units.obs_group_dict['sunshineRadiationMin'] = "group_radiation"
 weewx.units.obs_group_dict['sunshineThreshold'] = "group_radiation"
 weewx.units.obs_group_dict['sunshineThresholdMin'] = "group_radiation"
+# battery status
+weewx.units.obs_group_dict['wh31_ch1_batt_percent'] = "group_percent"
+weewx.units.obs_group_dict['wh31_ch2_batt_percent'] = "group_percent"
+weewx.units.obs_group_dict['wh31_ch3_batt_percent'] = "group_percent"
+weewx.units.obs_group_dict['wh51_ch1_batt_percent'] = "group_percent"
+weewx.units.obs_group_dict['wh65_batt_percent'] = "group_percent"
+weewx.units.obs_group_dict['wh57_batt_percent'] = "group_percent"
 # solar station
 weewx.units.obs_group_dict['solar_altimeter'] = "group_pressure"
 weewx.units.obs_group_dict['solar_appTemp'] = "group_temperature"
@@ -124,6 +131,7 @@ weewx.units.obs_group_dict['solar_thwIndex2'] = "group_temperature" #test
 weewx.units.obs_group_dict['solar_wetBulb'] = "group_temperature"
 weewx.units.obs_group_dict['solar_wetBulb2'] = "group_temperature" #test
 weewx.units.obs_group_dict['solar_windchill'] = "group_temperature"
+weewx.units.obs_group_dict['solar_voltage_percent'] = "group_percent"
 # AllSky camera
 weewx.units.obs_group_dict['asky_box_altimeter'] = 'group_pressure'
 weewx.units.obs_group_dict['asky_box_barometer'] = 'group_pressure'
@@ -403,6 +411,61 @@ class WXXTypes(weewx.xtypes.XType):
                 str(data['radiation']) if data['radiation'] is not None else 'None',
                 str(threshold) if threshold is not None else 'None'))
         return ValueTuple(sunshine, 'count', 'group_count')
+
+    @staticmethod
+    def calc_solar_voltage_percent(key, data, db_manager=None):
+        if 'solar_voltage' not in data or data['solar_voltage'] is None:
+            raise weewx.CannotCalculate(key)
+        # 3.8V = 0%, 4.2V = 100%
+        val = user.weiherhammerformulas.batt_to_percent(data['solar_voltage'], 3.8, 4.2)
+        return ValueTuple(val, 'percent', 'group_percent')
+
+    @staticmethod
+    def calc_wh31_ch1_batt_percent(key, data, db_manager=None):
+        if 'wh31_ch1_batt' not in data or data['wh31_ch1_batt'] is None:
+            raise weewx.CannotCalculate(key)
+        # 0 = high = 100%, 1 = low = 50%
+        val = user.weiherhammerformulas.wh31_batt_to_percent(data['wh31_ch1_batt'])
+        return ValueTuple(val, 'percent', 'group_percent')
+
+    @staticmethod
+    def calc_wh31_ch2_batt_percent(key, data, db_manager=None):
+        if 'wh31_ch2_batt' not in data or data['wh31_ch2_batt'] is None:
+            raise weewx.CannotCalculate(key)
+        # 0 = high = 100%, 1 = low = 50%
+        val = user.weiherhammerformulas.wh31_batt_to_percent(data['wh31_ch2_batt'])
+        return ValueTuple(val, 'percent', 'group_percent')
+
+    @staticmethod
+    def calc_wh31_ch3_batt_percent(key, data, db_manager=None):
+        if 'wh31_ch3_batt' not in data or data['wh31_ch3_batt'] is None:
+            raise weewx.CannotCalculate(key)
+        # 0 = high = 100%, 1 = low = 50%
+        val = user.weiherhammerformulas.wh31_batt_to_percent(data['wh31_ch3_batt'])
+        return ValueTuple(val, 'percent', 'group_percent')
+
+    @staticmethod
+    def calc_wh51_ch1_batt_percent(key, data, db_manager=None):
+        if 'wh51_ch1_batt' not in data or data['wh51_ch1_batt'] is None:
+            raise weewx.CannotCalculate(key)
+        # 1.0V = 0%, 1.8V = 100%
+        val = user.weiherhammerformulas.batt_to_percent(data['wh51_ch1_batt'], 1.0, 1.8)
+        return ValueTuple(val, 'percent', 'group_percent')
+
+    @staticmethod
+    def calc_wh57_batt_percent(key, data, db_manager=None):
+        if 'wh57_batt' not in data or data['wh57_batt'] is None:
+            raise weewx.CannotCalculate(key)
+        val = user.weiherhammerformulas.batt_to_percent(data['wh57_batt'], 0, 5)
+        return ValueTuple(val, 'percent', 'group_percent')
+
+    @staticmethod
+    def calc_wh65_batt_percent(key, data, db_manager=None):
+        if 'wh65_batt' not in data or data['wh65_batt'] is None:
+            raise weewx.CannotCalculate(key)
+        # 0 = high = 100%, 1 = low = 50%
+        val = user.weiherhammerformulas.wh65_batt_to_percent(data['wh65_batt'])
+        return ValueTuple(val, 'percent', 'group_percent')
 
 #
 # ######################## Class PressureCooker ##############################

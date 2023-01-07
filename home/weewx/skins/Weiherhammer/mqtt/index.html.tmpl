@@ -1,0 +1,103 @@
+#errorCatcher Echo
+#encoding UTF-8
+#set global $page = "mqtt"
+
+#include "header.html.tmpl"
+#if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
+    #set $file = "css/weewx-mqtt.css"
+    #if os.path.exists($file)
+    <link rel="stylesheet" href="$relative_url/$file?ver=#echo int( time.time() ) #" type="text/css" media="all" id="weewx-mqtt-css"/>
+    #end if
+    <script type="text/javascript">
+        var finalRotation;
+        var homepage_graphgroup = "dummy";
+        
+        var mqttMsg;
+        var mqttclient = "weiherhammer_$page" + Math.floor(Math.random() * 999999999);
+        var moment_locale = "$system_locale_js";
+        moment.locale(moment_locale);
+        
+        function autoRefreshPage() {
+            window.location = window.location.href;
+        }
+        
+        ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
+            update_weewx_data(weewx_data); // Initial call to update (date, daily high, low, etc)
+            weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
+
+            jQuery(document).ready(function() {
+                // Update the Last Updated timestamp with moment.js,
+                updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
+                updated_text = "$obs.label.header_last_updated " + updated;
+                jQuery(".updated").html( updated_text );
+            
+                if ( getURLvar("offline") && ( getURLvar("offline") == "true" || getURLvar("offline") == "1" ) ) {
+                    weiherhammer_debug("MQTT: offline url var detected. Skipping MQTT connect.");
+                } else {
+                    connect(); // Begin mqtt after weewx initial load
+                    // If the Restart button is clicked, reconnect to mqtt and update weewx and forecast data
+                    jQuery(document).on('click', '.restart-interval', function() { 
+                        ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
+                            update_weewx_data(weewx_data); // Initial call to update (date, daily high, low, etc)
+                            weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
+                            connect(); // Restart mqtt after weewx data's re-loaded
+                        }).catch(function(e){
+                            console.log(e);
+                        });
+                    });
+                }
+            });
+        }).catch(function(e) {
+            console.log(e);
+        });
+        
+    </script>
+#end if
+    <div class="site-inner">
+        <main class="content">
+            <article class="weewx $page" itemscope itemtype="https://schema.org/CreativeWork">
+
+                <!-- Top bar with city and share -->
+                <div class="wx-stn-info-container">
+                    <div class="wx-stn-name">
+                        <h1>$obs.label.page_header_mqtt</h1>
+                    </div>
+                    <div class="clear"></div>
+                    <!-- Updated time ago -->
+                    <div class="updated-wrapper">
+                        <div class="onlineMarkerOuter">
+                            <span class="loadingMarker" style="display:none"></span>
+                            <span class="onlineMarker" style="display:none"></span>
+                            <span class="offlineMarker" style="display:none"></span>
+                            <div class="updated"></div><!-- AJAX moment.js -->
+                        </div>
+                    </div>
+                    <div class="clear"></div>
+                    <div class="last-updated-alert" style="display:none;"></div><!-- AJAX moment.js -->
+                </div>
+                #if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
+                <div class="row mqtt-data">
+                    <div class="col-xs-12 mqtt-table-container">
+                        <table class="table table-striped mqtt-table">
+                            <thead class="table-light mqtt-table-head">
+                                <tr>
+                                    <th scope="col" class="mqtt-table-head-headline" colspan=2>Broker: $Extras.mqtt_websockets_host Topic: $Extras.mqtt_websockets_topic</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider mqtt-table-body">
+                                #set $file = $page + "/" + "weewx-mqtt.inc"
+                                #if os.path.exists($file)
+                                <!-- Begin $file -->
+                                #include $file
+                                <!-- End $file -->
+                                #end if
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="clear"></div>
+                #end if
+            </article>
+        </main>
+    </div>
+#include "footer.html.tmpl"

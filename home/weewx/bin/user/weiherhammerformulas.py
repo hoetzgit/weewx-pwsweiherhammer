@@ -208,3 +208,30 @@ def sunshineThreshold(mydatetime, lat, lon, coeff=1.0):
         seuil = 0.0
 
     return seuil
+
+# calculate battery values in percent
+def batt_to_percent(isBatt, minBatt, maxBatt):
+    isBatt -= minBatt
+    maxBatt -= minBatt
+    percentBatt = 0.0
+    if isBatt > 0.0:
+        percentBatt = isBatt * 100 / maxBatt
+    return percentBatt
+
+# "calculate" Ecowitt WH31 battery status in percent
+# Battery values 0 (high) => 100% and 1 (low) => 50%
+def wh31_batt_to_percent(isBatt):
+    if isBatt < 1.0:
+        percentBatt = 100.0
+    else:
+        percentBatt = 50.0
+    return percentBatt
+
+# "calculate" Ecowitt WH65 battery status in percent
+# Battery values 0 (high) => 100% and 1 (low) => 50%
+def wh65_batt_to_percent(isBatt):
+    if isBatt < 1.0:
+        percentBatt = 100.0
+    else:
+        percentBatt = 50.0
+    return percentBatt

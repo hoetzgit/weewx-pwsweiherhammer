@@ -1,0 +1,2059 @@
+/*
+Generator: generate_weiherhammer_mqtt_inc.sh
+generated: 07.01.2023 13:41:34
+*/
+
+:root {
+  --mqtt-rec-none:#FF0000;
+  --mqtt-rec:#00bb00;
+  --mqtt-rec-outdated:#236d1b;
+}
+
+.aeris_aqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.aeris_co-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.aeris_no2-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.aeris_o3-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.aeris_pm10_0-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.aeris_pm2_5-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.aeris_so2-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.altimeter-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.appTemp-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.asky_box_altimeter-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.asky_box_barometer-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.asky_box_dewpoint-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.asky_box_fan-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.asky_box_humidity-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.asky_box_pressure-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.asky_box_temperature-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.asky_cpu_fan-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.asky_cpu_temperature-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.asky_dome_dewpoint-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.asky_dome_heater-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.asky_dome_temperature-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.barometer-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.bathroom_hqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.bathroom_rqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.bathroom_tqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.beaufort-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.bedroom_hqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.bedroom_rqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.bedroom_tqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.boilingTemp-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_Altimeter-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_Altitude-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_Barometer-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_DateTime-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_Dewpoint-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_ExtraTemp1-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_FMX_10-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_FNX_10-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_Latitude-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_Longitude-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_MESS_DATUM-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_OutHumidity-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_OutTemp-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_Pressure-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_Quality_level-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_Radiation-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_Rain-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_RainDur-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_RainIndex-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_SolarRad-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_Station_id-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_SunshineDur-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_WindDir-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_WindDir10-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_WindGust-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_WindGustDir-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_WindSpeed-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cdc_WindSpeed10-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cloudbase-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dateTime-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dayET-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.daymaxwind-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dayRain-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.daySunshineDur-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dayWindrun-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dewpoint-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.ET-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.ET24-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.extraHumid1-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.extraHumid2-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.extraHumid3-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.extraTemp1-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.extraTemp2-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.extraTemp3-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.foshk_cloudbase-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.foshk_dewpoint-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.foshk_feelslike-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.foshk_heatindex-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.foshk_interval-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.foshk_sunhours-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.foshk_sunshine-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.foshk_windchill-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.foshk_winddir_avg10m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.foshk_windgust_max10m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.foshk_windspeed_avg10m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.gainRain-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.GTS-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.heatindex-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.hourRain-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.humidex-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.inDewpoint-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.inHumidity-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.inTemp-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.interval-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.lightning_strike_count-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.lightning_strike_count_sum10m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.lightning_strike_count_sum2m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.lightning_strike_count_sum30m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.lightning_strike_count_sum5m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.lightning_strike_count_sum60m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.livingroom_hqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.livingroom_rqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.livingroom_tqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.luminosity-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.maxSolarRad-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.monthRain-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.office_hqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.office_rqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.office_tqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.outEquiTemp-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.outHumAbs-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.outHumidity-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.outMixingRatio-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.outSVP-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.outTemp-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.outThetaE-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.outVaporP-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.owm_aqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.owm_co-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.owm_nh3-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.owm_no-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.owm_no2-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.owm_o3-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.owm_pm10_0-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.owm_pm2_5-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.owm_so2-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pm10_0-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pm2_5-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_Barometer-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_Cloudbase-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_Cloudcover-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_DateTime-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_Dewpoint-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_ExtraTemp1-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_OutHumidity-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_OutTemp-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_PresentWeather-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_Radiation-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_Rain-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_SnowDepth-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_SolarRad-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_Visibility-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_WindDir-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.poi_WindSpeed-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pressure-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pws_aqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pws_aqi_category-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pws_aqi_no2-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pws_aqi_no2_category-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pws_aqi_o3-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pws_aqi_o3_category-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pws_aqi_pm10_0-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pws_aqi_pm10_0_category-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pws_aqi_pm2_5-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pws_aqi_pm2_5_category-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.radiation-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.rain-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.rain24-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.rainRate-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.rain_sum10m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.rain_sum2m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.rain_sum30m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.rain_sum5m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.rain_sum60m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.rxCheckPercent-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sds011_humidity-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sds011_pm10_0-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sds011_pm2_5-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sds011_temperature-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.signal1-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.signal2-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.signal3-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.signal5-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.signal8-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.soilMoist1-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_altimeter-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_appTemp-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_barometer-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_dewpoint-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_heatindex-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_humidex-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_humidity-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_pressure-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_temperature-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_thswIndex-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_thwIndex-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_voltage-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_voltage_percent-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_wetBulb-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.solar_windchill-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.stormRain-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sunshine-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sunshine_avg10m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sunshine_avg2m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sunshine_avg30m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sunshine_avg5m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sunshine_avg60m-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sunshineDur-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sunshineRadiationMin-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sunshineThreshold-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sunshineThresholdMin-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.thswIndex-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.thwIndex-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.totalRain-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.trendBarometerCode-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.uba_aqi-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.uba_aqi_category-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.uba_no2-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.uba_no2_category-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.uba_o3-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.uba_o3_category-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.usUnits-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.utcoffsetLMT-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.UV-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.uvradiation-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.weekRain-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wetBulb-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh31_ch1_batt-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh31_ch1_batt_percent-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh31_ch1_sig-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh31_ch2_batt-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh31_ch2_batt_percent-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh31_ch2_sig-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh31_ch3_batt-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh31_ch3_batt_percent-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh31_ch3_sig-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh51_ch1_batt-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh51_ch1_batt_percent-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh51_ch1_sig-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh57_batt-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh57_batt_percent-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh57_lightning_count-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh57_lightning_distance-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh57_lightning_time-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh57_sig-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh65_batt-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh65_batt_percent-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.wh65_sig-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windchill-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windDir-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windGust-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windGustDir-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windrun-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windrun_ESE-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windrun_NW-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windrun_S-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windrun_SE-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windrun_SSE-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windrun_SSW-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windrun_SW-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windrun_W-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windrun_WNW-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windrun_WSW-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.windSpeed-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.yearGDD-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.yearRain-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+}
+

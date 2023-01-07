@@ -23,12 +23,87 @@
     --indoor-humidity-moist:#B2DF8A;
     --indoor-humidity-very-moist:#0077FF;
 }
+/* link color */
 
-/* Nav tabs */
+/* 
+Belchertown default: #e5554e
+Royal Blue: #4169e1
+*/
 
-.nav-tabs {
-    border-bottom: 1px solid transparent;
+a {
+    color: #4169e1;
+    text-decoration: none;
 }
+
+/* MQTT Debug */
+
+.mqtt-table-container {
+    padding-right: 0px;
+    padding-left: 0px;
+}
+
+.dark .mqtt-table-container {
+    padding-right: 0px;
+    padding-left: 0px;
+}
+
+.mqtt-table {
+    font-size: calc(10px + 0.4vw);
+}
+
+.dark .mqtt-table {
+    font-size: calc(10px + 0.4vw);
+}
+
+.mqtt-table >thead>tr>th, .mqtt-table >thead>tr>td, .mqtt-table >tbody>tr>th, .mqtt-table >tbody>tr>td {
+    vertical-align: middle;
+    padding: 4px 0px 4px 0px;
+    border-top: 1px solid #ddd;
+}
+
+.dark .mqtt-table >thead>tr>th, .dark .mqtt-table >thead>tr>td, .dark .mqtt-table >tbody>tr>th, .dark .mqtt-table >tbody>tr>td {
+    vertical-align: middle;
+    padding: 4px 0px 4px 0px;
+    border-top: 1px solid #ddd;
+}
+
+.mqtt-table-head-headline {
+    text-align:center;
+    background:#D7D7D7;
+    color:#000;
+}
+.dark .mqtt-table-head-headline {
+    text-align:center;
+    background:#D7D7D7;
+    color:#000;
+}
+
+.mqtt-table-head-subheadline {
+    text-align:center;
+}
+
+.dark .mqtt-table-head-subheadline {
+    text-align:center;
+}
+
+.mqtt-table-body-obs {
+    padding-left: 10px !important;
+}
+
+.dark .mqtt-table-body-obs {
+    padding-left: 10px !important;
+}
+
+.mqtt-table-body-obs-val {
+    text-align: right;
+    padding-right: 20px !important;
+}
+
+.dark .mqtt-table-body-obs-val {
+    text-align: right;
+    padding-right: 20px !important;
+}
+
 
 /* Status */
 
@@ -401,12 +476,18 @@ table.celestial td.label {
 
 /* Nav Tabs Index Radar */
 
+/* Nav tabs */
+
+.nav-tabs {
+    border-bottom: 1px solid transparent;
+}
+
 .tabs-menu > li > a, .dark .tabs-menu > li > a {
     padding: 0px 5px;
 }
 
 .nav-tabs>li>a, .dark .nav-tabs>li>a {
-    color: #e5554e;
+    /* color: #e5554e; */
     margin-right: 4px;
     line-height: 1.42857143;
     border: 1px solid transparent;
@@ -424,7 +505,7 @@ table.celestial td.label {
 }
 
 .dark .nav-tabs>li.active>a, .dark .nav-tabs>li.active>a:focus, .dark .nav-tabs>li.active>a:hover {
-    color: #FFF;
+    /* color: #FFF; */
     cursor: default;
     background-color: #424242;
     border: 1px solid #ddd;
@@ -691,14 +772,18 @@ a.history-table-body-year-nav-noaa, a.history-table-body-month-nav-noaa {
     color:#000;
 }
 
-.extreme-table-head-subheadline {
-    text-align:center;
-}
-
 .dark .extreme-table-head-headline {
     text-align:center;
     background:#D7D7D7;
     color:#000;
+}
+
+.extreme-table-head-subheadline {
+    text-align:center;
+}
+
+.dark .extreme-table-head-subheadline {
+    text-align:center;
 }
 
 .extreme-table-head-year {

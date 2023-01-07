@@ -29,7 +29,6 @@ tipping bucket rain gauge as a reference (for rain rate).
 """
 
 import logging
-import math
 import sys
 import time
 
@@ -49,7 +48,7 @@ from weewx.engine import StdService
 # get a logger object
 log = logging.getLogger(__name__)
 
-RAINRATE_VERSION = '0.20'
+RAINRATE_VERSION = '0.30'
 
 if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 7):
     raise weewx.UnsupportedFeature(
@@ -236,16 +235,12 @@ class RainRate(StdService):
         if len(rain_entries) < 2:
             pkt['rainRate'] = 0.0
         else:
-            # Immediately after a bucket tip, the rainRate is entirely composed of:
-            # 3600 * last_tip_amount / (time_of_last_tip - time_of_next_to_last_tip)
+            # Rain rate between the last two drops.
             rainRate1 = 3600 * rain_entries[0].amount / (rain_entries[0].timestamp - rain_entries[1].timestamp)
-            rainRate2 = 3600 * rain_entries[0].amount / (pkt['dateTime'] - rain_entries[1].timestamp)
-            # As time passes, rainRate2 becomes more prominent (y=x^sqrt(2))
-            secs_since_last_tip = pkt['dateTime'] - rain_entries[0].timestamp
-            if secs_since_last_tip >= 900.0:
-                factor1, factor2 = 0.0, 1.0
-            else:
-                factor2 = (secs_since_last_tip / 900.0) ** math.sqrt(2)
-                factor1 = 1 - factor2
-            pkt['rainRate'] = rainRate1 * factor1 + rainRate2 * factor2
+            # Rain rate imagining that there was a tip in the current packet (as such, between now and the actual last tip).
+            rainRate2 = 10000.0 # Pick a silly large number as we take the min below.
+            if pkt['dateTime'] != rain_entries[0].timestamp:
+                rainRate2 = 3600 * 0.01 / (pkt['dateTime'] - rain_entries[0].timestamp)
+            # Pick the lower of the two rates.
+            pkt['rainRate'] = min(rainRate1, rainRate2)
         log.debug('new_loop(%d): Added/updated pkt[rainRate] of %f' % (pkt['dateTime'], pkt['rainRate']))

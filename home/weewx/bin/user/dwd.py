@@ -261,7 +261,7 @@ class DWDPOIthread(threading.Thread):
         self.log_success = log_success
         self.log_failure = log_failure
         self.location = location
-        self.iconset = iconset
+        self.iconset = weeutil.weeutil.to_int(iconset)
         
         self.lock = threading.Lock()
         
@@ -412,7 +412,7 @@ class DWDPOIthread(threading.Thread):
                 self.getRecord()
                 time.sleep(300)
         except Exception as e:
-            logerr("thread '%s': %s - %s" % (self.name,e.__class__.__name__,e))
+            logerr("thread '%s': main loop %s - %s" % (self.name,e.__class__.__name__,e))
         finally:
             loginf("thread '%s' stopped" % self.name)
 
@@ -460,7 +460,7 @@ class DWDCDCthread(threading.Thread):
         self.log_success = log_success
         self.log_failure = log_failure
         self.location = location
-        self.iconset = iconset
+        self.iconset = weeutil.weeutil.to_int(iconset)
         self.lat = None
         self.lon = None
         self.alt = None
@@ -491,6 +491,9 @@ class DWDCDCthread(threading.Thread):
             obsgroup = obs[2]
             if obsgroup:
                 weewx.units.obs_group_dict.setdefault(prefix+obstype[0].upper()+obstype[1:],obsgroup)
+        weewx.units.obs_group_dict.setdefault(prefix+'Barometer','group_pressure')
+        weewx.units.obs_group_dict.setdefault(prefix+'Altimeter','group_pressure')
+
 
     def shutDown(self):
         """ request thread shutdown """
@@ -658,7 +661,7 @@ class DWDCDCthread(threading.Thread):
                 self.getRecord()
                 time.sleep(300)
         except Exception as e:
-            logerr("thread '%s': %s - %s" % (self.name,e.__class__.__name__,e))
+            logerr("thread '%s': main loop %s - %s" % (self.name,e.__class__.__name__,e))
         finally:
             loginf("thread '%s' stopped" % self.name)
 
@@ -687,7 +690,13 @@ class DWDservice(StdService):
         stations = poi_dict.get('stations',site_dict)
         for station in stations.sections:
             station_dict = weeutil.config.accumulateLeaves(stations[station])
-            station_dict['iconset'] = station_dict.get('icon_set',self.iconset)
+            station_dict['iconset'] = self.iconset
+            iconset = station_dict.get('icon_set')
+            if iconset is not None:
+                station_dict['iconset'] = self.iconset
+                if iconset=='belchertown': station_dict['iconset'] = 4
+                if iconset=='dwd': station_dict['iconset'] = 5
+                if iconset=='aeris': station_dict['iconset'] = 6
             self._create_poi_thread(station, station, station_dict)
             
         # https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/
@@ -695,7 +704,13 @@ class DWDservice(StdService):
         stations = cdc_dict.get('stations',site_dict)
         for station in stations.sections:
             station_dict = weeutil.config.accumulateLeaves(stations[station])
-            station_dict['iconset'] = station_dict.get('icon_set',self.iconset)
+            station_dict['iconset'] = self.iconset
+            iconset = station_dict.get('icon_set')
+            if iconset is not None:
+                station_dict['iconset'] = self.iconset
+                if iconset=='belchertown': station_dict['iconset'] = 4
+                if iconset=='dwd': station_dict['iconset'] = 5
+                if iconset=='aeris': station_dict['iconset'] = 6
             self._create_cdc_thread(station, station, station_dict)
         
         if  __name__!='__main__':

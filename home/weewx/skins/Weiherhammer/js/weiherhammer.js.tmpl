@@ -8,7 +8,7 @@
 #set global $hemisphere = "northern-hemisphere"
 #end if
 
-var pages = ["graphs", "records", "reports", "about", "pi", "webcam", "imprint", "privacy", "forecast", "extreme"];
+var pages = ["graphs", "records", "reports", "about", "pi", "webcam", "imprint", "privacy", "forecast", "extreme", "mqtt"];
 var pageName = "";
 // If this page we're on now is listed as a subpage, use ".." to get to the relative root
 function get_relative_url() {
@@ -539,6 +539,22 @@ function set_voltage_color(voltVal, container, mode, threshold=[3.0,1.0]) {
             }
         } else if (mode == 'hl') {
             if (voltVal > threshold[0]) {
+                var color = '#84D862';
+                var txt = "$gettext('ok')";
+            } else {
+                var color = '#FF0000';
+                var txt = "$gettext('low')";
+            }
+        } else if (mode == '1ok') {
+            if (voltVal == 1.0) {
+                var color = '#84D862';
+                var txt = "$gettext('ok')";
+            } else {
+                var color = '#FF0000';
+                var txt = "$gettext('low')";
+            }
+        } else if (mode == '0ok') {
+            if (voltVal == 0.0) {
                 var color = '#84D862';
                 var txt = "$gettext('ok')";
             } else {
@@ -2465,6 +2481,36 @@ function update_current_wx(data) {
     });
     // End dynamic station observation box
 
+    // Get all span elements within the table. This is setup by Python initially
+    jQuery('.mqtt-data').find("span").each(function() {
+        // The class name is the same as the Extras.station_observations name (weewx schema)
+        thisElementClass = jQuery(this).attr("class")
+        // Loop through each MQTT payload item
+        station_mqtt_data.forEach(mqttdata => {
+            if (thisElementClass.endsWith("barometer") || thisElementClass.endsWith("pressure") || thisElementClass.endsWith("altimeter") || thisElementClass.endsWith("time") || thisElementClass.endsWith("Time") || thisElementClass.endsWith("DATUM") || thisElementClass == "cloudbase") {
+                // Do not group number into thousands,hundreds format
+                localeStringUseGrouping = false;
+            } else {
+                localeStringUseGrouping = true;
+            }
+            if (data.hasOwnProperty(thisElementClass)) {
+                html_output = parseFloat(parseFloat(data[thisElementClass])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array[thisElementClass], maximumFractionDigits: unit_rounding_array[thisElementClass], useGrouping: localeStringUseGrouping}) + unit_label_array[thisElementClass];
+                // Finally update the element class
+                jQuery("." + thisElementClass).html(html_output);
+                jQuery('.' + thisElementClass).attr('data-mqttrec', 1);
+                jQuery('.' + thisElementClass + '-mqtt-rec-dot').css('background-color', 'var(--mqtt-rec)');
+            } else {
+                if ('mqttrec' in jQuery('.' + thisElementClass).data()) {
+                    var data_mqttrec = jQuery('.' + thisElementClass).data('mqttrec');
+                    if (parseInt(data_mqttrec) == 1) {
+                        jQuery('.' + thisElementClass + '-mqtt-rec-dot').css('background-color', 'var(--mqtt-rec-outdated)');
+                    }
+                }
+            }
+        });
+    });
+    // End dynamic mqtt data updates
+
     // Temperature F
     if (data.hasOwnProperty("outTemp_F")) {
         // Inside parseFloat converts str to int. Outside parseFloat processes the locale string
@@ -2634,7 +2680,7 @@ function update_current_wx(data) {
 
     // PWS battery status
     if (data.hasOwnProperty("wh65_batt")) {
-        set_voltage_color(data["wh65_batt"], ".wh65_batt", 'hl', [1.0]);
+        set_voltage_color(data["wh65_batt"], ".wh65_batt", '0ok');
     }
     if (data.hasOwnProperty("wh57_batt")) {
         set_voltage_color(data["wh57_batt"], ".wh57_batt", 'hml', [3.0,1.0]);
@@ -3208,7 +3254,7 @@ function showChart(json_file, prepend_renderTo = false) {
                                 }
                             },
                             width: 1,
-                            dashStyle: 'Solid',
+                            dashStyle: 'Dash',
                             zIndex : 3
                         });
                     }
@@ -3258,7 +3304,7 @@ function showChart(json_file, prepend_renderTo = false) {
                                 }
                             },
                             width: 1,
-                            dashStyle: 'Solid',
+                            dashStyle: 'Dash',
                             zIndex : 3
                         });
                     }
@@ -3308,7 +3354,7 @@ function showChart(json_file, prepend_renderTo = false) {
                                 }
                             },
                             width: 1,
-                            dashStyle: 'Solid',
+                            dashStyle: 'Dash',
                             zIndex : 3
                         });
                     }
@@ -3358,7 +3404,7 @@ function showChart(json_file, prepend_renderTo = false) {
                                 }
                             },
                             width: 1,
-                            dashStyle: 'Solid',
+                            dashStyle: 'Dash',
                             zIndex : 3
                         });
                     }
@@ -3408,7 +3454,7 @@ function showChart(json_file, prepend_renderTo = false) {
                                 }
                             },
                             width: 1,
-                            dashStyle: 'Solid',
+                            dashStyle: 'Dash',
                             zIndex : 3
                         });
                     }
@@ -3443,7 +3489,7 @@ function showChart(json_file, prepend_renderTo = false) {
                                 }
                             },
                             width: 1,
-                            dashStyle: 'Solid',
+                            dashStyle: 'Dash',
                             zIndex : 3
                         });
                     }
@@ -3476,7 +3522,7 @@ function showChart(json_file, prepend_renderTo = false) {
                                 }
                             },
                             width: 1,
-                            dashStyle: 'Solid',
+                            dashStyle: 'Dash',
                             zIndex : 3
                         });
                     }
