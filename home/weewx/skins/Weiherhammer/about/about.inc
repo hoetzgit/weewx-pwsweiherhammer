@@ -32,7 +32,7 @@
         </div>
 
         <div class="col-sm-4">
-            <img src="$relative_url/images/Wetterstation_Sainlogic.jpg" alt="Sainlogic WS3500 Wetterstation in Weiherhammer" title="Sainlogic WS3500 Wetterstation in Weiherhammer" style="horizontal-align: middle;"/>
+            <img src="$relative_url/images/Wetterstation_Sainlogic.jpg" alt="Sainlogic WS3500 Wetterstation in Weiherhammer" rel="tooltip" title="Sainlogic WS3500 Wetterstation in Weiherhammer" style="horizontal-align: middle;"/>
             <p><small>Sainlogic WS3500 im Garten, ca. 5m H&ouml;he</small></p>
         </div>
 
@@ -70,7 +70,7 @@
         </div>
 
         <div class="col-sm-4">
-            <img src="$relative_url/images/Wetterstation_Solar.jpg" alt="Solar Wetterstation in Weiherhammer" title="Solar Wetterstation in Weiherhammer" style="horizontal-align: middle;"/>
+            <img src="$relative_url/images/Wetterstation_Solar.jpg" alt="Solar Wetterstation in Weiherhammer" rel="tooltip" title="Solar Wetterstation in Weiherhammer" style="horizontal-align: middle;"/>
             <p><small>Solar Station am Balkon, ca. 4,5m H&ouml;he</small></p>
         </div>
 
@@ -98,7 +98,7 @@
         </div>
 
         <div class="col-sm-4">
-            <img src="$relative_url/images/airRohr_SDS011.jpg" alt="Nova PM Sensor SDS011 airRohr der Wetterstation in Weiherhammer" title="Nova PM Sensor SDS011 airRohr der Wetterstation in Weiherhammer" style="horizontal-align: middle;"/>
+            <img src="$relative_url/images/airRohr_SDS011.jpg" alt="Nova PM Sensor SDS011 airRohr der Wetterstation in Weiherhammer" rel="tooltip" title="Nova PM Sensor SDS011 airRohr der Wetterstation in Weiherhammer" style="horizontal-align: middle;"/>
             <p><small>Feinstaubsensor am Balkon in ca. 4,5m H&ouml;he</small></p>
         </div>
 
@@ -159,12 +159,12 @@
         </div>
 
         <div class="col-sm-4">
-            <img src="$relative_url/images/Allsky_Kamera_1.jpg" alt="360&deg; AllSky Himmelskamera in Weiherhammer, Kamera 1" title="360&deg; AllSky Himmelskamera in Weiherhammer, Kamera 1" style="horizontal-align: middle;"/>
+            <img src="$relative_url/images/Allsky_Kamera_1.jpg" alt="360&deg; AllSky Himmelskamera in Weiherhammer, Kamera 1" rel="tooltip" title="360&deg; AllSky Himmelskamera in Weiherhammer, Kamera 1" style="horizontal-align: middle;"/>
             <p><small>AllSky Kamera 1</small></p>
         </div>
 
         <div class="col-sm-2">
-            <img src="$relative_url/images/Allsky_Kamera_2.jpg" alt="360&deg; AllSky Himmelskamera in Weiherhammer, Kamera 2" title="360&deg; AllSky Himmelskamera in Weiherhammer, Kamera 2" style="horizontal-align: middle;"/>
+            <img src="$relative_url/images/Allsky_Kamera_2.jpg" alt="360&deg; AllSky Himmelskamera in Weiherhammer, Kamera 2" rel="tooltip" title="360&deg; AllSky Himmelskamera in Weiherhammer, Kamera 2" style="horizontal-align: middle;"/>
             <p><small>AllSky Kamera 2</small></p>
         </div>
 
@@ -191,7 +191,7 @@
         </div>
 
         <div class="col-sm-4">
-            <img src="$relative_url/images/Wetterstation_Webcam.jpg" alt="Webcam Wetterstation Weiherhammer" title="Webcam Wetterstation Weiherhammer" style="horizontal-align: middle;"/>
+            <img src="$relative_url/images/Wetterstation_Webcam.jpg" alt="Webcam Wetterstation Weiherhammer" rel="tooltip" title="Webcam Wetterstation Weiherhammer" style="horizontal-align: middle;"/>
             <p><small>Webcam Foscam FI9900P</small></p>
         </div>
 

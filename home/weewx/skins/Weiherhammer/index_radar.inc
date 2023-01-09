@@ -26,43 +26,43 @@
         </div>
         <div id="dwdradar" class="tab-content">
             <div class="dwdradar_image">
-                <a href="https://www.dwd.de/DE/leistungen/radarbild_film/radarbild_film.html?cl2Categories_Bundesland=rdbf_bay&cl2Categories_Darstellung=rdbf_akt&cl2Categories_Format=radarbild" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/radar/radfilm_bay_akt.gif" alt="DWD Radar" width="420px" title="$obs.label.radar_content_ttt"></a>
+                <a href="https://www.dwd.de/DE/leistungen/radarbild_film/radarbild_film.html?cl2Categories_Bundesland=rdbf_bay&cl2Categories_Darstellung=rdbf_akt&cl2Categories_Format=radarbild" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/radar/radfilm_bay_akt.gif" alt="DWD Radar" width="420px" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
             </div>
         </div>
         <div id="meteosat" class="tab-content">
             <div class="meteosat_image">
-##                <a href="https://www.dwd.de/DE/leistungen/satellit_metsat/satellit_metsat.html" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/sat/bilder/meteosat/satbild_hrvir_akt.png" alt="Meteosat" width="488px" title="$obs.label.radar_content_ttt"></a>
-                <a href="http://de.sat24.com/de" target="_blank" rel="noreferrer"><img src="https://api.sat24.com/animated/DE/infraPolair/1/W_dot_%20Europe%20Standard%20Time/4277781" alt="Meteosat" width="488px" title="$obs.label.radar_content_ttt"></a>
+##                <a href="https://www.dwd.de/DE/leistungen/satellit_metsat/satellit_metsat.html" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/sat/bilder/meteosat/satbild_hrvir_akt.png" alt="Meteosat" width="488px" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
+                <a href="http://de.sat24.com/de" target="_blank" rel="noreferrer"><img src="https://api.sat24.com/animated/DE/infraPolair/1/W_dot_%20Europe%20Standard%20Time/4277781" alt="Meteosat" width="488px" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
             </div>
         </div>
 ##        <div id="precipitation" class="tab-content">
 ##            <div class="precipitation_image">
-##                <a href="https://www.dwd.de/DE/leistungen/wolken_niederschlagsart/wolken_niederschlagsart.html" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/sat/satwetter/njob_satrad.png" alt="DWD Niederschlagsdaten" width="420px" title="$obs.label.radar_content_ttt"></a>
+##                <a href="https://www.dwd.de/DE/leistungen/wolken_niederschlagsart/wolken_niederschlagsart.html" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/sat/satwetter/njob_satrad.png" alt="DWD Niederschlagsdaten" width="420px" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
 ##            </div>
 ##        </div>
         <div id="webcam" class="tab-content">
             <div class="webcam_image">
-                <a href="$relative_url/webcam"><img src="$relative_url/images/webcam_small.jpg" alt="Die Webcam der Wetterstation Weiherhammer" title="$obs.label.radar_content_ttt"></a>
+                <a href="$relative_url/webcam"><img src="$relative_url/images/webcam_small.jpg" alt="Die Webcam der Wetterstation Weiherhammer" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
             </div>
             <div style="text-align:center"><small>$obs.label.radar_content_webcam</small></div>
         </div>
 ##        <div id="webcamrpi" class="tab-content">
 ##            <div class="webcamrpi_image">
-##                <a href="https://wcam.ott24.net" target="_blank" rel="noreferrer"><img src="https://wcam.ott24.net/image.jpg" alt="Die RPi Webcam der Wetterstation Weiherhammer" title="$obs.label.radar_content_ttt"></a>
+##                <a href="https://wcam.ott24.net" target="_blank" rel="noreferrer"><img src="https://wcam.ott24.net/image.jpg" alt="Die RPi Webcam der Wetterstation Weiherhammer" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
 ##            </div>
 ##            <div style="text-align:center"><small>Test Wetterkamera Raspberry Pi</small></div>
 ##        </div>
         #if os.path.exists("allsky/allskycam01.up")
         <div id="allsky01" class="tab-content">
             <div class="allsky01_image">
-                <a href="https://allsky.ott24.net" target="_blank" rel="noreferrer"><img src="https://allsky.ott24.net/image.jpg" alt="Die AllSky Kamera 1 der PWS Weiherhammer" title="$obs.label.radar_content_ttt"></a>
+                <a href="https://allsky.ott24.net" target="_blank" rel="noreferrer"><img src="https://allsky.ott24.net/image.jpg" alt="Die AllSky Kamera 1 der PWS Weiherhammer" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
             </div>
         </div>
         #end if
         #if os.path.exists("allsky/allskycam02.up")
         <div id="allsky02" class="tab-content">
             <div class="allsky02_image">
-                <a href="https://allsky02.ott24.net" target="_blank" rel="noreferrer"><img src="https://allsky02.ott24.net/image.jpg" alt="Die AllSky Kamera 2 der PWS Weiherhammer" title="$obs.label.radar_content_ttt"></a>
+                <a href="https://allsky02.ott24.net" target="_blank" rel="noreferrer"><img src="https://allsky02.ott24.net/image.jpg" alt="Die AllSky Kamera 2 der PWS Weiherhammer" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
             </div>
         </div>
         #end if

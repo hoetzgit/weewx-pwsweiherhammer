@@ -12,7 +12,7 @@
         var finalRotation;
         #if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
         var mqttMsg;
-        var mqttclient = "weiherhammer_website" + Math.floor(Math.random() * 999999999);
+        var mqttclient = "weiherhammer_$page" + Math.floor(Math.random() * 999999999);
         #end if
         var moment_locale = "$system_locale_js";
         moment.locale(moment_locale);
@@ -174,14 +174,10 @@
         });
         
     </script>
-  
     <div class="site-inner">
-        <main class="content">    
-
+        <main class="content">
             <article class="weewx frontpage" itemscope="" itemtype="http://schema.org/CreativeWork">
-            
                 <!-- Top bar with city and share -->
-                <div class="dummy"></div>
                 <div class="wx-stn-info-container">
                     <div class="wx-stn-name">
                         <h1>$obs.label.home_page_header</h1>
@@ -362,15 +358,15 @@
                             <div class="pws-aqi-index">
                                  #if $current.pws_aqi_category.has_data
                                  #if $current.pws_aqi_category.raw == 0.0
-                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_very_good">$obs.label.pws_aqi_very_good</span>
+                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" rel="tooltip" title="$obs.label.ttt_pws_aqi_very_good">$obs.label.pws_aqi_very_good</span>
                                  #else if $current.pws_aqi_category.raw == 1.0
-                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_good">$obs.label.pws_aqi_good</span>
+                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" rel="tooltip" title="$obs.label.ttt_pws_aqi_good">$obs.label.pws_aqi_good</span>
                                  #else if $current.pws_aqi_category.raw == 2.0
-                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_moderate">$obs.label.pws_aqi_moderate</span>
+                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" rel="tooltip" title="$obs.label.ttt_pws_aqi_moderate">$obs.label.pws_aqi_moderate</span>
                                  #else if $current.pws_aqi_category.raw == 3.0
-                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_poor">$obs.label.pws_aqi_poor</span>
+                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" rel="tooltip" title="$obs.label.ttt_pws_aqi_poor">$obs.label.pws_aqi_poor</span>
                                  #else if $current.pws_aqi_category.raw == 4.0
-                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" title="$obs.label.ttt_pws_aqi_very_poor">$obs.label.pws_aqi_very_poor</span>
+                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" rel="tooltip" title="$obs.label.ttt_pws_aqi_very_poor">$obs.label.pws_aqi_very_poor</span>
                                  #else
                                  $obs.label.pws_aqi_long <span class="pws-aqi-category">$obs.label.pws_aqi_unknown</span>
                                  #end if
@@ -382,12 +378,12 @@
                                 <table class="pws-aqi-table">
                                     <tbody>
                                         <tr>
-                                            <td class="pws-aqi-table-title" title="$obs.label.ttt_pm2_5_short"><span class="pws_aqi_pm2_5_dot"></span>&nbsp;$obs.label.sds011_pm2_5_short</td>
-                                            <td class="pws-aqi-table-title border-left" title="$obs.label.ttt_pm10_0_short"><span class="pws_aqi_pm10_0_dot"></span>&nbsp;$obs.label.sds011_pm10_0_short</td>
+                                            <td class="pws-aqi-table-title" rel="tooltip" title="$obs.label.ttt_pm2_5_short"><span class="pws_aqi_pm2_5_dot"></span>&nbsp;$obs.label.sds011_pm2_5_short</td>
+                                            <td class="pws-aqi-table-title border-left" rel="tooltip" title="$obs.label.ttt_pm10_0_short"><span class="pws_aqi_pm10_0_dot"></span>&nbsp;$obs.label.sds011_pm10_0_short</td>
                                         </tr>
                                         <tr>
-                                            <td class="pws-aqi-table-value sds011-pm2_5" title="$obs.label.ttt_pm2_5_short">$current.sds011_pm2_5</td>
-                                            <td class="pws-aqi-table-value border-left sds011-pm10_0" title="$obs.label.ttt_pm10_0_short">$current.sds011_pm10_0</td>
+                                            <td class="pws-aqi-table-value sds011-pm2_5">$current.sds011_pm2_5</td>
+                                            <td class="pws-aqi-table-value border-left sds011-pm10_0">$current.sds011_pm10_0</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -396,12 +392,12 @@
                                 <table class="pws-aqi-table">
                                     <tbody>
                                         <tr>
-                                            <td class="pws-aqi-table-title border-left" title="$obs.label.ttt_o3_short"><span class="pws_aqi_o3_dot"></span>&nbsp;$obs.label.uba_o3_short</td>
-                                            <td class="pws-aqi-table-title border-left" title="$obs.label.ttt_no2_short"><span class="pws_aqi_no2_dot"></span>&nbsp;$obs.label.uba_no2_short</td>
+                                            <td class="pws-aqi-table-title border-left" rel="tooltip" title="$obs.label.ttt_o3_short"><span class="pws_aqi_o3_dot"></span>&nbsp;$obs.label.uba_o3_short</td>
+                                            <td class="pws-aqi-table-title border-left" rel="tooltip" title="$obs.label.ttt_no2_short"><span class="pws_aqi_no2_dot"></span>&nbsp;$obs.label.uba_no2_short</td>
                                         </tr>
                                         <tr>
-                                            <td class="pws-aqi-table-value border-left uba-o3" title="$obs.label.ttt_o3_short">$current.uba_o3</td>
-                                            <td class="pws-aqi-table-value border-left uba-no2" title="$obs.label.ttt_no2_short">$current.uba_no2</td>
+                                            <td class="pws-aqi-table-value border-left uba-o3">$current.uba_o3</td>
+                                            <td class="pws-aqi-table-value border-left uba-no2">$current.uba_no2</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -420,20 +416,29 @@
                             </table>
                             #if $Extras.has_key("station_observation_extras") and $Extras.station_observation_extras == '1'
                             <!-- Additional Station Observations -->
-                            <div class="station-observation-extras-modal"><a href="#station-observation-extras" data-toggle="modal" data-target="#station-observation-extras">$gettext('more values')</a></div>
+                            <div class="station-observation-extras-modal-link"><a href="#station-observation-extras" data-toggle="modal" data-target="#station-observation-extras">$gettext('more values')</a></div>
                             <div class="modal fade" id="station-observation-extras" tabindex="-1" role="dialog" aria-labelledby="station-observation-extras" aria-hidden="true">
                                 <div class="modal-dialog modal-lg" role="document">
                                     <div class="modal-content">
-                                        <div class="modal-header">
+                                        <div class="modal-header station-observation-extras-modal-header">
                                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
                                             <h4 class="modal-title" id="station-observation-extras">$gettext('more station observations')</h4>
+                                            <div class="updated-wrapper">
+                                                <div class="onlineMarkerOuter">
+                                                    <span class="loadingMarker" style="display:none"></span>
+                                                    <span class="onlineMarker" style="display:none"></span>
+                                                    <span class="offlineMarker" style="display:none"></span>
+                                                    <div class="updated station-observation-extras-modal-updated"></div><!-- AJAX moment.js -->
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="station-observation-extras-modal-body modal-body">
+                                        <div class="modal-body station-observation-extras-modal-body">
                                             #include "station-observation-extras/station-observation-extras.inc"
                                         </div><!-- AJAX -->
                                         <div class="modal-footer">
+                                            <a href="$relative_url/mqtt/" class="btn btn-primary" role="button">MQTT</a>
                                             <button type="button" class="btn btn-primary" data-dismiss="modal">$gettext('close')</button>
                                         </div>
                                     </div>

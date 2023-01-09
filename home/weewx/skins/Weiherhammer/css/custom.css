@@ -23,9 +23,10 @@
     --indoor-humidity-moist:#B2DF8A;
     --indoor-humidity-very-moist:#0077FF;
 }
-/* link color */
 
-/* 
+/*
+link color
+TODO dark
 Belchertown default: #e5554e
 Royal Blue: #4169e1
 */
@@ -34,6 +35,85 @@ a {
     color: #4169e1;
     text-decoration: none;
 }
+
+a:hover {
+    color: #4169e1;
+    text-decoration: revert;
+}
+
+.sun-moon-modal a {
+    text-decoration: none;
+}
+
+.sun-moon-modal a:hover {
+    color: #4169e1;
+    text-decoration: revert;
+}
+
+.genesis-nav-menu a:hover, .dark .genesis-nav-menu a:hover {
+    color: #4169e1;
+    display: block;
+    padding: 30px 24px;
+}
+
+/* 
+Tooltips
+https://osvaldas.info/elegant-css-and-jquery-tooltip-responsive-mobile-friendly
+*/
+
+abbr[title] {
+    border-bottom: none;
+    text-decoration: none !important;
+    -webkit-text-decoration: none !important;
+    -moz-text-decoration: none !important;
+    text-decoration: none !important;
+}
+
+#tooltip
+{
+    text-align: center;
+    color: #fff;
+    background: #111;
+    position: absolute;
+    z-index: 100;
+    padding: 15px;
+    border-radius: 10px;
+}
+ 
+    #tooltip:after /* triangle decoration */
+    {
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-top: 10px solid #111;
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: -10px;
+        margin-left: -10px;
+    }
+ 
+        #tooltip.top:after
+        {
+            border-top-color: transparent;
+            border-bottom: 10px solid #111;
+            top: -20px;
+            bottom: auto;
+        }
+ 
+        #tooltip.left:after
+        {
+            left: 10px;
+            margin: 0;
+        }
+ 
+        #tooltip.right:after
+        {
+            right: 10px;
+            left: auto;
+            margin: 0;
+        }
 
 /* MQTT Debug */
 
@@ -288,18 +368,40 @@ table.celestial td.label {
     padding-bottom: 10px;
 }
 
-/* additional station observations */
+/* additional station observations modal window */
 
-.station-observation-extras-modal {
+.station-observation-extras-modal-link {
     width: 100%;
     text-align: center;
     margin: 0 auto;
     display: block;
 }
 
-.page .station-observation-extras-modal a {
+/*
+.station-observation-extras-modal-link a {
     text-decoration:none;
 }
+*/
+
+.station-observation-extras-modal-header {
+    padding: 10px 15px 0px 15px;
+}
+
+.station-observation-extras-modal-body {
+    padding: 5px 15px 5px 15px;
+}
+
+.station-observation-extras-modal-updated {
+    font-size: calc(10px + 0.3vw);
+}
+
+.station-observation-extras-modal-title {
+    text-align: left;
+    font-size: calc(14px + 0.3vw);
+    font-weight: 500;
+}
+
+/* additional station observations modal window content */
 
 .observation-extras-row {
     padding: 0px 8px 10px 8px;
@@ -312,20 +414,16 @@ table.celestial td.label {
 .observation-extras-row-right {
 }
 
-.observation-extras-title {
-    text-align: left;
-    font-size: calc(14px + 0.3vw);
-    font-weight: 500;
+.observation-extras-table {
+    font-size: calc(11px + 0.3vw);
 }
 
 .observations-extras-label {
-    font-size: calc(10px + 0.4vw);
     font-weight: 350;
     min-width: 260px;
 }
 
 .observations-extras-data {
-    font-size: calc(10px + 0.4vw);
     text-align: right;
 }
 

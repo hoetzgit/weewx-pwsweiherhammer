@@ -59,6 +59,9 @@
                             <div class="wx-stn-name">
                                 <h1>$obs.label.page_header_mqtt</h1>
                             </div>
+                            <div class="wx-stn-info">
+                                $obs.label.powered_by
+                            </div>
                             <div class="clear"></div>
                             <!-- Updated time ago -->
                             <div class="updated-wrapper">
@@ -78,7 +81,7 @@
                                 <table class="table table-striped mqtt-table">
                                     <thead class="table-light mqtt-table-head">
                                         <tr>
-                                            <th scope="col" class="mqtt-table-head-headline" colspan=2>Broker: $Extras.mqtt_websockets_host Topic: $Extras.mqtt_websockets_topic</th>
+                                            <th scope="col" class="mqtt-table-head-headline" colspan=2>Broker: $Extras.mqtt_websockets_host Topic: $Extras.mqtt_websockets_topic/#</th>
                                         </tr>
                                     </thead>
                                     <tbody class="table-group-divider mqtt-table-body">

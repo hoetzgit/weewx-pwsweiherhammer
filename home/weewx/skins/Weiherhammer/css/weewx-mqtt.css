@@ -1,6 +1,6 @@
 /*
 Generator: generate_weiherhammer_mqtt_inc.sh
-generated: 07.01.2023 15:03:22
+generated: 08.01.2023 12:19:05
 */
 
 :root {
@@ -15,6 +15,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .aeris_co-mqtt-rec-dot {
@@ -23,6 +24,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .aeris_no2-mqtt-rec-dot {
@@ -31,6 +33,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .aeris_o3-mqtt-rec-dot {
@@ -39,6 +42,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .aeris_pm10_0-mqtt-rec-dot {
@@ -47,6 +51,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .aeris_pm2_5-mqtt-rec-dot {
@@ -55,6 +60,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .aeris_so2-mqtt-rec-dot {
@@ -63,6 +69,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .altimeter-mqtt-rec-dot {
@@ -71,6 +78,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .appTemp-mqtt-rec-dot {
@@ -79,6 +87,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .asky_box_altimeter-mqtt-rec-dot {
@@ -87,6 +96,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .asky_box_barometer-mqtt-rec-dot {
@@ -95,6 +105,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .asky_box_dewpoint-mqtt-rec-dot {
@@ -103,6 +114,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .asky_box_fan-mqtt-rec-dot {
@@ -111,6 +123,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .asky_box_humidity-mqtt-rec-dot {
@@ -119,6 +132,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .asky_box_pressure-mqtt-rec-dot {
@@ -127,6 +141,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .asky_box_temperature-mqtt-rec-dot {
@@ -135,6 +150,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .asky_cpu_fan-mqtt-rec-dot {
@@ -143,6 +159,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .asky_cpu_temperature-mqtt-rec-dot {
@@ -151,6 +168,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .asky_dome_dewpoint-mqtt-rec-dot {
@@ -159,6 +177,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .asky_dome_heater-mqtt-rec-dot {
@@ -167,6 +186,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .asky_dome_temperature-mqtt-rec-dot {
@@ -175,6 +195,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .barometer-mqtt-rec-dot {
@@ -183,6 +204,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .bathroom_hqi-mqtt-rec-dot {
@@ -191,6 +213,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .bathroom_rqi-mqtt-rec-dot {
@@ -199,6 +222,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .bathroom_tqi-mqtt-rec-dot {
@@ -207,6 +231,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .beaufort-mqtt-rec-dot {
@@ -215,6 +240,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .bedroom_hqi-mqtt-rec-dot {
@@ -223,6 +249,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .bedroom_rqi-mqtt-rec-dot {
@@ -231,6 +258,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .bedroom_tqi-mqtt-rec-dot {
@@ -239,6 +267,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .boilingTemp-mqtt-rec-dot {
@@ -247,6 +276,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_Altimeter-mqtt-rec-dot {
@@ -255,6 +285,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_Altitude-mqtt-rec-dot {
@@ -263,6 +294,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_Barometer-mqtt-rec-dot {
@@ -271,6 +303,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_DateTime-mqtt-rec-dot {
@@ -279,6 +312,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_Dewpoint-mqtt-rec-dot {
@@ -287,6 +321,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_ExtraTemp1-mqtt-rec-dot {
@@ -295,6 +330,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_FMX_10-mqtt-rec-dot {
@@ -303,6 +339,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_FNX_10-mqtt-rec-dot {
@@ -311,6 +348,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_Latitude-mqtt-rec-dot {
@@ -319,6 +357,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_Longitude-mqtt-rec-dot {
@@ -327,6 +366,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_MESS_DATUM-mqtt-rec-dot {
@@ -335,6 +375,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_OutHumidity-mqtt-rec-dot {
@@ -343,6 +384,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_OutTemp-mqtt-rec-dot {
@@ -351,6 +393,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_Pressure-mqtt-rec-dot {
@@ -359,6 +402,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_Quality_level-mqtt-rec-dot {
@@ -367,6 +411,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_Radiation-mqtt-rec-dot {
@@ -375,6 +420,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_Rain-mqtt-rec-dot {
@@ -383,6 +429,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_RainDur-mqtt-rec-dot {
@@ -391,6 +438,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_RainIndex-mqtt-rec-dot {
@@ -399,6 +447,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_SolarRad-mqtt-rec-dot {
@@ -407,6 +456,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_Station_id-mqtt-rec-dot {
@@ -415,6 +465,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_SunshineDur-mqtt-rec-dot {
@@ -423,6 +474,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_WindDir-mqtt-rec-dot {
@@ -431,6 +483,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_WindDir10-mqtt-rec-dot {
@@ -439,6 +492,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_WindGust-mqtt-rec-dot {
@@ -447,6 +501,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_WindGustDir-mqtt-rec-dot {
@@ -455,6 +510,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_WindSpeed-mqtt-rec-dot {
@@ -463,6 +519,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cdc_WindSpeed10-mqtt-rec-dot {
@@ -471,6 +528,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .cloudbase-mqtt-rec-dot {
@@ -479,6 +537,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .dateTime-mqtt-rec-dot {
@@ -487,6 +546,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .dayET-mqtt-rec-dot {
@@ -495,6 +555,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .daymaxwind-mqtt-rec-dot {
@@ -503,6 +564,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .dayRain-mqtt-rec-dot {
@@ -511,6 +573,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .daySunshineDur-mqtt-rec-dot {
@@ -519,6 +582,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .dayWindrun-mqtt-rec-dot {
@@ -527,6 +591,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .dewpoint-mqtt-rec-dot {
@@ -535,6 +600,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .ET-mqtt-rec-dot {
@@ -543,6 +609,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .ET24-mqtt-rec-dot {
@@ -551,6 +618,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .extraHumid1-mqtt-rec-dot {
@@ -559,6 +627,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .extraHumid2-mqtt-rec-dot {
@@ -567,6 +636,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .extraHumid3-mqtt-rec-dot {
@@ -575,6 +645,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .extraTemp1-mqtt-rec-dot {
@@ -583,6 +654,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .extraTemp2-mqtt-rec-dot {
@@ -591,6 +663,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .extraTemp3-mqtt-rec-dot {
@@ -599,6 +672,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .foshk_cloudbase-mqtt-rec-dot {
@@ -607,6 +681,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .foshk_dewpoint-mqtt-rec-dot {
@@ -615,6 +690,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .foshk_feelslike-mqtt-rec-dot {
@@ -623,6 +699,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .foshk_heatindex-mqtt-rec-dot {
@@ -631,6 +708,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .foshk_interval-mqtt-rec-dot {
@@ -639,6 +717,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .foshk_sunhours-mqtt-rec-dot {
@@ -647,6 +726,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .foshk_sunshine-mqtt-rec-dot {
@@ -655,6 +735,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .foshk_windchill-mqtt-rec-dot {
@@ -663,6 +744,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .foshk_winddir_avg10m-mqtt-rec-dot {
@@ -671,6 +753,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .foshk_windgust_max10m-mqtt-rec-dot {
@@ -679,6 +762,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .foshk_windspeed_avg10m-mqtt-rec-dot {
@@ -687,6 +771,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .gainRain-mqtt-rec-dot {
@@ -695,6 +780,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .GTS-mqtt-rec-dot {
@@ -703,6 +789,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .heatindex-mqtt-rec-dot {
@@ -711,6 +798,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .hourRain-mqtt-rec-dot {
@@ -719,6 +807,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .humidex-mqtt-rec-dot {
@@ -727,6 +816,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .inDewpoint-mqtt-rec-dot {
@@ -735,6 +825,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .inHumidity-mqtt-rec-dot {
@@ -743,6 +834,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .inTemp-mqtt-rec-dot {
@@ -751,6 +843,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .interval-mqtt-rec-dot {
@@ -759,6 +852,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .lightning_strike_count-mqtt-rec-dot {
@@ -767,6 +861,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .lightning_strike_count_sum10m-mqtt-rec-dot {
@@ -775,6 +870,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .lightning_strike_count_sum2m-mqtt-rec-dot {
@@ -783,6 +879,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .lightning_strike_count_sum30m-mqtt-rec-dot {
@@ -791,6 +888,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .lightning_strike_count_sum5m-mqtt-rec-dot {
@@ -799,6 +897,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .lightning_strike_count_sum60m-mqtt-rec-dot {
@@ -807,6 +906,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .livingroom_hqi-mqtt-rec-dot {
@@ -815,6 +915,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .livingroom_rqi-mqtt-rec-dot {
@@ -823,6 +924,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .livingroom_tqi-mqtt-rec-dot {
@@ -831,6 +933,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .luminosity-mqtt-rec-dot {
@@ -839,6 +942,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .maxSolarRad-mqtt-rec-dot {
@@ -847,6 +951,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .monthRain-mqtt-rec-dot {
@@ -855,6 +960,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .office_hqi-mqtt-rec-dot {
@@ -863,6 +969,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .office_rqi-mqtt-rec-dot {
@@ -871,6 +978,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .office_tqi-mqtt-rec-dot {
@@ -879,6 +987,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .outEquiTemp-mqtt-rec-dot {
@@ -887,6 +996,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .outHumAbs-mqtt-rec-dot {
@@ -895,6 +1005,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .outHumidity-mqtt-rec-dot {
@@ -903,6 +1014,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .outMixingRatio-mqtt-rec-dot {
@@ -911,6 +1023,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .outSVP-mqtt-rec-dot {
@@ -919,6 +1032,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .outTemp-mqtt-rec-dot {
@@ -927,6 +1041,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .outThetaE-mqtt-rec-dot {
@@ -935,6 +1050,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .outVaporP-mqtt-rec-dot {
@@ -943,6 +1059,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .owm_aqi-mqtt-rec-dot {
@@ -951,6 +1068,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .owm_co-mqtt-rec-dot {
@@ -959,6 +1077,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .owm_nh3-mqtt-rec-dot {
@@ -967,6 +1086,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .owm_no-mqtt-rec-dot {
@@ -975,6 +1095,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .owm_no2-mqtt-rec-dot {
@@ -983,6 +1104,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .owm_o3-mqtt-rec-dot {
@@ -991,6 +1113,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .owm_pm10_0-mqtt-rec-dot {
@@ -999,6 +1122,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .owm_pm2_5-mqtt-rec-dot {
@@ -1007,6 +1131,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .owm_so2-mqtt-rec-dot {
@@ -1015,6 +1140,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .pm10_0-mqtt-rec-dot {
@@ -1023,6 +1149,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .pm2_5-mqtt-rec-dot {
@@ -1031,6 +1158,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_Barometer-mqtt-rec-dot {
@@ -1039,6 +1167,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_Cloudbase-mqtt-rec-dot {
@@ -1047,6 +1176,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_Cloudcover-mqtt-rec-dot {
@@ -1055,6 +1185,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_DateTime-mqtt-rec-dot {
@@ -1063,6 +1194,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_Dewpoint-mqtt-rec-dot {
@@ -1071,6 +1203,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_ExtraTemp1-mqtt-rec-dot {
@@ -1079,6 +1212,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_OutHumidity-mqtt-rec-dot {
@@ -1087,6 +1221,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_OutTemp-mqtt-rec-dot {
@@ -1095,6 +1230,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_PresentWeather-mqtt-rec-dot {
@@ -1103,6 +1239,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_Radiation-mqtt-rec-dot {
@@ -1111,6 +1248,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_Rain-mqtt-rec-dot {
@@ -1119,6 +1257,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_SnowDepth-mqtt-rec-dot {
@@ -1127,6 +1266,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_SolarRad-mqtt-rec-dot {
@@ -1135,6 +1275,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_Visibility-mqtt-rec-dot {
@@ -1143,6 +1284,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_WindDir-mqtt-rec-dot {
@@ -1151,6 +1293,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .poi_WindSpeed-mqtt-rec-dot {
@@ -1159,6 +1302,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .pressure-mqtt-rec-dot {
@@ -1167,6 +1311,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .pws_aqi-mqtt-rec-dot {
@@ -1175,6 +1320,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .pws_aqi_category-mqtt-rec-dot {
@@ -1183,6 +1329,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .pws_aqi_no2-mqtt-rec-dot {
@@ -1191,6 +1338,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .pws_aqi_no2_category-mqtt-rec-dot {
@@ -1199,6 +1347,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .pws_aqi_o3-mqtt-rec-dot {
@@ -1207,6 +1356,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .pws_aqi_o3_category-mqtt-rec-dot {
@@ -1215,6 +1365,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .pws_aqi_pm10_0-mqtt-rec-dot {
@@ -1223,6 +1374,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .pws_aqi_pm10_0_category-mqtt-rec-dot {
@@ -1231,6 +1383,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .pws_aqi_pm2_5-mqtt-rec-dot {
@@ -1239,6 +1392,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .pws_aqi_pm2_5_category-mqtt-rec-dot {
@@ -1247,6 +1401,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .radiation-mqtt-rec-dot {
@@ -1255,6 +1410,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .rain-mqtt-rec-dot {
@@ -1263,6 +1419,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .rain24-mqtt-rec-dot {
@@ -1271,6 +1428,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .rainRate-mqtt-rec-dot {
@@ -1279,6 +1437,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .rain_sum10m-mqtt-rec-dot {
@@ -1287,6 +1446,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .rain_sum2m-mqtt-rec-dot {
@@ -1295,6 +1455,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .rain_sum30m-mqtt-rec-dot {
@@ -1303,6 +1464,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .rain_sum5m-mqtt-rec-dot {
@@ -1311,6 +1473,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .rain_sum60m-mqtt-rec-dot {
@@ -1319,6 +1482,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .rxCheckPercent-mqtt-rec-dot {
@@ -1327,6 +1491,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .sds011_humidity-mqtt-rec-dot {
@@ -1335,6 +1500,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .sds011_pm10_0-mqtt-rec-dot {
@@ -1343,6 +1509,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .sds011_pm2_5-mqtt-rec-dot {
@@ -1351,6 +1518,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .sds011_temperature-mqtt-rec-dot {
@@ -1359,6 +1527,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .signal1-mqtt-rec-dot {
@@ -1367,6 +1536,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .signal2-mqtt-rec-dot {
@@ -1375,6 +1545,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .signal3-mqtt-rec-dot {
@@ -1383,6 +1554,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .signal5-mqtt-rec-dot {
@@ -1391,6 +1563,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .signal8-mqtt-rec-dot {
@@ -1399,6 +1572,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .soilMoist1-mqtt-rec-dot {
@@ -1407,6 +1581,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_altimeter-mqtt-rec-dot {
@@ -1415,6 +1590,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_appTemp-mqtt-rec-dot {
@@ -1423,6 +1599,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_barometer-mqtt-rec-dot {
@@ -1431,6 +1608,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_dewpoint-mqtt-rec-dot {
@@ -1439,6 +1617,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_heatindex-mqtt-rec-dot {
@@ -1447,6 +1626,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_humidex-mqtt-rec-dot {
@@ -1455,6 +1635,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_humidity-mqtt-rec-dot {
@@ -1463,6 +1644,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_pressure-mqtt-rec-dot {
@@ -1471,6 +1653,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_temperature-mqtt-rec-dot {
@@ -1479,6 +1662,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_thswIndex-mqtt-rec-dot {
@@ -1487,6 +1671,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_thwIndex-mqtt-rec-dot {
@@ -1495,6 +1680,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_voltage-mqtt-rec-dot {
@@ -1503,6 +1689,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_voltage_percent-mqtt-rec-dot {
@@ -1511,6 +1698,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_wetBulb-mqtt-rec-dot {
@@ -1519,6 +1707,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .solar_windchill-mqtt-rec-dot {
@@ -1527,6 +1716,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .stormRain-mqtt-rec-dot {
@@ -1535,6 +1725,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .sunshine-mqtt-rec-dot {
@@ -1543,6 +1734,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .sunshine_avg10m-mqtt-rec-dot {
@@ -1551,6 +1743,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .sunshine_avg2m-mqtt-rec-dot {
@@ -1559,6 +1752,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .sunshine_avg30m-mqtt-rec-dot {
@@ -1567,6 +1761,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .sunshine_avg5m-mqtt-rec-dot {
@@ -1575,6 +1770,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .sunshine_avg60m-mqtt-rec-dot {
@@ -1583,6 +1779,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .sunshineDur-mqtt-rec-dot {
@@ -1591,6 +1788,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .sunshineRadiationMin-mqtt-rec-dot {
@@ -1599,6 +1797,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .sunshineThreshold-mqtt-rec-dot {
@@ -1607,6 +1806,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .sunshineThresholdMin-mqtt-rec-dot {
@@ -1615,6 +1815,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .thswIndex-mqtt-rec-dot {
@@ -1623,6 +1824,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .thwIndex-mqtt-rec-dot {
@@ -1631,6 +1833,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .totalRain-mqtt-rec-dot {
@@ -1639,6 +1842,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .trendBarometerCode-mqtt-rec-dot {
@@ -1647,6 +1851,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .uba_aqi-mqtt-rec-dot {
@@ -1655,6 +1860,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .uba_aqi_category-mqtt-rec-dot {
@@ -1663,6 +1869,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .uba_no2-mqtt-rec-dot {
@@ -1671,6 +1878,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .uba_no2_category-mqtt-rec-dot {
@@ -1679,6 +1887,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .uba_o3-mqtt-rec-dot {
@@ -1687,6 +1896,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .uba_o3_category-mqtt-rec-dot {
@@ -1695,6 +1905,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .usUnits-mqtt-rec-dot {
@@ -1703,6 +1914,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .utcoffsetLMT-mqtt-rec-dot {
@@ -1711,6 +1923,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .UV-mqtt-rec-dot {
@@ -1719,6 +1932,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .uvradiation-mqtt-rec-dot {
@@ -1727,6 +1941,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .weekRain-mqtt-rec-dot {
@@ -1735,6 +1950,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wetBulb-mqtt-rec-dot {
@@ -1743,6 +1959,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh31_ch1_batt-mqtt-rec-dot {
@@ -1751,6 +1968,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh31_ch1_batt_percent-mqtt-rec-dot {
@@ -1759,6 +1977,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh31_ch1_sig-mqtt-rec-dot {
@@ -1767,6 +1986,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh31_ch1_sig_percent-mqtt-rec-dot {
@@ -1775,6 +1995,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh31_ch2_batt-mqtt-rec-dot {
@@ -1783,6 +2004,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh31_ch2_batt_percent-mqtt-rec-dot {
@@ -1791,6 +2013,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh31_ch2_sig-mqtt-rec-dot {
@@ -1799,6 +2022,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh31_ch2_sig_percent-mqtt-rec-dot {
@@ -1807,6 +2031,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh31_ch3_batt-mqtt-rec-dot {
@@ -1815,6 +2040,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh31_ch3_batt_percent-mqtt-rec-dot {
@@ -1823,6 +2049,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh31_ch3_sig-mqtt-rec-dot {
@@ -1831,6 +2058,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh31_ch3_sig_percent-mqtt-rec-dot {
@@ -1839,6 +2067,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh51_ch1_batt-mqtt-rec-dot {
@@ -1847,6 +2076,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh51_ch1_batt_percent-mqtt-rec-dot {
@@ -1855,6 +2085,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh51_ch1_sig-mqtt-rec-dot {
@@ -1863,6 +2094,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh51_ch1_sig_percent-mqtt-rec-dot {
@@ -1871,6 +2103,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh57_batt-mqtt-rec-dot {
@@ -1879,6 +2112,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh57_batt_percent-mqtt-rec-dot {
@@ -1887,6 +2121,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh57_lightning_count-mqtt-rec-dot {
@@ -1895,6 +2130,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh57_lightning_distance-mqtt-rec-dot {
@@ -1903,6 +2139,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh57_lightning_time-mqtt-rec-dot {
@@ -1911,6 +2148,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh57_sig-mqtt-rec-dot {
@@ -1919,6 +2157,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh57_sig_percent-mqtt-rec-dot {
@@ -1927,6 +2166,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh65_batt-mqtt-rec-dot {
@@ -1935,6 +2175,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh65_batt_percent-mqtt-rec-dot {
@@ -1943,6 +2184,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh65_sig-mqtt-rec-dot {
@@ -1951,6 +2193,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .wh65_sig_percent-mqtt-rec-dot {
@@ -1959,6 +2202,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .windchill-mqtt-rec-dot {
@@ -1967,6 +2211,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .windDir-mqtt-rec-dot {
@@ -1975,6 +2220,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .windGust-mqtt-rec-dot {
@@ -1983,6 +2229,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .windGustDir-mqtt-rec-dot {
@@ -1991,6 +2238,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .windrun-mqtt-rec-dot {
@@ -1999,6 +2247,25 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
+}
+
+.windrun_E-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.windrun_ENE-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
 }
 
 .windrun_ESE-mqtt-rec-dot {
@@ -2007,6 +2274,16 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
+}
+
+.windrun_NE-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
 }
 
 .windrun_NW-mqtt-rec-dot {
@@ -2015,6 +2292,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .windrun_S-mqtt-rec-dot {
@@ -2023,6 +2301,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .windrun_SE-mqtt-rec-dot {
@@ -2031,6 +2310,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .windrun_SSE-mqtt-rec-dot {
@@ -2039,6 +2319,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .windrun_SSW-mqtt-rec-dot {
@@ -2047,6 +2328,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .windrun_SW-mqtt-rec-dot {
@@ -2055,6 +2337,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .windrun_W-mqtt-rec-dot {
@@ -2063,6 +2346,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .windrun_WNW-mqtt-rec-dot {
@@ -2071,6 +2355,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .windrun_WSW-mqtt-rec-dot {
@@ -2079,6 +2364,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .windSpeed-mqtt-rec-dot {
@@ -2087,6 +2373,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .yearGDD-mqtt-rec-dot {
@@ -2095,6 +2382,7 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
 .yearRain-mqtt-rec-dot {
@@ -2103,5 +2391,6 @@ generated: 07.01.2023 15:03:22
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 

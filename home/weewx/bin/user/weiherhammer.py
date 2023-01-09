@@ -4076,10 +4076,11 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             if aggregate_type is None:
                 aggregate_type = "sum"
 
-            if isinstance(time_length, int):
-                order_sql = ' ORDER BY dateTime ASC'
-            else:
-                order_sql = ''
+            #if isinstance(time_length, int):
+            #    order_sql = ' ORDER BY dateTime ASC'
+            #else:
+            #    order_sql = ''
+            order_sql = ' ORDER BY dateTime ASC'
 
             # Special case for time_length = all, force to use complete days only
             if time_length == "all":

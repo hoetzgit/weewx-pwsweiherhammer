@@ -61,12 +61,12 @@ do
   printf "  background-color: var(--mqtt-rec-none);\n" >>"${TMPCSSDESTFILE}"
   printf "  border-radius: 50%s;\n" "%" >>"${TMPCSSDESTFILE}"
   printf "  display: inline-block;\n" >>"${TMPCSSDESTFILE}"
+  printf "  margin-right: 5px;\n" >>"${TMPCSSDESTFILE}"
   printf "}\n\n" >>"${TMPCSSDESTFILE}"
 
   # write inc file
   printf "                                        <tr>\n" >>"${TMPINCDESTFILE}"
-  printf '                                            <th scope="row" class="mqtt-table-body-obs"><div class="%s-mqtt-rec-dot"></div>&nbsp;%s</th>\n' "${value}" "${value}" >>"${TMPINCDESTFILE}"
-  #printf '                                            <td class="mqtt-table-body-obs-label">$obs.label['"'%s'"']</td>\n' "${value}" >>"${TMPINCDESTFILE}"
+  printf '                                            <th scope="row" class="mqtt-table-body-obs"><div class="%s-mqtt-rec-dot"></div><abbr rel="tooltip" title="Label: $obs.label.%s">%s</abbr></th>\n' "${value}" "${value}" "${value}" >>"${TMPINCDESTFILE}"
   printf '                                            <td class="mqtt-table-body-obs-val"><span class="%s" data-mqttrec="0">---</span></td><!-- AJAX -->\n' "${value}" >>"${TMPINCDESTFILE}"
   printf "                                        </tr>\n" >>"${TMPINCDESTFILE}"
 done < <(cat "${TMPFILE}")

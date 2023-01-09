@@ -29,7 +29,7 @@ $gettext('no')
         <div class="row observation-extras-row observation-extras-row-left">
             <div class="observation-extras-title">$gettext("Current Conditions")</div>
             <div class="observation-extras-body">
-                <table cellpadding="0" cellspacing="0">
+                <table class="observation-extras-table" cellpadding="0" cellspacing="0">
                     <tbody>
                         #for $x in $Extras.observations_current
                             #if $x == 'barometer'
@@ -91,7 +91,7 @@ $gettext('no')
         <div class="row observation-extras-row observation-extras-row-right">
             <div class="observation-extras-title">$gettext("Indoor Conditions")</div>
             <div class="observation-extras-body">
-                <table cellpadding="0" cellspacing="0">
+                <table class="observation-extras-table" cellpadding="0" cellspacing="0">
                     <tbody>
                         #for $x in $Extras.observations_indoor
                         <tr>
@@ -112,7 +112,7 @@ $gettext('no')
         <div class="row observation-extras-row">
             <div class="observation-extras-title">$gettext("Solar Conditions")</div>
             <div class="observation-extras-body">
-                <table cellpadding="0" cellspacing="0">
+                <table class="observation-extras-table" cellpadding="0" cellspacing="0">
                     <tbody>
                         #for $x in $Extras.observations_solar
                         <tr>
@@ -136,7 +136,7 @@ $gettext('no')
         <div class="row observation-extras-row">
             <div class="observation-extras-title">$gettext("SDS011 Conditions")</div>
             <div class="observation-extras-body">
-                <table cellpadding="0" cellspacing="0">
+                <table class="observation-extras-table" cellpadding="0" cellspacing="0">
                     <tbody>
                         #for $x in $Extras.observations_sds011
                         <tr>
@@ -160,7 +160,7 @@ $gettext('no')
         <div class="row observation-extras-row">
             <div class="observation-extras-title">$gettext("AllSkycam01 Conditions")</div>
             <div class="observation-extras-body">
-                <table cellpadding="0" cellspacing="0">
+                <table class="observation-extras-table" cellpadding="0" cellspacing="0">
                     <tbody>
                         #for $x in $Extras.observations_allskycam01
                         <tr>
@@ -186,7 +186,7 @@ $gettext('no')
         <div class="row observation-extras-row">
             <div class="observation-extras-title">$gettext("WH57 Conditions")</div>
             <div class="observation-extras-body">
-                <table cellpadding="0" cellspacing="0">
+                <table class="observation-extras-table" cellpadding="0" cellspacing="0">
                     <tbody>
                     #for $x in $Extras.observations_wh57
                         #if $x == 'lightning_strike_count'
