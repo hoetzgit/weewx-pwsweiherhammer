@@ -414,6 +414,7 @@
                                     $station_obs_html
                                 </tbody>
                             </table>
+                            <div class="clear"></div>
                             #if $Extras.has_key("station_observation_extras") and $Extras.station_observation_extras == '1'
                             <!-- Additional Station Observations -->
                             <div class="station-observation-extras-modal-link"><a href="#station-observation-extras" data-toggle="modal" data-target="#station-observation-extras">$gettext('more values')</a></div>
@@ -436,7 +437,7 @@
                                         </div>
                                         <div class="modal-body station-observation-extras-modal-body">
                                             #include "station-observation-extras/station-observation-extras.inc"
-                                        </div><!-- AJAX -->
+                                        </div>
                                         <div class="modal-footer">
                                             <a href="$relative_url/mqtt/" class="btn btn-primary" role="button">MQTT</a>
                                             <button type="button" class="btn btn-primary" data-dismiss="modal">$gettext('close')</button>

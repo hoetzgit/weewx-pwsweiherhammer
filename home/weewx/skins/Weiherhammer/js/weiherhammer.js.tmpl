@@ -2405,11 +2405,12 @@ function refreshHooks() {
 
 // Handle MQTT message
 function update_current_wx(data) {
-    data = jQuery.parseJSON(data);
+    var data = jQuery.parseJSON(data);
 
     try {
         refreshHooks();
     } catch (e) {
+        console.log(e);
     }
     
     #if $Extras.has_key('googleAnalyticsId')
@@ -2438,12 +2439,12 @@ function update_current_wx(data) {
         });
     } else {
         // Only show the updated time on non-archive packets
-        epoch = parseFloat(data["dateTime"]).toFixed(0);
-        updated = tzAdjustedMoment(epoch).format("$obs.label.time_last_updated");
+        var epoch = parseFloat(data["dateTime"]).toFixed(0);
+        var updated = tzAdjustedMoment(epoch).format("$obs.label.time_last_updated");
         if (pageName == "pi") {
-            updated_text = "$obs.label.mqtt_websockets_connected_pi " + updated;
+            var updated_text = "$obs.label.mqtt_websockets_connected_pi " + updated;
         } else {
-            updated_text = "$obs.label.mqtt_websockets_connected " + updated;
+            var updated_text = "$obs.label.mqtt_websockets_connected " + updated;
         }
         jQuery(".updated").html(updated_text);
     }
@@ -2452,72 +2453,77 @@ function update_current_wx(data) {
     jQuery(".offlineMarker").hide();
     jQuery(".loadingMarker").hide();
 
-    // Update the station observation box elements
-    station_mqtt_data = Object.keys(data); // Turn data (mqtt message) into an object we can forEach
+    // Update the station observation box span elements
+    // Update the station observation extra modal window span elements
     // Get all span elements within the table. This is setup by Python initially
-    jQuery('.station-observations').find("span").each(function() {
-        // The class name is the same as the Extras.station_observations name (weewx schema)
-        thisElementClass = jQuery(this).attr("class")
-        // Loop through each MQTT payload item
-        station_mqtt_data.forEach(mqttdata => {
-            if (thisElementClass == "rainWithRainRate") {
-                // Force dayRain since that's the MQTT payload name
-                thisElementClass = "dayRain";
-            }
-            if (thisElementClass == "barometer" || thisElementClass == "pressure" || thisElementClass == "altimeter" || thisElementClass == "cloudbase") {
-                // Do not group number into thousands,hundreds format
-                localeStringUseGrouping = false;
-            } else {
-                localeStringUseGrouping = true;
-            }
-            // If this MQTT payload key begins with the name of the span class name, update the info. Can also use mqttdata.includes(thisElementClass) if weewx-mqtt changes in future
-            //if (mqttdata.startsWith(thisElementClass)) {
-            if (data.hasOwnProperty(thisElementClass)) {
-                //html_output = parseFloat(parseFloat(data[mqttdata])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array[thisElementClass], maximumFractionDigits: unit_rounding_array[thisElementClass], useGrouping: localeStringUseGrouping}) + unit_label_array[thisElementClass];
-                html_output = parseFloat(parseFloat(data[thisElementClass])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array[thisElementClass], maximumFractionDigits: unit_rounding_array[thisElementClass], useGrouping: localeStringUseGrouping}) + unit_label_array[thisElementClass];
+    try {
+        jQuery('.station-observations').find("span").each(function() {
+            var thisElementClass = jQuery(this).attr("class");
+            if (thisElementClass != null) {
+                var localeStringUseGrouping = true;
 
-                // Finally update the element class
-                jQuery("." + thisElementClass).html(html_output);
+                if (thisElementClass == "rainWithRainRate") {
+                    // Force dayRain since that's the MQTT payload name
+                    thisElementClass = "dayRain";
+                }
+
+                if (thisElementClass.endsWith("barometer") || thisElementClass.endsWith("pressure") || thisElementClass.endsWith("altimeter") || thisElementClass.endsWith("time") || thisElementClass.endsWith("Time") || thisElementClass.endsWith("DATUM") || thisElementClass == "cloudbase") {
+                    // Do not group number into thousands,hundreds format
+                    localeStringUseGrouping = false;
+                }
+
+                if (data.hasOwnProperty(thisElementClass)) {
+                    var html_output = parseFloat(parseFloat(data[thisElementClass])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array[thisElementClass], maximumFractionDigits: unit_rounding_array[thisElementClass], useGrouping: localeStringUseGrouping}) + unit_label_array[thisElementClass];
+                    // Finally update the element class
+                    jQuery("." + thisElementClass).html(html_output);
+                }
             }
         });
-    });
+    } catch (e) {
+        console.log(e);
+    }
     // End dynamic station observation box
 
+    // Update the MQTT Data page
     // Get all span elements within the table. This is setup by Python initially
-    jQuery('.mqtt-data').find("span").each(function() {
-        // The class name is the same as the Extras.station_observations name (weewx schema)
-        thisElementClass = jQuery(this).attr("class")
-        // Loop through each MQTT payload item
-        station_mqtt_data.forEach(mqttdata => {
-            if (thisElementClass.endsWith("barometer") || thisElementClass.endsWith("pressure") || thisElementClass.endsWith("altimeter") || thisElementClass.endsWith("time") || thisElementClass.endsWith("Time") || thisElementClass.endsWith("DATUM") || thisElementClass == "cloudbase") {
-                // Do not group number into thousands,hundreds format
-                localeStringUseGrouping = false;
-            } else {
-                localeStringUseGrouping = true;
-            }
-            if (data.hasOwnProperty(thisElementClass)) {
-                html_output = parseFloat(parseFloat(data[thisElementClass])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array[thisElementClass], maximumFractionDigits: unit_rounding_array[thisElementClass], useGrouping: localeStringUseGrouping}) + unit_label_array[thisElementClass];
-                // Finally update the element class
-                jQuery("." + thisElementClass).html(html_output);
-                jQuery('.' + thisElementClass).attr('data-mqttrec', 1);
-                jQuery('.' + thisElementClass + '-mqtt-rec-dot').css('background-color', 'var(--mqtt-rec)');
-            } else {
-                if ('mqttrec' in jQuery('.' + thisElementClass).data()) {
-                    var data_mqttrec = jQuery('.' + thisElementClass).data('mqttrec');
-                    if (parseInt(data_mqttrec) == 1) {
-                        jQuery('.' + thisElementClass + '-mqtt-rec-dot').css('background-color', 'var(--mqtt-rec-outdated)');
+    try {
+        jQuery('.mqtt-data').find("span").each(function() {
+            var thisElementClass = jQuery(this).attr("class");
+            if (thisElementClass != null) {
+                var localeStringUseGrouping = true;
+
+                if (thisElementClass.endsWith("barometer") || thisElementClass.endsWith("pressure") || thisElementClass.endsWith("altimeter") || thisElementClass.endsWith("time") || thisElementClass.endsWith("Time") || thisElementClass.endsWith("DATUM") || thisElementClass == "cloudbase") {
+                    // Do not group number into thousands,hundreds format
+                    localeStringUseGrouping = false;
+                }
+
+                if (data.hasOwnProperty(thisElementClass)) {
+                    var html_output = parseFloat(parseFloat(data[thisElementClass])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array[thisElementClass], maximumFractionDigits: unit_rounding_array[thisElementClass], useGrouping: localeStringUseGrouping}) + unit_label_array[thisElementClass];
+                    // Finally update the element class
+                    jQuery("." + thisElementClass).html(html_output);
+                    jQuery('.' + thisElementClass).attr('data-mqttrec', 1);
+                    jQuery('.' + thisElementClass + '-mqtt-rec-dot').css('background-color', 'var(--mqtt-rec)');
+                } else {
+                    // mark received elements as outdated
+                    if ('mqttrec' in jQuery('.' + thisElementClass).data()) {
+                        var data_mqttrec = jQuery('.' + thisElementClass).data('mqttrec');
+                        if (parseInt(data_mqttrec) == 1) {
+                            jQuery('.' + thisElementClass + '-mqtt-rec-dot').css('background-color', 'var(--mqtt-rec-outdated)');
+                        }
                     }
                 }
             }
         });
-    });
+    } catch (e) {
+        console.log(e);
+    }
     // End dynamic mqtt data updates
 
     // Temperature F
     if (data.hasOwnProperty("outTemp_F")) {
         // Inside parseFloat converts str to int. Outside parseFloat processes the locale string
         // Help from: https://stackoverflow.com/a/40152286/1177153 and https://stackoverflow.com/a/31581206/1177153
-        outTemp = parseFloat(parseFloat(data["outTemp_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]});
+        var outTemp = parseFloat(parseFloat(data["outTemp_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]});
         get_outTemp_color("degree_F", outTemp);
         jQuery(".outtemp").html(outTemp);
 
@@ -2533,14 +2539,14 @@ function update_current_wx(data) {
 
     // Temperature C
     if (data.hasOwnProperty("outTemp_C")) {
-        outTemp = parseFloat(parseFloat(data["outTemp_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]});
+        var outTemp = parseFloat(parseFloat(data["outTemp_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]});
         get_outTemp_color("degree_C", outTemp);
         jQuery(".outtemp").html(outTemp);
     }
 
-    // Temperature C PWS Weiherhammer
+    // Temperature without unit PWS Weiherhammer
     if (data.hasOwnProperty("outTemp")) {
-        outTemp = parseFloat(parseFloat(data["outTemp"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]});
+        var outTemp = parseFloat(parseFloat(data["outTemp"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]});
         get_outTemp_color("degree_C", outTemp);
         jQuery(".outtemp").html(outTemp);
     }
@@ -2555,12 +2561,12 @@ function update_current_wx(data) {
         jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["appTemp_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
     }
 
-    // Apparent Temperature Metric PWS Weiherhammer
+    // Apparent Temperature without unit PWS Weiherhammer
     //if (data.hasOwnProperty("appTemp")) {
     //    jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["appTemp"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
     //}
 
-    // THSW Temperature Metric PWS Weiherhammer
+    // THSW Temperature without unit PWS Weiherhammer
     if (data.hasOwnProperty("thswIndex")) {
         jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["thswIndex"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
     }
@@ -2582,7 +2588,7 @@ function update_current_wx(data) {
     if (data.hasOwnProperty("windSpeed_kph")) {
         jQuery(".curwindspeed").html(parseFloat(parseFloat(data["windSpeed_kph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
     }
-    // Windspeed Metric PWS Weiherhammer
+    // Windspeed without unit PWS Weiherhammer
     if (data.hasOwnProperty("windSpeed")) {
         jQuery(".curwindspeed").html(parseFloat(parseFloat(data["windSpeed"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
     }
@@ -2615,7 +2621,7 @@ function update_current_wx(data) {
     if (data.hasOwnProperty("windGust_kph")) {
         jQuery(".curwindgust").html(parseFloat(parseFloat(data["windGust_kph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}));
     }
-    // Wind Gust Metric PWS Weiherhammer
+    // Wind Gust without unit PWS Weiherhammer
     if (data.hasOwnProperty("windGust")) {
         jQuery(".curwindgust").html(parseFloat(parseFloat(data["windGust"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}));
     }
@@ -2640,12 +2646,12 @@ function update_current_wx(data) {
     if (data.hasOwnProperty("windchill_C")) {
         jQuery(".curwindchill").html(parseFloat(parseFloat(data["windchill_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp");
     }
-    // Windchill Metric PWS Weiherhammer
+    // Windchill without unit PWS Weiherhammer
     if (data.hasOwnProperty("windchill")) {
         jQuery(".curwindchill").html(parseFloat(parseFloat(data["windchill"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp");
     }
 
-    // Daily Windrun Metric PWS Weiherhammer
+    // Daily Windrun without unit PWS Weiherhammer
     if (data.hasOwnProperty("dayWindrun")) {
         jQuery(".dailywindrun").html("$obs.label.windrun: " + parseFloat(parseFloat(data["dayWindrun"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windrun"], maximumFractionDigits: unit_rounding_array["windrun"]}) + "$unit.label.windrun");
     }
@@ -2707,6 +2713,7 @@ function update_current_wx(data) {
         set_boolean_color(data["sunshine"], ".current-sunshine-text", 'yesno-neutral');
     }
 
+    // Debug symbols
     // current Sunshine Symbol
     if (data.hasOwnProperty("sunshine")) {
         if (parseInt(data["sunshine"]) > 0) {
@@ -2718,7 +2725,7 @@ function update_current_wx(data) {
         jQuery(".sunshineThreshold").html("$gettext('No evaluation available')");
     }
 
-    // debug avg10m Symbols
+    // avg10m Symbols
     var avg10m_output = '';
     if (data.hasOwnProperty("lightning_strike_count_sum10m") && parseFloat(data["lightning_strike_count_sum10m"]) > 0.0) {
         avg10m_output = '<i class="wi wi-lightning"></i>';
@@ -2745,7 +2752,6 @@ function update_current_wx(data) {
 
     // PWS indoor room quality
     set_indoorclimate_color(data);
-
 };
 #end if
 

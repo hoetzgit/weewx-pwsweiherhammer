@@ -314,9 +314,9 @@
                         <p class="site-title" itemprop="headline">
                             <a href="$relative_url/">
                                 #if $Extras.has_key("logo_image_dark") and $Extras.logo_image_dark != '' and $bodyTheme == "dark"
-                                <img src="$relative_url/images/$Extras.logo_image_dark" id="logo_image" rel="tooltip" title="$head_title" alt="$head_title">
+                                <img src="$relative_url/images/$Extras.logo_image_dark" id="logo_image" rel="tooltip" title="$obs.label.html_description" alt="$head_title">
                                 #elif $Extras.has_key("logo_image") and $Extras.logo_image != ''
-                                <img src="$relative_url/images/$Extras.logo_image" id="logo_image" rel="tooltip" title="$head_title" alt="$head_title">
+                                <img src="$relative_url/images/$Extras.logo_image" id="logo_image" rel="tooltip" title="$obs.label.html_description" alt="$head_title">
                                 #else if $Extras.has_key("site_title") and $Extras.site_title != ''
                                 $Extras.site_title
                                 #end if

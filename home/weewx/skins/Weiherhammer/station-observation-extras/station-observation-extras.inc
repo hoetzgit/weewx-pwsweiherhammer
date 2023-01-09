@@ -36,23 +36,17 @@ $gettext('no')
                             <tr>
                                 <td class="observations-extras-label">$obs.label[$x]</td>
                                 ##TODO AJAX Trend
-                                <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
+                                <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td><!-- AJAX -->
                             </tr>
                             #elif $x == 'windSpeed'
                             <tr>
                                 <td class="observations-extras-label">$obs.label.wind</td>
-                                <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> (<span class="curwinddir">$getVar('current.windDir.ordinal_compass')</span>/<span class="curwinddeg">$getVar('current.windDir')</span>)</td>
+                                <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> (<span class="curwinddir">$getVar('current.windDir.ordinal_compass')</span>/<span class="curwinddeg">$getVar('current.windDir')</span>)</td><!-- AJAX -->
                             </tr>
                             #elif $x == 'rain'
                             <tr>
                                 <td class="observations-extras-label">$gettext("Rain Today")</td>
-                                <td class="observations-extras-data"><span class="dayRain">$getVar('day.%s.%s' % ($x,'sum'))</span></td>
-                            </tr>
-                            #elif $x == 'sunshineThreshold'
-                            <tr>
-                                <td class="observations-extras-label">$obs.label[$x]</td>
-                                ##TODO AJAX used "sunshineThresholdMin" for updates, not "sunshineThreshold"
-                                <td class="observations-extras-data"><span class="TODOsunshineThreshold">$getVar('current.%s' % $x)</span></td>
+                                <td class="observations-extras-data"><span class="dayRain">$getVar('day.%s.%s' % ($x,'sum'))</span></td><!-- AJAX -->
                             </tr>
                             #elif $x == 'sunshine'
                             <tr>
@@ -76,7 +70,7 @@ $gettext('no')
                             #else
                             <tr>
                                 <td class="observations-extras-label">$obs.label[$x]</td>
-                                <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
+                                <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td><!-- AJAX -->
                             </tr>
                             #end if
                         #end for
@@ -96,7 +90,7 @@ $gettext('no')
                         #for $x in $Extras.observations_indoor
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
-                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td><!-- AJAX -->
                         </tr>
                         #end for
                     </tbody>
@@ -119,9 +113,9 @@ $gettext('no')
                             <td class="observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'solar_barometer'
                             ##TODO AJAX Trend
-                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td><!-- AJAX -->
                             #else
-                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</td><!-- AJAX -->
                             #end if
                         </tr>
                         #end for
@@ -143,9 +137,9 @@ $gettext('no')
                             <td class="observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'sds011_barometer'
                             ##TODO AJAX Trend
-                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td><!-- AJAX -->
                             #else
-                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td><!-- AJAX -->
                             #end if
                         </tr>
                         #end for
@@ -167,11 +161,11 @@ $gettext('no')
                             <td class="observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'asky_box_barometer'
                             ##TODO AJAX Trend
-                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td><!-- AJAX -->
                             #elif $x == 'asky_dome_heater' or $x == 'asky_box_fan' or $x == 'asky_cpu_fan'
-                            <td class="observations-extras-data"><span class="$x">$get_boolean_status($getVar('current.%s' % $x), 'onoff')</span></td>
+                            <td class="observations-extras-data"><span class="$x">$get_boolean_status($getVar('current.%s' % $x), 'onoff')</span></td><!-- AJAX -->
                             #else
-                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td><!-- AJAX -->
                             #end if
                         </tr>
                         #end for
@@ -192,37 +186,37 @@ $gettext('no')
                         #if $x == 'lightning_strike_count'
                         <tr>
                             <td class="observations-extras-label">$gettext("Lightning strike sum")</td>
-                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'sum'))</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'sum'))</span></td><!-- AJAX -->
                         </tr>
                         #elif $x == 'wh57_lightning_time'
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
-                            <td class="observations-extras-data">$getVar('current.%s' % $x)</td>
+                            <td class="observations-extras-data">$getVar('current.%s' % $x)</td><!-- AJAX -->
                         </tr>
                         #elif $x == 'wh57_lightning_distance'
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
-                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s' % $x)</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s' % $x)</span></td><!-- AJAX -->
                         </tr>
                         #elif $x == 'lightning_distance'
                         #if $getVar('day.%s.has_data' % $x)
                         <tr>
                             <td class="observations-extras-label">$gettext("Lightning distance min")</td>
-                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'min'))</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'min'))</span></td><!-- AJAX -->
                         </tr>
                         <tr>
                             <td class="observations-extras-label">$gettext("Lightning distance avg")</td>
-                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'avg'))</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'avg'))</span></td><!-- AJAX -->
                         </tr>
                         <tr>
                             <td class="observations-extras-label">$gettext("Lightning distance max")</td>
-                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'max'))</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s.%s' % ($x,'max'))</span></td><!-- AJAX -->
                         </tr>
                         #end if
                         #else
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
-                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s' % $x)</span></td>
+                            <td class="observations-extras-data"><span class="$x">$getVar('day.%s' % $x)</span></td><!-- AJAX -->
                         </tr>
                         #end if
                     #end for
@@ -232,8 +226,4 @@ $gettext('no')
         </div>
         #end if
     </div>
- </div>
-
-
-
-
+</div>

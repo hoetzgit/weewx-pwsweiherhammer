@@ -50,6 +50,15 @@ a:hover {
     text-decoration: revert;
 }
 
+.station-observation-extras-modal-link a {
+    text-decoration: none;
+}
+
+.station-observation-extras-modal-link a:hover {
+    color: #4169e1;
+    text-decoration: revert;
+}
+
 .genesis-nav-menu a:hover, .dark .genesis-nav-menu a:hover {
     color: #4169e1;
     display: block;
@@ -377,12 +386,6 @@ table.celestial td.label {
     display: block;
 }
 
-/*
-.station-observation-extras-modal-link a {
-    text-decoration:none;
-}
-*/
-
 .station-observation-extras-modal-header {
     padding: 10px 15px 0px 15px;
 }
@@ -412,6 +415,12 @@ table.celestial td.label {
 }
 
 .observation-extras-row-right {
+}
+
+.observation-extras-title {
+    text-align: left;
+    font-size: calc(14px + 0.3vw);
+    font-weight: 500;
 }
 
 .observation-extras-table {
