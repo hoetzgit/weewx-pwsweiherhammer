@@ -211,6 +211,13 @@ def sunshineThreshold(mydatetime, lat, lon, coeff=1.0):
 
 # calculate battery values in percent
 def batt_to_percent(isBatt, minBatt, maxBatt):
+    isBatt = round(isBatt, 1)
+    minBatt = round(minBatt, 1)
+    maxBatt = round(maxBatt, 1)
+    if isBatt > maxBatt:
+        isBatt = maxBatt
+    if isBatt < minBatt:
+        isBatt = minBatt
     isBatt -= minBatt
     maxBatt -= minBatt
     percentBatt = 0.0

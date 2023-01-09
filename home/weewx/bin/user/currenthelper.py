@@ -143,6 +143,10 @@ class CurrentHelper(StdService):
         if self.debug > 0:
             logdbg("json = %s" % str(content))
 
+        # do anything here
+
+
+
         # add to LOOP
         event.packet.update(target_data)
         if self.debug > 1:

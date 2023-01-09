@@ -656,6 +656,8 @@ table.celestial td.label {
 
 .border-left-rain-hum {
     border-left: 1px solid #D7D7D7 !important;
+    margin-left: 3px;
+    padding-left: 3px;
 }
 
 /* Highcharts */
@@ -1365,6 +1367,9 @@ sub { top: 0.4em; }
     }
     .observations-extras-label {
         min-width: 170px;
+    }
+    .station-observation-extras-modal-link a {
+        font-size: 20px;
     }
 }
 

@@ -21,6 +21,7 @@ import time
 import copy
 from collections import OrderedDict
 from math import asin, atan2, cos, degrees, pi, radians, sin, sqrt
+import re
 from re import match
 
 import configobj
@@ -2366,16 +2367,14 @@ class getData(SearchList):
                 dayRain_sum = getattr(obs_binder, "sum")
                 # Need to use dayRain for class name since that is weewx-mqtt
                 # payload's name
-                obs_rain_output = "<span class='dayRain'>%s</span><!-- AJAX -->" % str(
-                    dayRain_sum
-                )
-                obs_rain_output += "&nbsp;<span class='border-left-rain-hum'>&nbsp;</span>"
-                obs_rain_output += (
-                    "<span class='rainRate'>%s</span><!-- AJAX -->"
-                    % str(getattr(current, "rainRate"))
-                )
+                obs_rain_output = "<span class='dayRain'>%s</span><!-- AJAX -->" % str(dayRain_sum)
+                obs_rain_output += '<span class="rainRate border-left-rain-hum">%s</span><!-- AJAX -->' % str(getattr(current, "rainRate"))
                 # Empty field for the JSON "current" output
                 obs_output = ""
+                if 'dayRain' not in station_obs_json:
+                    station_obs_json['dayRain'] = str(dayRain_sum)
+                if 'rainRate' not in station_obs_json:
+                    station_obs_json['rainRate'] = str(getattr(current, "rainRate"))
             elif obs == "outHumidityWithAbs":
                 # outHumidityWithAbs rel humidity with abs humidity
                 # https://github.com/roe-dl/weewx-GTS/discussions/14
@@ -2383,12 +2382,17 @@ class getData(SearchList):
                 humrel_output = getattr(current,'outHumidity',None)
                 humabs_output = getattr(current,'outHumAbs',None)
                 if humrel_output is not None:
-                    obs_humidity_output += "<span class='outHumidity'>%s</span><!-- AJAX -->" % str(humrel_output)
+                    obs_humidity_output += '<span class="outHumidity">%s</span><!-- AJAX -->' % str(humrel_output)
+                    if 'outHumidity' not in station_obs_json:
+                        station_obs_json['outHumidity'] = str(humrel_output)
                 if humabs_output is not None:
-                    if humrel_output is not None:
-                        obs_humidity_output += '&nbsp;<span class="border-left-rain-hum">&nbsp;</span>'
                     humabs_output = humabs_output.gram_per_meter_cubed
-                    obs_humidity_output += '<span class="outHumAbs">%s</span><!-- AJAX -->' % str(humabs_output)
+                    obs_humidity_output += '<span class="outHumAbs'
+                    if humrel_output is not None:
+                         obs_humidity_output += " border-left-rain-hum"
+                    obs_humidity_output += '">%s</span><!-- AJAX -->' % str(humabs_output)
+                    if 'outHumAbs' not in station_obs_json:
+                        station_obs_json['outHumAbs'] = str(humabs_output)
                 # Empty field for the JSON "current" output
                 obs_output = ""
             elif obs == "cloud_cover":
@@ -2423,37 +2427,70 @@ class getData(SearchList):
                     obs,
                     obs_output,
                 )
-            if obs in ("barometer", "pressure", "altimeter"):
-                # Append the trend arrow to the pressure observation. Need this
-                # for non-mqtt pages
-                # 20221205,ho disabled
-                #trend = weewx.tags.TrendObj(
-                #    10800,
-                #    300,
-                #    db_lookup,
-                #    None,
-                #    current_stamp,
-                #    self.generator.formatter,
-                #    self.generator.converter,
-                #)
-                #obs_trend = getattr(trend, obs)
-                station_obs_html += (
-                    '<span class="pressure-trend">'
+
+            if re.search ('barometer|pressure|altimeter', obs):
+                # Append span for trend arrow
+                # https://github.com/chaunceygardiner/weewx-loopdata
+                trend = weewx.tags.TrendObj(
+                    10800,
+                    300,
+                    db_lookup,
+                    None,
+                    current_stamp,
+                    self.generator.formatter,
+                    self.generator.converter,
                 )
-                # 20221205,ho disabled
-                #if str(obs_trend) == "N/A":
-                #    pass
-                #elif "-" in str(obs_trend):
-                #    station_obs_html += '<i class="fa fa-long-arrow-down barometer-down"></i>'
-                #else:
-                #    station_obs_html += '<i class="fa fa-long-arrow-up barometer-up"></i>'
-                station_obs_html += "</span>"  # Close the span
-            # 20220622,ho sunshine debug symbol
+                obs_trend = getattr(trend, obs)
+                # TODO get obs_trend raw value?
+                finalRotation = -1.0
+                # if obs_trend > 6.0:
+                    # finalRotation = 0.0;
+                # elif obs_trend > 3.5:
+                    # finalRotation = 22.5;
+                # elif obs_trend > 1.5:
+                    # finalRotation = 45.0;
+                # elif obs_trend >= 0.1:
+                    # finalRotation = 67.5;
+                # elif obs_trend > -0.1:
+                    # finalRotation = 90.0;
+                # elif obs_trend >= -1.5:
+                    # finalRotation = 112.5;
+                # elif obs_trend >= -3.5:
+                    # finalRotation = 135.0;
+                # elif obs_trend >= -6.0:
+                    # finalRotation = 157.5;
+                # else:
+                    # finalRotation = 180.0;
+
+                if str(obs_trend) == "N/A":
+                    pass
+                elif "-" in str(obs_trend):
+                    finalRotation = 112.5
+                elif "0,0" in str(obs_trend):
+                    finalRotation = 90.0
+                else:
+                    finalRotation = 67.5
+
+                obs_trend_output = ""
+                if finalRotation >= 0.0:
+                    obs_trend_output = '<i class="fa fa-fw fa-long-';
+                    if finalRotation == 0.0:
+                        obs_trend_output += 'arrow-up';
+                    elif finalRotation == 90.0:
+                        obs_trend_output += 'arrow-right';
+                    elif finalRotation == 180.0:
+                        obs_trend_output += 'arrow-down';
+                    else:
+                        obs_trend_output += 'arrow-up" style="transform:rotate(%.1fdeg);' % finalRotation
+                    obs_trend_output += '"></i>';
+                station_obs_html += '<span class="%s-pressure-trend-symbol">%s</span><!-- AJAX -->' % (obs, obs_trend_output)
+
+            # sunshine debug symbol
             if obs == "radiation":
-                station_obs_html += '<span class="current-sunshine-symbol"></span>'
-            # 20220803,ho cloudcover debug symbol
+                station_obs_html += '<span class="sunshine-debug-symbol"></span><!-- AJAX -->'
+            # cloudcover debug symbol
             if obs == "cloud_cover":
-                station_obs_html += '<span class="avg10m-obs-symbols"></span>'
+                station_obs_html += '<span class="cloudcover-debug-symbol"></span><!-- AJAX -->'
 
             station_obs_html += "</td>"
             station_obs_html += "</tr>"

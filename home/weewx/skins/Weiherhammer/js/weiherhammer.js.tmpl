@@ -273,71 +273,93 @@ function getURLvar(k) {
     return k ? p[k] : p;
 }
 
-// weewx-loopdata barometer trend
+// pressure trend symbols
 // https://github.com/chaunceygardiner/weewx-loopdata
-function get_barometer_trend_deg (trend_code, returnRotation = false) {
-    var RISING_VERY_RAPIDLY = 4;
-    var RISING_QUICKLY = 3;
-    var RISING = 2;
-    var RISING_SLOWLY = 1;
-    var STEADY = 0;
-    var FALLING_SLOWLY = -1;
-    var FALLING = -2;
-    var FALLING_QUICKLY = -3;
-    var FALLING_VERY_RAPIDLY = -4;
+function barometer_trend_deg (obs, trend_value, trend_code = null) {
+    const RISING_VERY_RAPIDLY = 4;
+    const RISING_QUICKLY = 3;
+    const RISING = 2;
+    const RISING_SLOWLY = 1;
+    const STEADY = 0;
+    const FALLING_SLOWLY = -1;
+    const FALLING = -2;
+    const FALLING_QUICKLY = -3;
+    const FALLING_VERY_RAPIDLY = -4;
 
-    var ltrend_code = parseInt(trend_code);
+    // Prefer the passed trend code
+    if (trend_code == null) {
+        trend_value = parseFloat(trend_value).toPrecision(1);
+        if (trend_value > 6.0) {
+            trend_code = RISING_VERY_RAPIDLY;
+        } else if  (trend_value > 3.5) {
+            trend_code = RISING_QUICKLY;
+        } else if  (trend_value > 1.5) {
+            trend_code = RISING;
+        } else if  (trend_value >= 0.1) {
+            trend_code = RISING_SLOWLY;
+        } else if  (trend_value > -0.1) {
+            trend_code = STEADY;
+        } else if  (trend_value >= -1.5) {
+            trend_code = FALLING_SLOWLY;
+        } else if  (trend_value >= -3.5) {
+            trend_code = FALLING;
+        } else if  (trend_value >= -6.0) {
+            trend_code = FALLING_QUICKLY;
+        } else {
+            trend_code = FALLING_VERY_RAPIDLY;
+        }
+    }
+
+    trend_code = parseInt(trend_code);
     var trend_descr = "N/A"
     var finalRotation = -1
-    if (ltrend_code == RISING_VERY_RAPIDLY) {
+    if (trend_code == RISING_VERY_RAPIDLY) {
         finalRotation = 0;
         trend_descr = "$gettext('rising very rapidly')";
-    } else if (ltrend_code == RISING_QUICKLY) {
+    } else if (trend_code == RISING_QUICKLY) {
         finalRotation = 22.5;
         trend_descr = "$gettext('rising quickly')";
-    } else if (ltrend_code == RISING) {
+    } else if (trend_code == RISING) {
         finalRotation = 45;
         trend_descr = "$gettext('rising')";
-    } else if (ltrend_code == RISING_SLOWLY) {
+    } else if (trend_code == RISING_SLOWLY) {
         finalRotation = 67.5;
         trend_descr = "$gettext('rising slowly')";
-    } else if (ltrend_code == STEADY) {
+    } else if (trend_code == STEADY) {
         finalRotation = 90;
         trend_descr = "$gettext('steady')";
-    } else if (ltrend_code == FALLING_SLOWLY) {
+    } else if (trend_code == FALLING_SLOWLY) {
         finalRotation = 112.5;
         trend_descr = "$gettext('falling slowly')";
-    } else if (ltrend_code == FALLING) {
+    } else if (trend_code == FALLING) {
         finalRotation = 135;
         trend_descr = "$gettext('falling')";
-    } else if (ltrend_code == FALLING_QUICKLY) {
+    } else if (trend_code == FALLING_QUICKLY) {
         finalRotation = 157.5;
         trend_descr = "$gettext('falling quickly')";
-    } else if (ltrend_code == FALLING_VERY_RAPIDLY) {
+    } else if (trend_code == FALLING_VERY_RAPIDLY) {
         finalRotation = 180;
         trend_descr = "$gettext('falling very rapidly')";
     }
 
-    // Return the finalRotation value if requested, otherwise just rotate barometer trend
-    if (returnRotation) {
-        return finalRotation;
-    } else {
-        html_output = ''
-        if (finalRotation >= 0) {
-            html_output = '&nbsp;'
-            if (finalRotation == 0) {
-                html_output += '<i class="fa fa-long-arrow-up"';
-            } else if (finalRotation == 90) {
-                html_output += '<i class="fa fa-long-arrow-right"';
-            } else if (finalRotation == 180) {
-                html_output += '<i class="fa fa-long-arrow-down"';
-            } else {
-                html_output += '<i class="fa fa-long-arrow-up" style="transform:rotate(' + finalRotation + 'deg);"';
-            }
-            html_output += ' rel="tooltip" title="' + trend_descr + '"></i>';
+    html_output = ''
+    if (finalRotation >= 0) {
+        //jQuery("." + obs).attr('style', 'padding-right: 1px;');
+        html_output = '<i class="fa fa-fw fa-long-';
+        if (finalRotation == 0) {
+            html_output += 'arrow-up';
+        } else if (finalRotation == 90) {
+            html_output += 'arrow-right';
+        } else if (finalRotation == 180) {
+            html_output += 'arrow-down';
+        } else {
+            html_output += 'arrow-up" style="transform:rotate(' + finalRotation + 'deg);';
         }
-        jQuery(".pressure-trend").html(html_output);
+        html_output += '" rel="tooltip" title="' + trend_descr + '"></i>';
+    } else {
+        //jQuery("." + obs).removeAttr('style');
     }
+    jQuery("." + obs + "-pressure-trend-symbol").html(html_output);
 }
 
 // http://stackoverflow.com/a/14887961/1177153
@@ -1064,21 +1086,6 @@ function update_weewx_data(data) {
     jQuery(".high").html(high);
     jQuery(".low").html(low);
 
-/*  //20221205,ho disabled
-    try {
-        // Barometer trending by finding a negative number
-        count = (data["current"]["barometer_trend"].match(/-/g) || []).length
-    } catch (err) {
-        // Returned "current" data does not have this value
-    }
-
-    if (count >= 1) {
-        jQuery(".pressure-trend").html('&nbsp;<i class="fa fa-long-arrow-down barometer-down"></i>');
-    } else {
-        jQuery(".pressure-trend").html('&nbsp;<i class="fa fa-long-arrow-up barometer-up"></i>');
-    }
-*/
-
     // Daily max gust span
     jQuery(".dailymaxgust").html(parseFloat(data["day"]["wind"]["max"]).toFixed(1));
 
@@ -1575,7 +1582,7 @@ function show_forcast_alert(data, forecast_provider) {
         weiherhammer_debug("Forecast: There are " + forecast_alerts.length + " alert(s).");
         for (i = 0; i < forecast_alerts.length; i++) {
 
-            alert_link = "<i class='fa fa-exclamation-triangle'></i> <a href='#forecast-alert-" + i + "' data-toggle='modal' data-target='#forecast-alert-" + i + "'><b>" + forecast_alerts[i]["title"] + "</b>, $obs.label.forecast_alert_begins " + forecast_alerts[i]["begins"] + " $obs.label.forecast_alert_expires " + forecast_alerts[i]["expires"] + "</a><br>";
+            alert_link = "<i class='fa fa-fw fa-exclamation-triangle'></i> <a href='#forecast-alert-" + i + "' data-toggle='modal' data-target='#forecast-alert-" + i + "'><b>" + forecast_alerts[i]["title"] + "</b>, $obs.label.forecast_alert_begins " + forecast_alerts[i]["begins"] + " $obs.label.forecast_alert_expires " + forecast_alerts[i]["expires"] + "</a><br>";
             jQuery(".wx-stn-alert-text").append(alert_link);
 
             forecast_alert_modal += "<!-- Forecast Alert Modal " + i + " -->";
@@ -1974,9 +1981,9 @@ function update_forecast_data(data) {
                             output_html += '<img src="' + get_relative_url() + '/images/snowflake-icon-15px.png"> <span>' + parseFloat(forecast_row[i]["snow_depth"]).toFixed(0) + '<span> ' + forecast_row[i]["snow_unit"];
                             output_html += '</div>';
                         } else if (forecast_row[i]["precip"] > 0) {
-                            output_html += '<i class="fa fa-umbrella rain-precip"></i> <span>' + parseFloat(forecast_row[i]["precip"]).toFixed(0) + '%</span>';
+                            output_html += '<i class="fa fa-fw fa-umbrella rain-precip"></i> <span>' + parseFloat(forecast_row[i]["precip"]).toFixed(0) + '%</span>';
                         } else {
-                            output_html += '<i class="fa fa-umbrella rain-no-precip"></i> <span>0%</span>';
+                            output_html += '<i class="fa fa-fw fa-umbrella rain-no-precip"></i> <span>0%</span>';
                         }
                         output_html += '</div>';
                     }
@@ -2054,9 +2061,9 @@ function update_forecast_data(data) {
                             output_html += '<img src="' + get_relative_url() + '/images/snowflake-icon-15px.png"> <span>' + parseFloat(forecast_row[i]["snow_depth"]).toFixed(0) + '<span> ' + forecast_row[i]["snow_unit"];
                             output_html += '</div>';
                         } else if (forecast_row[i]["precip"] > 0) {
-                            output_html += '<i class="fa fa-umbrella rain-precip"></i> <span>' + parseFloat(forecast_row[i]["precip"]).toFixed(0) + '%</span>';
+                            output_html += '<i class="fa fa-fw fa-umbrella rain-precip"></i> <span>' + parseFloat(forecast_row[i]["precip"]).toFixed(0) + '%</span>';
                         } else {
-                            output_html += '<i class="fa fa-umbrella rain-no-precip"></i> <span>0%</span>';
+                            output_html += '<i class="fa fa-fw fa-umbrella rain-no-precip"></i> <span>0%</span>';
                         }
                         output_html += '</div>';
                     }
@@ -2713,45 +2720,55 @@ function update_current_wx(data) {
         set_boolean_color(data["sunshine"], ".current-sunshine-text", 'yesno-neutral');
     }
 
+    // update pressure trends
+    if (data.hasOwnProperty("trendBarometerCode")) {
+        barometer_trend_deg('barometer', null, data["trendBarometerCode"]);
+    } else if (data.hasOwnProperty("trendBarometer")) {
+        barometer_trend_deg('barometer', data["trendBarometer"]);
+    }
+
+    // PWS indoor room quality
+    set_indoorclimate_color(data);
+
     // Debug symbols
-    // current Sunshine Symbol
+    // sunshine debug symbol
     if (data.hasOwnProperty("sunshine")) {
         if (parseInt(data["sunshine"]) > 0) {
-            jQuery(".current-sunshine-symbol").html('<i class="fa fa-sun-o"></i>');
+            jQuery(".sunshine-debug-symbol").attr('style', 'padding-left: 5px;');
+            jQuery(".sunshine-debug-symbol").html('<i class="fa fa-fw fa-sun-o"></i>');
         } else {
-            jQuery(".current-sunshine-symbol").html("");
+            jQuery(".sunshine-debug-symbol").html("");
+            jQuery(".sunshine-debug-symbol").removeAttr("style");
         }
     } else {
         jQuery(".sunshineThreshold").html("$gettext('No evaluation available')");
     }
 
-    // avg10m Symbols
-    var avg10m_output = '';
+    // cloudcover debug symbol
+    var debug_output = '';
     if (data.hasOwnProperty("lightning_strike_count_sum10m") && parseFloat(data["lightning_strike_count_sum10m"]) > 0.0) {
-        avg10m_output = '<i class="wi wi-lightning"></i>';
+        debug_output = '<i class="wi wi-lightning"></i>';
     } else if (data.hasOwnProperty("rain_sum10m") && parseFloat(data["rain_sum10m"]) > 0.0) {
-        avg10m_output = '<i class="wi wi-rain"></i>';
+        debug_output = '<i class="wi wi-rain"></i>';
     } else if (data.hasOwnProperty("radiation") && data.hasOwnProperty("sunshineRadiationMin") && data.hasOwnProperty("sunshine_avg10m")) {
         if (parseFloat(data["radiation"]) >= parseFloat(data["sunshineRadiationMin"])) {
             var sunshine_avg10m = parseFloat(data["sunshine_avg10m"]).toFixed(1);
             if (sunshine_avg10m == 0.0) {
-                avg10m_output = '<i class="wi wi-cloudy"></i>';
+                debug_output = '<i class="wi wi-cloudy"></i>';
             } else if (sunshine_avg10m == 1.0) {
-                avg10m_output = '<i class="wi wi-day-sunny"></i>';
+                debug_output = '<i class="wi wi-day-sunny"></i>';
             } else if (sunshine_avg10m > 0.0 && sunshine_avg10m < 1.0) {
-                avg10m_output = '<i class="wi wi-day-cloudy"></i>';
+                debug_output = '<i class="wi wi-day-cloudy"></i>';
             }
         }
     }
-    jQuery(".avg10m-obs-symbols").html(avg10m_output);
-
-    // 20221205,ho update with weewx-loopdata Barometer Trend
-    if (data.hasOwnProperty("trendBarometerCode")) {
-        get_barometer_trend_deg(parseInt(data["trendBarometerCode"]));
+    if (debug_output != "") {
+        jQuery(".cloudcover-debug-symbol").attr('style', 'padding-left: 5px;');
+    } else {
+        jQuery(".cloudcover-debug-symbol").removeAttr("style");
     }
+    jQuery(".cloudcover-debug-symbol").html(debug_output);
 
-    // PWS indoor room quality
-    set_indoorclimate_color(data);
 };
 #end if
 
