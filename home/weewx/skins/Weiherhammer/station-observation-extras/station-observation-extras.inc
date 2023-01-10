@@ -35,8 +35,7 @@ $gettext('no')
                             #if $x == 'barometer'
                             <tr>
                                 <td class="observations-extras-label">$obs.label[$x]</td>
-                                ##TODO AJAX Trend
-                                <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td><!-- AJAX -->
+                                <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> (<span class="trend_$x">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="trend_$x-symbol"></span>)</td><!-- AJAX -->
                             </tr>
                             #elif $x == 'windSpeed'
                             <tr>
@@ -112,8 +111,7 @@ $gettext('no')
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'solar_barometer'
-                            ##TODO AJAX Trend
-                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td><!-- AJAX -->
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> (<span class="trend_$x">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="trend_$x-symbol"></span>)</td><!-- AJAX -->
                             #else
                             <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</td><!-- AJAX -->
                             #end if
@@ -136,8 +134,7 @@ $gettext('no')
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'sds011_barometer'
-                            ##TODO AJAX Trend
-                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td><!-- AJAX -->
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> (<span class="trend_$x">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="trend_$x-symbol"></span>)</td><!-- AJAX -->
                             #else
                             <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span></td><!-- AJAX -->
                             #end if
@@ -160,8 +157,7 @@ $gettext('no')
                         <tr>
                             <td class="observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'asky_box_barometer'
-                            ##TODO AJAX Trend
-                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> ($getVar('trend.%s.%s' % ($x,'formatted')))</td><!-- AJAX -->
+                            <td class="observations-extras-data"><span class="$x">$getVar('current.%s' % $x)</span> (<span class="trend_$x">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="trend_$x-symbol"></span>)</td><!-- AJAX -->
                             #elif $x == 'asky_dome_heater' or $x == 'asky_box_fan' or $x == 'asky_cpu_fan'
                             <td class="observations-extras-data"><span class="$x">$get_boolean_status($getVar('current.%s' % $x), 'onoff')</span></td><!-- AJAX -->
                             #else

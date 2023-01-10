@@ -2428,7 +2428,7 @@ class getData(SearchList):
                     obs_output,
                 )
 
-            if re.search ('barometer|pressure|altimeter', obs):
+            if re.search ('barometer|pressure|altimeter', obs.lower()):
                 # Append span for trend arrow
                 # https://github.com/chaunceygardiner/weewx-loopdata
                 trend = weewx.tags.TrendObj(
@@ -2441,7 +2441,7 @@ class getData(SearchList):
                     self.generator.converter,
                 )
                 obs_trend = getattr(trend, obs)
-                # TODO get obs_trend raw value?
+                # TODO get obs_trend as raw value?
                 finalRotation = -1.0
                 # if obs_trend > 6.0:
                     # finalRotation = 0.0;
@@ -2464,10 +2464,10 @@ class getData(SearchList):
 
                 if str(obs_trend) == "N/A":
                     pass
-                elif "-" in str(obs_trend):
-                    finalRotation = 112.5
                 elif "0,0" in str(obs_trend):
                     finalRotation = 90.0
+                elif "-" in str(obs_trend):
+                    finalRotation = 112.5
                 else:
                     finalRotation = 67.5
 
@@ -2483,7 +2483,7 @@ class getData(SearchList):
                     else:
                         obs_trend_output += 'arrow-up" style="transform:rotate(%.1fdeg);' % finalRotation
                     obs_trend_output += '"></i>';
-                station_obs_html += '<span class="%s-pressure-trend-symbol">%s</span><!-- AJAX -->' % (obs, obs_trend_output)
+                station_obs_html += '<span class="trend_%s-symbol">%s</span><!-- AJAX -->' % (obs, obs_trend_output)
 
             # sunshine debug symbol
             if obs == "radiation":

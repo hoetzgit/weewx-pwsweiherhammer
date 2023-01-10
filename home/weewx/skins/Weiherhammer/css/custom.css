@@ -22,6 +22,7 @@
     --indoor-humidity-optimal:#84D862;
     --indoor-humidity-moist:#B2DF8A;
     --indoor-humidity-very-moist:#0077FF;
+    --link-color:#337ab7;
 }
 
 /*
@@ -29,15 +30,16 @@ link color
 TODO dark
 Belchertown default: #e5554e
 Royal Blue: #4169e1
+Bootstrap Button: #337ab7
 */
 
 a {
-    color: #4169e1;
+    color: var(--link-color);
     text-decoration: none;
 }
 
 a:hover {
-    color: #4169e1;
+    color: var(--link-color);
     text-decoration: revert;
 }
 
@@ -46,7 +48,7 @@ a:hover {
 }
 
 .sun-moon-modal a:hover {
-    color: #4169e1;
+    color: var(--link-color);
     text-decoration: revert;
 }
 
@@ -55,12 +57,12 @@ a:hover {
 }
 
 .station-observation-extras-modal-link a:hover {
-    color: #4169e1;
+    color: var(--link-color);
     text-decoration: revert;
 }
 
 .genesis-nav-menu a:hover, .dark .genesis-nav-menu a:hover {
-    color: #4169e1;
+    color: var(--link-color);
     display: block;
     padding: 30px 24px;
 }

@@ -1,7 +1,7 @@
 """
 rainrate.py
 
-Copyright (C)2022 by John A Kline (john@johnkline.com)
+Copyright (C)2022-2023 by John A Kline (john@johnkline.com)
 Distributed under the terms of the GNU Public License (GPLv3)
 
 weewx-rainrate is a WeeWX service that attempts to produce a
@@ -48,7 +48,7 @@ from weewx.engine import StdService
 # get a logger object
 log = logging.getLogger(__name__)
 
-RAINRATE_VERSION = '0.30'
+RAINRATE_VERSION = '0.32'
 
 if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 7):
     raise weewx.UnsupportedFeature(
@@ -64,6 +64,7 @@ class RainEntry:
     timestamp : int   # timestamp when this rain occurred
     amount    : float # amount of rain
     expiration: int   # timestamp at which this entry should be removed (30m later)
+    dont_merge: bool  # Will be true if this rain entry is written as part of a merge
 
 @dataclass
 class LoopRainRate:
@@ -89,6 +90,14 @@ class RainRate(StdService):
             log.info("RainRate is enabled...continuing.")
         else:
             log.info("RainRate is disabled. Enable it in the RainRate section of weewx.conf.")
+            return
+
+        # Get archive interval
+        try:
+            std_archive_dict = config_dict.get('StdArchive', {})
+            self.archive_interval = to_int(std_archive_dict.get('archive_interval'))
+        except Exception as e:
+            log.info("Cannot determine archive_interval.  Exiting. (%s)" % e)
             return
 
         # List of rain events, including when they "expire" (15m later).
@@ -125,36 +134,53 @@ class RainRate(StdService):
 
             # Fetch the records.
             start = time.time()
-            archive_pkts: List[Dict[str, Any]] = RainRate.get_archive_packets(
+            archive_recs: List[Dict[str, Any]] = RainRate.get_archive_records(
                 dbm, archive_columns, earliest_time)
 
             # Save rain events (if any).
-            pkt_count = 0
-            for pkt in archive_pkts:
-                pkt_time = pkt['dateTime']
-                if 'rain' in pkt and pkt['rain'] is not None and pkt['rain'] > 0.0:
-                    self.rain_entries.append(RainEntry(timestamp = pkt_time, amount = pkt['rain'], expiration = pkt_time + 900))
-                    pkt_count += 1
-            log.debug('Collected %d archive packets containing rain in %f seconds.' % (pkt_count, time.time() - start))
+            rec_count = 0
+            for rec in archive_recs:
+                if 'rain' in rec and rec['rain'] is not None and rec['rain'] > 0.0000001:
+                    rec_count += 1
+                    RainRate.archive_records_to_rain_entries(rec, self.archive_interval, self.rain_entries)
+            log.debug('Collected %d archive records containing rain in %f seconds.' % (rec_count, time.time() - start))
         except Exception as e:
             # Print problem to log and give up.
             log.error('Error in RainRate setup.  RainRate is exiting. Exception: %s' % e)
             weeutil.logger.log_traceback(log.error, "    ****  ")
 
     @staticmethod
-    def get_archive_packets(dbm, archive_columns: List[str],
+    def archive_records_to_rain_entries(rec: Dict[str, Any], archive_interval: int, rain_entries: List[RainEntry])->None:
+        archive_time = rec['dateTime']
+        archive_amt = rec['rain']
+        if archive_amt < 0.0100001:
+            # Add the single tip midway through archive period.
+            rec_time = round(archive_time - (archive_interval / 2.0))
+            rain_entries.append(RainEntry(timestamp = rec_time, amount = archive_amt, expiration = rec_time + 1800, dont_merge=True))
+        else:
+            # Evenly space the tips
+            number_of_tips: int = round(archive_amt / 0.01)
+            interval: int = round(archive_interval / number_of_tips)
+            time_of_rain: int = archive_time
+            for _ in range(number_of_tips):
+                time_of_rain -= interval
+                rain_entries.append(
+                    RainEntry(timestamp = time_of_rain, amount = archive_amt / number_of_tips, expiration = time_of_rain + 1800, dont_merge=True))
+
+    @staticmethod
+    def get_archive_records(dbm, archive_columns: List[str],
             earliest_time: int) -> List[Dict[str, Any]]:
         """At startup, gather previous 15 of rain."""
-        packets = []
+        records = []
         for cols in dbm.genSql('SELECT * FROM archive' \
                 ' WHERE dateTime > %d ORDER BY dateTime ASC' % earliest_time):
-            pkt: Dict[str, Any] = {}
+            rec: Dict[str, Any] = {}
             for i in range(len(cols)):
-                pkt[archive_columns[i]] = cols[i]
-            packets.append(pkt)
-            log.debug('get_archive_packets: pkt(%s): %s' % (
-                timestamp_to_string(pkt['dateTime']), pkt))
-        return packets
+                rec[archive_columns[i]] = cols[i]
+            records.append(rec)
+            log.debug('get_archive_records: rec(%s): %s' % (
+                timestamp_to_string(rec['dateTime']), rec))
+        return records
 
     def new_loop(self, event):
         """ Record rain, compute rainRate and add/update rainRate in the pkt."""
@@ -191,38 +217,50 @@ class RainRate(StdService):
             self.loop_rain_rates.pop(0)
 
             if archive_rain_rate is None:
-                # We have no help from loop records (it's probably an archive record during catchup (when WeeWX restarted).
-                # We'll average the rain reported in the archive record over 15m.
-                archive_rain_rate = record['rain'] / 900.0
+                # We have no help from loop records--probably an archive record during catchup (when WeeWX restarted).
+                # We'll average the rain reported over the length of the archive period.
+                archive_rain_rate = record['rain'] / self.archive_interval
 
         # TODO: Verify that this archive record is received in the same units as loop data (i.e., before any conversion that might be needed).
 
         record['rainRate'] = archive_rain_rate
 
     @staticmethod
-    def add_packet(pkt, rain_entries):
+    def add_packet(pkt, rain_entries, dont_merge=False):
         """If the pkt contains rain, add a new RainEntry to rain_entries (add to
-        the beginning) and include the timestamp and an expiration (15m later).
+        the beginning) and include the timestamp and an expiration (30m later).
         Also, delete any expired entries in rain_entries."""
 
         # Process new packet.  Be careful, the first time through, pkt['rain'] may be None.
         pkt_time: int       = to_int(pkt['dateTime'])
         if 'rain' in pkt and pkt['rain'] is not None and pkt['rain'] > 0.0:
             pkt_rain = pkt['rain']
+            if pkt_rain > 0.0100001:
+                log.info("Multi-tip pkt[%d] rain: %f" % (pkt['dateTime'], pkt['rain']))
             if len(rain_entries) == 0:
-                rain_entries.insert(0, RainEntry(timestamp = pkt_time, amount = 0.01, expiration = pkt_time + 1800))
-                pkt_rain = pkt_rain - 0.01
-                if pkt_rain > 0.001:
-                    # We have a multiple tip on the first tip of the storm.  Put the rest of the rain 900s ago, just beyond
-                    # the 15m span.
-                    rain_entries.append(RainEntry(timestamp = pkt_time - 900, amount = pkt_rain, expiration = pkt_time + 900))
-            elif pkt_rain < 0.011:
-                    rain_entries.insert(0, RainEntry(timestamp = pkt_time, amount = pkt_rain, expiration = pkt_time + 1800))
+                # Record the first tip.  It doesn't matter if it is a multitip as we have no idea when the rain
+                # actually accumulated. As such, we'll record it as a single tip (0.01).
+                rain_entries.insert(0, RainEntry(timestamp = pkt_time, amount = 0.01, expiration = pkt_time + 1800, dont_merge = dont_merge))
+            elif pkt_rain < 0.0100001:
+                    # Record the single tip
+                    rain_entries.insert(0, RainEntry(timestamp = pkt_time, amount = pkt_rain, expiration = pkt_time + 1800, dont_merge = dont_merge))
             else:
-                # Spread the rain over equally (in halves) from last rain in rain_entries.
-                earlier_pkt_time: int = pkt_time - ((pkt_time - rain_entries[0].timestamp) / 2)
-                rain_entries.insert(0, RainEntry(timestamp = earlier_pkt_time, amount = pkt_rain / 2.0, expiration = earlier_pkt_time + 1800))
-                rain_entries.insert(0, RainEntry(timestamp = pkt_time, amount = pkt_rain / 2.0, expiration = pkt_time + 1800))
+                # Spread the rain over equally (between last tip and now).
+                number_of_tips: int = round(pkt_rain / 0.01)
+                interval: int = round((pkt_time - rain_entries[0].timestamp) / number_of_tips)
+                time_of_rain: int = pkt_time - (interval * (number_of_tips - 1))
+                for _ in range(number_of_tips):
+                    rain_entries.insert(
+                        0, RainEntry(timestamp = time_of_rain, amount = pkt_rain / number_of_tips, expiration = time_of_rain + 1800, dont_merge = dont_merge))
+                    time_of_rain += interval
+
+        # If we have rain entries extremely close together, treat as a multi-tip.
+        if len(rain_entries) > 1 and not dont_merge and not rain_entries[1].dont_merge and rain_entries[0].timestamp - rain_entries[1].timestamp < 2.5:
+            log.info("Merging pkt[%d]rain:%f and pkt[%d]rain:%f" % (rain_entries[1].timestamp, rain_entries[1].amount, rain_entries[0].timestamp, rain_entries[0].amount))
+            combined_pkt: Dict[str, Any] = { 'dateTime': pkt_time, 'rain': rain_entries[0].amount + rain_entries[1].amount }
+            del rain_entries[0]
+            del rain_entries[0]
+            RainRate.add_packet(combined_pkt, rain_entries, dont_merge=True)
 
         # Delete any entries that have matured.
         while len(rain_entries) > 0 and rain_entries[-1].expiration <= pkt_time:
@@ -235,7 +273,7 @@ class RainRate(StdService):
         if len(rain_entries) < 2:
             pkt['rainRate'] = 0.0
         else:
-            # Rain rate between the last two drops.
+            # Rain rate between the last two tips.
             rainRate1 = 3600 * rain_entries[0].amount / (rain_entries[0].timestamp - rain_entries[1].timestamp)
             # Rain rate imagining that there was a tip in the current packet (as such, between now and the actual last tip).
             rainRate2 = 10000.0 # Pick a silly large number as we take the min below.
@@ -243,4 +281,6 @@ class RainRate(StdService):
                 rainRate2 = 3600 * 0.01 / (pkt['dateTime'] - rain_entries[0].timestamp)
             # Pick the lower of the two rates.
             pkt['rainRate'] = min(rainRate1, rainRate2)
+            if pkt['rainRate'] < 0.035:
+                pkt['rainRate'] = 0.0
         log.debug('new_loop(%d): Added/updated pkt[rainRate] of %f' % (pkt['dateTime'], pkt['rainRate']))

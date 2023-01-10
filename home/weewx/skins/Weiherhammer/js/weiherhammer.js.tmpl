@@ -359,7 +359,7 @@ function barometer_trend_deg (obs, trend_value, trend_code = null) {
     } else {
         //jQuery("." + obs).removeAttr('style');
     }
-    jQuery("." + obs + "-pressure-trend-symbol").html(html_output);
+    jQuery(".trend_" + obs + "-symbol").html(html_output);
 }
 
 // http://stackoverflow.com/a/14887961/1177153
@@ -2474,7 +2474,7 @@ function update_current_wx(data) {
                     thisElementClass = "dayRain";
                 }
 
-                if (thisElementClass.endsWith("barometer") || thisElementClass.endsWith("pressure") || thisElementClass.endsWith("altimeter") || thisElementClass.endsWith("time") || thisElementClass.endsWith("Time") || thisElementClass.endsWith("DATUM") || thisElementClass == "cloudbase") {
+                if (thisElementClass.includes("arometer") || thisElementClass.includes("ressure") || thisElementClass.includes("ltimeter") || thisElementClass.includes("time") || thisElementClass.includes("Time") || thisElementClass.includes("DATUM") || thisElementClass.includes("loudbase")) {
                     // Do not group number into thousands,hundreds format
                     localeStringUseGrouping = false;
                 }
@@ -2499,7 +2499,7 @@ function update_current_wx(data) {
             if (thisElementClass != null) {
                 var localeStringUseGrouping = true;
 
-                if (thisElementClass.endsWith("barometer") || thisElementClass.endsWith("pressure") || thisElementClass.endsWith("altimeter") || thisElementClass.endsWith("time") || thisElementClass.endsWith("Time") || thisElementClass.endsWith("DATUM") || thisElementClass == "cloudbase") {
+                if (thisElementClass.includes("arometer") || thisElementClass.includes("ressure") || thisElementClass.includes("ltimeter") || thisElementClass.includes("time") || thisElementClass.includes("Time") || thisElementClass.includes("DATUM") || thisElementClass.includes("loudbase")) {
                     // Do not group number into thousands,hundreds format
                     localeStringUseGrouping = false;
                 }
@@ -2720,11 +2720,18 @@ function update_current_wx(data) {
         set_boolean_color(data["sunshine"], ".current-sunshine-text", 'yesno-neutral');
     }
 
-    // update pressure trends
-    if (data.hasOwnProperty("trendBarometerCode")) {
-        barometer_trend_deg('barometer', null, data["trendBarometerCode"]);
-    } else if (data.hasOwnProperty("trendBarometer")) {
-        barometer_trend_deg('barometer', data["trendBarometer"]);
+    // update pressure trend values and symbols
+    if (data.hasOwnProperty("trend_barometer")) {
+        jQuery(".trend_barometer").html(parseFloat(parseFloat(data["trend_barometer"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["barometer"], maximumFractionDigits: unit_rounding_array["barometer"]}));
+        barometer_trend_deg('barometer', data["trend_barometer"]);
+    }
+    if (data.hasOwnProperty("trend_solar_barometer")) {
+        jQuery(".trend_solar_barometer").html(parseFloat(parseFloat(data["trend_solar_barometer"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["barometer"], maximumFractionDigits: unit_rounding_array["barometer"]}));
+        barometer_trend_deg('solar_barometer', data["trend_solar_barometer"]);
+    }
+    if (data.hasOwnProperty("trend_asky_box_barometer")) {
+        jQuery(".trend_asky_box_barometer").html(parseFloat(parseFloat(data["trend_asky_box_barometer"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["barometer"], maximumFractionDigits: unit_rounding_array["barometer"]}));
+        barometer_trend_deg('asky_box_barometer', data["trend_asky_box_barometer"]);
     }
 
     // PWS indoor room quality

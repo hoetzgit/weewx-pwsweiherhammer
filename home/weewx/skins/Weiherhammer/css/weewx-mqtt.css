@@ -1,12 +1,39 @@
 /*
 Generator: generate_weiherhammer_mqtt_inc.sh
-generated: 08.01.2023 12:19:05
+generated: 10.01.2023 13:31:05
 */
 
 :root {
   --mqtt-rec-none:#FF0000;
   --mqtt-rec:#00bb00;
   --mqtt-rec-outdated:#236d1b;
+}
+
+.mqtt-rec-none-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.mqtt-rec-outdated-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-outdated);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
 }
 
 .aeris_aqi-mqtt-rec-dot {
@@ -1845,7 +1872,34 @@ generated: 08.01.2023 12:19:05
   margin-right: 5px;
 }
 
-.trendBarometerCode-mqtt-rec-dot {
+.trend_asky_box_barometer-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.trend_barometer-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.trend_barometer_code-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.trend_solar_barometer-mqtt-rec-dot {
   height: 8px;
   width: 8px;
   background-color: var(--mqtt-rec-none);
@@ -2277,7 +2331,34 @@ generated: 08.01.2023 12:19:05
   margin-right: 5px;
 }
 
+.windrun_N-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
 .windrun_NE-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.windrun_NNE-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.windrun_NNW-mqtt-rec-dot {
   height: 8px;
   width: 8px;
   background-color: var(--mqtt-rec-none);

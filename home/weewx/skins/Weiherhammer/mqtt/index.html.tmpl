@@ -81,7 +81,14 @@
                                 <table class="table table-striped mqtt-table">
                                     <thead class="table-light mqtt-table-head">
                                         <tr>
-                                            <th scope="col" class="mqtt-table-head-headline" colspan=2>Broker: $Extras.mqtt_websockets_host Topic: $Extras.mqtt_websockets_topic/#</th>
+                                            <th scope="col" class="mqtt-table-head-headline" colspan=2><b>Broker:</b> $Extras.mqtt_websockets_host <b>Topic:</b> $Extras.mqtt_websockets_topic/#</th>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-head-subheadline" colspan=2>
+                                                <div class="mqtt-rec-dot"></div>$gettext('received'),
+                                                <div class="mqtt-rec-outdated-dot"></div>$gettext('outdated'),
+                                                <div class="mqtt-rec-none-dot"></div>$gettext('not received yet')
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody class="table-group-divider mqtt-table-body">
