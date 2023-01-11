@@ -1,6 +1,6 @@
 /*
 Generator: generate_weiherhammer_mqtt_inc.sh
-generated: 10.01.2023 13:31:05
+generated: 11.01.2023 09:29:18
 */
 
 :root {
@@ -15,6 +15,7 @@ generated: 10.01.2023 13:31:05
   background-color: var(--mqtt-rec-none);
   border-radius: 50%;
   display: inline-block;
+  margin-left: 10px;
   margin-right: 5px;
 }
 
@@ -24,6 +25,7 @@ generated: 10.01.2023 13:31:05
   background-color: var(--mqtt-rec);
   border-radius: 50%;
   display: inline-block;
+  margin-left: 10px;
   margin-right: 5px;
 }
 
@@ -33,6 +35,7 @@ generated: 10.01.2023 13:31:05
   background-color: var(--mqtt-rec-outdated);
   border-radius: 50%;
   display: inline-block;
+  margin-left: 10px;
   margin-right: 5px;
 }
 

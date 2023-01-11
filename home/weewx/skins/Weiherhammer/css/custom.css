@@ -23,6 +23,8 @@
     --indoor-humidity-moist:#B2DF8A;
     --indoor-humidity-very-moist:#0077FF;
     --link-color:#337ab7;
+    --tooltip-color:#fff;
+    --tooltip-backgroud-color:#337ab7;
 }
 
 /*
@@ -83,8 +85,8 @@ abbr[title] {
 #tooltip
 {
     text-align: center;
-    color: #fff;
-    background: #111;
+    color: var(--tooltip-color);
+    background: var(--tooltip-backgroud-color);
     position: absolute;
     z-index: 100;
     padding: 15px;
@@ -97,7 +99,7 @@ abbr[title] {
         height: 0;
         border-left: 10px solid transparent;
         border-right: 10px solid transparent;
-        border-top: 10px solid #111;
+        border-top: 10px solid var(--tooltip-backgroud-color);
         content: '';
         position: absolute;
         left: 50%;
@@ -108,7 +110,7 @@ abbr[title] {
         #tooltip.top:after
         {
             border-top-color: transparent;
-            border-bottom: 10px solid #111;
+            border-bottom: 10px solid var(--tooltip-backgroud-color);
             top: -20px;
             bottom: auto;
         }
@@ -348,7 +350,7 @@ table.celestial td.label {
 }
 
 .obs-row-middle {
-    padding: 0px 15px 0px 10px;
+    padding: 0px 5px 0px 0px;
     margin: 0 -15px 0 -10px;
 }
 
@@ -377,6 +379,10 @@ table.celestial td.label {
 
 .stn-high-low, .dark .stn-high-low {
     padding-bottom: 10px;
+}
+
+.stn-high-low-table-title {
+    font-weight: 400;
 }
 
 /* additional station observations modal window */
@@ -442,6 +448,7 @@ table.celestial td.label {
 
 .station-observations-label {
     min-width: 120px;
+    /* font-weight: 400; */
 }
 
 .station-observations-data {
@@ -490,7 +497,12 @@ table.celestial td.label {
     width:50%;
 }
 
-.pws-aqi-table-title, .pws-aqi-table-value {
+.pws-aqi-table-title {
+    padding:0px;
+    font-weight: 400;
+}
+
+.pws-aqi-table-value {
     padding:0px
 }
 
@@ -519,10 +531,15 @@ table.celestial td.label {
 
 .almanac-row {
     border-top: 1px solid #D7D7D7;
-    padding: 0px 15px 0px;
+    padding: 0px 25px 0px;
     margin: 0 -15px 0 -15px;
 }
 
+.sun-moon-title {
+    font-size: 25px;
+    text-align: center;
+    padding-bottom: 10px;
+}
 
 /* Wind */
 
@@ -537,7 +554,7 @@ table.celestial td.label {
 }
 
 .current_wind {
-    padding: 15px 0 0 0px!important;
+    /* padding: 15px 0 0 0px!important; */
 }
 
 .compass {
@@ -552,7 +569,7 @@ table.celestial td.label {
     align-items: center;
     width: 50%;
     float: left;
-    margin-top: 6px;
+    /* margin-top: 6px; */
     margin-bottom: 10px;
 }
 
@@ -592,6 +609,7 @@ table.celestial td.label {
 }
 
 .tabs-menu > li > a, .dark .tabs-menu > li > a {
+    color: var(--link-color);
     padding: 0px 5px;
 }
 
@@ -606,6 +624,7 @@ table.celestial td.label {
 }
 
 .nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover {
+    color: #333;
     cursor: default;
     background-color: #f6f6f6;
     border: 1px solid #ddd;
@@ -614,7 +633,7 @@ table.celestial td.label {
 }
 
 .dark .nav-tabs>li.active>a, .dark .nav-tabs>li.active>a:focus, .dark .nav-tabs>li.active>a:hover {
-    /* color: #FFF; */
+    color: #FFF;
     cursor: default;
     background-color: #424242;
     border: 1px solid #ddd;
@@ -628,7 +647,7 @@ table.celestial td.label {
 
 /* Tabs /Radar Image */ 
 .col-radar-map {
-    padding: 10px 5px 0px 5px !important;
+    padding: 10px 0px 0px 5px !important;
 }
 
 #radar {
@@ -645,11 +664,11 @@ table.celestial td.label {
 
 /* Snapshot Stats */
 
-.stn-quick-stats  {
-    padding-right: 0px;
+.stn-quick-stats, .dark .stn-quick-stats {
+    padding-right: 0px !important;
 }
 
-.snapshot-data {
+.snapshot-data, .dark .snapshot-data {
     text-align: right;
     padding-right: 10px !important;
 }
@@ -666,6 +685,14 @@ table.celestial td.label {
 span.highcharts-title {
     width: 100% !important;
     text-align: center !important;
+}
+
+/* earthquake */
+
+.earthquake-container, .dark .earthquake-container {
+    font-size: 18px;
+    text-align: center;
+    min-height: 180px !important;
 }
 
 /* weewx-DWD */
@@ -1091,7 +1118,7 @@ sub { top: 0.4em; }
 /* stats */
 
 .stats-label {
-    font-weight: 700;
+    font-weight: 400;
 }
 
 /* TODO */
@@ -1245,7 +1272,7 @@ sub { top: 0.4em; }
     }
     .obs-row-middle {
         border-top: 1px solid #D7D7D7;
-        padding: 0px 15px 0px;
+        padding: 0px 10px 0px;
         margin: 0 -15px 0 -15px;
     }
     .current_obs_top, .dark .current_obs_top {
@@ -1270,7 +1297,7 @@ sub { top: 0.4em; }
         background-color: #D7D7D7;
     }
     .current_wind {
-        padding: 20px 0 0 0px!important;
+        padding: 10px 0 0 0px!important;
     }
     .windspeedtable {
         padding-top: 0px;

@@ -1,5 +1,5 @@
                                         <!-- Generator: generate_weiherhammer_mqtt_inc.sh -->
-                                        <!-- generated: 10.01.2023 13:31:05 -->
+                                        <!-- generated: 11.01.2023 09:29:18 -->
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="aeris_aqi-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.aeris_aqi">aeris_aqi</abbr></th>
                                             <td class="mqtt-table-body-obs-val"><span class="aeris_aqi" data-mqttrec="0">---</span></td><!-- AJAX -->
