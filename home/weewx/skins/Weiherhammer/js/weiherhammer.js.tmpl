@@ -1065,6 +1065,7 @@ async function ajaxweewx() {
 //var station_obs_array = "";
 var unit_rounding_array = "";
 var unit_label_array = "";
+var unit_group_array = "";
 var weewx_data = "";
 var indoorclimate_config = "";
 function update_weewx_data(data) {
@@ -1079,6 +1080,7 @@ function update_weewx_data(data) {
     //station_obs_array = data["station_observations"];
     unit_rounding_array = data["unit_rounding"];
     unit_label_array = data["unit_label"];
+    unit_group_array = data["unit_group"];
 
     // Daily High Low
     high = data["day"]["outTemp"]["max"];
@@ -2474,9 +2476,11 @@ function update_current_wx(data) {
                     thisElementClass = "dayRain";
                 }
 
-                if (thisElementClass.includes("arometer") || thisElementClass.includes("ressure") || thisElementClass.includes("ltimeter") || thisElementClass.includes("time") || thisElementClass.includes("Time") || thisElementClass.includes("DATUM") || thisElementClass.includes("loudbase")) {
-                    // Do not group number into thousands,hundreds format
-                    localeStringUseGrouping = false;
+                if (unit_group_array.hasOwnProperty(thisElementClass)) {
+                    if (unit_group_array[thisElementClass].includes("group_time") || unit_group_array[thisElementClass].includes("group_pressure")) {
+                        // Do not group number into thousands,hundreds format
+                        localeStringUseGrouping = false;
+                    }
                 }
 
                 if (data.hasOwnProperty(thisElementClass)) {
@@ -2491,7 +2495,7 @@ function update_current_wx(data) {
     }
     // End dynamic station observation box
 
-    // Update the MQTT Data page
+    // Update the MQTT Monitor page
     // Get all span elements within the table. This is setup by Python initially
     try {
         jQuery('.mqtt-data').find("span").each(function() {
@@ -2499,9 +2503,11 @@ function update_current_wx(data) {
             if (thisElementClass != null) {
                 var localeStringUseGrouping = true;
 
-                if (thisElementClass.includes("arometer") || thisElementClass.includes("ressure") || thisElementClass.includes("ltimeter") || thisElementClass.includes("time") || thisElementClass.includes("Time") || thisElementClass.includes("DATUM") || thisElementClass.includes("loudbase")) {
-                    // Do not group number into thousands,hundreds format
-                    localeStringUseGrouping = false;
+                if (unit_group_array.hasOwnProperty(thisElementClass)) {
+                    if (unit_group_array[thisElementClass].includes("group_time") || unit_group_array[thisElementClass].includes("group_pressure")) {
+                        // Do not group number into thousands,hundreds format
+                        localeStringUseGrouping = false;
+                    }
                 }
 
                 if (data.hasOwnProperty(thisElementClass)) {
@@ -2524,7 +2530,7 @@ function update_current_wx(data) {
     } catch (e) {
         console.log(e);
     }
-    // End dynamic mqtt data updates
+    // End dynamic MQTT Monitor updates
 
     // Temperature F
     if (data.hasOwnProperty("outTemp_F")) {

@@ -1,5 +1,5 @@
                                         <!-- Generator: generate_weiherhammer_mqtt_inc.sh -->
-                                        <!-- generated: 11.01.2023 09:29:18 -->
+                                        <!-- generated: 12.01.2023 13:13:00 -->
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="aeris_aqi-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.aeris_aqi">aeris_aqi</abbr></th>
                                             <td class="mqtt-table-body-obs-val"><span class="aeris_aqi" data-mqttrec="0">---</span></td><!-- AJAX -->
@@ -83,6 +83,14 @@
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="asky_dome_temperature-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.asky_dome_temperature">asky_dome_temperature</abbr></th>
                                             <td class="mqtt-table-body-obs-val"><span class="asky_dome_temperature" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="AstronomicalTwilightEnd-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.AstronomicalTwilightEnd">AstronomicalTwilightEnd</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="AstronomicalTwilightEnd" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="AstronomicalTwilightStart-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.AstronomicalTwilightStart">AstronomicalTwilightStart</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="AstronomicalTwilightStart" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="barometer-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.barometer">barometer</abbr></th>
@@ -233,6 +241,14 @@
                                             <td class="mqtt-table-body-obs-val"><span class="cdc_WindSpeed10" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
                                         <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="CivilTwilightEnd-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.CivilTwilightEnd">CivilTwilightEnd</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="CivilTwilightEnd" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="CivilTwilightStart-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.CivilTwilightStart">CivilTwilightStart</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="CivilTwilightStart" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="cloudbase-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.cloudbase">cloudbase</abbr></th>
                                             <td class="mqtt-table-body-obs-val"><span class="cloudbase" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
@@ -263,6 +279,46 @@
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="dewpoint-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.dewpoint">dewpoint</abbr></th>
                                             <td class="mqtt-table-body-obs-val"><span class="dewpoint" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="EarthJupiterDistance-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.EarthJupiterDistance">EarthJupiterDistance</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="EarthJupiterDistance" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="EarthMarsDistance-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.EarthMarsDistance">EarthMarsDistance</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="EarthMarsDistance" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="EarthMercuryDistance-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.EarthMercuryDistance">EarthMercuryDistance</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="EarthMercuryDistance" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="EarthMoonDistance-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.EarthMoonDistance">EarthMoonDistance</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="EarthMoonDistance" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="EarthNeptuneDistance-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.EarthNeptuneDistance">EarthNeptuneDistance</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="EarthNeptuneDistance" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="EarthPlutoDistance-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.EarthPlutoDistance">EarthPlutoDistance</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="EarthPlutoDistance" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="EarthSaturnDistance-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.EarthSaturnDistance">EarthSaturnDistance</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="EarthSaturnDistance" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="EarthSunDistance-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.EarthSunDistance">EarthSunDistance</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="EarthSunDistance" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="EarthUranusDistance-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.EarthUranusDistance">EarthUranusDistance</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="EarthUranusDistance" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="EarthVenusDistance-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.EarthVenusDistance">EarthVenusDistance</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="EarthVenusDistance" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="ET-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.ET">ET</abbr></th>
@@ -377,6 +433,10 @@
                                             <td class="mqtt-table-body-obs-val"><span class="interval" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
                                         <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="lightning_last_time-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.lightning_last_time">lightning_last_time</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="lightning_last_time" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="lightning_strike_count-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.lightning_strike_count">lightning_strike_count</abbr></th>
                                             <td class="mqtt-table-body-obs-val"><span class="lightning_strike_count" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
@@ -423,6 +483,62 @@
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="monthRain-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.monthRain">monthRain</abbr></th>
                                             <td class="mqtt-table-body-obs-val"><span class="monthRain" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="MoonAltitude-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.MoonAltitude">MoonAltitude</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="MoonAltitude" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="MoonAzimuth-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.MoonAzimuth">MoonAzimuth</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="MoonAzimuth" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="MoonDeclination-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.MoonDeclination">MoonDeclination</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="MoonDeclination" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="MoonFullness-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.MoonFullness">MoonFullness</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="MoonFullness" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="MoonRightAscension-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.MoonRightAscension">MoonRightAscension</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="MoonRightAscension" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="Moonrise-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.Moonrise">Moonrise</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="Moonrise" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="Moonset-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.Moonset">Moonset</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="Moonset" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="MoonTransit-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.MoonTransit">MoonTransit</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="MoonTransit" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="NauticalTwilightEnd-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.NauticalTwilightEnd">NauticalTwilightEnd</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="NauticalTwilightEnd" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="NauticalTwilightStart-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.NauticalTwilightStart">NauticalTwilightStart</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="NauticalTwilightStart" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="NextEquinox-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.NextEquinox">NextEquinox</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="NextEquinox" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="NextFullMoon-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.NextFullMoon">NextFullMoon</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="NextFullMoon" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="NextNewMoon-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.NextNewMoon">NextNewMoon</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="NextNewMoon" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="NextSolstice-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.NextSolstice">NextSolstice</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="NextSolstice" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="office_hqi-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.office_hqi">office_hqi</abbr></th>
@@ -765,6 +881,30 @@
                                             <td class="mqtt-table-body-obs-val"><span class="stormRain" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
                                         <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="SunAltitude-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.SunAltitude">SunAltitude</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="SunAltitude" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="SunAzimuth-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.SunAzimuth">SunAzimuth</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="SunAzimuth" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="SunDeclination-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.SunDeclination">SunDeclination</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="SunDeclination" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="SunRightAscension-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.SunRightAscension">SunRightAscension</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="SunRightAscension" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="Sunrise-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.Sunrise">Sunrise</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="Sunrise" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="Sunset-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.Sunset">Sunset</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="Sunset" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="sunshine-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.sunshine">sunshine</abbr></th>
                                             <td class="mqtt-table-body-obs-val"><span class="sunshine" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
@@ -803,6 +943,10 @@
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="sunshineThresholdMin-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.sunshineThresholdMin">sunshineThresholdMin</abbr></th>
                                             <td class="mqtt-table-body-obs-val"><span class="sunshineThresholdMin" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="SunTransit-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.SunTransit">SunTransit</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="SunTransit" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="thswIndex-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.thswIndex">thswIndex</abbr></th>
@@ -1083,4 +1227,8 @@
                                         <tr>
                                             <th scope="row" class="mqtt-table-body-obs"><div class="yearRain-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.yearRain">yearRain</abbr></th>
                                             <td class="mqtt-table-body-obs-val"><span class="yearRain" data-mqttrec="0">---</span></td><!-- AJAX -->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="mqtt-table-body-obs"><div class="yesterdaySunshineDur-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.yesterdaySunshineDur">yesterdaySunshineDur</abbr></th>
+                                            <td class="mqtt-table-body-obs-val"><span class="yesterdaySunshineDur" data-mqttrec="0">---</span></td><!-- AJAX -->
                                         </tr>

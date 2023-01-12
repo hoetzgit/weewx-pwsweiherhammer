@@ -1,6 +1,6 @@
 /*
 Generator: generate_weiherhammer_mqtt_inc.sh
-generated: 11.01.2023 09:29:18
+generated: 12.01.2023 13:13:00
 */
 
 :root {
@@ -220,6 +220,24 @@ generated: 11.01.2023 09:29:18
 }
 
 .asky_dome_temperature-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.AstronomicalTwilightEnd-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.AstronomicalTwilightStart-mqtt-rec-dot {
   height: 8px;
   width: 8px;
   background-color: var(--mqtt-rec-none);
@@ -561,6 +579,24 @@ generated: 11.01.2023 09:29:18
   margin-right: 5px;
 }
 
+.CivilTwilightEnd-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.CivilTwilightStart-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
 .cloudbase-mqtt-rec-dot {
   height: 8px;
   width: 8px;
@@ -625,6 +661,96 @@ generated: 11.01.2023 09:29:18
 }
 
 .dewpoint-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.EarthJupiterDistance-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.EarthMarsDistance-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.EarthMercuryDistance-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.EarthMoonDistance-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.EarthNeptuneDistance-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.EarthPlutoDistance-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.EarthSaturnDistance-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.EarthSunDistance-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.EarthUranusDistance-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.EarthVenusDistance-mqtt-rec-dot {
   height: 8px;
   width: 8px;
   background-color: var(--mqtt-rec-none);
@@ -885,6 +1011,15 @@ generated: 11.01.2023 09:29:18
   margin-right: 5px;
 }
 
+.lightning_last_time-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
 .lightning_strike_count-mqtt-rec-dot {
   height: 8px;
   width: 8px;
@@ -985,6 +1120,132 @@ generated: 11.01.2023 09:29:18
 }
 
 .monthRain-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.MoonAltitude-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.MoonAzimuth-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.MoonDeclination-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.MoonFullness-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.MoonRightAscension-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.Moonrise-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.Moonset-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.MoonTransit-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.NauticalTwilightEnd-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.NauticalTwilightStart-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.NextEquinox-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.NextFullMoon-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.NextNewMoon-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.NextSolstice-mqtt-rec-dot {
   height: 8px;
   width: 8px;
   background-color: var(--mqtt-rec-none);
@@ -1758,6 +2019,60 @@ generated: 11.01.2023 09:29:18
   margin-right: 5px;
 }
 
+.SunAltitude-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.SunAzimuth-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.SunDeclination-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.SunRightAscension-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.Sunrise-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.Sunset-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
 .sunshine-mqtt-rec-dot {
   height: 8px;
   width: 8px;
@@ -1840,6 +2155,15 @@ generated: 11.01.2023 09:29:18
 }
 
 .sunshineThresholdMin-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.SunTransit-mqtt-rec-dot {
   height: 8px;
   width: 8px;
   background-color: var(--mqtt-rec-none);
@@ -2470,6 +2794,15 @@ generated: 11.01.2023 09:29:18
 }
 
 .yearRain-mqtt-rec-dot {
+  height: 8px;
+  width: 8px;
+  background-color: var(--mqtt-rec-none);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.yesterdaySunshineDur-mqtt-rec-dot {
   height: 8px;
   width: 8px;
   background-color: var(--mqtt-rec-none);

@@ -291,7 +291,7 @@ class getData(SearchList):
         except KeyError:
             moment_js_tz = ""
 
-# Highcharts UTC offset is the opposite of normal. Positive values are
+        # Highcharts UTC offset is the opposite of normal. Positive values are
         # west, negative values are east of UTC.
         # https://api.highcharts.com/highcharts/time.timezoneOffset Multiplying
         # by -1 will reverse the number sign and keep 0 (not -0).
@@ -2501,11 +2501,15 @@ class getData(SearchList):
 
         all_obs_rounding_json = OrderedDict()
         all_obs_unit_labels_json = OrderedDict()
+        all_obs_unit_groups_json = OrderedDict()
         for obs in sorted(weewx.units.obs_group_dict):
             try:
                 # Find the unit from group (like group_temperature = degree_F)
                 obs_group = weewx.units.obs_group_dict[obs]
                 obs_unit = self.generator.converter.group_unit_dict[obs_group]
+                # Add to the rounding array
+                if obs not in all_obs_unit_groups_json:
+                    all_obs_unit_groups_json[obs] = str(obs_group)
             except:
                 # Something's wrong. Continue this loop to ignore this group
                 # (like group_dust or something non-standard)
@@ -2734,6 +2738,7 @@ class getData(SearchList):
             "station_obs_html": station_obs_html,
             "all_obs_rounding_json": json.dumps(all_obs_rounding_json),
             "all_obs_unit_labels_json": json.dumps(all_obs_unit_labels_json),
+            "all_obs_unit_groups_json": json.dumps(all_obs_unit_groups_json),
             "earthquake_time": eqtime,
             "earthquake_url": equrl,
             "earthquake_place": eqplace,

@@ -6,6 +6,7 @@ PW=""
 PORT=1883
 TOPIC="weewx-loopdata"
 SOURCEFILE="/home/weewx/public_html/loopdata/loopdata.json"
+DESTFILE1="/home/weewx/public_html/celestial/loopdata.json"
 RETAIN="-r"
 CLIENTID="${HOSTNAME}-weewx-loopdata-publisher"
 
@@ -13,6 +14,9 @@ if [ ! -f "$SOURCEFILE" ]; then
     echo "ERROR: weewx-loopata file [${SOURCEFILE}] does not exist! Abort." >&2
     exit 126 # Command invoked cannot execute
 fi
+
+# temporary
+cp -a ${SOURCEFILE} ${DESTFILE1}
 
 # publish mod date
 subtopic="${TOPIC}/dateTime"

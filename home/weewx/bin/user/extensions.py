@@ -16,7 +16,9 @@ import locale
 # Other options are possible. See:
 # http://docs.python.org/2/library/locale.html#locale.setlocale
 locale.setlocale(locale.LC_ALL, '')
-
+#
+# This data structure maps user observation types to a "unit group"
+#
 import weewx.units
 #
 # Ecowitt GW1100 Sainlogic WS3500 WH65
@@ -121,7 +123,6 @@ weewx.units.obs_group_dict['wh51_ch5_sig_percent'] = 'group_percent'
 weewx.units.obs_group_dict['wh51_ch6_sig_percent'] = 'group_percent'
 weewx.units.obs_group_dict['wh51_ch7_sig_percent'] = 'group_percent'
 weewx.units.obs_group_dict['wh51_ch8_sig_percent'] = 'group_percent'
-
 #
 # Ecowitt Sende - Signal in Prozent
 weewx.units.obs_group_dict['signal1'] = 'group_percent'
@@ -326,12 +327,62 @@ weewx.units.obs_group_dict['windrun_W'] = 'group_distance' #TODO check this
 weewx.units.obs_group_dict['windrun_WNW'] = 'group_distance' #TODO check this
 weewx.units.obs_group_dict['windrun_WSW'] = 'group_distance' #TODO check this
 #
-# units
+# Set up weewx-celestial observation type.
+weewx.units.obs_group_dict['EarthSunDistance'] = 'group_distance'
+weewx.units.obs_group_dict['EarthMoonDistance'] = 'group_distance'
+weewx.units.obs_group_dict['EarthMercuryDistance'] = 'group_distance'
+weewx.units.obs_group_dict['EarthVenusDistance'] = 'group_distance'
+weewx.units.obs_group_dict['EarthMarsDistance'] = 'group_distance'
+weewx.units.obs_group_dict['EarthJupiterDistance'] = 'group_distance'
+weewx.units.obs_group_dict['EarthSaturnDistance'] = 'group_distance'
+weewx.units.obs_group_dict['EarthUranusDistance'] = 'group_distance'
+weewx.units.obs_group_dict['EarthNeptuneDistance'] = 'group_distance'
+weewx.units.obs_group_dict['EarthPlutoDistance'] = 'group_distance'
+weewx.units.obs_group_dict['SunAzimuth'] = 'group_direction'
+weewx.units.obs_group_dict['SunAltitude'] = 'group_direction'
+weewx.units.obs_group_dict['SunRightAscension'] = 'group_direction'
+weewx.units.obs_group_dict['SunDeclination'] = 'group_direction'
+weewx.units.obs_group_dict['Sunrise'] = 'group_time'
+weewx.units.obs_group_dict['SunTransit'] = 'group_time'
+weewx.units.obs_group_dict['Sunset'] = 'group_time'
+weewx.units.obs_group_dict['yesterdaySunshineDur'] = 'group_deltatime'
+weewx.units.obs_group_dict['AstronomicalTwilightStart'] = 'group_time'
+weewx.units.obs_group_dict['NauticalTwilightStart'] = 'group_time'
+weewx.units.obs_group_dict['CivilTwilightStart'] = 'group_time'
+weewx.units.obs_group_dict['CivilTwilightEnd'] = 'group_time'
+weewx.units.obs_group_dict['NauticalTwilightEnd'] = 'group_time'
+weewx.units.obs_group_dict['AstronomicalTwilightEnd'] = 'group_time'
+weewx.units.obs_group_dict['NextEquinox'] = 'group_time'
+weewx.units.obs_group_dict['NextSolstice'] = 'group_time'
+weewx.units.obs_group_dict['MoonAzimuth'] = 'group_direction'
+weewx.units.obs_group_dict['MoonAltitude'] = 'group_direction'
+weewx.units.obs_group_dict['MoonRightAscension'] = 'group_direction'
+weewx.units.obs_group_dict['MoonDeclination'] = 'group_direction'
+weewx.units.obs_group_dict['MoonFullness'] = 'group_percent'
+weewx.units.obs_group_dict['MoonPhase']  = 'group_data'
+weewx.units.obs_group_dict['NextNewMoon'] = 'group_time'
+weewx.units.obs_group_dict['NextFullMoon'] = 'group_time'
+weewx.units.obs_group_dict['Moonrise']  = 'group_time'
+weewx.units.obs_group_dict['MoonTransit'] = 'group_time'
+weewx.units.obs_group_dict['Moonset']  = 'group_time'
+#
+# Tests
+#weewx-mqtt [[[augmentations]]]
+weewx.units.obs_group_dict['daySunshineDur'] = 'group_deltatime'
+weewx.units.obs_group_dict['dayWindrun'] = 'group_distance'
+#
+#weewx-mqttpublish [[[[[aggregates]]]]]
+weewx.units.obs_group_dict['daySunshineDurSum'] = 'group_deltatime'
+weewx.units.obs_group_dict['dayWindrunSum'] = 'group_distance'
+#
+# END unit groups
+#
+# map unit groups to a standard unit type
 weewx.units.USUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
 weewx.units.MetricUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
 weewx.units.MetricWXUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
 #
-# unit format
+# default values for formats and labels
 weewx.units.default_unit_format_dict['count'] = '%.0f'
 weewx.units.default_unit_format_dict['kg_per_meter_qubic'] = '%.3f'
 weewx.units.default_unit_format_dict['kilowatt_hour_per_meter_squared'] = '%.3f'
@@ -356,7 +407,7 @@ weewx.units.default_unit_label_dict['milligram_per_meter_cubed'] = ' mg/m³'
 # Ecowitt uvradiation
 weewx.units.default_unit_label_dict['microwatt_per_meter_squared'] = ' μW/m²'
 #
-# unit conversations
+# Conversion functions to go from one unit type to another.
 weewx.units.conversionDict['kilowatt_hour_per_meter_squared'] = {'watt_hour_per_meter_squared': lambda x : x * 1000.0}
 weewx.units.conversionDict['watt_hour_per_meter_squared'] = {'kilowatt_hour_per_meter_squared': lambda x : x / 1000.0}
 weewx.units.conversionDict['gram_per_meter_cubed'] = {'microgram_per_meter_cubed': lambda x : x * 1000000}
@@ -372,11 +423,3 @@ weewx.units.conversionDict['microwatt_per_meter_squared'] = {'watt_per_meter_squ
 weewx.units.conversionDict['watt_per_meter_squared'] = {'microwatt_per_meter_squared': lambda x : x * 1000000.0}
 weewx.units.conversionDict['milliwatt_per_meter_squared'] = {'watt_per_meter_squared': lambda x : x * 0.001}
 weewx.units.conversionDict['watt_per_meter_squared'] = {'milliwatt_per_meter_squared': lambda x : x * 1000.0}
-#
-# Tests
-weewx.units.obs_group_dict['daySunshineDur'] = 'group_deltatime' #test weewx-mqtt
-weewx.units.obs_group_dict['dayWindrun'] = 'group_distance' #test weewx-mqtt
-weewx.units.obs_group_dict['daySunshineDurSum'] = 'group_deltatime' #test weewx-mqttpublish
-weewx.units.obs_group_dict['dayWindrunSum'] = 'group_distance' #test weewx-mqttpublish
-#
-# END
