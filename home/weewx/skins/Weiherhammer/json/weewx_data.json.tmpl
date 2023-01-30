@@ -71,108 +71,56 @@
         "archive_interval_ms": "$archive_interval_ms"
     },
     "extras": {
-        "weiherhammer_theme": "$Extras.theme",
-        "theme_toggle_enabled": "$Extras.theme_toggle_enabled",
-        "weiherhammer_locale": "$Extras.weiherhammer_locale",
+        "forecast_show_conditions": "$Extras.forecast_show_conditions",
+        "forecast_show_conditions_console": "$Extras.forecast_show_conditions_console",
+        "forecast_show_dewpoint": "$Extras.forecast_show_dewpoint",
+        "forecast_show_dewpoint_console": "$Extras.forecast_show_dewpoint_console",
+        "forecast_show_humidity": "$Extras.forecast_show_humidity",
+        "forecast_show_humidity_console": "$Extras.forecast_show_humidity_console",
+        "forecast_show_pop": "$Extras.forecast_show_pop",
+        "forecast_show_pop_console": "$Extras.forecast_show_pop_console",
+        "forecast_show_pressure": "$Extras.forecast_show_pressure",
+        "forecast_show_pressure_console": "$Extras.forecast_show_pressure_console",
+        "forecast_show_temperature": "$Extras.forecast_show_temperature",
+        "forecast_show_temperature_console": "$Extras.forecast_show_temperature_console",
+        "forecast_show_winddirdeg": "$Extras.forecast_show_winddirdeg",
+        "forecast_show_winddirdeg_console": "$Extras.forecast_show_winddirdeg_console",
+        "forecast_show_windspeed": "$Extras.forecast_show_windspeed",
+        "forecast_show_windspeed_console": "$Extras.forecast_show_windspeed_console",
+        "highcharts_decimal": "$Extras.highcharts_decimal",
+        "highcharts_homepage_graphgroup": "$Extras.highcharts_homepage_graphgroup",
+        "highcharts_thousands": "$Extras.highcharts_thousands",
         "reload_hook_images": "$Extras.reload_hook_images",
-        "reload_images_radar": "$Extras.reload_images_radar",
-        "reload_images_hook_asi": "$Extras.reload_images_hook_asi",
+        "reload_images_hook_ac": "$Extras.reload_images_hook_ac",
         "reload_images_hook_af": "$Extras.reload_images_hook_af",
         "reload_images_hook_as": "$Extras.reload_images_hook_as",
-        "reload_images_hook_ac": "$Extras.reload_images_hook_ac",
-        "station_observations": "$Extras.station_observations",
-        "highcharts_homepage_graphgroup": "$Extras.highcharts_homepage_graphgroup",
-        "highcharts_decimal": "$Extras.highcharts_decimal",
-        "highcharts_thousands": "$Extras.highcharts_thousands",
-        #if $Extras.has_key("current_provider_list")
-        "current_provider_list": "$Extras.current_provider_list",
-        #end if
-        #if $Extras.has_key("current_provider_default")
-        "current_provider_default": "$Extras.current_provider_default",
-        #end if
-        #if $Extras.has_key("current_provider_visible")
-        "current_provider_visible": "$Extras.current_provider_visible",
-        #end if
-        #if $Extras.has_key("forecast_show_conditions")
-        "forecast_show_conditions": "$Extras.forecast_show_conditions",
-        #else
-        "forecast_show_conditions": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_conditions")
-        "forecast_show_temperature": "$Extras.forecast_show_temperature",
-        #else
-        "forecast_show_temperature": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_pop")
-        "forecast_show_pop": "$Extras.forecast_show_pop",
-        #else
-        "forecast_show_pop": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_dewpoint")
-        "forecast_show_dewpoint": "$Extras.forecast_show_dewpoint",
-        #else
-        "forecast_show_dewpoint": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_humidity")
-        "forecast_show_humidity": "$Extras.forecast_show_humidity",
-        #else
-        "forecast_show_humidity": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_windspeed")
-        "forecast_show_windspeed": "$Extras.forecast_show_windspeed",
-        #else
-        "forecast_show_windspeed": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_winddirdeg")
-        "forecast_show_winddirdeg": "$Extras.forecast_show_winddirdeg",
-        #else
-        "forecast_show_winddirdeg": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_pressure")
-        "forecast_show_pressure": "$Extras.forecast_show_pressure",
-        #else
-        "forecast_show_pressure": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_conditions_console")
-        "forecast_show_conditions_console": "$Extras.forecast_show_conditions_console",
-        #else
-        "forecast_show_conditions_console": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_conditions_console")
-        "forecast_show_temperature_console": "$Extras.forecast_show_temperature_console",
-        #else
-        "forecast_show_temperature_console": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_pop_console")
-        "forecast_show_pop_console": "$Extras.forecast_show_pop_console",
-        #else
-        "forecast_show_pop_console": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_dewpoint_console")
-        "forecast_show_dewpoint_console": "$Extras.forecast_show_dewpoint_console",
-        #else
-        "forecast_show_dewpoint_console": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_humidity_console")
-        "forecast_show_humidity_console": "$Extras.forecast_show_humidity_console",
-        #else
-        "forecast_show_humidity_console": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_windspeed_console")
-        "forecast_show_windspeed_console": "$Extras.forecast_show_windspeed_console",
-        #else
-        "forecast_show_windspeed_console": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_winddirdeg_console")
-        "forecast_show_winddirdeg_console": "$Extras.forecast_show_winddirdeg_console",
-        #else
-        "forecast_show_winddirdeg_console": "0",
-        #end if
-        #if $Extras.has_key("forecast_show_pressure_console")
-        "forecast_show_pressure_console": "$Extras.forecast_show_pressure_console"
-        #else
-        "forecast_show_pressure_console": "0"
-        #end if
+        "reload_images_hook_asi": "$Extras.reload_images_hook_asi",
+        "reload_images_radar": "$Extras.reload_images_radar",
+        "theme_toggle_enabled": "$Extras.theme_toggle_enabled",
+        "weiherhammer_locale": "$Extras.weiherhammer_locale",
+        "weiherhammer_theme": "$Extras.theme",
+        "console_theme": "$Extras.console_theme"
+    },
+    "forecast": {
+        "alerts_provider": "$alerts_provider",
+        "alerts_provider_list": "$alerts_provider_list",
+        "alerts_provider_toggle": "$alerts_provider_toggle",
+        "aqi_provider": "$aqi_provider",
+        "aqi_provider_list": "$aqi_provider_list",
+        "aqi_provider_toggle": "$aqi_provider_toggle",
+        "current_provider": "$current_provider",
+        "current_provider_list": "$current_provider_list",
+        "current_provider_toggle": "$current_provider_toggle",
+        "current_obs_icon": "$current_obs_icon",
+        "current_obs_summary": "$current_obs_summary",
+        "current_obs_source": "$current_obs_source",
+        "forecast_provider": "$forecast_provider",
+        "forecast_provider_list": "$forecast_provider_list",
+        "forecast_provider_toggle": "$forecast_provider_toggle",
+        "builtin_forecast_file": "$builtin_forecast_file",
+        "builtin_forecast_available": "$builtin_forecast_available",
+        "external_forecast_file": "$external_forecast_file",
+        "external_forecast_available": "$external_forecast_available"
     },
     "earthquake": {
         "time": "$earthquake_time",
@@ -186,77 +134,70 @@
         "bearing": "$earthquake_bearing",
         "bearing_raw": "$earthquake_bearing_raw"
     },
-    "station_observations": {
-        "current": $station_obs_json
-    },
     "unit_rounding": $all_obs_rounding_json,
     "unit_label": $all_obs_unit_labels_json,
     "unit_group": $all_obs_unit_groups_json,
-    #if $Extras.has_key("indoorclimate_section") and $Extras.indoorclimate_section != ''
-    "indoorclimate_config": $indoorclimate_config,
-    #end if
     "current": {
-        "datetime": "$current.dateTime",
-        "datetime_raw": "$current.dateTime.raw",
-        "epoch": "#echo int( time.time() )#",
-        "outTemp": "$current.outTemp",
-        "outTemp_formatted": "$current.outTemp.formatted",
-        "outHumidity": "$current.outHumidity",
-        ## TODO: Move inside data to it's own json file, and update ajax functions to correctly pull and parse data.
-        #if $Extras.has_key("aqi_enabled_kiosk") and $Extras.aqi_enabled_kiosk == '0'
-        "inTemp": "$current.inTemp",
-        "inTemp_formatted": "$current.inTemp.formatted",
-        "inHumidity": "$current.inHumidity",
-        "inHumidity_formatted": "$current.inHumidity.formatted",
-        #end if
-        #if $day.appTemp.has_data
         "appTemp": "$current.appTemp",
-        #end if
-        "windchill": "$current.windchill",
-        "heatindex": "$current.heatindex",
-        "dewpoint": "$current.dewpoint",
         "barometer": "$current.barometer",
         "barometer_formatted": "$current.barometer.formatted",
         "barometer_trend": "$trend.barometer",
         "barometer_trend_formatted": "$trend.barometer.formatted",
-        "windspeed": "$current.windSpeed",
-        "winddir": "$current.windDir",
-        "winddir_formatted": "$current.windDir.formatted",
+        "cloudbase": "$current.cloudbase",
+        #if $cloudcover == "N/A" or $cloudcover is None
+        "cloudcover": "N/A",
+        #else
+        "cloudcover": "$cloudcover$cloudcover_unit",
+        #end if
+        "dateTime": "$current.dateTime",
+        "dateTime_raw": "$current.dateTime.raw",
+        "dewpoint": "$current.dewpoint",
+        "epoch": "#echo int( time.time() )#",
+        "ET": "$current.ET",
+        "extraHumid1": "$current.extraHumid1",
+        "extraHumid2": "$current.extraHumid2",
+        "extraHumid3": "$current.extraHumid3",
+        "extraTemp1": "$current.extraTemp1",
+        "extraTemp2": "$current.extraTemp2",
+        "extraTemp3": "$current.extraTemp3",
+        "heatindex": "$current.heatindex",
+        "inHumidity": "$current.inHumidity",
+        "inHumidity_formatted": "$current.inHumidity.formatted",
+        "inTemp": "$current.inTemp",
+        "inTemp_formatted": "$current.inTemp.formatted",
+        "luminosity": "$current.luminosity",
+        "outHumAbs": "$current.outHumAbs.gram_per_meter_cubed",
+        "outHumidity": "$current.outHumidity",
+        "outTemp": "$current.outTemp",
+        "outTemp_formatted": "$current.outTemp.formatted",
+        "pressure": "$current.pressure",
+        "radiation": "$current.radiation",
+        "rain": "$current.rain",
+        "rainRate": "$current.rainRate",
+        "sds011_pm10_0": "$current.sds011_pm10_0",
+        "sds011_pm2_5": "$current.sds011_pm2_5",
+        "thswIndex": "$current.thswIndex",
+        "thwIndex": "$current.thwIndex",
+        "uba_no2": "$current.uba_no2",
+        "uba_o3": "$current.uba_o3",
+        "UV": "$current.UV",
+        #if $visibility == "N/A" or $visibility is None
+        "visibility": "N/A",
+        #else
+        "visibility": "$visibility $visibility_unit",
+        #end if
+        "wetBulb": "$current.wetBulb",
+        "windchill": "$current.windchill",
+        "windDir": "$current.windDir",
+        "windDir_formatted": "$current.windDir.formatted",
+        "windDirCompass": "$current.windDir.ordinal_compass",
         "windGust": "$current.windGust",
         "windGust_formatted": "$current.windGust.formatted",
         "windGustDir": "$current.windGustDir",
-        "windcompass": "$current.windDir.ordinal_compass",
-        #if $day.windrun.has_data
         "windrun": "$current.windrun",
-        #end if
-        #if $day.extraTemp1.has_data
-        "extraTemp1": "$current.extraTemp1",
-        #end if
-        #if $day.UV.has_data
-        "uv": "$current.UV",
-        #end if
-        #if $day.radiation.has_data
-        "solar_radiation": "$current.radiation",
-        #end if
-        #if $day.ET.has_data and $day.ET.sum.raw > 0.0
-        "et": "$current.ET",
-        #end if    
-        "rainRate": "$current.rainRate",
-        "rain": "$current.rain",
-        "sds011_pm2_5": "$current.sds011_pm2_5",
-        "sds011_pm10_0": "$current.sds011_pm10_0",
-        "uba_no2": "$current.uba_no2",
-        "uba_o3": "$current.uba_o3",
-        "pws_aqi": "$current.pws_aqi",
-        "pws_aqi_category": "$current.pws_aqi_category",
-        "pws_aqi_pm2_5_category": "$current.pws_aqi_pm2_5_category",
-        "pws_aqi_pm10_0_category": "$current.pws_aqi_pm10_0_category",
-        "pws_aqi_no2_category": "$current.pws_aqi_no2_category",
-        "pws_aqi_o3_category": "$current.pws_aqi_o3_category",
-        "wetBulb": "$current.wetBulb",
-        "thwIndex": "$current.thwIndex",
-        "thswIndex": "$current.thswIndex"
+        "windSpeed": "$current.windSpeed"
     },
+    "raw": $current_obs_raw_json,
     "day": {
         "outTemp": {
             "max": "$day.outTemp.max",
@@ -264,16 +205,16 @@
             "maxtime": "$day.outTemp.maxtime",
             "min": "$day.outTemp.min",
             "min_formatted": "$day.outTemp.min.formatted",
-            "mintime": "$day.outTemp.mintime"
+            "mintime": "$day.outTemp.mintime",
+            "avg": "$day.outTemp.avg",
+            "avg_formatted": "$day.outTemp.avg.formatted"
         },
-        #if $day.appTemp.has_data        
         "appTemp": {
             "max": "$day.appTemp.max",
             "maxtime": "$day.appTemp.maxtime",
             "min": "$day.appTemp.min",
             "mintime": "$day.appTemp.mintime"
         },
-        #end if
         "heatindex": {
             "max": "$day.heatindex.max",
             "maxtime": "$day.heatindex.maxtime"
@@ -308,53 +249,46 @@
             "average": "$day.wind.avg",
             "vectordir": "$day.wind.vecdir",
             "vectoravg": "$day.wind.vecavg",
-            #if $day.windrun.has_data
             "windrun_max": "$day.windrun.max",
             "windrun_maxtime": "$day.windrun.maxtime",
             "windrun_min": "$day.windrun.min",
             "windrun_mintime": "$day.windrun.mintime",
-            "windrun": "$day.windrun.sum",
-            #end if
+            "windrun_sum": "$day.windrun.sum",
             "rms": "$day.wind.rms"
         },
-        #if $day.UV.has_data
-        "uv": {
+        "UV": {
             "max": "$day.UV.max",
             "maxtime": "$day.UV.maxtime",
             "min": "$day.UV.min",
             "mintime": "$day.UV.mintime"
         },
-        #end if
-        #if $day.radiation.has_data
-        "solar_radiation": {
+        "radiation": {
             "max": "$day.radiation.max",
             "maxtime": "$day.radiation.maxtime",
             "min": "$day.radiation.min",
             "mintime": "$day.radiation.mintime"
         },
-        #end if
         "rain": {
             "sum": "$day.rain.sum",
             "max": "$day.rainRate.max",
             "maxtime": "$day.rainRate.maxtime"
-        }
+        },
+        "dayRain": "$current.dayRain"
     },
-    
     "week": {
         "outTemp": {
             "max": "$week.outTemp.max",
             "maxtime": "$week.outTemp.maxtime",
+            "avg": "$week.outTemp.avg",
             "min": "$week.outTemp.min",
             "mintime": "$week.outTemp.mintime"
         },
-        #if $week.appTemp.has_data
         "appTemp": {
             "max": "$week.appTemp.max",
             "maxtime": "$week.appTemp.maxtime",
             "min": "$week.appTemp.min",
             "mintime": "$week.appTemp.mintime"
         },
-        #end if
         "heatindex": {
             "max": "$week.heatindex.max",
             "maxtime": "$week.heatindex.maxtime"
@@ -388,52 +322,46 @@
             "average": "$week.wind.avg",
             "vectordir": "$week.wind.vecdir",
             "vectoravg": "$week.wind.vecavg",
-            #if $week.windrun.has_data
             "windrun_max": "$week.windrun.max",
             "windrun_maxtime": "$week.windrun.maxtime",
             "windrun_min": "$week.windrun.min",
             "windrun_mintime": "$week.windrun.mintime",
-            #end if
+            "windrun_sum": "$week.windrun.sum",
             "rms": "$week.wind.rms"
         },
-        #if $week.UV.has_data
-        "uv": {
+        "UV": {
             "max": "$week.UV.max",
             "maxtime": "$week.UV.maxtime",
             "min": "$week.UV.min",
             "mintime": "$week.UV.mintime"
         },
-        #end if
-        #if $week.radiation.has_data
-        "solar_radiation": {
+        "radiation": {
             "max": "$week.radiation.max",
             "maxtime": "$week.radiation.maxtime",
             "min": "$week.radiation.min",
             "mintime": "$week.radiation.mintime"
         },
-        #end if
         "rain": {
             "sum": "$week.rain.sum",
             "max": "$week.rainRate.max",
             "maxtime": "$week.rainRate.maxtime"
-        } 
+        },
+        "weekRain": "$current.weekRain"
     },
-    
     "month": {
         "outTemp": {
             "max": "$month.outTemp.max",
             "maxtime": "$month.outTemp.maxtime",
+            "avg": "$month.outTemp.avg",
             "min": "$month.outTemp.min",
             "mintime": "$month.outTemp.mintime"
         },
-        #if $month.appTemp.has_data
         "appTemp": {
             "max": "$month.appTemp.max",
             "maxtime": "$month.appTemp.maxtime",
             "min": "$month.appTemp.min",
             "mintime": "$month.appTemp.mintime"
         },
-        #end if
         "heatindex": {
             "max": "$month.heatindex.max",
             "maxtime": "$month.heatindex.maxtime"
@@ -467,52 +395,46 @@
             "average": "$month.wind.avg",
             "vectordir": "$month.wind.vecdir",
             "vectoravg": "$month.wind.vecavg",
-            #if $month.windrun.has_data
             "windrun_max": "$month.windrun.max",
             "windrun_maxtime": "$month.windrun.maxtime",
             "windrun_min": "$month.windrun.min",
             "windrun_mintime": "$month.windrun.mintime",
-            #end if
+            "windrun_sum": "$month.windrun.sum",
             "rms": "$month.wind.rms"
         },
-        #if $month.UV.has_data
-        "uv": {
+        "UV": {
             "max": "$month.UV.max",
             "maxtime": "$month.UV.maxtime",
             "min": "$month.UV.min",
             "mintime": "$month.UV.mintime"
         },
-        #end if
-        #if $month.radiation.has_data
-        "solar_radiation": {
+        "radiation": {
             "max": "$month.radiation.max",
             "maxtime": "$month.radiation.maxtime",
             "min": "$month.radiation.min",
             "mintime": "$month.radiation.mintime"
         },
-        #end if
         "rain": {
             "sum": "$month.rain.sum",
             "max": "$month.rainRate.max",
             "maxtime": "$month.rainRate.maxtime"
-        }
+        },
+        "monthRain": "$current.monthRain"
     },
-    
     "year": {
         "outTemp": {
             "max": "$year.outTemp.max",
             "maxtime": "$year.outTemp.maxtime",
+            "avg": "$year.outTemp.avg",
             "min": "$year.outTemp.min",
             "mintime": "$year.outTemp.mintime"
         },
-        #if $year.appTemp.has_data
         "appTemp": {
             "max": "$year.appTemp.max",
             "maxtime": "$year.appTemp.maxtime",
             "min": "$year.appTemp.min",
             "mintime": "$year.appTemp.mintime"
         },
-        #end if
         "heatindex": {
             "max": "$year.heatindex.max",
             "maxtime": "$year.heatindex.maxtime"
@@ -546,35 +468,31 @@
             "average": "$year.wind.avg",
             "vectordir": "$year.wind.vecdir",
             "vectoravg": "$year.wind.vecavg",
-            #if $year.windrun.has_data
             "windrun_max": "$year.windrun.max",
             "windrun_maxtime": "$year.windrun.maxtime",
             "windrun_min": "$year.windrun.min",
             "windrun_mintime": "$year.windrun.mintime",
-            #end if
+            "windrun_sum": "$year.windrun.sum",
             "rms": "$year.wind.rms"
         },
-        #if $year.UV.has_data
-        "uv": {
+        "UV": {
             "max": "$year.UV.max",
             "maxtime": "$year.UV.maxtime",
             "min": "$year.UV.min",
             "mintime": "$year.UV.mintime"
         },
-        #end if
-        #if $year.radiation.has_data
-        "solar_radiation": {
+        "radiation": {
             "max": "$year.radiation.max",
             "maxtime": "$year.radiation.maxtime",
             "min": "$year.radiation.min",
             "mintime": "$year.radiation.mintime"
         },
-        #end if
         "rain": {
             "sum": "$year.rain.sum",
             "max": "$year.rainRate.max",
             "maxtime": "$year.rainRate.maxtime"
-        }
+        },
+        "yearRain": "$current.yearRain"
     },
     "almanac": {
         "sunrise": "$almanac.sunrise",
@@ -620,6 +538,373 @@
             "moon_rise_epoch": "$almanac.moon.rise.raw",
             "moon_set": "$almanac.moon.set",
             "moon_set_epoch": "$almanac.moon.set.raw"
+        }
+    },
+    #if $Extras.has_key("value_depended_properties_enabled") and $Extras.value_depended_properties_enabled == '1'
+    "value_dependent_properties": $value_dependent_properties_json,
+    #else
+    "value_dependent_properties": {},
+    #end if
+    "aqilevel": {
+        "1": {
+            "text": "$gettext('very good')",
+            "ttt": "$pgettext('ttt_aqi', 'very good')",
+            "color": "#50F0E6"
+        },
+        "2": {
+            "text": "$gettext('good')",
+            "ttt": "$pgettext('ttt_aqi', 'good')",
+            "color": "#50CDAA"
+        },
+        "3": {
+            "text": "$gettext('moderate')",
+            "ttt": "$pgettext('ttt_aqi', 'moderate')",
+            "color": "#F0E641"
+        },
+        "4": {
+            "text": "$gettext('poor')",
+            "ttt": "$pgettext('ttt_aqi', 'poor')",
+            "color": "#FF5050"
+        },
+        "5": {
+            "text": "$gettext('very poor')",
+            "ttt": "$pgettext('ttt_aqi', 'very poor')",
+            "color": "#960032"
+        },
+        "unknown": {
+            "text": "$gettext('unknown')",
+            "ttt": "$gettext('unknown')",
+            "color": "inherit"
+        }
+    },
+    #if $Extras.has_key("value_depended_properties_enabled") and $Extras.value_depended_properties_enabled == '1'
+    "roomclimate_extension_config": $roomclimate_extension_config_json,
+    #else
+    "roomclimate_extension_config": {},
+    #end if
+    "roomclimate": {
+        "temperature": {
+            "-2": {
+                "text": "$gettext('very cold')",
+                "ttt": "$pgettext('ttt_roomclimate_temperature', 'very cold')",
+                "color": "#0000FF"
+            },
+            "-1": {
+                "text": "$gettext('cold')",
+                "ttt": "$pgettext('ttt_roomclimate_temperature', 'cold')",
+                "color": "#0088FF"
+            },
+            "0": {
+                "text": "$gettext('optimal')",
+                "ttt": "$pgettext('ttt_roomclimate_temperature', 'optimal')",
+                "color": "#84D862"
+            },
+            "1": {
+                "text": "$gettext('warm')",
+                "ttt": "$pgettext('ttt_roomclimate_temperature', 'warm')",
+                "color": "#FF8800"
+            },
+            "2": {
+                "text": "$gettext('very warm')",
+                "ttt": "$pgettext('ttt_roomclimate_temperature', 'very warm')",
+                "color": "#FF0000"
+            }
+        },
+        "humidity": {
+            "-2": {
+                "text": "$gettext('very dry')",
+                "ttt": "$pgettext('ttt_roomclimate_humidity', 'very dry')",
+                "color": "#FF8800"
+            },
+            "-1": {
+                "text": "$gettext('dry')",
+                "ttt": "$pgettext('ttt_roomclimate_humidity', 'dry')",
+                "color": "#B2DF8A"
+            },
+            "0": {
+                "text": "$gettext('optimal')",
+                "ttt": "$pgettext('ttt_roomclimate_humidity', 'optimal')",
+                "color": "#84D862"
+            },
+            "1": {
+                "text": "$gettext('moist')",
+                "ttt": "$pgettext('ttt_roomclimate_humidity', 'moist')",
+                "color": "#B2DF8A"
+            },
+            "2": {
+                "text": "$gettext('very moist')",
+                "ttt": "$pgettext('ttt_roomclimate_humidity', 'very moist')",
+                "color": "#0077FF"
+            }
+        },
+        "room": {
+            "0": {
+                "text": "$gettext('optimal')",
+                "ttt": "$pgettext('ttt_roomclimate_room', 'optimal')",
+                "color": "#84D862"
+            },
+            "1": {
+                "text": "$gettext('action required')",
+                "ttt": "$pgettext('ttt_roomclimate_room', 'action required')",
+                "color": "#B2DF8A"
+            }
+        },
+        "unknown": {
+            "text": "$gettext('unknown')",
+            "ttt": "$gettext('unknown')",
+            "color": "inherit"
+        }
+    },
+    "batterylevel": {
+        "wh31": {
+            "0": {
+                "text": "$gettext('ok')",
+                "ttt": "$pgettext('ttt_batterylevel', 'ok')",
+                "color": "#84D862"
+            },
+            "1": {
+                "text": "$gettext('low')",
+                "ttt": "$pgettext('ttt_batterylevel', 'low')",
+                "color": "#FF0000"
+            }
+        },
+        "wh57": {
+            "0": {
+                "text": "$gettext('low')",
+                "ttt": "$pgettext('ttt_batterylevel', 'low')",
+                "color": "#FF0000"
+            },
+            "1": {
+                "text": "$gettext('low')",
+                "ttt": "$pgettext('ttt_batterylevel', 'low')",
+                "color": "#FF0000"
+            },
+            "2": {
+                "text": "$gettext('sufficient')",
+                "ttt": "$pgettext('ttt_batterylevel', 'sufficient')",
+                "color": "#FF8800"
+            },
+            "3": {
+                "text": "$gettext('sufficient')",
+                "ttt": "$pgettext('ttt_batterylevel', 'sufficient')",
+                "color": "#FF8800"
+            },
+            "4": {
+                "text": "$gettext('ok')",
+                "ttt": "$pgettext('ttt_batterylevel', 'ok')",
+                "color": "#84D862"
+            },
+            "5": {
+                "text": "$gettext('ok')",
+                "ttt": "$pgettext('ttt_batterylevel', 'ok')",
+                "color": "#84D862"
+            }
+        },
+        "wh65": {
+            "0": {
+                "text": "$gettext('ok')",
+                "ttt": "$pgettext('ttt_batterylevel', 'ok')",
+                "color": "#84D862"
+            },
+            "1": {
+                "text": "$gettext('low')",
+                "ttt": "$pgettext('ttt_batterylevel', 'low')",
+                "color": "#FF0000"
+            }
+        },
+        "unknown": {
+            "text": "$gettext('unknown')",
+            "ttt": "$gettext('unknown')",
+            "color": "inherit"
+        }
+    },
+    "voltagelevel": {
+        "solar": {
+            "4": {
+                "text": "$gettext('ok')",
+                "ttt": "$pgettext('ttt_batterylevel', 'ok')",
+                "color": "#84D862"
+            },
+            "3": {
+                "text": "$gettext('low')",
+                "ttt": "$pgettext('ttt_batterylevel', 'low')",
+                "color": "#FF0000"
+            }
+        },
+        "wh51": {
+            "1.9": {
+                "text": "$gettext('ok')",
+                "ttt": "$pgettext('ttt_batterylevel', 'ok')",
+                "color": "#84D862"
+            },
+            "1.8": {
+                "text": "$gettext('ok')",
+                "ttt": "$pgettext('ttt_batterylevel', 'ok')",
+                "color": "#84D862"
+            },
+            "1.7": {
+                "text": "$gettext('ok')",
+                "ttt": "$pgettext('ttt_batterylevel', 'ok')",
+                "color": "#84D862"
+            },
+            "1.6": {
+                "text": "$gettext('ok')",
+                "ttt": "$pgettext('ttt_batterylevel', 'ok')",
+                "color": "#84D862"
+            },
+            "1.5": {
+                "text": "$gettext('ok')",
+                "ttt": "$pgettext('ttt_batterylevel', 'ok')",
+                "color": "#84D862"
+            },
+            "1.4": {
+                "text": "$gettext('sufficient')",
+                "ttt": "$pgettext('ttt_batterylevel', 'sufficient')",
+                "color": "#FF8800"
+            },
+            "1.3": {
+                "text": "$gettext('sufficient')",
+                "ttt": "$pgettext('ttt_batterylevel', 'sufficient')",
+                "color": "#FF8800"
+            },
+            "1.2": {
+                "text": "$gettext('low')",
+                "ttt": "$pgettext('ttt_batterylevel', 'low')",
+                "color": "#FF0000"
+            },
+            "1.1": {
+                "text": "$gettext('low')",
+                "ttt": "$pgettext('ttt_batterylevel', 'low')",
+                "color": "#FF0000"
+            },
+            "1.0": {
+                "text": "$gettext('low')",
+                "ttt": "$pgettext('ttt_batterylevel', 'low')",
+                "color": "#FF0000"
+            }
+        },
+        "unknown": {
+            "text": "$gettext('unknown')",
+            "ttt": "$gettext('unknown')",
+            "color": "inherit"
+        }
+    },
+    "signallevel": {
+        "0": {
+            "text": "$gettext('very poor')",
+            "ttt": "$pgettext('ttt_signallevel', 'very poor')",
+            "color": "#FF0000"
+        },
+        "1": {
+            "text": "$gettext('poor')",
+            "ttt": "$pgettext('ttt_signallevel', 'poor')",
+            "color": "#FF0000"
+        },
+        "2": {
+            "text": "$gettext('sufficient')",
+            "ttt": "$pgettext('ttt_signallevel', 'sufficient')",
+            "color": "#FF8800"
+        },
+        "3": {
+            "text": "$gettext('good')",
+            "ttt": "$pgettext('ttt_signallevel', 'good')",
+            "color": "#84D862"
+        },
+        "4": {
+            "text": "$gettext('very good')",
+            "ttt": "$pgettext('ttt_signallevel', 'very good')",
+            "color": "#84D862"
+        },
+        "unknown": {
+            "text": "$gettext('unknown')",
+            "ttt": "$gettext('unknown')",
+            "color": "inherit"
+        }
+    },
+    "switchlevel": {
+        "0": {
+            "text": "$gettext('off')",
+            "ttt": "$pgettext('ttt_switchlevel', 'off')",
+            "color_ok": "#84D862",
+            "color_nok": "#FF0000"
+        },
+        "1": {
+            "text": "$gettext('on')",
+            "ttt": "$pgettext('ttt_switchevel', 'on')",
+            "color_ok": "#FF0000",
+            "color_nok": "#84D862"
+        },
+        "unknown": {
+            "text": "$gettext('unknown')",
+            "ttt": "$gettext('unknown')",
+            "color": "inherit"
+        }
+    },
+    "trend": {
+        "pressuretrend": {
+            "fa-symbol-up": "fa-long-arrow-up",
+            "fa-symbol-right": "fa-long-arrow-right",
+            "fa-symbol-down": "fa-long-arrow-down",
+            "-4": {
+                "text": "$gettext('falling very rapidly')",
+                "ttt": "$pgettext('ttt_pressuretrend', 'falling very rapidly')"
+            },
+            "-3": {
+                "text": "$gettext('falling quickly')",
+                "ttt": "$pgettext('ttt_pressuretrend', 'falling quickly')"
+            },
+            "-2": {
+                "text": "$gettext('falling')",
+                "ttt": "$pgettext('ttt_pressuretrend', 'falling')"
+            },
+            "-1": {
+                "text": "$gettext('falling slowly')",
+                "ttt": "$pgettext('ttt_pressuretrend', 'falling slowly')"
+            },
+            "0": {
+                "text": "$gettext('steady')",
+                "ttt": "$pgettext('ttt_pressuretrend', 'steady')"
+            },
+            "1": {
+                "text": "$gettext('rising slowly')",
+                "ttt": "$pgettext('ttt_pressuretrend', 'rising slowly')"
+            },
+            "2": {
+                "text": "$gettext('rising')",
+                "ttt": "$pgettext('ttt_pressuretrend', 'rising')"
+            },
+            "3": {
+                "text": "$gettext('rising quickly')",
+                "ttt": "$pgettext('ttt_pressuretrend', 'rising quickly')"
+            },
+            "4": {
+                "text": "$gettext('rising very rapidly')",
+                "ttt": "$pgettext('ttt_pressuretrend', 'rising very rapidly')"
+            },
+            "unknown": {
+                "text": "$gettext('unknown')",
+                "ttt": "$gettext('unknown')"
+            }
+        },
+        "outTemp": {
+            "trend": "$trend.outTemp",
+            "raw": "$trend.outTemp.raw",
+            "formatted": "$trend.outTemp.formatted"
+        },
+        "barometer": {
+            "trend": "$trend.barometer",
+            "raw": "$trend.barometer.raw",
+            "formatted": "$trend.barometer.formatted"
+        },
+        "solar_barometer": {
+            "trend": "$trend.solar_barometer",
+            "raw": "$trend.solar_barometer.raw",
+            "formatted": "$trend.solar_barometer.formatted"
+        },
+        "asky_box_barometer": {
+            "trend": "$trend.asky_box_barometer",
+            "raw": "$trend.asky_box_barometer.raw",
+            "formatted": "$trend.asky_box_barometer.formatted"
         }
     }
 }

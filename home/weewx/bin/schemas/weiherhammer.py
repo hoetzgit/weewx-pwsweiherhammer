@@ -165,23 +165,34 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('daymaxwind', 'REAL'),
 ('uvradiation', 'REAL'),
 ('wh65_batt', 'REAL'),
-('wh65_sig', 'REAL'),
+('wh65_batt_percent', 'REAL'),
+('wh65_sig_percent', 'REAL'),
 #
 # Ecowitt WH31
 ('wh31_ch1_batt', 'REAL'),
 ('wh31_ch2_batt', 'REAL'),
 ('wh31_ch3_batt', 'REAL'),
+('wh31_ch1_batt_percent', 'REAL'),
+('wh31_ch2_batt_percent', 'REAL'),
+('wh31_ch3_batt_percent', 'REAL'),
 ('wh31_ch1_sig', 'REAL'),
 ('wh31_ch2_sig', 'REAL'),
 ('wh31_ch3_sig', 'REAL'),
+('wh31_ch1_sig_percent', 'REAL'),
+('wh31_ch2_sig_percent', 'REAL'),
+('wh31_ch3_sig_percent', 'REAL'),
 #
 # Ecowitt Bodenfeuchte WH51
 ('wh51_ch1_batt', 'REAL'),
+('wh51_ch1_batt_percent', 'REAL'),
 ('wh51_ch1_sig', 'REAL'),
+('wh51_ch1_sig_percent', 'REAL'),
 #
 # Ecowitt Blitzsensor WH57
 ('wh57_batt', 'REAL'),
+('wh57_batt_percent', 'REAL'),
 ('wh57_sig', 'REAL'),
+('wh57_sig_percent', 'REAL'),
 ('wh57_lightning_time', 'REAL'),
 ('wh57_lightning_distance', 'REAL'),
 #
@@ -249,6 +260,20 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('uba_o3', 'REAL'),
 ('uba_o3_category', 'REAL'),
 #
+# Indoor Room Quality 
+('livingroom_hqi', 'REAL'),
+('livingroom_tqi', 'REAL'),
+('livingroom_rqi', 'REAL'),
+('office_hqi', 'REAL'),
+('office_tqi', 'REAL'),
+('office_rqi', 'REAL'),
+('bathroom_hqi', 'REAL'),
+('bathroom_tqi', 'REAL'),
+('bathroom_rqi', 'REAL'),
+('bedroom_hqi', 'REAL'),
+('bedroom_tqi', 'REAL'),
+('bedroom_rqi', 'REAL'),
+#
 # additional Values 
 ('outEquiTemp', 'REAL'),
 ('outHumAbs', 'REAL'),
@@ -260,13 +285,7 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ]
 
 day_summaries = [(e[0], 'scalar') for e in table
-                 if e[0] not in ('dateTime', 'usUnits', 'interval'
-                   ,'asky_box_fan', 'asky_dome_heater', 'asky_cpu_fan'
-                   ,'aeris_aqi', 'owm_aqi'
-                   ,'pws_aqi', 'pws_aqi_category', 'pws_aqi_no2_category', 'pws_aqi_o3_category', 'pws_aqi_pm10_0_category', 'pws_aqi_pm2_5_category'
-                   ,'uba_aqi', 'uba_aqi_category', 'uba_no2_category', 'uba_o3_category'
-                   ,'sunshine'
-                   )] + [('wind', 'VECTOR')]
+                 if e[0] not in ('dateTime', 'usUnits', 'interval')] + [('wind', 'VECTOR')]
 
 schema = {
     'table': table,

@@ -8,19 +8,27 @@
 #set global $hemisphere = "northern-hemisphere"
 #end if
 
-var pages = ["graphs", "records", "reports", "about", "pi", "webcam", "imprint", "privacy", "forecast", "extreme", "mqtt"];
+var pages = ["graphs", "records", "reports", "about", "pi", "webcam", "imprint", "privacy", "forecast", "extreme", "mqttmon"];
 var pageName = "";
+function get_pageName() {
+    var sPath = window.location.pathname.replace(/\/$/, "");
+    var name = sPath.substring(sPath.lastIndexOf('/') + 1);
+    if (name == "" ) {
+        name = "homepage";
+    }
+    weiherhammer_debug("Page name is: " + name);
+    return name;
+}
+
 // If this page we're on now is listed as a subpage, use ".." to get to the relative root
 function get_relative_url() {
-    var sPath = window.location.pathname.replace(/\/$/, "");
-    pageName = sPath.substring(sPath.lastIndexOf('/') + 1);
+    pageName = get_pageName();
     if (pages.includes(pageName)) {
         var relative_url = "..";
     } else {
         var relative_url = ".";
     }
     weiherhammer_debug("URL: Relative URL is: " + relative_url);
-
     return relative_url;
 }
 
@@ -35,13 +43,11 @@ if (getURLvar("debug") && (getURLvar("debug") == "true" || getURLvar("debug") ==
 
 var moment_locale = "$system_locale_js";
 moment.locale(moment_locale);
-
 var graphgroups_raw = $charts;
 var graphgroups_titles = $graphpage_titles;
 var graphpage_content = $graphpage_content;
-
-//  declare icon_dict as global variable
 var icon_dict = {};
+var forecast_data = {};
 
 function weiherhammer_debug(message) {
     if (weiherhammer_debug_config > 0) {
@@ -49,17 +55,44 @@ function weiherhammer_debug(message) {
     }
 }
 
-function weiherhammer_log(message) {
-    // console.log(message);
-}
+//https://www.techighness.com/post/javascript-check-key-existence-in-deeply-nested-object-or-array-without-knowing-path/
+const getKeyValue = (obj, key) => {
+    try {
+        if (!obj || (typeof obj !== "object" && !Array.isArray(obj))) {
+          return null;
+        }
+        else if (obj.hasOwnProperty(key)) {
+          return obj[key];
+        }
+        else if (Array.isArray(obj)) {
+          for (let i = 0; i < obj.length; i++) {
+            const result = getKeyValue(obj[i], key);
+            if (result !== null) {
+              return result;
+            }
+          }
+        }
+        else {
+          for (const k in obj) {
+            const result = getKeyValue(obj[k], key);
+            if (result !== null) {
+              return result;
+            }
+          }
+        }
+        return null;
+    } catch (err) {
+        console.error(err);
+    }
+};
 
 jQuery(document).ready(function() {
-
     // Bootstrap hover tooltips
     jQuery(function() {
         jQuery('[data-toggle="tooltip"]').tooltip()
     })
 
+    #if $Extras.has_key('theme_toggle_enabled') and $Extras.theme_toggle_enabled == '1'
     // If the visitor has overridden the theme, keep that theme going throughout the full site and their visit.
     if (sessionStorage.getItem('theme') == "toggleOverride") {
         weiherhammer_debug("Theme: sessionStorage override in place.");
@@ -83,7 +116,6 @@ jQuery(document).ready(function() {
         }
     }
 
-    #if $Extras.has_key('theme_toggle_enabled') and $Extras.theme_toggle_enabled == '1'
     // Dark mode checkbox toggle switcher
     try {
         document.getElementById('themeSwitch').addEventListener('change', function(event) {
@@ -95,11 +127,10 @@ jQuery(document).ready(function() {
     }
     #end if
 
-    #if $Extras.has_key('current_provider_visible') and $Extras.current_provider_visible == '1'
-    //20221024,ho
+    #if $Extras.has_key('current_provider_toggle') and $Extras.current_provider_toggle == '1'
     // If the visitor has overridden the current source,provider keep that current source provider going throughout the full site and their visit.
     if (sessionStorage.getItem('current_provider_override') == "toggleOverride") {
-        weiherhammer_log("current_provider_override: sessionStorage override in place.");
+        weiherhammer_debug("current_provider_override: sessionStorage override in place.");
         changeCurrentProviderRadio(sessionStorage.getItem('current_provider'));
     }
     // current provider switcher
@@ -132,7 +163,7 @@ jQuery(document).ready(function() {
             jQuery('#btn-back-to-top').css('transform', 'scale(0)');
         }
     });
-    #if $Extras.back_to_top_button_position == '1'
+    #if $Extras.has_key("back_to_top_button_position") and $Extras.back_to_top_button_position == '1'
     // Button is visible on left side
     jQuery('#btn-back-to-top').css('left','20px').css('right','auto');
     #end if
@@ -144,12 +175,12 @@ jQuery(document).ready(function() {
         return false;
     });
 
-    #if $Extras.back_to_top_button_position == '1'
+    #if $Extras.has_key("back_to_top_button_position") and $Extras.back_to_top_button_position == '1'
     // Button is visible on left side
     jQuery('#btn-back-to-top').css('left','20px').css('right','auto');
     #end if
 
-    #if $Extras.back_to_top_button_opacity >= '0.1' and $Extras.back_to_top_button_opacity <= '0.9'
+    #if $Extras.has_key("back_to_top_button_opacity") and $Extras.back_to_top_button_opacity >= '0.1' and $Extras.back_to_top_button_opacity <= '0.9'
     jQuery('#btn-back-to-top').css('opacity','$Extras.back_to_top_button_opacity');
     #end if
 
@@ -159,10 +190,14 @@ jQuery(document).ready(function() {
 #if $Extras.has_key("theme") and $Extras.theme == 'auto'
 // Run this on every page for dark mode if skin theme is auto
 ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
-    update_weewx_data(weewx_data); // Initial call to update (date, daily high, low, etc)
-    weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
+    try {
+        autoTheme(weewx_data["almanac"]["sunset_hour"], weewx_data["almanac"]["sunset_minute"], weewx_data["almanac"]["sunrise_hour"], weewx_data["almanac"]["sunrise_minute"]);
+    } catch (err) {
+        // Returned weewx_data does not have this value
+        console.error(err);
+    }
 }).catch(function(e) {
-    console.log(e);
+    console.error(e);
 });
 #end if
 
@@ -171,9 +206,9 @@ jQuery.ajaxSetup({
     cache: false
 });
 
-#if $Extras.has_key("show_farmers_rules") and $Extras.show_farmers_rules == '1'
-// 20220816,ho Farmers rules
+// Farmers rules
 // TODO error handling
+#if $Extras.has_key("show_farmers_rules") and $Extras.show_farmers_rules == '1'
 function farmers_rules() {
     farmers_rules = {};
     jQuery.when(
@@ -186,19 +221,12 @@ function farmers_rules() {
         show_farmers_rules(farmers_rules);
     });
 }
-#end if
 
-#if $Extras.has_key("show_farmers_rules") and $Extras.show_farmers_rules == '1'
-// 20220816,ho Farmers rules
 // https://stackoverflow.com/questions/4959975/generate-random-number-between-two-numbers-in-javascript
 function randomIntFromInterval(min, max) { // min and max included 
     return Math.floor(Math.random() * (max - min + 1) + min)
 }
-#end if
 
-#if $Extras.has_key("show_farmers_rules") and $Extras.show_farmers_rules == '1'
-// 20220816,ho Farmers rules
-// TODO hasOwnProperty
 function show_farmers_rules(data) {
     var dname = "No data found!";
     var frule = "No data found!";
@@ -271,95 +299,6 @@ function getURLvar(k) {
     var p = {};
     location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(s, k, v) {p[k] = v});
     return k ? p[k] : p;
-}
-
-// pressure trend symbols
-// https://github.com/chaunceygardiner/weewx-loopdata
-function barometer_trend_deg (obs, trend_value, trend_code = null) {
-    const RISING_VERY_RAPIDLY = 4;
-    const RISING_QUICKLY = 3;
-    const RISING = 2;
-    const RISING_SLOWLY = 1;
-    const STEADY = 0;
-    const FALLING_SLOWLY = -1;
-    const FALLING = -2;
-    const FALLING_QUICKLY = -3;
-    const FALLING_VERY_RAPIDLY = -4;
-
-    // Prefer the passed trend code
-    if (trend_code == null) {
-        trend_value = parseFloat(trend_value).toPrecision(1);
-        if (trend_value > 6.0) {
-            trend_code = RISING_VERY_RAPIDLY;
-        } else if  (trend_value > 3.5) {
-            trend_code = RISING_QUICKLY;
-        } else if  (trend_value > 1.5) {
-            trend_code = RISING;
-        } else if  (trend_value >= 0.1) {
-            trend_code = RISING_SLOWLY;
-        } else if  (trend_value > -0.1) {
-            trend_code = STEADY;
-        } else if  (trend_value >= -1.5) {
-            trend_code = FALLING_SLOWLY;
-        } else if  (trend_value >= -3.5) {
-            trend_code = FALLING;
-        } else if  (trend_value >= -6.0) {
-            trend_code = FALLING_QUICKLY;
-        } else {
-            trend_code = FALLING_VERY_RAPIDLY;
-        }
-    }
-
-    trend_code = parseInt(trend_code);
-    var trend_descr = "N/A"
-    var finalRotation = -1
-    if (trend_code == RISING_VERY_RAPIDLY) {
-        finalRotation = 0;
-        trend_descr = "$gettext('rising very rapidly')";
-    } else if (trend_code == RISING_QUICKLY) {
-        finalRotation = 22.5;
-        trend_descr = "$gettext('rising quickly')";
-    } else if (trend_code == RISING) {
-        finalRotation = 45;
-        trend_descr = "$gettext('rising')";
-    } else if (trend_code == RISING_SLOWLY) {
-        finalRotation = 67.5;
-        trend_descr = "$gettext('rising slowly')";
-    } else if (trend_code == STEADY) {
-        finalRotation = 90;
-        trend_descr = "$gettext('steady')";
-    } else if (trend_code == FALLING_SLOWLY) {
-        finalRotation = 112.5;
-        trend_descr = "$gettext('falling slowly')";
-    } else if (trend_code == FALLING) {
-        finalRotation = 135;
-        trend_descr = "$gettext('falling')";
-    } else if (trend_code == FALLING_QUICKLY) {
-        finalRotation = 157.5;
-        trend_descr = "$gettext('falling quickly')";
-    } else if (trend_code == FALLING_VERY_RAPIDLY) {
-        finalRotation = 180;
-        trend_descr = "$gettext('falling very rapidly')";
-    }
-
-    html_output = ''
-    if (finalRotation >= 0) {
-        //jQuery("." + obs).attr('style', 'padding-right: 1px;');
-        html_output = '<i class="fa fa-fw fa-long-';
-        if (finalRotation == 0) {
-            html_output += 'arrow-up';
-        } else if (finalRotation == 90) {
-            html_output += 'arrow-right';
-        } else if (finalRotation == 180) {
-            html_output += 'arrow-down';
-        } else {
-            html_output += 'arrow-up" style="transform:rotate(' + finalRotation + 'deg);';
-        }
-        html_output += '" rel="tooltip" title="' + trend_descr + '"></i>';
-    } else {
-        //jQuery("." + obs).removeAttr('style');
-    }
-    jQuery(".trend_" + obs + "-symbol").html(html_output);
 }
 
 // http://stackoverflow.com/a/14887961/1177153
@@ -442,162 +381,9 @@ function get_outTemp_color(unit, outTemp, returnColor = false) {
     }
 }
 
-// Change the color of the indoor climate variable
-// TODO necessary at all? configurable?
-function reset_indoorclimate_color() {
-    const resetContainer = ['.inTemp', '.extraTemp1', '.extraTemp2', '.extraTemp3', '.inHumidity', '.extraHumid1', '.extraHumid2', '.extraHumid3'];
-    const resetColor = '';
-    const resetTitle = "$gettext('unknown')";
-    resetContainer.forEach(function(container) {
-        jQuery(container).css('color', resetColor);
-        jQuery(container).attr('title', resetTitle);
-    });
-}
-
-// Change the color of the indoor temperature variable
-function set_indoorclimate_color(data) {
-    try {
-        //console.log('set_indoorclimate_color');
-        for (const [obs, obsConf] of Object.entries(indoorclimate_config['observations'])) {
-            if (data.hasOwnProperty(obs)) {
-                var obsVal = parseFloat(data[obs]).toFixed(1);
-                var tLen = obsConf['threshold'].length;
-                for (var i = 0; i < tLen; i++) {
-                    tVal = parseFloat(obsConf['threshold'][i]).toFixed(1);
-                    if (obsVal < tVal) {
-                        var group = obsConf['group'];
-                        //console.log(obs,group,obsVal,tVal,color[i],indoorclimate_config['group'][group]['name'][i]);
-                        jQuery('.' + obs).css('color', indoorclimate_config['group'][group]['color'][i]);
-                        jQuery('.' + obs).attr('title', indoorclimate_config['group'][group]['name'][i]);
-                        break;
-                    }
-                }
-            }
-        }
-    } catch (e) {
-        console.error("ERROR set_indoorclimate_color", e);
-    }
-}
-
-// Change the color of the "boolean" (0,1) represented values
-function set_boolean_color(boolVal, container, mode) {
-    if (mode != 'reset') {
-        boolVal = parseFloat(boolVal).toFixed(0);
-        if (boolVal > 0) {
-            if (mode == 'onoff-ok') {
-                var txt = "$gettext('on')";
-                var color = '#84D862';
-            } else if (mode == 'onoff-nok') {
-                var txt = "$gettext('on')";
-                var color = '#FF0000';
-            } else if (mode == 'yesno-ok') {
-                var txt = "$gettext('yes')";
-                var color = '#84D862';
-            } else if (mode == 'yesno-nok') {
-                var txt = "$gettext('off')";
-                var color = '#FF0000';
-            } else if (mode == 'yesno-neutral') {
-                var txt = "$gettext('yes')";
-                var color = '';
-            } else if (mode == 'oklow-ok') {
-                var txt = "$gettext('ok')";
-                var color = '#84D862';
-            } else if (mode == 'oklow-nok') {
-                var txt = "$gettext('low')";
-                var color = '#FF0000';
-            } else {
-                var txt = "$gettext('unknown')";
-                var color = '#FF0000';
-            }
-        } else {
-            if (mode == 'onoff-ok') {
-                var txt = "$gettext('off')";
-                var color = '#FF0000';
-            } else if (mode == 'onoff-nok') {
-                var txt = "$gettext('off')";
-                var color = '#84D862';
-            } else if (mode == 'yesno-ok') {
-                var txt = "$gettext('no')";
-                var color = '#84D862';
-            } else if (mode == 'yesno-nok') {
-                var txt = "$gettext('no')";
-                var color = '#FF0000';
-            } else if (mode == 'yesno-neutral') {
-                var txt = "$gettext('no')";
-                var color = '';
-            } else if (mode == 'oklow-ok') {
-                var txt = "$gettext('low')";
-                var color = '#FF0000';
-            } else if (mode == 'oklow-nok') {
-                var txt = "$gettext('ok')";
-                var color = '#84D862';
-            } else {
-                var txt = "$gettext('unknown')";
-                var color = '#FF0000';
-            }
-        }
-    } else {
-        var txt = '';
-        var color = '';
-    }
-    jQuery(container).html(txt);
-    jQuery(container).css('color', color);
-}
-
-// Change the color of the voltage values
-function set_voltage_color(voltVal, container, mode, threshold=[3.0,1.0]) {
-    if (mode != 'reset') {
-        voltVal = parseFloat(voltVal).toFixed(2);
-        if (mode == 'hml') {
-            if (voltVal > threshold[0]) {
-                var color = '#84D862';
-                var txt = "$gettext('ok')";
-            } else if (voltVal > threshold[1]) {
-                var color = '#FF8800';
-                var txt = "$gettext('middle')";
-            } else {
-                var color = '#FF0000';
-                var txt = "$gettext('low')";
-            }
-        } else if (mode == 'hl') {
-            if (voltVal > threshold[0]) {
-                var color = '#84D862';
-                var txt = "$gettext('ok')";
-            } else {
-                var color = '#FF0000';
-                var txt = "$gettext('low')";
-            }
-        } else if (mode == '1ok') {
-            if (voltVal == 1.0) {
-                var color = '#84D862';
-                var txt = "$gettext('ok')";
-            } else {
-                var color = '#FF0000';
-                var txt = "$gettext('low')";
-            }
-        } else if (mode == '0ok') {
-            if (voltVal == 0.0) {
-                var color = '#84D862';
-                var txt = "$gettext('ok')";
-            } else {
-                var color = '#FF0000';
-                var txt = "$gettext('low')";
-            }
-        } else {
-            var color = '#FF0000';
-            var txt = "$gettext('unknown')";
-        }
-    } else {
-        var color = '';
-        var txt = '';
-    }
-
-    jQuery(container + '-text').html(txt);
-    jQuery(container).css('color', color);
-}
-
 // Change the color of the aqi variable according to US-EPA standards
 // (adjusted to match skin colors better)
+//TODO ==> UBA colors
 function get_aqi_color(aqi, returnColor = false) {
     if (aqi >= 301) {
         var aqi_color = "#cc241d";
@@ -621,48 +407,543 @@ function get_aqi_color(aqi, returnColor = false) {
     }
 }
 
-// Change the color of the aqi variable according to Umweltbundesamt standards
-function set_aqi_color(aqi_category, container, property="background-color") {
-    aqi_category = parseFloat(aqi_category).toFixed(0);
-    if (aqi_category >= 4) {
-        var aqi_color = "#960032";
-    } else if (aqi_category == 3) {
-        var aqi_color = "#FF5050";
-    } else if (aqi_category == 2) {
-        var aqi_color = "#F0E641";
-    } else if (aqi_category == 1) {
-        var aqi_color = "#50CDAA";
-    } else if (aqi_category == 0) {
-        var aqi_color = "#50F0E6";
-    } else {
-        var aqi_color = "transparent";
-    }
-    jQuery(container).css(property, aqi_color);
-    //TODO
-    if (aqi_category >= 4) {
-        jQuery(container).css("color", "white");
-    } else {
-        jQuery(container).css("color", "#333");
+// Change the color/label of the aqi category (aqi level) according to Umweltbundesamt standards
+function update_aqi_properties(data, aqi, value, options=[]) {
+    try {
+        value = parseInt(value).toString();
+
+        // fallback for all possible properties
+        var title = "$gettext('unknown')";
+        var txt = "$gettext('unknown')";
+        var color = "inherit";
+
+        // data for all possible properties
+        if (data.hasOwnProperty("aqilevel") && data["aqilevel"].hasOwnProperty(value)) {
+            if (data["aqilevel"][value].hasOwnProperty("ttt")) {
+                title = data["aqilevel"][value]["ttt"];
+            }
+            if (data["aqilevel"][value].hasOwnProperty("text")) {
+                txt = data["aqilevel"][value]["text"];
+            }
+            if (data["aqilevel"][value].hasOwnProperty("color")) {
+                color = data["aqilevel"][value]["color"];
+            }
+        }
+
+        var cnt = options.length; // 0 = all
+        if (cnt == 0) {
+            options = ["all"];
+        }
+
+        for (i = 0; i < options.length; i++) {
+            if (options[i] == "all" || options[i] == "title") {
+                jQuery("." + aqi).prop("title", title);
+                jQuery("." + aqi + "_category").prop("title", title);
+                jQuery("." + aqi + "_dot").prop("title", title);
+                jQuery("." + aqi + "_text").prop("title", title);
+            }
+            if (options[i] == "all" || options[i] == "text") {
+                jQuery("." + aqi + "_text").html(txt);
+            }
+            if (options[i] == "all" || options[i] == "color") {
+                jQuery("." + aqi).css("background-color", color);
+                jQuery("." + aqi + "_category").css("background-color", color);
+                jQuery("." + aqi + "_dot").css("background-color", color);
+                jQuery("." + aqi + "_text").css("background-color", color);
+            }
+        }
+    } catch (e) {
+        console.error("ERROR update_aqi_properties", e);
     }
 }
 
-// Change the label of the aqi variable according to Umweltbundesamt standards
-function set_aqi_label(aqi_category, container=".pws-aqi-category") {
-    aqi_category = parseFloat(aqi_category).toFixed(0);
-    if (aqi_category >= 4) {
-        var aqi_label = "$obs.label.pws_aqi_very_poor";
-    } else if (aqi_category == 3) {
-        var aqi_label = "$obs.label.pws_aqi_poor";
-    } else if (aqi_category == 2) {
-        var aqi_label = "$obs.label.pws_aqi_moderate";
-    } else if (aqi_category == 1) {
-        var aqi_label = "$obs.label.pws_aqi_good";
-    } else if (aqi_category == 0) {
-        var aqi_label = "$obs.label.pws_aqi_very_good";
-    } else {
-        var aqi_label = "$obs.label.pws_aqi_unknown";
+// Change the color/label/title of the battery observations
+function update_battery_properties(data, sensor, sensorclass, value, options=[]) {
+    try {
+        value = parseInt(value).toString();
+
+        // fallback for all possible properties
+        var title = "$gettext('unknown')";
+        var txt = "$gettext('unknown')";
+        var color = "inherit";
+
+        // data for all possible properties
+        if (data.hasOwnProperty("batterylevel") && 
+               data["batterylevel"].hasOwnProperty(sensorclass) && 
+               data["batterylevel"][sensorclass].hasOwnProperty(value)) {
+            if (data["batterylevel"][sensorclass][value]["ttt"]) {
+                title = data["batterylevel"][sensorclass][value]["ttt"];
+            }
+            if (data["batterylevel"][sensorclass][value]["text"]) {
+                txt = data["batterylevel"][sensorclass][value]["text"];
+            }
+            if (data["batterylevel"][sensorclass][value]["color"]) {
+                color = data["batterylevel"][sensorclass][value]["color"];
+            }
+        }
+
+        var cnt = options.length; // 0 = all
+        if (cnt == 0) {
+            options = ["all"];
+        }
+
+        for (i = 0; i < options.length; i++) {
+            if (options[i] == "all" || options[i] == "title") {
+                jQuery("." + sensor).prop("title", title);
+                jQuery("." + sensor + "_text").prop("title", title);
+                jQuery("." + sensor + "_percent").prop("title", title);
+            }
+            if (options[i] == "all" || options[i] == "text") {
+                jQuery("." + sensor + "_text").html(txt);
+            }
+            if (options[i] == "all" || options[i] == "color") {
+                jQuery("." + sensor).css("color", color);
+                jQuery("." + sensor + "_text").css("color", color);
+                jQuery("." + sensor + "_percent").css("color", color);
+            }
+        }
+    } catch (e) {
+        console.error("ERROR update_battery_properties", e);
     }
-    jQuery(container).html(aqi_label);
+}
+
+// Change the color/label/title of the voltage observations
+function update_voltage_properties(data, sensor, sensorclass, value, options=[]) {
+    try {
+        if (sensorclass == "solar") {
+            value = parseInt(value).toString();
+        } else {
+            value = parseFloat(value).toFixed(1).toString();
+        }
+
+        // fallback for all possible properties
+        var title = "$gettext('unknown')";
+        var txt = "$gettext('unknown')";
+        var color = "inherit";
+
+        // data for all possible properties
+        if (data.hasOwnProperty("voltagelevel") && 
+               data["voltagelevel"].hasOwnProperty(sensorclass) && 
+               data["voltagelevel"][sensorclass].hasOwnProperty(value)) {
+            if (data["voltagelevel"][sensorclass][value]["ttt"]) {
+                title = data["voltagelevel"][sensorclass][value]["ttt"];
+            }
+            if (data["voltagelevel"][sensorclass][value]["text"]) {
+                txt = data["voltagelevel"][sensorclass][value]["text"];
+            }
+            if (data["voltagelevel"][sensorclass][value]["color"]) {
+                color = data["voltagelevel"][sensorclass][value]["color"];
+            }
+        }
+
+        var cnt = options.length; // 0 = all
+        if (cnt == 0) {
+            options = ["all"];
+        }
+
+        for (i = 0; i < options.length; i++) {
+            if (options[i] == "all" || options[i] == "title") {
+                jQuery("." + sensor).prop("title", title);
+                jQuery("." + sensor + "_text").prop("title", title);
+                jQuery("." + sensor + "_percent").prop("title", title);
+            }
+            if (options[i] == "all" || options[i] == "text") {
+                jQuery("." + sensor + "_text").html(txt);
+            }
+            if (options[i] == "all" || options[i] == "color") {
+                jQuery("." + sensor).css("color", color);
+                jQuery("." + sensor + "_text").css("color", color);
+                jQuery("." + sensor + "_percent").css("color", color);
+            }
+        }
+    } catch (e) {
+        console.error("ERROR update_voltage_properties", e);
+    }
+}
+
+// Change the color/label/title of the signal observations
+function update_signal_properties(data, sensor, value, options=[]) {
+    try {
+        value = parseInt(value).toString();
+
+        // fallback for all possible properties
+        var title = "$gettext('unknown')";
+        var txt = "$gettext('unknown')";
+        var color = "inherit";
+
+        // data for all possible properties
+        if (data.hasOwnProperty("signallevel") && data["signallevel"].hasOwnProperty(value)) {
+            if (data["signallevel"][value]["ttt"]) {
+                title = data["signallevel"][value]["ttt"];
+            }
+            if (data["signallevel"][value]["text"]) {
+                txt = data["signallevel"][value]["text"];
+            }
+            if (data["signallevel"][value]["color"]) {
+                color = data["signallevel"][value]["color"];
+            }
+        }
+
+        var cnt = options.length; // 0 = all
+        if (cnt == 0) {
+            options = ["all"];
+        }
+
+        for (i = 0; i < options.length; i++) {
+            if (options[i] == "all" || options[i] == "title") {
+                jQuery("." + sensor).prop("title", title);
+                jQuery("." + sensor + "_text").prop("title", title);
+                jQuery("." + sensor + "_percent").prop("title", title);
+            }
+            if (options[i] == "all" || options[i] == "text") {
+                jQuery("." + sensor + "_text").html(txt);
+            }
+            if (options[i] == "all" || options[i] == "color") {
+                jQuery("." + sensor).css("color", color);
+                jQuery("." + sensor + "_text").css("color", color);
+                jQuery("." + sensor + "_percent").css("color", color);
+            }
+        }
+    } catch (e) {
+        console.error("ERROR update_signal_properties", e);
+    }
+}
+
+// Change the color/label/title of the switch observations
+function update_switch_properties(data, sensor, colorlogic, value, options=[]) {
+    try {
+        value = parseInt(value).toString();
+
+        // fallback for all possible properties
+        var title = "$gettext('unknown')";
+        var txt = "$gettext('unknown')";
+        var color = "inherit";
+
+        // data for all possible properties
+        if (data.hasOwnProperty("switchlevel") && data["switchlevel"].hasOwnProperty(value)) {
+            if (data["switchlevel"][value]["ttt"]) {
+                var title = data["switchlevel"][value]["ttt"];
+            }
+            if (data["switchlevel"][value]["text"]) {
+                var txt = data["switchlevel"][value]["text"];
+            }
+            if (data["switchlevel"][value]["color" + "_" + colorlogic]) {
+                var color = data["switchlevel"][value]["color" + "_" + colorlogic];
+            }
+        }
+
+        var cnt = options.length; // 0 = all
+        if (cnt == 0) {
+            options = ["all"];
+        }
+
+        for (i = 0; i < options.length; i++) {
+            if (options[i] == "all" || options[i] == "title") {
+                jQuery("." + sensor).prop("title", title);
+                jQuery("." + sensor + "_text").prop("title", title);
+            }
+            if (options[i] == "all" || options[i] == "text") {
+                jQuery("." + sensor + "_text").html(txt);
+            }
+            if (options[i] == "all" || options[i] == "color") {
+                jQuery("." + sensor).css("color", color);
+                jQuery("." + sensor + "_text").css("color", color);
+            }
+        }
+    } catch (e) {
+        console.error("ERROR update_switch_properties", e);
+    }
+}
+
+// Change the color/label/title of the indoor quality
+function update_roomclimate_properties(data, options=[]) {
+
+    if (!weewx_data['roomclimate_extension_config'].hasOwnProperty('observations')) {
+        return;
+    } else if (weewx_data['roomclimate_extension_config'].hasOwnProperty('enabled')) {
+        if (!to_bool(weewx_data['roomclimate_extension_config']['enabled'])) {
+            return;
+        }
+    } else if (!weewx_data.hasOwnProperty('roomclimate')) {
+        return;
+    } else if (!vdp_array.hasOwnProperty('roomclimate')) {
+        return;
+    } else if (!vdp_array['roomclimate'].hasOwnProperty('obs')) {
+        return;
+    }
+
+    var cnt = options.length; // 0 = all
+    if (cnt == 0) {
+        options = ["all"];
+    }
+
+    // fallback for all possible properties
+    var fbtitle = "$gettext('unknown')";
+    var fbtxt = "$gettext('unknown')";
+    var fbcolor = "";
+
+    try {
+        //console.log('update_roomclimate_properties');
+        for (const [obs, obsConf] of Object.entries(weewx_data['roomclimate_extension_config']['observations'])) {
+            var room = obsConf['location'];
+            var group = obsConf['group'];
+            //console.log("obs room group", obs, room, group);
+            if (data.hasOwnProperty(obs)) {
+                if (group == "temperature") {
+                    // Temperature and Temperature Quality Index
+                    if (data.hasOwnProperty(room + "_tqi")) {
+                        var title = fbtitle;
+                        var txt = fbtxt;
+                        var color = fbcolor;
+                        var qi = parseInt(data[room + "_tqi"]).toString();
+                        if (weewx_data.hasOwnProperty("roomclimate")) {
+                            if (weewx_data["roomclimate"].hasOwnProperty(group)) {
+                                if (weewx_data["roomclimate"][group].hasOwnProperty(qi)) {
+                                    if (weewx_data["roomclimate"][group][qi].hasOwnProperty("ttt")) {
+                                        title = weewx_data["roomclimate"][group][qi]["ttt"];
+                                    }
+                                    if (weewx_data["roomclimate"][group][qi].hasOwnProperty("text")) {
+                                        txt = weewx_data["roomclimate"][group][qi]["text"];
+                                    }
+                                    if (weewx_data["roomclimate"][group][qi].hasOwnProperty("color")) {
+                                        color = weewx_data["roomclimate"][group][qi]["color"];
+                                    }
+                                }
+                            }
+                        }
+
+                        //console.log("tqi color txt title ", qi,color,txt,title);
+                        for (var i = 0; i < options.length; i++) {
+                            if (options[i] == "all" || options[i] == "title") {
+                                if (vdp_array['roomclimate']['obs'].includes(obs)) {
+                                    jQuery('.' + obs).attr('title', title);
+                                }
+                                if (vdp_array['roomclimate']['obs'].includes(room + "_tqi")) {
+                                    jQuery('.' + room + "_tqi").attr('title', title);
+                                    jQuery('.' + room + "_tqi_text").attr('title', title);
+                                }
+                            }
+                            if (options[i] == "all" || options[i] == "text") {
+                                if (vdp_array['roomclimate']['obs'].includes(room + "_tqi")) {
+                                    jQuery('.' + room + "_tqi_text").html(txt);
+                                }
+                            }
+                            if (options[i] == "all" || options[i] == "color") {
+                                if (vdp_array['roomclimate']['obs'].includes(obs)) {
+                                    jQuery('.' + obs).css('color', color);
+                                }
+                                if (vdp_array['roomclimate']['obs'].includes(room + "_tqi")) {
+                                    jQuery('.' + room + "_tqi").css('color', color);
+                                    jQuery('.' + room + "_tqi_text").css('color', color);
+                                }
+                            }
+                        }
+                    }
+                } else if (group == "humidity") {
+                    // Humidity and Humidity Quality Index
+                    if (data.hasOwnProperty(room + "_hqi")) {
+                        var title = fbtitle;
+                        var txt = fbtxt;
+                        var color = fbcolor;
+                        var qi = parseInt(data[room + "_hqi"]).toString();
+                        if (weewx_data.hasOwnProperty("roomclimate")) {
+                            if (weewx_data["roomclimate"].hasOwnProperty(group)) {
+                                if (weewx_data["roomclimate"][group].hasOwnProperty(qi)) {
+                                    if (weewx_data["roomclimate"][group][qi].hasOwnProperty("ttt")) {
+                                        title = weewx_data["roomclimate"][group][qi]["ttt"];
+                                    }
+                                    if (weewx_data["roomclimate"][group][qi].hasOwnProperty("text")) {
+                                        txt = weewx_data["roomclimate"][group][qi]["text"];
+                                    }
+                                    if (weewx_data["roomclimate"][group][qi].hasOwnProperty("color")) {
+                                        color = weewx_data["roomclimate"][group][qi]["color"];
+                                    }
+                                }
+                            }
+                        }
+
+                        //console.log("hqi color txt title ", qi,color,txt,title);
+                        for (var i = 0; i < options.length; i++) {
+                            if (options[i] == "all" || options[i] == "title") {
+                                if (vdp_array['roomclimate']['obs'].includes(obs)) {
+                                    jQuery('.' + obs).attr('title', title);
+                                }
+                                if (vdp_array['roomclimate']['obs'].includes(room + "_hqi")) {
+                                    jQuery('.' + room + "_hqi").attr('title', title);
+                                    jQuery('.' + room + "_hqi_text").attr('title', title);
+                                }
+                            }
+                            if (options[i] == "all" || options[i] == "text") {
+                                if (vdp_array['roomclimate']['obs'].includes(room + "_hqi")) {
+                                    jQuery('.' + room + "_hqi_text").html(txt);
+                                }
+                            }
+                            if (options[i] == "all" || options[i] == "color") {
+                                if (vdp_array['roomclimate']['obs'].includes(obs)) {
+                                    jQuery('.' + obs).css('color', color);
+                                }
+                                if (vdp_array['roomclimate']['obs'].includes(room + "_hqi")) {
+                                    jQuery('.' + room + "_hqi").css('color', color);
+                                    jQuery('.' + room + "_hqi_text").css('color', color);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Room Quality Index
+            if (data.hasOwnProperty(room + "_rqi") && vdp_array['roomclimate']['obs'].includes(room + "_rqi")) {
+                var title = fbtitle;
+                var txt = fbtxt;
+                var color = fbcolor;
+                var group = "room";
+                var qi = parseInt(data[room + "_rqi"]).toString();
+                if (weewx_data.hasOwnProperty("roomclimate")) {
+                    if (weewx_data["roomclimate"].hasOwnProperty(group)) {
+                        if (weewx_data["roomclimate"][group].hasOwnProperty(qi)) {
+                            if (weewx_data["roomclimate"][group][qi].hasOwnProperty("ttt")) {
+                                title = weewx_data["roomclimate"][group][qi]["ttt"];
+                            }
+                            if (weewx_data["roomclimate"][group][qi].hasOwnProperty("text")) {
+                                txt = weewx_data["roomclimate"][group][qi]["text"];
+                            }
+                            if (weewx_data["roomclimate"][group][qi].hasOwnProperty("color")) {
+                                color = weewx_data["roomclimate"][group][qi]["color"];
+                            }
+
+                            //console.log("rqi color txt title ", qi,color,txt,title);
+                            for (var i = 0; i < options.length; i++) {
+                                if (options[i] == "all" || options[i] == "title") {
+                                    jQuery('.' + room + "_rqi").attr('title', title);
+                                    jQuery('.' + room + "_rqi_text").attr('title', title);
+                                }
+                                if (options[i] == "all" || options[i] == "text") {
+                                    jQuery('.' + room + "_rqi_text").html(txt);
+                                }
+                                if (options[i] == "all" || options[i] == "color") {
+                                    jQuery('.' + room + "_rqi").css('color', color);
+                                    jQuery('.' + room + "_rqi_text").css('color', color);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.error("ERROR update_roomclimate_properties", e);
+    }
+}
+
+// Change the color/label/title/arrow of the pressure trend
+function update_pressure_trend_properties(data, trend_obs, value=null) {
+    const RISING_VERY_RAPIDLY = "4";
+    const RISING_QUICKLY = "3";
+    const RISING = "2";
+    const RISING_SLOWLY = "1";
+    const STEADY = "0";
+    const FALLING_SLOWLY = "-1";
+    const FALLING = "-2";
+    const FALLING_QUICKLY = "-3";
+    const FALLING_VERY_RAPIDLY = "-4";
+    var trend_value = null;
+    var trend_code = "unknown";
+    var symbol_rotation = null;
+    var symbol_output = "";
+
+    try {
+        if (value == null) {
+            // data is weewx_data
+            if (data.hasOwnProperty("trend")) {
+                if (data["trend"].hasOwnProperty(trend_obs)) {
+                    if (data["trend"][trend_obs].hasOwnProperty("raw")) {
+                        trend_value = parseFloat(data["trend"][trend_obs]["raw"]).toPrecision(1);
+                    }
+                }
+            }
+        } else {
+            trend_value = parseFloat(value).toPrecision(1);
+        }
+        // console.log("trend_obs trend_value value",trend_obs,trend_value,value);
+
+        if (trend_value != null) {
+            if (trend_value > 6.0) {
+                trend_code = RISING_VERY_RAPIDLY;
+            } else if  (trend_value > 3.5) {
+                trend_code = RISING_QUICKLY;
+            } else if  (trend_value > 1.5) {
+                trend_code = RISING;
+            } else if  (trend_value >= 0.1) {
+                trend_code = RISING_SLOWLY;
+            } else if  (trend_value > -0.1) {
+                trend_code = STEADY;
+            } else if  (trend_value >= -1.5) {
+                trend_code = FALLING_SLOWLY;
+            } else if  (trend_value >= -3.5) {
+                trend_code = FALLING;
+            } else if  (trend_value >= -6.0) {
+                trend_code = FALLING_QUICKLY;
+            } else {
+                trend_code = FALLING_VERY_RAPIDLY;
+            }
+        }
+        //console.log("trend_code",trend_code);
+
+        if (!data["trend"].hasOwnProperty("pressuretrend")) {
+            if (!data["trend"]["pressuretrend"].hasOwnProperty(trend_code)) {
+                trend_code = "unknown";
+            }
+        } else {
+            if (trend_code == RISING_VERY_RAPIDLY) {
+                symbol_rotation = 0.0;
+            } else if (trend_code == RISING_QUICKLY) {
+                symbol_rotation = 22.5;
+            } else if (trend_code == RISING) {
+                symbol_rotation = 45.0;
+            } else if (trend_code == RISING_SLOWLY) {
+                symbol_rotation = 67.5;
+            } else if (trend_code == STEADY) {
+                symbol_rotation = 90.0;
+            } else if (trend_code == FALLING_SLOWLY) {
+                symbol_rotation = 112.5;
+            } else if (trend_code == FALLING) {
+                symbol_rotation = 135.0;
+            } else if (trend_code == FALLING_QUICKLY) {
+                symbol_rotation = 157.5;
+            } else if (trend_code == FALLING_VERY_RAPIDLY) {
+                symbol_rotation = 180.0;
+            }
+        }
+
+        // TODO error handling data["trend"]["pressuretrend"]["fa-symbol-***"]
+        if (symbol_rotation != null) {
+            symbol_output = '<i class="fa fa-fw ';
+            if (symbol_rotation == 0.0) {
+                symbol_output += data["trend"]["pressuretrend"]["fa-symbol-up"];
+            } else if (symbol_rotation == 90.0) {
+                symbol_output += data["trend"]["pressuretrend"]["fa-symbol-right"];
+            } else if (symbol_rotation == 180.0) {
+                symbol_output += data["trend"]["pressuretrend"]["fa-symbol-down"];
+            } else {
+                symbol_output += data["trend"]["pressuretrend"]["fa-symbol-up"];
+                symbol_output += '" style="transform:rotate(' + symbol_rotation + 'deg);';
+            }
+            symbol_output += '"></i>';
+        }
+
+        jQuery("." + trend_obs).attr('title', data["trend"]["pressuretrend"][trend_code]["ttt"]);
+        jQuery(".trend_" + trend_obs).attr('title', data["trend"]["pressuretrend"][trend_code]["ttt"]);
+
+        jQuery(".trend_" + trend_obs + "_symbol").html(symbol_output);
+        jQuery(".trend_" + trend_obs + "_symbol").attr('title', data["trend"]["pressuretrend"][trend_code]["ttt"]);
+
+        jQuery(".trend_" + trend_obs + "_text").html(data["trend"]["pressuretrend"][trend_code]["text"]);
+        jQuery(".trend_" + trend_obs + "_text").attr('title', data["trend"]["pressuretrend"][trend_code]["ttt"]);
+
+    } catch (e) {
+        console.error("ERROR update_pressure_trend_properties", e);
+    }
 }
 
 function get_gauge_color(value, options) {
@@ -910,9 +1191,27 @@ function highcharts_tooltip_factory(obsvalue, point_obsType, highchartsReturn = 
 // Handle wind arrow rotation with the ability to "rollover" past 0 
 // without spinning back around. e.g 350 to 3 would normally spin back around
 // https://stackoverflow.com/a/19872672/1177153
-function rotateThis(newRotation) {
-    if (newRotation == "N/A") {return;}
-    weiherhammer_debug("rotateThis: rotating to " + newRotation);
+function rotateWindDir(newRotation, windSpeed="N/A") {
+    if (newRotation == "N/A") {
+        // jQuery(".arrow").css("visibility", "hidden");
+        // //jQuery(".arrow").css('opacity','0.5');
+        // jQuery(".curwinddeg").html("-");
+        // jQuery(".curwinddir").html("--");
+        return;
+    }
+    // if (windSpeed != "N/A") {
+        // windSpeed = windSpeed || 0.0; // if windSpeed undefined make 0.0, else windSpeed
+        // if (windSpeed == 0.0) {
+            // jQuery(".arrow").css("visibility", "hidden");
+            // //jQuery(".arrow").css('opacity','0.5');
+            // jQuery(".curwinddeg").html("-");
+            // jQuery(".curwinddir").html("--");
+            // return;
+        // }
+    // }
+    // jQuery(".arrow").css("visibility", "visible");
+    //jQuery(".arrow").css('opacity','');
+    weiherhammer_debug("rotateWindDir: rotating to " + newRotation);
     var currentRotation;
     finalRotation = finalRotation || 0; // if finalRotation undefined or 0, make 0, else finalRotation
     currentRotation = finalRotation % 360;
@@ -1024,31 +1323,18 @@ function changeTheme(themeName, toggleOverride = false) {
     }
 }
 
-#if $Extras.has_key('current_provider_visible') and $Extras.current_provider_visible == '1'
-//20221024,ho
+#if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
+#if $Extras.has_key('current_provider_toggle') and $Extras.current_provider_toggle == '1'
 function changeCurrentProviderRadio(current_provider, toggleOverride = false) {
-    weiherhammer_log("changeCurrentProviderRadio: Changing to: " + current_provider);
+    weiherhammer_debug("changeCurrentProviderRadio: Changing to: " + current_provider);
     sessionStorage.setItem('current_provider', current_provider);
     if (toggleOverride) {
         sessionStorage.setItem('current_provider_override', 'toggleOverride');
     }
-    if (current_provider == "dwd") {
-        jQuery("#provider_radio_dwd").prop("checked", true);
-    } else if (current_provider == "metar") {
-        jQuery("#provider_radio_metar").prop("checked", true);
-    } else if (current_provider == "brightsky") {
-        jQuery("#provider_radio_brightsky").prop("checked", true);
-    } else if (current_provider == "owm") {
-        jQuery("#provider_radio_owm").prop("checked", true);
-    } else if (current_provider == "weatherbit") {
-        jQuery("#provider_radio_weatherbit").prop("checked", true);
-    } else if (current_provider == "conditions") {
-        jQuery("#provider_radio_conditions").prop("checked", true);
-    } else {
-        sessionStorage.setItem('current_provider', 'dwd');
-    }
-    ajaxforecast();
+    jQuery("#provider_radio_" + current_provider).prop("checked", true);
+    ajaxforecast(["current"]); // update current provider data
 }
+#end if
 #end if
 
 
@@ -1061,128 +1347,332 @@ async function ajaxweewx() {
     }
 }
 
-// Update weewx data elements
+// Update with weewx data elements
 //var station_obs_array = "";
-var unit_rounding_array = "";
-var unit_label_array = "";
-var unit_group_array = "";
-var weewx_data = "";
-var indoorclimate_config = "";
-function update_weewx_data(data) {
-    weiherhammer_debug("Updating weewx data");
+var weewx_data = {};
+var unit_rounding_array = {};
+var unit_label_array = {};
+var unit_group_array = {};
+var vdp_array = {};
+var external_forecast_available = "$external_forecast_available";
+var builtin_forecast_available = "$builtin_forecast_available";
+
+// Update data after refresh time only if MQTT not enabled
+function update_with_weewx_data(data, data_update=false) {
+    weiherhammer_debug("Updating with weewx data");
     weewx_data = data;
-    
-    #if $Extras.has_key("theme") and $Extras.theme == 'auto'
-    // Auto theme if enabled
-    autoTheme(data["almanac"]["sunset_hour"], data["almanac"]["sunset_minute"], data["almanac"]["sunrise_hour"], data["almanac"]["sunrise_minute"]);
-    #end if
+
+    // to prevent index errors
+    if (!data.hasOwnProperty("extras")) {
+        data["extras"] = {};
+    }
+    if (!data.hasOwnProperty("current")) {
+        data["current"] = {};
+    }
+    if (!data.hasOwnProperty("day")) {
+        data["day"] = {};
+    }
+    if (!data.hasOwnProperty("month")) {
+        data["month"] = {};
+    }
+    if (!data.hasOwnProperty("week")) {
+        data["week"] = {};
+    }
+    if (!data.hasOwnProperty("year")) {
+        data["year"] = {};
+    }
+    if (!data.hasOwnProperty("raw")) {
+        data["raw"] = {};
+    }
+    if (!data.hasOwnProperty("trend")) {
+        data["trend"] = {};
+    }
+    if (!data.hasOwnProperty("roomclimate_extension_config")) {
+        data["roomclimate_extension_config"] = {};
+    }
+    if (!data.hasOwnProperty("value_dependent_properties")) {
+        data["value_dependent_properties"] = {};
+    }
 
     //station_obs_array = data["station_observations"];
-    unit_rounding_array = data["unit_rounding"];
-    unit_label_array = data["unit_label"];
-    unit_group_array = data["unit_group"];
-
-    // Daily High Low
-    high = data["day"]["outTemp"]["max"];
-    low = data["day"]["outTemp"]["min"];
-    jQuery(".high").html(high);
-    jQuery(".low").html(low);
-
-    // Daily max gust span
-    jQuery(".dailymaxgust").html(parseFloat(data["day"]["wind"]["max"]).toFixed(1));
-
-    // Daily Snapshot Stats Section
     try {
-        jQuery(".snapshot-records-today-header").html(tzAdjustedMoment(data["current"]["epoch"]).format('$obs.label.time_snapshot_records_today_header'));
-        jQuery(".snapshot-records-month-header").html(tzAdjustedMoment(data["current"]["epoch"]).format('$obs.label.time_snapshot_records_month_header'));
+        unit_rounding_array = data["unit_rounding"];
+        unit_label_array = data["unit_label"];
+        unit_group_array = data["unit_group"];
+        vdp_array = data["value_dependent_properties"];
     } catch (err) {
         // Returned "current" data does not have this value
+        console.error("Error update_with_weewx_data", err);
     }
 
-    jQuery(".dailystatshigh").html(data["day"]["outTemp"]["max"]);
-    jQuery(".dailystatslow").html(data["day"]["outTemp"]["min"]);
-    jQuery(".dailystatswindavg").html(data["day"]["wind"]["average"]);
-    jQuery(".dailystatswindmax").html(data["day"]["wind"]["max"]);
-    jQuery(".dailystatsrain").html(data["day"]["rain"]["sum"]);
-    jQuery(".dailystatsrainrate").html(data["day"]["rain"]["max"]);
-    // jQuery(".dailywindrun").html(data["day"]["wind"]["windrun"]);
+    // update only data values
+    if (pageName == "homepage" && data_update) {
+        // all obs with class = obs or class = obs_formatted
+        try {
+            jQuery.each(data["raw"], function(data_class, data_raw) {
+                if (!unit_rounding_array.hasOwnProperty(data_class)) {
+                    unit_rounding_array[data_class] = unit_rounding_array["default"]
+                }
+                if (!unit_label_array.hasOwnProperty(data_class)) {
+                    unit_label_array[data_class] = unit_label_array["default"]
+                }
+                if (jQuery('.' + data_class).length > 0) {
+                    // general (class = obs)
+                    jQuery("." + data_class).html(parseFloat(parseFloat(data_raw)).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array[data_class], maximumFractionDigits: unit_rounding_array[data_class]}) + unit_label_array[data_class]);
+                }
+                if (jQuery('.' + data_class + "_formatted").length > 0) {
+                    // obs_formatted
+                    jQuery("." + data_class + "_formatted").html(parseFloat(parseFloat(data_raw)).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array[data_class], maximumFractionDigits: unit_rounding_array[data_class]}));
+                }
+            });
+        } catch (err) {
+            console.error("Error update_with_weewx_data", err);
+        }
 
-    // Month Snapshot Stats Section
-    jQuery(".monthstatshigh").html(data["month"]["outTemp"]["max"]);
-    jQuery(".monthstatslow").html(data["month"]["outTemp"]["min"]);
-    jQuery(".monthstatswindavg").html(data["month"]["wind"]["average"]);
-    jQuery(".monthstatswindmax").html(data["month"]["wind"]["max"]);
-    jQuery(".monthstatsrain").html(data["month"]["rain"]["sum"]);
-    jQuery(".monthstatsrainrate").html(data["month"]["rain"]["max"]);
+        try {
+            // temperature observations
+            jQuery(".day_outtemp_min").html(data["day"]["outTemp"]["min"]);
+            jQuery(".day_outtemp_max").html(data["day"]["outTemp"]["max"]);
 
-    // Sunrise and Sunset            
-    jQuery(".sunrise-value").html(tzAdjustedMoment(parseFloat(data["almanac"]["sunrise_epoch"]).toFixed(0)).format("$obs.label.time_sunrise"));
-    jQuery(".sunset-value").html(tzAdjustedMoment(parseFloat(data["almanac"]["sunset_epoch"]).toFixed(0)).format("$obs.label.time_sunset"));
-    jQuery(".moonrise-value").html(tzAdjustedMoment(parseFloat(data["almanac"]["moon"]["moon_rise_epoch"]).toFixed(0)).format("$obs.label.time_sunrise"));
-    jQuery(".moonset-value").html(tzAdjustedMoment(parseFloat(data["almanac"]["moon"]["moon_set_epoch"]).toFixed(0)).format("$obs.label.time_sunrise"));
+            // wind observations
+            jQuery(".curwinddir").html(data["current"]["windDirCompass"]);
+            jQuery(".curwinddeg").html(data["current"]["windDir"]);
+            jQuery(".day_windrun_sum").html(data["day"]["wind"]["windrun_sum"]);
 
-    // Moon icon, phase and illumination percent
-    jQuery(".moon-icon").html(moon_icon(data["almanac"]["moon"]["moon_index"]));        
-    jQuery(".moon-phase").html(titleCase(data["almanac"]["moon"]["moon_phase"])); // Javascript function above
-    jQuery(".moon-visible").html("<strong>" + data["almanac"]["moon"]["moon_fullness"] + "%</strong> $obs.label.moon_visible");
-    #if $almanac.hasExtras
-    // Close current modal if open
-    jQuery('#almanac').modal('hide');
-    jQuery(".almanac-extras-modal-body").html(data["almanac"]["almanac_extras_modal_html"]);
-    try {
-        almanac_updated = "$obs.label.header_last_updated " + tzAdjustedMoment(data["current"]["datetime_raw"]).format("$obs.label.time_last_updated");
-        jQuery(".almanac_last_updated").html(almanac_updated);
-    } catch (err) {
-        // Returned "current" data does not have this value
-    }
-    #end if
+            // Daily Snapshot Stats Section
+            jQuery(".day_wind_avg").html(data["day"]["wind"]["average"]);
+            jQuery(".day_wind_max").html(data["day"]["wind"]["max"]);
+            jQuery(".day_rainRate_max").html(data["day"]["rain"]["max"]);
+            jQuery(".day_barometer_min").html(data["day"]["barometer"]["min"]);
+            jQuery(".day_barometer_max").html(data["day"]["barometer"]["max"]);
 
-    try {
-        // Barometer trending by finding a negative number
-        count = (data["current"]["barometer_trend"].match(/-/g) || []).length
-    } catch (err) {
-        // Returned "current" data does not have this value
-    }
+            // Month Snapshot Stats Section
+            jQuery(".month_outTemp_min").html(data["month"]["outTemp"]["min"]);
+            jQuery(".month_outTemp_max").html(data["month"]["outTemp"]["max"]);
+            jQuery(".month_wind_avg").html(data["month"]["wind"]["average"]);
+            jQuery(".month_wind_max").html(data["month"]["wind"]["max"]);
+            jQuery(".month_rainRate_max").html(data["month"]["rain"]["max"]);
+            jQuery(".month_barometer_min").html(data["month"]["barometer"]["min"]);
+            jQuery(".month_barometer_max").html(data["month"]["barometer"]["max"]);
 
-    // PWS Airquality
-    try {
-        set_aqi_color(data["current"]["pws_aqi_category"], ".pws-aqi-category");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        set_aqi_color(-1, ".pws-aqi-category"); //Reset to default
-    }
-    try {
-        set_aqi_color(data["current"]["pws_aqi_pm2_5_category"], ".pws_aqi_pm2_5_dot");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        set_aqi_color(-1, ".pws_aqi_pm2_5_dot"); //Reset to default
-    }
-    try {
-        set_aqi_color(data["current"]["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        set_aqi_color(-1, ".pws_aqi_pm10_0_dot"); //Reset to default
-    }
-    try {
-        set_aqi_color(data["current"]["pws_aqi_o3_category"], ".pws_aqi_o3_dot");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        set_aqi_color(-1, ".pws_aqi_o3_dot"); //Reset to default
-    }
-    try {
-        set_aqi_color(data["current"]["pws_aqi_no2_category"], ".pws_aqi_no2_dot");
-    } catch (err) {
-        // Returned "current" data does not have this value
-        set_aqi_color(-1, ".pws_aqi_no2_dot"); //Reset to default
+        } catch (err) {
+            // Returned data does not have this value
+            console.error("Error update_with_weewx_data", err);
+        }
     }
 
-    // PWS indoor climate config
-    if (data.hasOwnProperty('indoorclimate_config')) {
-        indoorclimate_config = data['indoorclimate_config'];
-    } else {
-        // reset all indoor climate fields to default
-        reset_indoorclimate_color();
-        indoorclimate_config = "";
+    if (pageName == "homepage") {
+        try {
+            // Update alerts and current data
+            #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
+            ajaxforecast(["alerts","current"]); 
+            #end if
+
+            // temperature observations
+            jQuery(".day_outTemp_min").prop("title", "$obs.label.summaries_date_ttt" + data["day"]["outTemp"]["mintime"]);
+            jQuery(".day_outTemp_max").prop("title", "$obs.label.summaries_date_ttt" + data["day"]["outTemp"]["maxtime"]);
+
+            // wind observations
+            rotateWindDir(data["current"]["windDir_formatted"], data["raw"]["windSpeed"]);
+
+            // Daily Snapshot Stats Section
+            jQuery(".summaries-day-title").html(tzAdjustedMoment(data["current"]["epoch"]).format('$obs.label.time_summaries_day_title'));
+            jQuery(".summaries-month-title").html(tzAdjustedMoment(data["current"]["epoch"]).format('$obs.label.time_summaries_month_title'));
+
+            // Daily Snapshot Stats Section Tooltip
+            jQuery(".day_wind_max").prop("title", "$obs.label.summaries_date_ttt" + data["day"]["wind"]["maxtime"]);
+            jQuery(".day_rainRate_max").prop("title", "$obs.label.summaries_date_ttt" + data["day"]["rain"]["maxtime"]);
+            jQuery(".day_barometer_min").prop("title", "$obs.label.summaries_date_ttt" + data["day"]["barometer"]["mintime"]);
+            jQuery(".day_barometer_max").prop("title", "$obs.label.summaries_date_ttt" + data["day"]["barometer"]["maxtime"]);
+
+            // Month Snapshot Stats Section Tooltip
+            jQuery(".month_outTemp_min").prop("title", "$obs.label.summaries_date_ttt" + data["month"]["outTemp"]["mintime"]);
+            jQuery(".month_outTemp_max").prop("title", "$obs.label.summaries_date_ttt" + data["month"]["outTemp"]["maxtime"]);
+            jQuery(".month_wind_max").prop("title", "$obs.label.summaries_date_ttt" + data["month"]["wind"]["maxtime"]);
+            jQuery(".month_rainRate_max").prop("title", "$obs.label.summaries_date_ttt" + data["month"]["rain"]["maxtime"]);
+            jQuery(".month_barometer_min").prop("title", "$obs.label.summaries_date_ttt" + data["month"]["barometer"]["mintime"]);
+            jQuery(".month_barometer_max").prop("title", "$obs.label.summaries_date_ttt" + data["month"]["barometer"]["maxtime"]);
+        } catch (err) {
+            // Returned data does not have this value
+            console.error("Error update_with_weewx_data", err);
+        }
+
+        try {
+            // Sunrise and Sunset
+            jQuery(".sunrise-value").html(tzAdjustedMoment(parseFloat(data["almanac"]["sunrise_epoch"]).toFixed(0)).format("$obs.label.time_sunrise"));
+            jQuery(".sunset-value").html(tzAdjustedMoment(parseFloat(data["almanac"]["sunset_epoch"]).toFixed(0)).format("$obs.label.time_sunset"));
+            jQuery(".moonrise-value").html(tzAdjustedMoment(parseFloat(data["almanac"]["moon"]["moon_rise_epoch"]).toFixed(0)).format("$obs.label.time_sunrise"));
+            jQuery(".moonset-value").html(tzAdjustedMoment(parseFloat(data["almanac"]["moon"]["moon_set_epoch"]).toFixed(0)).format("$obs.label.time_sunrise"));
+
+            // Moon icon, phase and illumination percent
+            jQuery(".moon-icon").html(moon_icon(data["almanac"]["moon"]["moon_index"]));
+            jQuery(".moon-phase").html(titleCase(data["almanac"]["moon"]["moon_phase"])); // Javascript function above
+            jQuery(".moon-visible").html("<strong>" + data["almanac"]["moon"]["moon_fullness"] + "%</strong> $obs.label.moon_visible");
+        } catch (err) {
+            // Returned data does not have this value
+            console.error("Error update_with_weewx_data", err);
+        }
+
+        #if $almanac.hasExtras
+        try {
+            // Close current modal if open
+            //jQuery('#almanac').modal('hide');
+            jQuery(".almanac-extras-modal-body").html(data["almanac"]["almanac_extras_modal_html"]);
+            almanac_updated = "$obs.label.header_last_updated " + tzAdjustedMoment(data["current"]["dateTime_raw"]).format("$obs.label.time_last_updated");
+            jQuery(".almanac_last_updated").html(almanac_updated);
+        } catch (err) {
+            // Returned data does not have this value
+            console.error("Error update_with_weewx_data", err);
+        }
+        #end if
+
+        // ========================================================
+        // obs value dependent properties if enabled
+        // ========================================================
+
+        #if $Extras.has_key("value_depended_properties_enabled") and $Extras.value_depended_properties_enabled == '1'
+
+        // Temperature properties
+        if (vdp_array.hasOwnProperty("station")) {
+            if (vdp_array["station"].hasOwnProperty("obs")) {
+                if (vdp_array["station"]["obs"].includes('outTemp')) {
+                   get_outTemp_color("$unit.unit_type.outTemp", data["current"]["outTemp_formatted"]);
+                }
+            }
+        }
+
+        // aqi properties
+        #if $Extras.has_key("aqi_enabled") and $Extras.aqi_enabled == '1'
+        try {
+            if (vdp_array.hasOwnProperty("aqi")) {
+                if (vdp_array["aqi"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["aqi"]["obs"];
+                    //console.log("aqi all obs", vals);
+                    for (var i = 0; i < vals.length; i++) {
+                        //console.log("aqi obs", vals[i]);
+                        if (data["raw"].hasOwnProperty(vals[i])) {
+                            update_aqi_properties(data, vals[i], data["raw"][vals[i]]);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            // Returned data does not have this value
+            console.error("Error update_with_weewx_data", err);
+        }
+        #end if
+
+        // pressure trend properties
+        try {
+            if (vdp_array.hasOwnProperty("pressure_trend")) {
+                if (vdp_array["pressure_trend"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["pressure_trend"]["obs"];
+                    for (var i = 0; i < vals.length; i++) {
+                        if (data["trend"].hasOwnProperty(vals[i])) {
+                            if (data["trend"][vals[i]].hasOwnProperty("raw")) {
+                                update_pressure_trend_properties(data, vals[i], data["trend"][vals[i]]["raw"]);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            // Returned data does not have this value
+            console.error("Error update_with_weewx_data", err);
+        }
+
+        // battery properties
+        try {
+            if (vdp_array.hasOwnProperty("batt")) {
+                if (vdp_array["batt"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["batt"]["obs"];
+                }
+                if (vdp_array["batt"].hasOwnProperty("group")) {
+                    var groups = vdp_array["batt"]["group"];
+                }
+                if (vals.length == groups.length) {
+                    for (var i = 0; i < vals.length; i++) {
+                        if (data["raw"].hasOwnProperty(vals[i])) {
+                            update_battery_properties(data, vals[i], groups[i], data["raw"][vals[i]]);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            // Returned data does not have this value
+            console.error("Error update_with_weewx_data", err);
+        }
+
+        // voltage properties
+        try {
+            if (vdp_array.hasOwnProperty("voltage")) {
+                if (vdp_array["voltage"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["voltage"]["obs"];
+                }
+                if (vdp_array["voltage"].hasOwnProperty("group")) {
+                    var groups = vdp_array["voltage"]["group"];
+                }
+                if (vals.length == groups.length) {
+                    for (var i = 0; i < vals.length; i++) {
+                        if (data["raw"].hasOwnProperty(vals[i])) {
+                            update_voltage_properties(data, vals[i], groups[i], data["raw"][vals[i]]);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            // Returned data does not have this value
+            console.error("Error update_with_weewx_data", err);
+        }
+
+        // signal properties
+        try {
+            if (vdp_array.hasOwnProperty("sig")) {
+                if (vdp_array["sig"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["sig"]["obs"];
+                    for (var i = 0; i < vals.length; i++) {
+                        if (data["raw"].hasOwnProperty(vals[i])) {
+                            update_signal_properties(data, vals[i], data["raw"][vals[i]]);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            // Returned data does not have this value
+            console.error("Error update_with_weewx_data", err);
+        }
+
+        // switch properties
+        try {
+            if (vdp_array.hasOwnProperty("switch")) {
+                if (vdp_array["switch"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["switch"]["obs"];
+                }
+                if (vdp_array["switch"].hasOwnProperty("group")) {
+                    var groups = vdp_array["switch"]["group"];
+                }
+                if (vals.length == groups.length) {
+                    for (var i = 0; i < vals.length; i++) {
+                        if (data["raw"].hasOwnProperty(vals[i])) {
+                            update_switch_properties(data, vals[i], groups[i], data["raw"][vals[i]]);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            // Returned data does not have this value
+            console.error("Error update_with_weewx_data", err);
+        }
+
+        // room climate properties
+        try {
+            update_roomclimate_properties(data["raw"]);
+        } catch (err) {
+            // Returned data does not have this value
+            console.error("Error update_with_weewx_data", err);
+        }
+
+        #end if
     }
 }
 
@@ -1209,23 +1699,75 @@ function moon_icon(moonphase){
 }
 
 #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
-function ajaxforecast() {
-    forecast_data = {};
+function ajaxforecast(options=['']) {
+    //console.log("ajaxforecast", options);
+    var forecast_external = {};
+    var forecast_builtin = {};
     jQuery.when(
+        #if $external_forecast_available == "1"
+        // Get the forecast from external calls
+        jQuery.getJSON(get_relative_url() + "/json/forecast.json", function(forecast) {
+            //console.log("forecast.json", forecast);
+            forecast_external = forecast;
+        }),
+        #end if
+        #if $builtin_forecast_available == "1"
+        // Get the built in forecast
+        jQuery.getJSON(get_relative_url() + "/json/forecast_builtin.json", function(forecast) {
+            //console.log("forecast_builtin.json", forecast);
+            forecast_builtin = forecast;
+        }),
+        #end if
         // Get the iconlist - original source is // https://www.aerisweather.com/support/docs/api/reference/icon-list/
         jQuery.getJSON(get_relative_url() + '/images/aeris-icon-list.json', function(iconlist) {
         icon_dict = iconlist;
-            }
-        ),
-        // Get the forecast
-        jQuery.getJSON(get_relative_url() + "/json/forecast.json", function(forecast) {
-            forecast_data = forecast;
         })
     ).then(function() {
-        //  update forecast once both promises are fulfilled
-        update_forecast_data(forecast_data);
+        // Merge external and builtin forecast
+        forecast_data = Object.assign({}, forecast_external, forecast_builtin);
+
+        //console.log("forecast_data", forecast_data);
+        if (options == "none") {
+            return true;
         }
-    );
+        var cnt = options.length; // 0 = all but filter with pageName
+        if (cnt == 0) {
+            if (pageName == "homepage") {
+                options = ["alerts", "current"];
+            } else if (pageName == "forecast") {
+                options = ["forecast"];
+            } else {
+                options = ["all"];
+            }
+        }
+        for (var i = 0; i < options.length; i++) {
+            //console.log("ajaxforecast options=" + options[i]);
+            if (options[i] == "all" || options[i] == "current") {
+                // update current weather data
+                //console.log("update_current_data");
+                update_current_data(forecast_data);
+            }
+            if (options[i] == "all" || options[i] == "alerts") {
+                // update alerts data
+                //console.log("update_alerts_data");
+                update_alerts_data(forecast_data);
+            }
+            if (options[i] == "all" || options[i] == "aqi") {
+                // update aqi data
+                //console.log("update_aqi_data");
+                update_aqi_data(forecast_data);
+            }
+            if (options[i] == "all" || options[i] == "forecast") {
+                // update forecast once both promises are fulfilled
+                //console.log("update_forecast_data");
+                update_forecast_data(forecast_data);
+                if (options[i] == "forecast") {
+                    //console.log("update_current_data");
+                    update_current_data(forecast_data, ["wxicon"]);
+                }
+            }
+        }
+    });
 }
 
 function aeris_coded_weather(data, full_observation = false) {
@@ -1234,6 +1776,11 @@ function aeris_coded_weather(data, full_observation = false) {
     var coverage_code = data.split(":")[0]
     var intensity_code = data.split(":")[1]
     var weather_code = data.split(":")[2]
+
+    // console.log("Aeris Code: " + data);
+    // console.log("Coverage Code: " + coverage_code);
+    // console.log("Intensity Code: " + intensity_code);
+    // console.log("Weather Code: " + weather_code);
 
     var cloud_dict = {
         "CL": "$obs.label.forecast_cloud_code_CL",
@@ -1306,16 +1853,23 @@ function aeris_coded_weather(data, full_observation = false) {
         return cloud_dict[weather_code];
     } else {
         // Add the coverage if it's present, and full observation forecast is requested
-        if ((coverage_code) && (full_observation)) {
+        if ((coverage_code) && (full_observation) && coverage_dict.hasOwnProperty(coverage_code)) {
             output += coverage_dict[coverage_code] + " ";
         }
         // Add the intensity if it's present
-        if (intensity_code) {
+        if (intensity_code && intensity_dict.hasOwnProperty(intensity_code)) {
             output += intensity_dict[intensity_code] + " ";
         }
         // Weather output
-        output += weather_dict[weather_code];
+        if (weather_dict.hasOwnProperty(weather_code)) {
+            output += weather_dict[weather_code];
+        }
     }
+
+    if (output == "") {
+        output = "$gettext('unknown')";
+    }
+    // console.log("Result: " + output);
 
     return output;
 }
@@ -1525,93 +2079,21 @@ function aeris_coded_alerts(data, full_observation = false) {
         "AW.UK.SV": "$obs.label.forecast_alert_code_AW_UK_SV",
         "AW.UK.EX": "$obs.label.forecast_alert_code_AW_UK_EX"
     }
-
-    return alert_dict[data];
+    
+    if (alert_dict.hasOwnProperty(data)) {
+        return alert_dict[data];
+    } else {
+        return "$gettext('unknown')"
+    }
 }
 
 function aeris_icon(data) {
     // https://www.aerisweather.com/support/docs/api/reference/icon-list/
     var icon_name = data.split(".")[0]; // Remove .png
-        icon_out = icon_dict[icon_name];
-        if ( icon_out === undefined ) {
-            icon_out ='unknown' 
-            }
-        return icon_out;
-}
-
-function show_forcast_alert(data, forecast_provider) {
-    weiherhammer_debug("Forecast: Updating alert data for " + forecast_provider);
-    var i, forecast_alert_modal, forecast_alerts;
-    forecast_alert_modal = "";
-    forecast_alerts = [];
-
-    // Empty anything that's been appended to the modal from the previous run
-    jQuery(".wx-stn-alert-text").empty();
-
-    if (forecast_provider == "darksky") {
-        if (data['alerts']) {
-            for (i = 0; i < data['alerts'].length; i++) {
-                forecast_alert_title = data['alerts'][i]['title'];
-                forecast_alert_body = data['alerts'][i]['description'].replace(/\n/g, '<br>');
-                forecast_alert_link = data['alerts'][i]['title'];
-                forecast_alert_expires = tzAdjustedMoment(data['alerts'][i]['expires']).format('$obs.label.time_forecast_alert_expires');
-                forecast_alerts.push({"title": forecast_alert_title, "body": forecast_alert_body, "link": forecast_alert_link, "expires": forecast_alert_expires});
-            }
-        }
-    } else if (forecast_provider == "aeris") {
-        if (data['alerts'][0]['response'][0]) {
-            for (i = 0; i < data['alerts'][0]['response'].length; i++) {
-                //forecast_alert_title = data['alerts'][0]['response'][i]['details']['name'];
-                /*
-                forecast_alert_title = aeris_coded_alerts(data['alerts'][0]['response'][i]['details']['type']);
-                if (typeof forecast_alert_title === "undefined") {
-                    // If the type can't be decoded then use the raw name in the alert. I have seen this for "Hurricane Local Statement" not matching a coded weather value
-                    forecast_alert_title = data['alerts'][0]['response'][i]['details']['name'];
-                }
-                */
-                forecast_alert_title = "$obs.label.forecast_alert_title: " + data['alerts'][0]['response'][i]['details']['name'];
-                forecast_alert_body = data['alerts'][0]['response'][i]['details']['body'].replace(/\n/g, '<br>');
-                //forecast_alert_link = data['alerts'][0]['response'][i]['details']['name'];
-                forecast_alert_link = data['alerts'][0]['response'][i]['details']['type'];
-                forecast_alert_begins = tzAdjustedMoment(data['alerts'][0]['response'][i]['timestamps']['begins']).format('$obs.label.time_forecast_alert_expires');
-                forecast_alert_expires = tzAdjustedMoment(data['alerts'][0]['response'][i]['timestamps']['expires']).format('$obs.label.time_forecast_alert_expires');
-                forecast_alerts.push({"title": forecast_alert_title, "body": forecast_alert_body, "link": forecast_alert_link, "begins": forecast_alert_begins, "expires": forecast_alert_expires});
-            }
-        }
-    }
-
-    if (forecast_alerts.length > 0) {
-        weiherhammer_debug("Forecast: There are " + forecast_alerts.length + " alert(s).");
-        for (i = 0; i < forecast_alerts.length; i++) {
-
-            alert_link = "<i class='fa fa-fw fa-exclamation-triangle'></i> <a href='#forecast-alert-" + i + "' data-toggle='modal' data-target='#forecast-alert-" + i + "'><b>" + forecast_alerts[i]["title"] + "</b>, $obs.label.forecast_alert_begins " + forecast_alerts[i]["begins"] + " $obs.label.forecast_alert_expires " + forecast_alerts[i]["expires"] + "</a><br>";
-            jQuery(".wx-stn-alert-text").append(alert_link);
-
-            forecast_alert_modal += "<!-- Forecast Alert Modal " + i + " -->";
-            forecast_alert_modal += "<div class='modal fade' id='forecast-alert-" + i + "' tabindex='-1' role='dialog' aria-labelledby='forecast-alert'>";
-            forecast_alert_modal += "<div class='modal-dialog' role='document'>";
-            forecast_alert_modal += "<div class='modal-content'>";
-            forecast_alert_modal += "<div class='modal-header'>";
-            forecast_alert_modal += "<button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>";
-            forecast_alert_modal += "<h4 class='modal-title' id='forecast-alert'>" + forecast_alerts[i]["title"] + "</h4>";
-            forecast_alert_modal += "</div>";
-            forecast_alert_modal += "<div class='modal-body'>";
-            forecast_alert_modal += forecast_alerts[i]["body"];
-            forecast_alert_modal += "<br><p><small>" + " $obs.label.forecast_alert_begins " + forecast_alerts[i]["begins"] + " $obs.label.forecast_alert_expires " + forecast_alerts[i]["expires"] + "</small></p>";
-            forecast_alert_modal += "</div>";
-            forecast_alert_modal += "<div class='modal-footer'>";
-            forecast_alert_modal += "<button type='button' class='btn btn-primary' data-dismiss='modal'>$obs.label.close</button>";
-            forecast_alert_modal += "</div>";
-            forecast_alert_modal += "</div>";
-            forecast_alert_modal += "</div>";
-            forecast_alert_modal += "</div>";
-
-            jQuery(".wx-stn-alert-text").append(forecast_alert_modal);
-        }
-        jQuery(".wx-stn-alert").show();
+    if (icon_dict.hasOwnProperty(icon_name)) {
+        return icon_dict[icon_name]
     } else {
-        weiherhammer_debug("Forecast: There are no forecast alerts");
-        jQuery(".wx-stn-alert").hide();
+        return "$gettext('unknown')"
     }
 }
 
@@ -1622,125 +2104,14 @@ function aeris_aqi_translate(data) {
     else if (data === "unhealthy") data = "$obs.label.aqi_unhealthy";
     else if (data === "very unhealthy") data = "$obs.label.aqi_very_unhealthy";
     else if (data === "hazardous") data = "$obs.label.aqi_hazardous";
-    //20220312,ho else data = "$obs.label.aqi_unknown";
+    else data = "$gettext('unknown')";
 
     return data;
 }
 
-function update_forecast_data(data) {
-    forecast_provider = "$Extras.forecast_provider";
-    weiherhammer_debug("Forecast: Provider is " + forecast_provider);
-    weiherhammer_debug("Forecast: Updating data");
-    weiherhammer_debug(data);
-
-    try {
-        var forecast_issueTime_dwd = tzAdjustedMoment(data["dwd"]["current"][0]["response"]["obTimestamp"]).format('$obs.label.time_forecast_last_updated');
-    } catch (err) {
-        // Returned "current" data does not have this value
-    }
-
-    //20221024,ho
-    current_provider = sessionStorage.getItem('current_provider');
-    try {
-        if (data["dwd"]["success"]) {
-            if (current_provider == "dwd") {
-                data["current"] = data["dwd"]["current"]
-            }
-        } else {
-            jQuery('input[type=radio]#provider_radio_dwd').remove();
-        }
-
-        if (data["brightsky"]["success"]) {
-            if (current_provider == "brightsky") {
-                data["current"] = data["brightsky"]["current"]
-            }
-        } else {
-            jQuery('input[type=radio]#provider_radio_brightsky').remove();
-        }
-
-        if (data["weatherbit"]["success"]) {
-            if (current_provider == "weatherbit") {
-                data["current"] = data["weatherbit"]["current"]
-            }
-        } else {
-            jQuery('input[type=radio]#provider_radio_weatherbit').remove();
-        }
-
-        if (data["owm"]["success"]) {
-            if (current_provider == "owm") {
-                data["current"] = data["owm"]["current"]
-            }
-        } else {
-            jQuery('input[type=radio]#provider_radio_owm').remove();
-        }
-
-        if (data["aeris_metar"]["success"]) {
-            if (current_provider == "metar") {
-                data["current"] = data["aeris_metar"]["current"]
-            }
-        } else {
-            jQuery('input[type=radio]#provider_radio_metar').remove();
-        }
-
-        if (data["aeris_conditions"]["success"]) {
-            if (current_provider == "conditions") {
-                data["current"] = data["aeris_conditions"]["current"]
-            }
-        } else {
-            jQuery('input[type=radio]#provider_radio_conditions').remove();
-        }
-
-    } catch (err) {
-        // Returned "current" data does not have values
-    }
-
-    // 20220726,ho
-    if (pageName == "console.html") {
-        var forecast_show_conditions = "$Extras.forecast_show_conditions_console";
-        var forecast_show_temperature = "$Extras.forecast_show_temperature_console";
-        var forecast_show_pop = "$Extras.forecast_show_pop_console";
-        var forecast_show_dewpoint = "$Extras.forecast_show_dewpoint_console";
-        var forecast_show_humidity = "$Extras.forecast_show_humidity_console";
-        var forecast_show_windspeed = "$Extras.forecast_show_windspeed_console";
-        var forecast_show_winddirdeg = "$Extras.forecast_show_winddirdeg_console";
-        var forecast_show_pressure = "$Extras.forecast_show_pressure_console";
-    } else {
-        var forecast_show_conditions = "$Extras.forecast_show_conditions";
-        var forecast_show_temperature = "$Extras.forecast_show_temperature";
-        var forecast_show_pop = "$Extras.forecast_show_pop";
-        var forecast_show_dewpoint = "$Extras.forecast_show_dewpoint";
-        var forecast_show_humidity = "$Extras.forecast_show_humidity";
-        var forecast_show_windspeed = "$Extras.forecast_show_windspeed";
-        var forecast_show_winddirdeg = "$Extras.forecast_show_winddirdeg";
-        var forecast_show_pressure = "$Extras.forecast_show_pressure";
-    }
-
-
-    #if $Extras.has_key('current_provider_visible') and $Extras.current_provider_visible == '1'
-    //20221024,ho
-    jQuery(".ProviderRadiosSelected").html(data["current"][0]["response"]["ob"]["source_api"]);
-    #end if
-
-    if (forecast_provider == "N/A") {
-        jQuery(".forecastrow").hide();
-        weiherhammer_debug("Forecast: No provider, hiding forecastrow");
-        return;
-    } else if (forecast_provider == "aeris") {
-        var forecast_subtitle = tzAdjustedMoment(data["timestamp"]).format('$obs.label.time_forecast_last_updated');
-        try {
-            var wxicon = get_relative_url() + "/images/" + aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png";
-        } catch (err) {
-            // Returned "current" data does not have this value
-        }
-        
-        // Current observation text
-        try {
-            jQuery(".current-obs-text").html(aeris_coded_weather(data["current"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
-        } catch (err) {
-            // Returned "current" data does not have this value
-        }
-
-        
+function update_aqi_data(data) {
+    //TODO
+/* TODO
         // AQI
         if (data["aqi"][0]["success"] && !data["aqi"][0]["error"]) {
             jQuery(".wx-aqi").html(data["aqi"][0]["response"][0]["periods"][0]["aqi"]);
@@ -1762,57 +2133,219 @@ function update_forecast_data(data) {
                 // AQI not in the station observation table, so silently exit
             }
         }
+*/
+}
 
-        // Visibility text in station observation table
-        try {
-            if (("$Extras.forecast_units" == "si") || ("$Extras.forecast_units" == "ca")) {
-                // si and ca = kilometer
-                visibility = data["current"][0]["response"]["ob"]["visibilityKM"];
-            } else {
-                // us and uk2 and default = miles
-                visibility = data["current"][0]["response"]["ob"]["visibilityMI"];
+function update_alerts_data(data) {
+    var alerts_provider = "$alerts_provider";
+    weiherhammer_debug("Current: Provider is " + alerts_provider);
+    weiherhammer_debug("Current: Updating data");
+    weiherhammer_debug(data);
+
+    try {
+        if (!data.hasOwnProperty(alerts_provider)) {
+            throw new Error("Forecast JSON file does not contain alerts data for provider=" + alerts_provider);
+        } else if (!data[alerts_provider].hasOwnProperty("alerts")) {
+            throw new Error("Forecast JSON file does not contain alerts data. Provider=" + alerts_provider);
+        }
+
+        //TODO more checks?
+
+        // using data from alerts provider
+        data = data[alerts_provider];
+
+        var i, forecast_alert_modal, forecast_alerts;
+        forecast_alert_modal = "";
+        forecast_alerts = [];
+
+        // Empty anything that's been appended to the modal from the previous run
+        jQuery(".wx-stn-alert-text").empty();
+
+        if (alerts_provider == "darksky") {
+            if (data['alerts']) {
+                for (i = 0; i < data['alerts'].length; i++) {
+                    forecast_alert_title = data['alerts'][i]['title'];
+                    forecast_alert_body = data['alerts'][i]['description'].replace(/\n/g, '<br>');
+                    forecast_alert_link = data['alerts'][i]['title'];
+                    forecast_alert_expires = tzAdjustedMoment(data['alerts'][i]['expires']).format('$obs.label.time_forecast_alert_expires');
+                    forecast_alerts.push({"title": forecast_alert_title, "body": forecast_alert_body, "link": forecast_alert_link, "expires": forecast_alert_expires});
+                }
             }
+        } else {
+            if (data['alerts'][0]['response'][0]) {
+                for (i = 0; i < data['alerts'][0]['response'].length; i++) {
+                    //forecast_alert_title = data['alerts'][0]['response'][i]['details']['name'];
+                    /*
+                    forecast_alert_title = aeris_coded_alerts(data['alerts'][0]['response'][i]['details']['type']);
+                    if (typeof forecast_alert_title === "undefined") {
+                        // If the type can't be decoded then use the raw name in the alert. I have seen this for "Hurricane Local Statement" not matching a coded weather value
+                        forecast_alert_title = data['alerts'][0]['response'][i]['details']['name'];
+                    }
+                    */
+                    forecast_alert_title = "$obs.label.forecast_alert_title: " + data['alerts'][0]['response'][i]['details']['name'];
+                    forecast_alert_body = data['alerts'][0]['response'][i]['details']['body'].replace(/\n/g, '<br>');
+                    //forecast_alert_link = data['alerts'][0]['response'][i]['details']['name'];
+                    forecast_alert_link = data['alerts'][0]['response'][i]['details']['type'];
+                    forecast_alert_begins = tzAdjustedMoment(data['alerts'][0]['response'][i]['timestamps']['begins']).format('$obs.label.time_forecast_alert_expires');
+                    forecast_alert_expires = tzAdjustedMoment(data['alerts'][0]['response'][i]['timestamps']['expires']).format('$obs.label.time_forecast_alert_expires');
+                    forecast_alerts.push({"title": forecast_alert_title, "body": forecast_alert_body, "link": forecast_alert_link, "begins": forecast_alert_begins, "expires": forecast_alert_expires});
+                }
+            }
+        }
+
+        if (forecast_alerts.length > 0) {
+            weiherhammer_debug("Forecast: There are " + forecast_alerts.length + " alert(s).");
+            for (i = 0; i < forecast_alerts.length; i++) {
+
+                alert_link = "<i class='fa fa-fw fa-exclamation-triangle'></i> <a href='#forecast-alert-" + i + "' data-toggle='modal' data-target='#forecast-alert-" + i + "'><b>" + forecast_alerts[i]["title"] + "</b>, $obs.label.forecast_alert_begins " + forecast_alerts[i]["begins"] + " $obs.label.forecast_alert_expires " + forecast_alerts[i]["expires"] + "</a><br>";
+                jQuery(".wx-stn-alert-text").append(alert_link);
+
+                forecast_alert_modal += "<!-- Forecast Alert Modal " + i + " -->";
+                forecast_alert_modal += "<div class='modal fade' id='forecast-alert-" + i + "' tabindex='-1' role='dialog' aria-labelledby='forecast-alert'>";
+                forecast_alert_modal += "<div class='modal-dialog' role='document'>";
+                forecast_alert_modal += "<div class='modal-content'>";
+                forecast_alert_modal += "<div class='modal-header'>";
+                forecast_alert_modal += "<button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>";
+                forecast_alert_modal += "<h4 class='modal-title' id='forecast-alert'>" + forecast_alerts[i]["title"] + "</h4>";
+                forecast_alert_modal += "</div>";
+                forecast_alert_modal += "<div class='modal-body'>";
+                forecast_alert_modal += forecast_alerts[i]["body"];
+                forecast_alert_modal += "<br><p><small>" + " $obs.label.forecast_alert_begins " + forecast_alerts[i]["begins"] + " $obs.label.forecast_alert_expires " + forecast_alerts[i]["expires"] + "</small></p>";
+                forecast_alert_modal += "</div>";
+                forecast_alert_modal += "<div class='modal-footer'>";
+                forecast_alert_modal += "<button type='button' class='btn btn-primary' data-dismiss='modal'>$obs.label.close</button>";
+                forecast_alert_modal += "</div>";
+                forecast_alert_modal += "</div>";
+                forecast_alert_modal += "</div>";
+                forecast_alert_modal += "</div>";
+
+                jQuery(".wx-stn-alert-text").append(forecast_alert_modal);
+            }
+            jQuery(".wx-stn-alert").show();
+        } else {
+            weiherhammer_debug("Forecast: There are no forecast alerts");
+            jQuery(".wx-stn-alert").hide();
+        }
+    } catch (err) {
+        console.error("Error update_alerts_data", err);
+        console.log(alerts_provider);
+        console.log(data);
+    }
+}
+
+function update_current_data(data, options="all") {
+    var current_provider = sessionStorage.getItem('current_provider');
+    weiherhammer_debug("Current: Provider is " + current_provider);
+    weiherhammer_debug("Current: Updating data");
+    weiherhammer_debug(data);
+
+    try {
+        if (!data.hasOwnProperty(current_provider)) {
+            throw new Error("Forecast JSON file does not contain current data for provider=" + current_provider);
+        } else if (!data[current_provider].hasOwnProperty("current")) {
+            throw new Error("Forecast JSON file does not contain current data. Provider=" + current_provider);
+        } else if (!Array.isArray(data[current_provider]["current"])) {
+            throw new Error("Forecast JSON file does not contain current/0 data. Provider=" + current_provider);
+        } else if (!data[current_provider]["current"][0].hasOwnProperty("success") || !data[current_provider]["current"][0]["success"]) {
+            throw new Error("Provider " + current_provider + " does not contain valid data.");
+        } else if (!data[current_provider]["current"][0].hasOwnProperty("response")) {
+            throw new Error("Forecast JSON file does not contain current/0/response data. Provider=" + current_provider);
+        } else if (!Array.isArray(data[current_provider]["current"][0]["response"])) {
+            throw new Error("Forecast JSON file does not contain current/0/response/0 data. Provider=" + current_provider);
+        } else if (!data[current_provider]["current"][0]["response"][0].hasOwnProperty("ob")) {
+            throw new Error("Forecast JSON file does not contain current/0/response/0/ob data. Provider=" + current_provider);
+        }
+
+        // using data from current provider
+        data = data[current_provider];
+        obs_data = data["current"][0]["response"][0]["ob"];
+
+        if (options == "all" || options == "wxicon") {
+            var wxicon = get_relative_url() + "/images/" + aeris_icon(obs_data["icon"]) + ".png";
+            jQuery("#wxicon").attr("src", wxicon);
+        }
+        if (options == "all") {
+            var current_update = tzAdjustedMoment(obs_data["timestamp"]).format('$obs.label.time_forecast_last_updated');
+            var visibility = obs_data["visibilityKM"];
+            if (visibility !== null) {
+                visibility = parseFloat(parseFloat(visibility)).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["visibility"], maximumFractionDigits: unit_rounding_array["visibility"]}) + " " + unit_label_array["visibility"];
+            } else {
+                visibility = "N/A"
+            }
+            var cloudcover = parseFloat(parseFloat(obs_data["sky"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["cloudcover"], maximumFractionDigits: unit_rounding_array["cloudcover"]}) + unit_label_array["cloudcover"];
+            jQuery(".current-obs-text").html(aeris_coded_weather(obs_data["weatherPrimaryCoded"], true));
+            if (data["current"][0].hasOwnProperty("source")) {
+                jQuery(".current_provider_source_api").text(data["current"][0]["source"]);
+            } else {
+                jQuery(".current_provider_source_api").text(current_provider);
+            }
+            jQuery(".visibility").html(visibility);
+            jQuery(".cloudcover").html(cloudcover);
+        }
+    } catch (err) {
+        jQuery("#wxicon").attr("src", get_relative_url() + "/images/unknown.png");
+        jQuery(".visibility").html("N/A");
+        jQuery(".cloudcover").html("N/A");
+        jQuery(".current_provider_source_api").text(current_provider);
+        console.error("Error update_current_data", err);
+        console.log(current_provider);
+        console.log(data);
+    }
+}
+
+function update_forecast_data(data) {
+    //TODO build html code in weiherhammer.py, only update html code here
+    var forecast_provider = "$forecast_provider";
+    weiherhammer_debug("Forecast: Provider is " + forecast_provider);
+    weiherhammer_debug("Forecast: Updating data");
+    weiherhammer_debug(data);
+
+    try {
+        if (!data.hasOwnProperty(forecast_provider)) {
+            throw new Error("Forecast JSON file does not contain data for provider=" + forecast_provider);
+        }
+
+        //TODO muss hier weg
+        try {
+            var forecast_issueTime_dwd = tzAdjustedMoment(data["dwd_mosmix"]["current"][0]["response"][0]["obTimestamp"]).format('$obs.label.time_forecast_last_updated');
         } catch (err) {
             // Returned "current" data does not have this value
         }
 
-        try {
-            visibility_output = parseFloat(parseFloat(visibility)).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["visibility"], maximumFractionDigits: unit_rounding_array["visibility"]}) + " " + unit_label_array["visibility"];
-            jQuery(".station-observations .visibility").html(visibility_output);
-        } catch (err) {
-            // Visibility not in the station observation table or any of the unit arrays, so silently exit
+        // using data from forecast provider
+        data = data[forecast_provider];
+
+        //TODO more checks?
+
+        if (pageName == "console.html") {
+            var forecast_show_conditions = "$Extras.forecast_show_conditions_console";
+            var forecast_show_temperature = "$Extras.forecast_show_temperature_console";
+            var forecast_show_pop = "$Extras.forecast_show_pop_console";
+            var forecast_show_dewpoint = "$Extras.forecast_show_dewpoint_console";
+            var forecast_show_humidity = "$Extras.forecast_show_humidity_console";
+            var forecast_show_windspeed = "$Extras.forecast_show_windspeed_console";
+            var forecast_show_winddirdeg = "$Extras.forecast_show_winddirdeg_console";
+            var forecast_show_pressure = "$Extras.forecast_show_pressure_console";
+        } else {
+            var forecast_show_conditions = "$Extras.forecast_show_conditions";
+            var forecast_show_temperature = "$Extras.forecast_show_temperature";
+            var forecast_show_pop = "$Extras.forecast_show_pop";
+            var forecast_show_dewpoint = "$Extras.forecast_show_dewpoint";
+            var forecast_show_humidity = "$Extras.forecast_show_humidity";
+            var forecast_show_windspeed = "$Extras.forecast_show_windspeed";
+            var forecast_show_winddirdeg = "$Extras.forecast_show_winddirdeg";
+            var forecast_show_pressure = "$Extras.forecast_show_pressure";
         }
 
-        // Cloudcover text in station observation table
-        try {
-            if (("$Extras.forecast_units" == "si") || ("$Extras.forecast_units" == "ca")) {
-                // si and ca = kilometer
-                cloud_cover = data["current"][0]["response"]["ob"]["sky"];
-            } else {
-                // us and uk2 and default = miles
-                cloud_cover = "N/A"
-            }
-        } catch (err) {
-            // Returned "current" data does not have this value
-        }
-
-        try {
-            cloud_cover_output = parseFloat(parseFloat(cloud_cover)).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["cloudcover"], maximumFractionDigits: unit_rounding_array["cloudcover"]}) + " " + unit_label_array["cloudcover"];
-
-            jQuery(".station-observations .cloud_cover").html(cloud_cover_output);
-        } catch (err) {
-            // Cloudcover not in the station observation table or any of the unit arrays, so silently exit
-        }
+        var forecast_subtitle = tzAdjustedMoment(data["timestamp"]).format('$obs.label.time_forecast_last_updated');
 
         //  start of new composite version of forecast code
-
         var forecast_types = ["forecast_1hr", "forecast_3hr", "forecast_24hr"];
         var forecast_interval
         for (forecast_interval of forecast_types) {
             var forecast_row = [];
             var output_html = "";
             for (i = 0; i < data[(forecast_interval)][0]["response"][0]["periods"].length; i++) {
-
                 //  for 24hr interval add 7200 (2 hours) to the epoch to get an hour well into the day to avoid any DST issues. This way it'll either be 1am or 2am. Without it, we get 12am or 11pm (the previous day).
                 if (forecast_interval == "forecast_24hr") {
                     var image_url = get_relative_url() + "/images/" + aeris_icon(data[(forecast_interval)][0]["response"][0]["periods"][i]["icon"]) + ".png";
@@ -1823,7 +2356,6 @@ function update_forecast_data(data) {
                     var condition_text = aeris_coded_weather(data[(forecast_interval)][0]["response"][0]["periods"][i]["weatherPrimaryCoded"], false);
                     var weekday = tzAdjustedMoment(data[(forecast_interval)][0]["response"][0]["periods"][i]["timestamp"]).format("$obs.label.time_forecast_time");
                 }
-
                 // Determine temperature units
                 if (("$Extras.forecast_units" == "ca") || ("$Extras.forecast_units" == "uk2") || ("$Extras.forecast_units" == "si")) {
                     avgTemp = data[(forecast_interval)][0]["response"][0]["periods"][i]["avgTempC"];
@@ -1837,7 +2369,6 @@ function update_forecast_data(data) {
                     maxTemp = data[(forecast_interval)][0]["response"][0]["periods"][i]["maxTempF"];
                     var dewPoint = data[(forecast_interval)][0]["response"][0]["periods"][i]["dewpointF"];
                 }
-
                 //  for 1hr interval determine temperature range, set to a minimum value of 2; also avoids div by zero
                 if (forecast_interval == "forecast_1hr") {
                     if (i == 0) {
@@ -1848,7 +2379,6 @@ function update_forecast_data(data) {
                         if (highTemp < avgTemp) highTemp = avgTemp;
                     }
                 }
-
                 // Determine wind units
                 if ("$unit.unit_type.windSpeed" == "knot") {
                     windSpeed = data[(forecast_interval)][0]["response"][0]["periods"][i]["windSpeedKTS"];
@@ -1869,16 +2399,13 @@ function update_forecast_data(data) {
                     windSpeed = data[(forecast_interval)][0]["response"][0]["periods"][i]["windSpeedMPH"];
                     windGust = data[(forecast_interval)][0]["response"][0]["periods"][i]["windGustMPH"];
                 }
-
                 /*
                 As per API specification, "pop" is either a number from 0 to
                 100 or null. We convert to 0 in the second case.
                 */
                 var precip = data[(forecast_interval)][0]["response"][0]["periods"][i]["pop"] || 0;
-
                 // Humidity
                 var humidity = data[(forecast_interval)][0]["response"][0]["periods"][i]["humidity"];
-
                 /*
                 Determine snow unit. "snowCM" and "snowIN" are specified
                 to always return a number. We still convert to 0 if we ever get
@@ -1891,22 +2418,16 @@ function update_forecast_data(data) {
                     var snow_depth = data[(forecast_interval)][0]["response"][0]["periods"][i]["snowIN"] || 0;
                     var snow_unit = "in";
                 }
-
                 //  for 24hr interval add 7200 (2 hours) to the epoch to get an hour well into the day to avoid any DST issues. This way it'll either be 1am or 2am. Without it, we get 12am or 11pm (the previous day).
                 if (forecast_interval == "forecast_24hr") {
                     var forecast_link_setup = "$Extras.forecast_daily_forecast_link".replace("YYYY", tzAdjustedMoment(data[(forecast_interval)][0]["response"][0]["periods"][i]["timestamp"] + 7200).format("YYYY")).replace("MM", tzAdjustedMoment(data[(forecast_interval)][0]["response"][0]["periods"][i]["timestamp"] + 7200).format("MM")).replace("DD", tzAdjustedMoment(data[(forecast_interval)][0]["response"][0]["periods"][i]["timestamp"] + 7200).format("DD"));
                 } else {
                     var forecast_link_setup = "$Extras.forecast_daily_forecast_link".replace("YYYY", tzAdjustedMoment(data[(forecast_interval)][0]["response"][0]["periods"][i]["timestamp"]).format("YYYY")).replace("MM", tzAdjustedMoment(data[(forecast_interval)][0]["response"][0]["periods"][i]["timestamp"]).format("MM")).replace("DD", tzAdjustedMoment(data[(forecast_interval)][0]["response"][0]["periods"][i]["timestamp"]).format("DD"));
-
                 }
-
                 var forecast_link = '<a href="' + forecast_link_setup + '" target="_blank">$obs.label.daily_forecast</a>';
-
-                //20220227,ho
                 var windDirDEG = data[(forecast_interval)][0]["response"][0]["periods"][i]["windDirDEG"] || 0;
                 var windDir = data[(forecast_interval)][0]["response"][0]["periods"][i]["windDir"] || 0;
                 var pressureMB = data[(forecast_interval)][0]["response"][0]["periods"][i]["pressureMB"] || 0;
-
                 forecast_row.push({
                     "weekday": weekday,
                     "image_url": image_url,
@@ -1927,7 +2448,6 @@ function update_forecast_data(data) {
                     "pressureMB": pressureMB
                 });
             }
-
             //  Create individual forecast rows
             if (forecast_interval == "forecast_1hr") {
                 //  set temperature range and offset to centralise output
@@ -1947,7 +2467,6 @@ function update_forecast_data(data) {
                     }
                     output_html += '<span id="weekday">' + forecast_time(i, forecast_interval, forecast_row[i]["weekday"]) + '</span>';
                     output_html += '<br>';
-
                     //TODO forecast_show_conditions/forecast_show_temperature
                     if (pageName == "console.html") {
                         output_html += '<div class="forecast-conditions-1hour">';
@@ -1968,13 +2487,11 @@ function update_forecast_data(data) {
                         output_html += parseFloat(forecast_row[i]["avgTemp"]).toFixed(0) + '&deg;</div>';
                         output_html += '</div>';
                     }
-
                     if (forecast_show_dewpoint == "1") {
                         output_html += '<div class="forecast-dewpoint">';
                         output_html += '<i class="wi wi-thermometer wi-raindrops rain-precip"></i> <span>' + parseFloat(forecast_row[i]["dewPoint"]).toFixed(0) + '&deg;</span>';
                         output_html += '</div>';
                     }
-
                     if (forecast_show_pop == "1") {
                         output_html += '<div class="forecast-precip">';
                         if (forecast_row[i]["snow_depth"] > 0) {
@@ -1989,38 +2506,32 @@ function update_forecast_data(data) {
                         }
                         output_html += '</div>';
                     }
-
                     if (forecast_show_humidity == "1") {
                         output_html += '<div class="forecast-humidity">';
                         output_html += '<i class="wi wi-humidity humidity-forecast"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span>';
                         output_html += '</div>';
                     }
-
                     if (forecast_show_windspeed == "1") {
                         output_html += '<div class="forecast-wind" rel="tooltip" title="' + '$unit.label.windSpeed' + '">';
                         output_html += '<i class="wi wi-strong-wind"></i> <span>'+ parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span>|<span>' + parseFloat(forecast_row[i]["windGust"]).toFixed(0) + '</span>';        
                         output_html += '</div>';
                     }
-
                     if (forecast_show_winddirdeg == "1") {
                         output_html += '<div class="forecast-winddirdeg">';
                         output_html += '<i class="wi wi-wind wi-from-n" style="transform:rotate(' + parseFloat(forecast_row[i]["windDirDEG"]).toFixed(0) + 'deg);font-size:30px"></i> <span style="font-size:12px">' + forecast_row[i]["windDir"] + '</span>';
                         output_html += '</div>';
                     }
-
                     if (forecast_show_pressure == "1") {
                         output_html += '<div class="forecast-pressure" rel="tooltip" title="' + '$unit.label.barometer' + '">';
                         output_html += '<i class="wi wi-barometer"></i> <span>' + parseFloat(forecast_row[i]["pressureMB"]).toFixed(0) + '</span>';
                         output_html += '</div>';
                     }
-
                     #if $Extras.has_key("forecast_show_daily_forecast_link") and $Extras.forecast_show_daily_forecast_link == '1'
                     output_html += forecast_row[i]["forecast_link"];
                     #end if
                     output_html += '</div>';
                 }
             } else {
-
                 // Build 3 or 24 hour forecast rows
                 for (i = 0; i < forecast_row.length; i++) {
                     if (forecast_interval == "forecast_3hr") {
@@ -2038,24 +2549,20 @@ function update_forecast_data(data) {
                     }
                     output_html += '<span id="weekday">' + forecast_time(i, forecast_interval, forecast_row[i]["weekday"]) + '</span>';
                     output_html += '<br>';
-
                     if (forecast_show_conditions == "1") {
                         output_html += '<div class="forecast-conditions">';
                         output_html += '<img id="icon" src="' + forecast_row[i]["image_url"] + '" alt="Vorhersagesymbol ' + forecast_row[i]["weekday"] + '">';
                         output_html += '<div class="forecast-condition-text">' + forecast_row[i]["condition_text"] + '</div>';
                         output_html += '</div>';
                     }
-
                     if (forecast_show_temperature == "1") {
                         output_html += '<div class="forecast-high">' + parseFloat(forecast_row[i]["minTemp"]).toFixed(0) + '&deg;</span> | <span class="forecast-low">' + parseFloat(forecast_row[i]["maxTemp"]).toFixed(0) + '&deg;</div>';
                     }
-
                     if (forecast_show_dewpoint == "1") {
                         output_html += '<div class="forecast-dewpoint">';
                         output_html += '<i class="wi wi-thermometer wi-raindrops rain-precip"></i> <span>' + parseFloat(forecast_row[i]["dewPoint"]).toFixed(0) + '&deg;</span>';
                         output_html += '</div>';
                     }
-
                     if (forecast_show_pop == "1") {
                         output_html += '<div class="forecast-precip">';
                         if (forecast_row[i]["snow_depth"] > 0) {
@@ -2069,38 +2576,32 @@ function update_forecast_data(data) {
                         }
                         output_html += '</div>';
                     }
-
                     if (forecast_show_humidity == "1") {
                         output_html += '<div class="forecast-humidity">';
                         output_html += '<i class="wi wi-humidity humidity-forecast"></i> <span>' + parseFloat(forecast_row[i]["humidity"]).toFixed(0) + '%</span>';
                         output_html += '</div>';
                     }
-
                     if (forecast_show_windspeed == "1") {
                         output_html += '<div class="forecast-wind">';
                         output_html += '<i class="wi wi-strong-wind"></i> <span>' + parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span> | <span> ' + parseFloat(forecast_row[i]["windGust"]).toFixed(0) + '$unit.label.windSpeed' + '</span>';
                         output_html += '</div>';
                     }
-
                     if (forecast_show_winddirdeg == "1") {
                         output_html += '<div class="forecast-winddirdeg">';
                         output_html += '<i class="wi wi-wind wi-from-n" style="transform:rotate(' + parseFloat(forecast_row[i]["windDirDEG"]).toFixed(0) + 'deg);font-size:30px"></i> <span>' + forecast_row[i]["windDir"] + '</span>';
                         output_html += '</div>';
                     }
-
                     if (forecast_show_pressure == "1") {
                         output_html += '<div class="forecast-pressure">';
                         output_html += '<i class="wi wi-barometer"></i> <span>' + parseFloat(forecast_row[i]["pressureMB"]).toFixed(0) + '$unit.label.barometer' + '</span>';
                         output_html += '</div>';
                     }
-
                     #if $Extras.has_key("forecast_show_daily_forecast_link") and $Extras.forecast_show_daily_forecast_link == '1'
                     output_html += forecast_row[i]["forecast_link"];
                     #end if
                     output_html += '</div>';
                 }
             }
-
             // Show the forecasts rows
             if (forecast_interval == "forecast_1hr") {
                 jQuery(".1hr_forecasts").html(output_html);
@@ -2116,27 +2617,23 @@ function update_forecast_data(data) {
             jQuery(".forecast-subtitle").html("$obs.label.forecast_last_updated " + forecast_subtitle);
             jQuery(".forecast-issueTime-dwd").html(forecast_issueTime_dwd);
         }
-
-//	End of new composite version of forecast code
-    
-    #if $Extras.has_key("forecast_alert_enabled") and $Extras.forecast_alert_enabled == '1'
-        // Show weather alert
-        show_forcast_alert(data, forecast_provider);
-    #end if
-
-    // WX icon in temperature box    
-    jQuery("#wxicon").attr("src", wxicon);
+    } catch (err) {
+        forecast_select(0);
+        console.error("Error update_forecast_data", err);
+        console.log(forecast_provider);
+        console.log(data);
     }
 }
 
 #end if
+
 //  function to display selected forecast according to value of interval (1, 3 or 24); 0 hides all forecasts
-function forecast_select(interval) {
+function forecast_select(interval, force=false) {
     if (interval == 0) {
         jQuery(".forecastrow").hide();
     } else {
         oldinterval = sessionStorage.getItem("forecastInterval");
-        if (interval != oldinterval) {
+        if (interval != oldinterval || force) {
             //  hide the old forecast
             var forecast = document.getElementById((oldinterval + "hour-selected-forecast"));
             var button = document.getElementById(("button" + oldinterval));
@@ -2177,17 +2674,19 @@ function forecast_time(i, interval, daytime) {
 }
 
 #if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
-//============================================//
-// Live website using MQTT Websockets enabled //
-//============================================//
+
+// ============================================
+// Live website using MQTT Websockets enabled
+// ============================================
 
 var mqttConnected = false;
-
+//TODO alle Bilder dabei?
 function ajaximages(section = false, reload_timer_interval_seconds = false) {
     // This function only runs if the elements have an img src.
     // Update images within the specific section
     if (!section || section == "radar") {
         weiherhammer_debug("Updating radar image");
+
         // Reload only Windy Radar
         if (document.querySelectorAll(".radar_image img").length > 0) {
             var radar_img = document.querySelectorAll(".radar_image img")[0].src;
@@ -2196,6 +2695,7 @@ function ajaximages(section = false, reload_timer_interval_seconds = false) {
             //var radar_html = jQuery('.radar-map').children('img').attr('src').split('?')[0] // Get the img src and remove everything after "?" so we don't stack ?'s onto the image during updates
             //jQuery('.radar-map').children('img').attr('src', radar_html + "?" + Math.floor(Math.random() * 999999999));
         }
+
         // Reload iframe - https://stackoverflow.com/a/4249946/1177153
         //if (document.querySelectorAll(".radar-map iframe").length > 0) {
         if (document.querySelectorAll(".radar_mage iframe").length > 0) {
@@ -2205,16 +2705,19 @@ function ajaximages(section = false, reload_timer_interval_seconds = false) {
         }
         } else if (!section || section != "radar") {
         weiherhammer_debug("Updating " + section + " images");
+
         // Reload images
         jQuery('.' + section + ' img').each(function() {
             new_image_url = jQuery(this).attr('src').split('?')[0] + "?" + Math.floor(Math.random() * 999999999);
             jQuery(this).attr('src', new_image_url);
         });
+
         // Reload iframes
         jQuery('.' + section + ' iframe').each(function() {
             jQuery(this).attr('src', function(i, val) {return val;});
         });
     }
+
     // Set the new timer
     if (reload_timer_interval_seconds) {
         var reload_timer_ms = reload_timer_interval_seconds * 1000; // convert to millis
@@ -2364,6 +2867,9 @@ function onFailure() {
     }
     jQuery(".updated").html("$obs.label.mqtt_websockets_failed $obs.label.header_last_updated " + updated);
     console.log("MQTT: " + tzAdjustedMoment(epoch).format() + ": Cannot connect to MQTT broker");
+    if (pageName == "mqttmon") {
+        setTimeout(mqttmon_mark_outdated, (mqttmon_outdated_treshold * 1000) + 10000);
+    }
 }
 
 // MQTT connection lost
@@ -2383,6 +2889,9 @@ function onConnectionLost(responseObject) {
     if (responseObject.errorCode !== 0) {
         console.log("MQTT: " + tzAdjustedMoment(epoch).format() + ": mqtt Connection Lost: " + responseObject.errorMessage);
     }
+    if (pageName == "mqttmon") {
+        setTimeout(mqttmon_mark_outdated, (mqttmon_outdated_treshold * 1000) + 10000);
+    }
 }
 
 function inactive() {
@@ -2397,13 +2906,16 @@ function inactive() {
     jQuery(".updated").html("$obs.label.mqtt_websockets_stopped $obs.label.header_last_updated " + updated + " <button type='button' class='btn btn-primary restart-interval'>$obs.label.mqtt_websockets_continue</button>");
     reconnect_using_inactive_timestamp = true; // Set a flag to use the inactive timestamp in case we reconnect we have the latest last updated time
     inactive_timestamp = epoch; // Store this timestamp in case we reconnect
+    if (pageName == "mqttmon") {
+        setTimeout(mqttmon_mark_outdated, (mqttmon_outdated_treshold * 1000) + 10000);
+    }
 }
 
 var mqtt_payload = "";
 // New message from mqtt, process it
 function onMessageArrived(message) {
     weiherhammer_debug("MQTT: " + message.payloadString);
-    update_current_wx(message.payloadString);
+    update_with_mqtt_data(message.payloadString);
     mqtt_payload = jQuery.parseJSON(message.payloadString);
 }
 
@@ -2412,8 +2924,87 @@ function refreshHooks() {
     //weiherhammer_debug(mqtt_payload);
 }
 
+#if $Extras.has_key("mqttmon_format_toggle") and $Extras.mqttmon_format_toggle == "1"
+function mqttmon_switch_format() {
+    var checked = jQuery("#" + "mqttmonFormatSwitch").prop("checked");
+    if (checked) {
+        mqttmon_format_user = mqttmon_format_default;
+    } else {
+        mqttmon_format_user = "raw";
+    }
+    sessionStorage.setItem("mqttmon_format_user", mqttmon_format_user);
+    //console.log(sessionStorage.getItem("mqttmon_format_user"));
+
+    try {
+        jQuery('.mqttmon-data').find("span").each(function() {
+            var elementClass = jQuery(this).attr("class");
+            if (elementClass == null) {
+                return true;
+            }
+            if (!jQuery("." + elementClass).data('raw')) {
+                // console.log("class " + elementClass + " has no data raw.");
+                return true;
+            }
+            if (!jQuery("." + elementClass).data('formatted')) {
+                // console.log("class " + elementClass + " has no data formatted.");
+                return true;
+            }
+            data_raw = jQuery('.' + elementClass).data("raw");
+            data_formatted = jQuery('.' + elementClass).data("formatted");
+            data_title = jQuery('.' + elementClass).prop("title");
+            if (mqttmon_format_user == "formatted") {
+                jQuery('.' + elementClass).text(data_formatted);
+                if (data_title == data_formatted) {
+                    data_title = jQuery('.' + elementClass).prop("title", data_raw);
+                }
+            } else {
+                jQuery('.' + elementClass).text(data_raw);
+                if (data_title == data_raw) {
+                    data_title = jQuery('.' + elementClass).prop("title", data_formatted);
+                }
+            }
+        });
+    } catch (err) {
+        console.error("Error mqttmon_switch_format", err);
+    }
+}
+#end if
+
+function mqttmon_mark_outdated() {
+    var now_ts =  moment().unix();
+
+    try {
+        jQuery('.mqttmon-data').find("span").each(function() {
+            var elementClass = jQuery(this).attr("class");
+            if (elementClass == null) {
+                return true;
+            }
+            if (!jQuery("." + elementClass).data('received_ts')) {
+                // console.log("class " + elementClass + " has no data received_ts.");
+                return true;
+            }
+            // if (typeof jQuery("." + elementClass).data('received_ts') === 'undefined') {
+                // console.log("class " + elementClass + " has undefined data received_ts.");
+                // return true;
+            // }
+            // get last ts
+            var last_ts = parseInt(jQuery('.' + elementClass).data('received_ts'));
+
+            if (last_ts > 0) {
+                if (now_ts - last_ts > mqttmon_outdated_treshold) {
+                   // update element as received
+                   jQuery('.' + elementClass + '-mqttmon-rcv-dot').css('background-color', 'var(--mqttmon-rcv-outdated)');
+                }
+            }
+        });
+    } catch (err) {
+        console.error("Error mqttmon_mark_outdated", err);
+    }
+}
+
 // Handle MQTT message
-function update_current_wx(data) {
+function update_with_mqtt_data(data) {
+    weiherhammer_debug("Updating with MQTT data");
     var data = jQuery.parseJSON(data);
 
     try {
@@ -2428,18 +3019,19 @@ function update_current_wx(data) {
     #end if
 
     // This message is a weewx archive update. Update weewx data, forecast data and highcharts graphs
-    if (data.hasOwnProperty("interval_minute") || data.hasOwnProperty("interval")) {
+    if (data.hasOwnProperty("interval")) {
         // Delays are recommended to allow the other skins to complete processing
         weiherhammer_debug("MQTT: MQTT message indicates this is an archive interval.");
         if (pageName == "pi" || pageName == "kiosk.html" || pageName == "console.html") {
             weiherhammer_debug("Skipping chart update for page " + pageName + ", no charts to be updated.");
         }
         else {
-            setTimeout(showChart, 30000, homepage_graphgroup); // Load updated charts.
+            setTimeout(showChart, 20000, homepage_graphgroup); // Load updated charts.
         }
         ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
-            setTimeout(update_weewx_data.bind(null, weewx_data), 10000); // Initial call to update (date, daily high, low, etc)
-            setTimeout(weiherhammer_debug.bind(null, weewx_data), 10000); // Make weewx_data.json available in debugging console
+            //TODO brauch ich das wirklich?
+            //setTimeout(update_with_weewx_data.bind(null, weewx_data, true), 20000); // Initial call to update (date, daily high, low, etc)
+            //setTimeout(weiherhammer_debug.bind(null, weewx_data), 20000); // Make weewx_data.json available in debugging console
         #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
             setTimeout(ajaxforecast, 10000); // Update forecast data
         #end if
@@ -2457,331 +3049,486 @@ function update_current_wx(data) {
         }
         jQuery(".updated").html(updated_text);
     }
+
     // If we're in this function, show the online beacon and hide the others
     jQuery(".onlineMarker").show(); // Show the online beacon
     jQuery(".offlineMarker").hide();
     jQuery(".loadingMarker").hide();
 
-    // Update the station observation box span elements
-    // Update the station observation extra modal window span elements
-    // Get all span elements within the table. This is setup by Python initially
-    try {
-        jQuery('.station-observations').find("span").each(function() {
-            var thisElementClass = jQuery(this).attr("class");
-            if (thisElementClass != null) {
-                var localeStringUseGrouping = true;
-
-                if (thisElementClass == "rainWithRainRate") {
-                    // Force dayRain since that's the MQTT payload name
-                    thisElementClass = "dayRain";
+    if (pageName == "homepage") {
+        // all obs with class = obs or class = obs_formatted
+        try {
+            jQuery.each(data, function(data_class, data_raw) {
+                if (!unit_rounding_array.hasOwnProperty(data_class)) {
+                    unit_rounding_array[data_class] = unit_rounding_array["default"]
                 }
-
-                if (unit_group_array.hasOwnProperty(thisElementClass)) {
-                    if (unit_group_array[thisElementClass].includes("group_time") || unit_group_array[thisElementClass].includes("group_pressure")) {
-                        // Do not group number into thousands,hundreds format
-                        localeStringUseGrouping = false;
-                    }
+                if (!unit_label_array.hasOwnProperty(data_class)) {
+                    unit_label_array[data_class] = unit_label_array["default"]
                 }
-
-                if (data.hasOwnProperty(thisElementClass)) {
-                    var html_output = parseFloat(parseFloat(data[thisElementClass])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array[thisElementClass], maximumFractionDigits: unit_rounding_array[thisElementClass], useGrouping: localeStringUseGrouping}) + unit_label_array[thisElementClass];
-                    // Finally update the element class
-                    jQuery("." + thisElementClass).html(html_output);
+                if (jQuery('.' + data_class).length > 0) {
+                    // general (class = obs)
+                    jQuery("." + data_class).html(parseFloat(parseFloat(data_raw)).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array[data_class], maximumFractionDigits: unit_rounding_array[data_class]}) + unit_label_array[data_class]);
                 }
+                if (jQuery('.' + data_class + "_formatted").length > 0) {
+                    // obs_formatted
+                    jQuery("." + data_class + "_formatted").html(parseFloat(parseFloat(data_raw)).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array[data_class], maximumFractionDigits: unit_rounding_array[data_class]}));
+                }
+            });
+        } catch (err) {
+            console.error("Error update_with_mqtt_data", err);
+        }
+
+        // temperature observations
+        try {
+            // Tooltip
+            if (data.hasOwnProperty("day_outTemp_mindate")) {
+                var value = tzAdjustedMoment(parseFloat(data["day_outTemp_mindate"]).toFixed(0)).format("$obs.label.time_summaries_day");
+                jQuery(".day_outTemp_min").prop("title", "$obs.label.summaries_date_ttt" + value);
             }
-        });
-    } catch (e) {
-        console.log(e);
-    }
-    // End dynamic station observation box
+            if (data.hasOwnProperty("day_outTemp_maxdate")) {
+                var value = tzAdjustedMoment(parseFloat(data["day_outTemp_maxdate"]).toFixed(0)).format("$obs.label.time_summaries_day");
+                jQuery(".day_outTemp_max").prop("title", "$obs.label.summaries_date_ttt" + value);
+            }
+        } catch (err) {
+            console.error("Error update_with_mqtt_data", err);
+        }
 
-    // Update the MQTT Monitor page
-    // Get all span elements within the table. This is setup by Python initially
-    try {
-        jQuery('.mqtt-data').find("span").each(function() {
-            var thisElementClass = jQuery(this).attr("class");
-            if (thisElementClass != null) {
-                var localeStringUseGrouping = true;
-
-                if (unit_group_array.hasOwnProperty(thisElementClass)) {
-                    if (unit_group_array[thisElementClass].includes("group_time") || unit_group_array[thisElementClass].includes("group_pressure")) {
-                        // Do not group number into thousands,hundreds format
-                        localeStringUseGrouping = false;
-                    }
+        // wind observations
+        try {
+            if (data.hasOwnProperty("windDir")) {
+                // without unit
+                jQuery(".curwinddir").html(highcharts_tooltip_factory(parseFloat(data["windDir"]).toFixed(0), "windDir"));
+                jQuery(".curwinddeg").html(parseFloat(data["windDir"]).toFixed(0) + "&deg;");
+                if (!data.hasOwnProperty("windSpeed")) {
+                    data["windSpeed"] = "N/A";
                 }
+                rotateWindDir(data["windDir"], data["windSpeed"]);
+            }
+            if (data.hasOwnProperty("windSpeed")) {
+                // without unit
+                jQuery(".windSpeed_formatted").html(parseFloat(parseFloat(data["windSpeed"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
+                if (!data.hasOwnProperty("windDir")) {
+                    data["windDir"] = "N/A";
+                }
+                rotateWindDir(data["windDir"], data["windSpeed"]);
+            }
+        } catch (err) {
+            console.error("Error update_with_mqtt_data", err);
+        }
 
-                if (data.hasOwnProperty(thisElementClass)) {
-                    var html_output = parseFloat(parseFloat(data[thisElementClass])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array[thisElementClass], maximumFractionDigits: unit_rounding_array[thisElementClass], useGrouping: localeStringUseGrouping}) + unit_label_array[thisElementClass];
-                    // Finally update the element class
-                    jQuery("." + thisElementClass).html(html_output);
-                    jQuery('.' + thisElementClass).attr('data-mqttrec', 1);
-                    jQuery('.' + thisElementClass + '-mqtt-rec-dot').css('background-color', 'var(--mqtt-rec)');
-                } else {
-                    // mark received elements as outdated
-                    if ('mqttrec' in jQuery('.' + thisElementClass).data()) {
-                        var data_mqttrec = jQuery('.' + thisElementClass).data('mqttrec');
-                        if (parseInt(data_mqttrec) == 1) {
-                            jQuery('.' + thisElementClass + '-mqtt-rec-dot').css('background-color', 'var(--mqtt-rec-outdated)');
+        // aqi
+        #if $Extras.has_key("aqi_enabled") and $Extras.aqi_enabled == '1'
+        try {
+            // aqi properties
+            if (vdp_array.hasOwnProperty("aqi")) {
+                if (vdp_array["aqi"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["aqi"]["obs"];
+                    for (var i = 0; i < vals.length; i++) {
+                        if (data.hasOwnProperty(vals[i])) {
+                            update_aqi_properties(weewx_data, vals[i], data[vals[i]], ["all"]);
                         }
                     }
                 }
             }
-        });
-    } catch (e) {
-        console.log(e);
-    }
-    // End dynamic MQTT Monitor updates
-
-    // Temperature F
-    if (data.hasOwnProperty("outTemp_F")) {
-        // Inside parseFloat converts str to int. Outside parseFloat processes the locale string
-        // Help from: https://stackoverflow.com/a/40152286/1177153 and https://stackoverflow.com/a/31581206/1177153
-        var outTemp = parseFloat(parseFloat(data["outTemp_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]});
-        get_outTemp_color("degree_F", outTemp);
-        jQuery(".outtemp").html(outTemp);
-
-        // Feels like temp as defined by NOAA's "Apparent Temperature" at: http://www.nws.noaa.gov/ndfd/definitions.htm
-        //if ( data["outTemp_F"] <= 50 ) {
-        //    jQuery(".feelslike").html( "Feels like: " + parseFloat(parseFloat(data["windchill_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " $unit.label.outTemp" );
-        //} else if ( data["outTemp_F"] >= 80 ) {
-        //    jQuery(".feelslike").html( "Feels like: " + parseFloat(parseFloat(data["heatindex_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " $unit.label.outTemp" );
-        //} else {
-        //    jQuery(".feelslike").html( "Feels like: " + parseFloat(parseFloat(data["outTemp_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " $unit.label.outTemp" );
-        //}
-    }
-
-    // Temperature C
-    if (data.hasOwnProperty("outTemp_C")) {
-        var outTemp = parseFloat(parseFloat(data["outTemp_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]});
-        get_outTemp_color("degree_C", outTemp);
-        jQuery(".outtemp").html(outTemp);
-    }
-
-    // Temperature without unit PWS Weiherhammer
-    if (data.hasOwnProperty("outTemp")) {
-        var outTemp = parseFloat(parseFloat(data["outTemp"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]});
-        get_outTemp_color("degree_C", outTemp);
-        jQuery(".outtemp").html(outTemp);
-    }
-
-    // Apparent Temperature US
-    if (data.hasOwnProperty("appTemp_F")) {
-        jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["appTemp_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
-    }
-
-    // Apparent Temperature Metric
-    if (data.hasOwnProperty("appTemp_C")) {
-        jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["appTemp_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
-    }
-
-    // Apparent Temperature without unit PWS Weiherhammer
-    //if (data.hasOwnProperty("appTemp")) {
-    //    jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["appTemp"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
-    //}
-
-    // THSW Temperature without unit PWS Weiherhammer
-    if (data.hasOwnProperty("thswIndex")) {
-        jQuery(".feelslike").html("$obs.label.feels_like: " + parseFloat(parseFloat(data["thswIndex"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["outTemp"], maximumFractionDigits: unit_rounding_array["outTemp"]}) + " $unit.label.outTemp");
-    }
-
-    // Wind
-    if (data.hasOwnProperty("windDir")) {
-        // No toLocaleString() here since there is no float decimal needed.
-        rotateThis(data["windDir"]);
-        //jQuery(".wind-arrow").css( "transform", "rotate(" + data["windDir"] + "deg)" );
-        jQuery(".curwinddeg").html(parseFloat(data["windDir"]).toFixed(0) + "&deg;");
-        jQuery(".curwinddir").html(highcharts_tooltip_factory(parseFloat(data["windDir"]).toFixed(0), "windDir"));
-    }
-
-    // Windspeed US
-    if (data.hasOwnProperty("windSpeed_mph")) {
-        jQuery(".curwindspeed").html(parseFloat(parseFloat(data["windSpeed_mph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
-    }
-    // Windspeed Metric
-    if (data.hasOwnProperty("windSpeed_kph")) {
-        jQuery(".curwindspeed").html(parseFloat(parseFloat(data["windSpeed_kph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
-    }
-    // Windspeed without unit PWS Weiherhammer
-    if (data.hasOwnProperty("windSpeed")) {
-        jQuery(".curwindspeed").html(parseFloat(parseFloat(data["windSpeed"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
-    }
-    // Windspeed METRICWX
-    if (data.hasOwnProperty("windSpeed_mps")) {
-        jQuery(".curwindspeed").html(parseFloat(parseFloat(data["windSpeed_mps"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
-    }
-    // Windspeed Beaufort
-    if (data.hasOwnProperty("windSpeed_beaufort")) {
-        jQuery(".curwindspeed").html(parseFloat(parseFloat(data["windSpeed_beaufort"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
-    }
-    // Windspeed knots
-    if (data.hasOwnProperty("windSpeed_knot")) {
-        jQuery(".curwindspeed").html(parseFloat(parseFloat(data["windSpeed_knot"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
-    }
-
-    // Beaufort
-    #if $Extras.has_key("beaufort_category") and $Extras.beaufort_category == '1'
-    if (data.hasOwnProperty("beaufort")) {
-        jQuery(".beaufort").html(beaufort_cat(parseFloat(data["beaufort"])));
-    }
-    #end if
-
-    // Wind Gust US
-    // May not be provided in mqtt, but just in case.
-    if (data.hasOwnProperty("windGust_mph")) {
-        jQuery(".curwindgust").html(parseFloat(parseFloat(data["windGust_mph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}));
-    }
-    // Wind Gust Metric
-    if (data.hasOwnProperty("windGust_kph")) {
-        jQuery(".curwindgust").html(parseFloat(parseFloat(data["windGust_kph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}));
-    }
-    // Wind Gust without unit PWS Weiherhammer
-    if (data.hasOwnProperty("windGust")) {
-        jQuery(".curwindgust").html(parseFloat(parseFloat(data["windGust"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}));
-    }
-    // Wind Gust METRICWX
-    if (data.hasOwnProperty("windGust_mps")) {
-        jQuery(".curwindgust").html(parseFloat(parseFloat(data["windGust_mps"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}));
-    }
-    // Wind Gust Beaufort
-    if (data.hasOwnProperty("windGust_beaufort")) {
-        jQuery(".curwindgust").html(parseFloat(parseFloat(data["windGust_beaufort"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
-    }
-    // Windspeed knots
-    if (data.hasOwnProperty("windGust_knot")) {
-        jQuery(".curwindgust").html(parseFloat(parseFloat(data["windGust_knot"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}));
-    }
-
-    // Windchill US
-    if (data.hasOwnProperty("windchill_F")) {
-        jQuery(".curwindchill").html(parseFloat(parseFloat(data["windchill_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp");
-    }
-    // Windchill Metric
-    if (data.hasOwnProperty("windchill_C")) {
-        jQuery(".curwindchill").html(parseFloat(parseFloat(data["windchill_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp");
-    }
-    // Windchill without unit PWS Weiherhammer
-    if (data.hasOwnProperty("windchill")) {
-        jQuery(".curwindchill").html(parseFloat(parseFloat(data["windchill"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp");
-    }
-
-    // Daily Windrun without unit PWS Weiherhammer
-    if (data.hasOwnProperty("dayWindrun")) {
-        jQuery(".dailywindrun").html("$obs.label.windrun: " + parseFloat(parseFloat(data["dayWindrun"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windrun"], maximumFractionDigits: unit_rounding_array["windrun"]}) + "$unit.label.windrun");
-    }
-
-    // PWS Weiherhammer Airquality
-    if (data.hasOwnProperty("pws_aqi_category")) {
-        set_aqi_label(data["pws_aqi_category"]);
-        set_aqi_color(data["pws_aqi_category"], ".pws-aqi-category");
-    }
-    if (data.hasOwnProperty("sds011_pm2_5")) {
-        jQuery(".sds011-pm2_5").html(parseFloat(parseFloat(data["sds011_pm2_5"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["sds011_pm2_5"], maximumFractionDigits: unit_rounding_array["sds011_pm2_5"]}) + " $unit.label.sds011_pm2_5");
-    }
-    if (data.hasOwnProperty("pws_aqi_pm2_5_category")) {
-        set_aqi_color(data["pws_aqi_pm2_5_category"], ".pws_aqi_pm2_5_dot");
-    }
-    if (data.hasOwnProperty("sds011_pm10_0")) {
-        jQuery(".sds011-pm10_0").html(parseFloat(parseFloat(data["sds011_pm10_0"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["sds011_pm10_0"], maximumFractionDigits: unit_rounding_array["sds011_pm10_0"]}) + " $unit.label.sds011_pm10_0");
-    }
-    if (data.hasOwnProperty("pws_aqi_pm10_0_category")) {
-        set_aqi_color(data["pws_aqi_pm10_0_category"], ".pws_aqi_pm10_0_dot");
-    }
-    if (data.hasOwnProperty("uba_o3")) {
-        jQuery(".uba-o3").html(parseFloat(parseFloat(data["uba_o3"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["uba_o3"], maximumFractionDigits: unit_rounding_array["uba_o3"]}) + " $unit.label.uba_o3");
-    }
-    if (data.hasOwnProperty("pws_aqi_o3_category")) {
-        set_aqi_color(data["pws_aqi_o3_category"], ".pws_aqi_o3_dot");
-    }
-    if (data.hasOwnProperty("uba_no2")) {
-        jQuery(".uba-no2").html(parseFloat(parseFloat(data["uba_no2"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["uba_no2"], maximumFractionDigits: unit_rounding_array["uba_no2"]}) + " $unit.label.uba_no2");
-    }
-    if (data.hasOwnProperty("pws_aqi_no2_category")) {
-        set_aqi_color(data["pws_aqi_no2_category"], ".pws_aqi_no2_dot");
-    }
-
-    // PWS battery status
-    if (data.hasOwnProperty("wh65_batt")) {
-        set_voltage_color(data["wh65_batt"], ".wh65_batt", '0ok');
-    }
-    if (data.hasOwnProperty("wh57_batt")) {
-        set_voltage_color(data["wh57_batt"], ".wh57_batt", 'hml', [3.0,1.0]);
-    }
-    if (data.hasOwnProperty("solar_voltage")) {
-        set_voltage_color(data["solar_voltage"], ".solar_voltage", 'hl', [3.8]);
-    }
-
-    // AllSky Heater/Fans
-    if (data.hasOwnProperty("asky_dome_heater")) {
-        set_boolean_color(data["asky_dome_heater"], ".asky_dome_heater", 'onoff-nok');
-    }
-    if (data.hasOwnProperty("asky_box_fan")) {
-        set_boolean_color(data["asky_box_fan"], ".asky_box_fan", 'onoff-nok');
-    }
-    if (data.hasOwnProperty("asky_cpu_fan")) {
-        set_boolean_color(data["asky_cpu_fan"], ".asky_cpu_fan", 'onoff-nok');
-    }
-
-    // current Sunshine Text
-    if (data.hasOwnProperty("sunshine")) {
-        set_boolean_color(data["sunshine"], ".current-sunshine-text", 'yesno-neutral');
-    }
-
-    // update pressure trend values and symbols
-    if (data.hasOwnProperty("trend_barometer")) {
-        jQuery(".trend_barometer").html(parseFloat(parseFloat(data["trend_barometer"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["barometer"], maximumFractionDigits: unit_rounding_array["barometer"]}));
-        barometer_trend_deg('barometer', data["trend_barometer"]);
-    }
-    if (data.hasOwnProperty("trend_solar_barometer")) {
-        jQuery(".trend_solar_barometer").html(parseFloat(parseFloat(data["trend_solar_barometer"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["barometer"], maximumFractionDigits: unit_rounding_array["barometer"]}));
-        barometer_trend_deg('solar_barometer', data["trend_solar_barometer"]);
-    }
-    if (data.hasOwnProperty("trend_asky_box_barometer")) {
-        jQuery(".trend_asky_box_barometer").html(parseFloat(parseFloat(data["trend_asky_box_barometer"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["barometer"], maximumFractionDigits: unit_rounding_array["barometer"]}));
-        barometer_trend_deg('asky_box_barometer', data["trend_asky_box_barometer"]);
-    }
-
-    // PWS indoor room quality
-    set_indoorclimate_color(data);
-
-    // Debug symbols
-    // sunshine debug symbol
-    if (data.hasOwnProperty("sunshine")) {
-        if (parseInt(data["sunshine"]) > 0) {
-            jQuery(".sunshine-debug-symbol").attr('style', 'padding-left: 5px;');
-            jQuery(".sunshine-debug-symbol").html('<i class="fa fa-fw fa-sun-o"></i>');
-        } else {
-            jQuery(".sunshine-debug-symbol").html("");
-            jQuery(".sunshine-debug-symbol").removeAttr("style");
+        } catch (err) {
+            console.error("Error update_with_mqtt_data", err);
         }
-    } else {
-        jQuery(".sunshineThreshold").html("$gettext('No evaluation available')");
-    }
+        #end if
 
-    // cloudcover debug symbol
-    var debug_output = '';
-    if (data.hasOwnProperty("lightning_strike_count_sum10m") && parseFloat(data["lightning_strike_count_sum10m"]) > 0.0) {
-        debug_output = '<i class="wi wi-lightning"></i>';
-    } else if (data.hasOwnProperty("rain_sum10m") && parseFloat(data["rain_sum10m"]) > 0.0) {
-        debug_output = '<i class="wi wi-rain"></i>';
-    } else if (data.hasOwnProperty("radiation") && data.hasOwnProperty("sunshineRadiationMin") && data.hasOwnProperty("sunshine_avg10m")) {
-        if (parseFloat(data["radiation"]) >= parseFloat(data["sunshineRadiationMin"])) {
-            var sunshine_avg10m = parseFloat(data["sunshine_avg10m"]).toFixed(1);
-            if (sunshine_avg10m == 0.0) {
-                debug_output = '<i class="wi wi-cloudy"></i>';
-            } else if (sunshine_avg10m == 1.0) {
-                debug_output = '<i class="wi wi-day-sunny"></i>';
-            } else if (sunshine_avg10m > 0.0 && sunshine_avg10m < 1.0) {
-                debug_output = '<i class="wi wi-day-cloudy"></i>';
+        // Snapshot Stats Section
+        try {
+            // Daily Snapshot Stats Section
+            // Tooltip
+            if (data.hasOwnProperty("day_barometer_mindate")) {
+                var value = tzAdjustedMoment(parseFloat(data["day_barometer_mindate"]).toFixed(0)).format("$obs.label.time_summaries_day");
+                jQuery(".day_barometer_min").prop("title", "$obs.label.summaries_date_ttt" + value);
+            }
+            if (data.hasOwnProperty("day_barometer_maxdate")) {
+                var value = tzAdjustedMoment(parseFloat(data["day_barometer_maxdate"]).toFixed(0)).format("$obs.label.time_summaries_day");
+                jQuery(".day_barometer_max").prop("title", "$obs.label.summaries_date_ttt" + value);
+            }
+            if (data.hasOwnProperty("day_rainRate_maxdate")) {
+                var value = tzAdjustedMoment(parseFloat(data["day_rainRate_maxdate"]).toFixed(0)).format("$obs.label.time_summaries_day");
+                jQuery(".day_rainRate_max").prop("title", "$obs.label.summaries_date_ttt" + value);
+            }
+            if (data.hasOwnProperty("day_wind_maxdate")) {
+                var value = tzAdjustedMoment(parseFloat(data["day_wind_maxdate"]).toFixed(0)).format("$obs.label.time_summaries_day");
+                jQuery(".day_wind_max").prop("title", "$obs.label.summaries_date_ttt" + value);
+            }
+
+            // Monthly Snapshot Stats Section
+            // Tooltip
+            if (data.hasOwnProperty("month_outTemp_mindate")) {
+                var value = tzAdjustedMoment(parseFloat(data["month_outTemp_mindate"]).toFixed(0)).format("$obs.label.time_summaries_month");
+                jQuery(".month_outTemp_min").prop("title", "$obs.label.summaries_date_ttt" + value);
+            }
+            if (data.hasOwnProperty("month_outTemp_maxdate")) {
+                var value = tzAdjustedMoment(parseFloat(data["month_outTemp_maxdate"]).toFixed(0)).format("$obs.label.time_summaries_month");
+                jQuery(".month_outTemp_max").prop("title", "$obs.label.summaries_date_ttt" + value);
+            }
+            if (data.hasOwnProperty("month_barometer_mindate")) {
+                var value = tzAdjustedMoment(parseFloat(data["month_barometer_mindate"]).toFixed(0)).format("$obs.label.time_summaries_month");
+                jQuery(".month_barometer_min").prop("title", "$obs.label.summaries_date_ttt" + value);
+            }
+            if (data.hasOwnProperty("month_barometer_maxdate")) {
+                var value = tzAdjustedMoment(parseFloat(data["month_barometer_maxdate"]).toFixed(0)).format("$obs.label.time_summaries_month");
+                jQuery(".month_barometer_max").prop("title", "$obs.label.summaries_date_ttt" + value);
+            }
+            if (data.hasOwnProperty("month_rainRate_maxdate")) {
+                var value = tzAdjustedMoment(parseFloat(data["month_rainRate_maxdate"]).toFixed(0)).format("$obs.label.time_summaries_month");
+                jQuery(".month_rainRate_max").prop("title", "$obs.label.summaries_date_ttt" + value);
+            }
+            if (data.hasOwnProperty("month_wind_maxdate")) {
+                var value = tzAdjustedMoment(parseFloat(data["month_wind_maxdate"]).toFixed(0)).format("$obs.label.time_summaries_month");
+                jQuery(".month_wind_max").prop("title", "$obs.label.summaries_date_ttt" + value);
+            }
+        } catch (err) {
+            console.error("Error update_with_mqtt_data", err);
+        }
+
+        // update pressure trend values
+        try {
+            if (vdp_array.hasOwnProperty("pressure_trend")) {
+                if (vdp_array["pressure_trend"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["pressure_trend"]["obs"];
+                    for (var i = 0; i < vals.length; i++) {
+                        if (data.hasOwnProperty("trend_" + vals[i])) {
+                            update_pressure_trend_properties(weewx_data, vals[i], data["trend_" + vals[i]], ["all"]);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Error update_with_mqtt_data", err);
+        }
+
+        // battery properties
+        try {
+            if (vdp_array.hasOwnProperty("batt")) {
+                if (vdp_array["batt"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["batt"]["obs"];
+                }
+                if (vdp_array["batt"].hasOwnProperty("group")) {
+                    var groups = vdp_array["batt"]["group"];
+                }
+                if (vals.length == groups.length) {
+                    for (var i = 0; i < vals.length; i++) {
+                        if (data.hasOwnProperty(vals[i])) {
+                            update_battery_properties(weewx_data, vals[i], groups[i], data[vals[i]], ["all"]);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Error update_with_mqtt_data", err);
+        }
+
+        // voltage properties
+        try {
+            if (vdp_array.hasOwnProperty("voltage")) {
+                if (vdp_array["voltage"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["voltage"]["obs"];
+                }
+                if (vdp_array["voltage"].hasOwnProperty("group")) {
+                    var groups = vdp_array["voltage"]["group"];
+                }
+                if (vals.length == groups.length) {
+                    for (var i = 0; i < vals.length; i++) {
+                        if (data.hasOwnProperty(vals[i])) {
+                            update_voltage_properties(weewx_data, vals[i], groups[i], data[vals[i]], ["all"]);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Error update_with_mqtt_data", err);
+        }
+
+        // signal properties
+        try {
+            if (vdp_array.hasOwnProperty("sig")) {
+                if (vdp_array["sig"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["sig"]["obs"];
+                    for (var i = 0; i < vals.length; i++) {
+                        if (data.hasOwnProperty(vals[i])) {
+                            update_signal_properties(weewx_data, vals[i], data[vals[i]], ["all"]);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Error update_with_mqtt_data", err);
+        }
+
+        // switch properties
+        try {
+            if (vdp_array.hasOwnProperty("switch")) {
+                if (vdp_array["switch"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["switch"]["obs"];
+                }
+                if (vdp_array["switch"].hasOwnProperty("group")) {
+                    var groups = vdp_array["switch"]["group"];
+                }
+                if (vals.length == groups.length) {
+                    for (var i = 0; i < vals.length; i++) {
+                        if (data.hasOwnProperty(vals[i])) {
+                            update_switch_properties(weewx_data, vals[i], groups[i], data[vals[i]], ["all"]);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Error update_with_mqtt_data", err);
+        }
+
+        // room climate properties
+        try {
+            update_roomclimate_properties(data, ["all"]);
+        } catch (err) {
+            console.error("Error update_with_mqtt_data", err);
+        }
+
+        // Debug symbols
+        // sunshine debug symbol
+        try {
+            if (data.hasOwnProperty("sunshine")) {
+                if (parseInt(data["sunshine"]) > 0) {
+                    jQuery(".debug_sunshine_symbol").attr('style', 'padding-left: 5px;');
+                    jQuery(".debug_sunshine_symbol").html('<i class="fa fa-fw fa-sun-o"></i>');
+                } else {
+                    jQuery(".debug_sunshine_symbol").html("");
+                    jQuery(".debug_sunshine_symbol").removeAttr("style");
+                }
+            } else {
+                jQuery(".sunshineThreshold").html("$gettext('No evaluation available')");
+            }
+
+            // cloudcover debug symbol
+            var debug_output = '';
+            if (data.hasOwnProperty("lightning_strike_count_sum10m") && parseFloat(data["lightning_strike_count_sum10m"]) > 0.0) {
+                debug_output = '<i class="wi wi-lightning"></i>';
+            } else if (data.hasOwnProperty("rain_sum10m") && parseFloat(data["rain_sum10m"]) > 0.0) {
+                debug_output = '<i class="wi wi-rain"></i>';
+            } else if (data.hasOwnProperty("radiation") && data.hasOwnProperty("sunshineRadiationMin") && data.hasOwnProperty("sunshine_avg10m")) {
+                if (parseFloat(data["radiation"]) >= parseFloat(data["sunshineRadiationMin"])) {
+                    var sunshine_avg10m = parseFloat(data["sunshine_avg10m"]).toFixed(1);
+                    if (sunshine_avg10m == 0.0) {
+                        debug_output = '<i class="wi wi-cloudy"></i>';
+                    } else if (sunshine_avg10m == 1.0) {
+                        debug_output = '<i class="wi wi-day-sunny"></i>';
+                    } else if (sunshine_avg10m > 0.0 && sunshine_avg10m < 1.0) {
+                        debug_output = '<i class="wi wi-day-cloudy"></i>';
+                    }
+                }
+            }
+            if (debug_output != "") {
+                jQuery(".debug_cloudcover_symbol").attr('style', 'padding-left: 5px;');
+            } else {
+                jQuery(".debug_cloudcover_symbol").removeAttr("style");
+            }
+            jQuery(".debug_cloudcover_symbol").html(debug_output);
+        } catch (err) {
+            console.error("Error update_with_mqtt_data", err);
+        }
+    } else if (pageName == "mqttmon") {
+        // Update the MQTT Monitor page
+        // Get all span elements within the table. This is setup by Python initially
+
+        var mqttmon_data_formatted = (mqttmon_format_user == mqttmon_format_default);
+        var data_received_ts =  moment().unix();
+
+        try {
+            jQuery.each(data, function(data_class, data_raw) {
+                if (!jQuery('.' + data_class).length > 0) {
+                    console.log("class not exists", data_class);
+                    return true;
+                }
+                // update element as received
+                jQuery('.' + data_class + '-mqttmon-rcv-dot').css('background-color', 'var(--mqttmon-rcv)');
+                jQuery('.' + data_class).data('received_ts', data_received_ts);
+
+                if (!unit_rounding_array.hasOwnProperty(data_class)) {
+                    unit_rounding_array[data_class] = unit_rounding_array["default"]
+                }
+                if (!unit_label_array.hasOwnProperty(data_class)) {
+                    unit_label_array[data_class] = unit_label_array["default"]
+                }
+
+                // update raw data
+                if (data_raw == null) {
+                    data_raw = "";
+                }
+                jQuery('.' + data_class).data('raw', data_raw);
+
+                // update format data
+                var data_formatted = data_raw;
+                if (unit_group_array.hasOwnProperty(data_class)) {
+                    if (unit_group_array[data_class].includes("group_time")) {
+                        if (data_class != "cdc_MESS_DATUM") {
+                            //data_formatted = tzAdjustedMoment(parseFloat(data_raw).toFixed(0)).format("$obs.label.time_mqtt_monitor");
+                            data_formatted = tzAdjustedMoment(parseInt(data_raw)).format("$obs.label.time_mqtt_monitor");
+                        }
+                   } else {
+                        var localeStringUseGrouping = true;
+                        if (unit_group_array[data_class].includes("group_time") || unit_group_array[data_class].includes("group_pressure")) {
+                            // Do not group number into thousands,hundreds format
+                            localeStringUseGrouping = false;
+                        }
+                        data_formatted = parseFloat(parseFloat(data_raw)).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array[data_class], maximumFractionDigits: unit_rounding_array[data_class], useGrouping: localeStringUseGrouping}) + unit_label_array[data_class];
+                    }
+                }
+
+                // update element formatted data
+                jQuery('.' + data_class).data('formatted', data_formatted);
+
+                // Finally update element text
+                if (mqttmon_data_formatted) {
+                    jQuery("." + data_class).text(data_formatted);
+                    // general tooltip
+                    jQuery("." + data_class).prop("title", data_raw);
+                } else {
+                    jQuery("." + data_class).text(data_raw);
+                    // general tooltip
+                    jQuery("." + data_class).prop("title", data_formatted);
+                }
+
+                // Correct beaufort tooltip
+                if (data_class == "beaufort") {
+                    jQuery("." + data_class).prop("title", beaufort_cat(parseInt(data["beaufort"])));
+                }
+            });
+        } catch (err) {
+            console.error("Error MQTT Monitor update_with_mqtt_data", err);
+        }
+
+        // mark outdated topics
+        mqttmon_mark_outdated();
+
+        //
+        // Correct value dependent properties (colors, tooltip, values as text etc.)
+        //
+        if (mqttmon_data_formatted) {
+            #if $Extras.has_key("aqi_enabled") and $Extras.aqi_enabled == '1'
+            // aqi properties
+            try {
+                if (vdp_array.hasOwnProperty("aqi")) {
+                    if (vdp_array["aqi"].hasOwnProperty("obs")) {
+                        var vals = vdp_array["aqi"]["obs"];
+                        for (var i = 0; i < vals.length; i++) {
+                            if (data.hasOwnProperty(vals[i])) {
+                                update_aqi_properties(weewx_data, vals[i], data[vals[i]], ["title"]);
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Error update_with_mqtt_data", err);
+            }
+            #end if
+
+            // pressure trend properties
+            try {
+                if (vdp_array.hasOwnProperty("pressure_trend")) {
+                    if (vdp_array["pressure_trend"].hasOwnProperty("obs")) {
+                        var vals = vdp_array["pressure_trend"]["obs"];
+                        for (var i = 0; i < vals.length; i++) {
+                            if (data.hasOwnProperty("trend_" + vals[i])) {
+                                update_pressure_trend_properties(weewx_data, vals[i], data["trend_" + vals[i]], ["title"]);
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Error update_with_mqtt_data", err);
+            }
+
+            // battery properties
+            try {
+                if (vdp_array.hasOwnProperty("batt")) {
+                    if (vdp_array["batt"].hasOwnProperty("obs")) {
+                        var vals = vdp_array["batt"]["obs"];
+                    }
+                    if (vdp_array["batt"].hasOwnProperty("group")) {
+                        var groups = vdp_array["batt"]["group"];
+                    }
+                    if (vals.length == groups.length) {
+                        for (var i = 0; i < vals.length; i++) {
+                            if (data.hasOwnProperty(vals[i])) {
+                                update_battery_properties(weewx_data, vals[i], groups[i], data[vals[i]], ["title"]);
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Error update_with_mqtt_data", err);
+            }
+
+            // voltage properties
+            try {
+                if (vdp_array.hasOwnProperty("voltage")) {
+                    if (vdp_array["voltage"].hasOwnProperty("obs")) {
+                        var vals = vdp_array["voltage"]["obs"];
+                    }
+                    if (vdp_array["voltage"].hasOwnProperty("group")) {
+                        var groups = vdp_array["voltage"]["group"];
+                    }
+                    if (vals.length == groups.length) {
+                        for (var i = 0; i < vals.length; i++) {
+                            if (data.hasOwnProperty(vals[i])) {
+                                update_voltage_properties(weewx_data, vals[i], groups[i], data[vals[i]], ["title"]);
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Error update_with_mqtt_data", err);
+            }
+
+            // signal properties
+            try {
+                if (vdp_array.hasOwnProperty("sig")) {
+                    if (vdp_array["sig"].hasOwnProperty("obs")) {
+                        var vals = vdp_array["sig"]["obs"];
+                        for (var i = 0; i < vals.length; i++) {
+                            if (data.hasOwnProperty(vals[i])) {
+                                update_signal_properties(weewx_data, vals[i], data[vals[i]], ["title"]);
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Error update_with_mqtt_data", err);
+            }
+
+            // switch properties
+            try {
+                if (vdp_array.hasOwnProperty("switch")) {
+                    if (vdp_array["switch"].hasOwnProperty("obs")) {
+                        var vals = vdp_array["switch"]["obs"];
+                    }
+                    if (vdp_array["switch"].hasOwnProperty("group")) {
+                        var groups = vdp_array["switch"]["group"];
+                    }
+                    if (vals.length == groups.length) {
+                        for (var i = 0; i < vals.length; i++) {
+                            if (data.hasOwnProperty(vals[i])) {
+                                update_switch_properties(weewx_data, vals[i], groups[i], data[vals[i]], ["title"]);
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Error update_with_mqtt_data", err);
+            }
+
+            // room climate properties
+            try {
+                update_roomclimate_properties(data, ["title"]);
+            } catch (err) {
+                console.error("Error update_with_mqtt_data", err);
             }
         }
     }
-    if (debug_output != "") {
-        jQuery(".cloudcover-debug-symbol").attr('style', 'padding-left: 5px;');
-    } else {
-        jQuery(".cloudcover-debug-symbol").removeAttr("style");
-    }
-    jQuery(".cloudcover-debug-symbol").html(debug_output);
-
 };
 #end if
 
@@ -3510,7 +4257,7 @@ function showChart(json_file, prepend_renderTo = false) {
 
                     const plconf = [{
                         color: "#FF5733",
-                        label: "$pgettext('chart_equivalentTemperature', 'Sultriness border')",
+                        label: "$pgettext('chart_equivalentTemperature', 'sultriness border')",
                         level: 50
                     }];
 

@@ -58,9 +58,9 @@ for i in 50 51 52 53 54; do
 
 # TEST
 # echo -e "\
-# \nGLÄTTE/SCHNEE/GLÄTTE/SCHNEE: \
-# \nGLÄTTE/SCHNEE/GLÄTTE: \
-# \nGLÄTTE/SCHNEE: \
+# \nFROST/SCHNEE/GLÄTTE/GLATTEIS: \
+# \nFROST/SCHNEE/GLÄTTE: \
+# \nFROST/GLATTEIS: \
 # \nGLÄTTE: \
 # \nDAUERREGEN/TAUWETTER (teils UNWETTER): \
 # \nGLATTEIS (teils UNWETTER): \
@@ -84,11 +84,17 @@ for i in 50 51 52 53 54; do
         # XXX/XXX/XXX/XXX: ===> <\p><p><strong>Xxx/Xxx/Xxx/Xxx:<\strong>
         sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2\/\u\3\L\4\/\u\5\L\6\/\u\7\L\8:<\/strong>/g' "${TMP}"
 
-        # XXX/XXX/XXX: ===> <\p><p><strong>Xxx/Xxx/Xxx:<\strong>
+        # GLÄTTE/GLATTEIS/SCHNEE: ===> <\p><p><strong>Xxx/Xxx/Xxx:<\strong>
         sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2\/\u\3\L\4\/\u\5\L\6:<\/strong>/g' "${TMP}"
+
+        # GLÄTTE/GLATTEIS/SCHNEE ===> <\p><p><strong>Xxx/Xxx/Xxx:<\strong>
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\)/<\/p><p><strong>\u\1\L\2\/\u\3\L\4\/\u\5\L\6:<\/strong>/g' "${TMP}"
 
         # GLÄTTE/SCHNEE: ===> <\p><p><strong>Glätte/Schnee:<\strong>
         sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2\/\u\3\L\4:<\/strong>/g' "${TMP}"
+
+        # GLÄTTE/SCHNEE ===> <\p><p><strong>Glätte/Schnee:<\strong>
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)\/\([[:upper:]]\)\([[:upper:]]*\)/<\/p><p><strong>\u\1\L\2\/\u\3\L\4:<\/strong>/g' "${TMP}"
 
         # NEBEL: ===> <\p><p><strong>Nebel:<\strong>
         sed -i 's/\([[:upper:]]\)\([[:upper:]]*\):/<\/p><p><strong>\u\1\L\2:<\/strong>/g' "${TMP}"

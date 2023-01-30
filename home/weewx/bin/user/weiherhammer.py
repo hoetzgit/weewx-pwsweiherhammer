@@ -103,7 +103,6 @@ aqi_category = ""
 aqi_time = 0
 aqi_location = ""
 
-
 class getData(SearchList):
     """
     Collect all custom data and calculations, then return search list extension
@@ -111,7 +110,6 @@ class getData(SearchList):
 
     def __init__(self, generator):
         SearchList.__init__(self, generator)
-        self.indoorclimate_dict = None
 
     def get_gps_distance(self, pointA, pointB, distance_unit):
         """
@@ -561,7 +559,11 @@ class getData(SearchList):
         # Bind to the appropriate standard converter units
         converter = weewx.units.StdUnitConverters[target_unit]
 
+
+        # ==============================================================================
         # Temperature Range Lookups
+        # ==============================================================================
+
 
         # 1. The database query finds the result based off the total column.
         # 2. We need to convert the min, max to the site's requested unit.
@@ -761,7 +763,12 @@ class getData(SearchList):
                 locale.format("%.1f", 0),
             ]
 
+
+        # ==============================================================================
         # Rain lookups
+        # ==============================================================================
+
+
         # Find the group_name for rain in database
         rain_unit = converter.group_unit_dict["group_rain"]
 
@@ -976,7 +983,12 @@ class getData(SearchList):
         else:
             at_days_without_rain = (0, 0)
 
+
+        # ==============================================================================
         # Lightning Strike Count lookups
+        # ==============================================================================
+
+
         # Find the group_name for lightning_strike_count in database
         # "lightning_strike_count" for variable names abbreviated with "lsc"
         lsc_unit = converter.group_unit_dict["group_count"]
@@ -1184,7 +1196,12 @@ class getData(SearchList):
         else:
             at_days_without_lsc = (0, 0)
 
+
+        # ==============================================================================
         # Sunshine lookups
+        # ==============================================================================
+
+
         # Find the group_name for sunshineDur in database
         sunshineDur_unit = converter.group_unit_dict["group_deltatime"]
 
@@ -1473,9 +1490,12 @@ class getData(SearchList):
             windSpeed_unit
         ]
 
+
         # ==============================================================================
         # Get NOAA Data
         # ==============================================================================
+
+
         years = []
         noaa_header_html = ""
         default_noaa_file = ""
@@ -1547,31 +1567,406 @@ class getData(SearchList):
             # folder is not created yet. Skip this section.
             pass
 
+
         # ==============================================================================
-        # Forecast Data
+        # Get all observations, groups and rounding values
         # ==============================================================================
 
-        if (
-            self.generator.skin_dict["Extras"]["forecast_enabled"] == "1"
-            and self.generator.skin_dict["Extras"]["forecast_api_id"] != ""
-            or "forecast_dev_file" in self.generator.skin_dict["Extras"]
-        ):
 
-            forecast_file = html_root + "/json/forecast.json"
-            forecast_api_id = self.generator.skin_dict["Extras"]["forecast_api_id"]
-            forecast_api_secret = self.generator.skin_dict["Extras"][
-                "forecast_api_secret"
-            ]
-            forecast_units = self.generator.skin_dict["Extras"][
-                "forecast_units"
-            ].lower()
+        all_obs_rounding_json = OrderedDict()
+        all_obs_unit_labels_json = OrderedDict()
+        all_obs_unit_groups_json = OrderedDict()
+        current_obs_raw_dict = {}
+
+        for obs in sorted(weewx.units.obs_group_dict):
+            try:
+                # Find the unit from group (like group_temperature = degree_F)
+                obs_group = weewx.units.obs_group_dict[obs]
+                obs_unit = self.generator.converter.group_unit_dict[obs_group]
+                # Add to the rounding array
+                if obs not in all_obs_unit_groups_json:
+                    all_obs_unit_groups_json[obs] = str(obs_group)
+                # Add obs to raw array
+                if obs not in current_obs_raw_dict:
+                    if obs != 'LMTtime':
+                        current_obs_raw_dict[obs] = None
+            except:
+                # Something's wrong. Continue this loop to ignore this group
+                # (like group_dust or something non-standard)
+                continue
+            try:
+                # Find the number of decimals to round to based on group name
+                obs_round = self.generator.skin_dict["Units"]["StringFormats"].get(
+                    obs_unit, "0"
+                )[2]
+            except:
+                obs_round = self.generator.skin_dict["Units"]["StringFormats"].get(
+                    obs_unit, "0"
+                )
+            # Add to the rounding array
+            if obs not in all_obs_rounding_json:
+                all_obs_rounding_json[obs] = str(obs_round)
+            # Get the unit's label
+            # Add to label array and strip whitespace if possible
+            if obs not in all_obs_unit_labels_json:
+                obs_unit_label = weewx.units.get_label_string(
+                    self.generator.formatter, self.generator.converter, obs
+                )
+                all_obs_unit_labels_json[obs] = obs_unit_label
+
+        # defaults
+        all_obs_rounding_json['default'] = 2
+        all_obs_unit_labels_json['default'] = " N/A"
+
+        # Special handling items
+        all_obs_rounding_json["visibility"] = 0
+        all_obs_unit_labels_json["visibility"] = " km"
+        all_obs_rounding_json["cloudcover"] = 0
+        all_obs_unit_labels_json["cloudcover"] = "%"
+
+        # add absolute humidity to relative humidity
+        # https://github.com/roe-dl/weewx-GTS/discussions/14
+        all_obs_rounding_json["outHumAbs"] = 1
+        all_obs_unit_labels_json["outHumAbs"] = " g/m³"
+
+
+        # ================================================================================
+        # "Forecast": data for current, forecast, aqi, alerts (external calls or builtin)
+        # ================================================================================
+
+
+        current_enabled = to_bool(self.generator.skin_dict["Extras"].get("current_enabled", False))
+        current_provider_toggle = self.generator.skin_dict["Extras"].get("current_provider_toggle", "0")
+        current_provider_list = self.generator.skin_dict["Extras"].get("current_provider_list", "dwd_mosmix")
+        if isinstance(current_provider_list, list) is False:
+            current_provider_list = current_provider_list.split()
+        current_provider = self.generator.skin_dict["Extras"].get("current_provider", "dwd_mosmix")
+        current_units = self.generator.skin_dict["Extras"].get("current_units", "ca").lower()
+        current_lang = self.generator.skin_dict["Extras"].get("current_lang", "de").lower()
+
+        forecast_enabled = to_bool(self.generator.skin_dict["Extras"].get("forecast_enabled", False))
+        forecast_provider_toggle = self.generator.skin_dict["Extras"].get("forecast_provider_toggle", "0")
+        forecast_provider_list = self.generator.skin_dict["Extras"].get("forecast_provider_list", "dwd_mosmix")
+        if isinstance(forecast_provider_list, list) is False:
+            forecast_provider_list = forecast_provider_list.split()
+        forecast_provider = self.generator.skin_dict["Extras"].get("forecast_provider", "dwd_mosmix")
+        forecast_units = self.generator.skin_dict["Extras"].get("forecast_units", "ca").lower()
+        forecast_lang = self.generator.skin_dict["Extras"].get("forecast_lang", "de").lower()
+        forecast_interval_hours = to_int(self.generator.skin_dict["Extras"].get("forecast_interval_hours", 24))
+
+        aqi_enabled = to_bool(self.generator.skin_dict["Extras"].get("aqi_enabled", False))
+        aqi_provider_toggle = self.generator.skin_dict["Extras"].get("aqi_provider_toggle", "0")
+        aqi_provider_list = self.generator.skin_dict["Extras"].get("aqi_provider_list", "dwd_mosmix")
+        if isinstance(aqi_provider_list, list) is False:
+            aqi_provider_list = aqi_provider_list.split()
+        aqi_provider = self.generator.skin_dict["Extras"].get("aqi_provider", "dwd_mosmix")
+
+        alerts_enabled = to_bool(self.generator.skin_dict["Extras"].get("alerts_enabled", False))
+        alerts_provider_toggle = self.generator.skin_dict["Extras"].get("alerts_provider_toggle", "0")
+        alerts_provider_list = self.generator.skin_dict["Extras"].get("alerts_provider_list", "dwd_mosmix")
+        if isinstance(alerts_provider_list, list) is False:
+            alerts_provider_list = alerts_provider_list.split()
+        alerts_provider = self.generator.skin_dict["Extras"].get("alerts_provider", "dwd_mosmix")
+        alerts_limit = to_int(self.generator.skin_dict["Extras"].get("alerts_limit", 1))
+
+        external_forecast_file = html_root + "/json/forecast.json"
+        builtin_forecast_file = html_root + "/json/forecast_builtin.json"
+
+        builtin_provider = (
+                            current_provider_list.count("builtin") > 0 or 
+                            forecast_provider_list.count("builtin") > 0 or
+                            aqi_provider_list.count("builtin") > 0 or
+                            alerts_provider_list.count("builtin") > 0
+                           )
+        external_provider = (
+                             (len(current_provider_list) > 0 and current_provider_list.count("builtin") == 0) or 
+                             (len(forecast_provider_list) > 0 and forecast_provider_list.count("builtin")== 0) or 
+                             (len(aqi_provider_list) > 0 and aqi_provider_list.count("builtin") == 0) or 
+                             (len(alerts_provider_list) > 0 and alerts_provider_list.count("builtin") == 0)
+                            )
+
+        # builtin is Aeris Weather
+        if builtin_provider:
+            forecast_file = builtin_forecast_file
+            forecast_api_id = self.generator.skin_dict["Extras"].get("aeris_api_id", "")
+            forecast_api_secret = self.generator.skin_dict["Extras"].get("aeris_api_secret", "")
+            forecast_units = self.generator.skin_dict["Extras"].get("aeris_units", "ca").lower()
+            forecast_lang = self.generator.skin_dict["Extras"].get("aeris_lang", "de").lower()
+            forecast_stale_timer = to_int(self.generator.skin_dict["Extras"].get("buildin_stale_timer", 86400))
             latitude = self.generator.config_dict["Station"]["latitude"]
             longitude = self.generator.config_dict["Station"]["longitude"]
-            forecast_stale_timer = self.generator.skin_dict["Extras"]["forecast_stale"]
             forecast_is_stale = False
+            
+            forecast_source = "API Aeris"
+            if to_bool(self.generator.skin_dict["Extras"].get("aeris_metar", False)):
+                forecast_current_source = forecast_source + " METAR ETIC"
+                forecast_current_url = (
+                  # "https://api.aerisapi.com/observations/%s,%s?&format=json&filter=allstations&filter=metar&limit=1&client_id=%s&client_secret=%s"
+                    "https://api.aerisapi.com/observations/closest?p=%s,%s&format=json&filter=metar&limit=1&client_id=%s&client_secret=%s"
+                    % (latitude, longitude, forecast_api_id, forecast_api_secret)
+                )
+            else:
+                forecast_current_source = forecast_source + " Mesonet F0887"
+                forecast_current_url = (
+                  # "https://api.aerisapi.com/observations/%s,%s?&format=json&filter=allstations&limit=1&client_id=%s&client_secret=%s"
+                    "https://api.aerisapi.com/observations/closest?p=%s,%s&format=json&filter=mesonet&limit=1&client_id=%s&client_secret=%s"
+                    % (latitude, longitude, forecast_api_id, forecast_api_secret)
+                )
+            forecast_xxhr_source = "API Aeris Forecast"
+            forecast_24hr_url = (
+                "https://api.aerisapi.com/forecasts/%s,%s?&format=json&filter=day&limit=8&client_id=%s&client_secret=%s"
+                % (latitude, longitude, forecast_api_id, forecast_api_secret)
+            )
+            forecast_3hr_url = (
+                "https://api.aerisapi.com/forecasts/%s,%s?&format=json&filter=3hr&limit=8&client_id=%s&client_secret=%s"
+                % (latitude, longitude, forecast_api_id, forecast_api_secret)
+            )
+            forecast_1hr_url = (
+                "https://api.aerisapi.com/forecasts/%s,%s?&format=json&filter=1hr&limit=16&client_id=%s&client_secret=%s"
+                % (latitude, longitude, forecast_api_id, forecast_api_secret)
+            )
+            forecast_aqi_source = "API Aeris Airquality"
+            forecast_aqi_url = (
+                "https://api.aerisapi.com/airquality/closest?p=%s,%s&format=json&radius=50mi&limit=1&client_id=%s&client_secret=%s"
+                % (latitude, longitude, forecast_api_id, forecast_api_secret)
+            )
+            forecast_alerts_source = "API Aeris Alerts"
+            forecast_alerts_url = "https://api.aerisapi.com/alerts/%s,%s?&format=json&limit=%s&lang=%s&client_id=%s&client_secret=%s" % (
+                    latitude,
+                    longitude,
+                    alerts_limit,
+                    forecast_lang,
+                    forecast_api_id,
+                    forecast_api_secret
+                )
 
+            # Determine if the file exists and get it's modified time, enhanced
+            # for 1 hr forecast to load close to the hour
+            if os.path.isfile(forecast_file):
+                if (int(time.time()) - int(os.path.getmtime(forecast_file))) > int(forecast_stale_timer):
+                    forecast_is_stale = True
+                else:
+                    # catches repeated calls every archive interval (300secs)
+                    if (time.strftime("%M") < "05" and int(time.time()) - int(os.path.getmtime(forecast_file))) > int(300):
+                        forecast_is_stale = True
+            else:
+                # File doesn't exist, download a new copy
+                forecast_is_stale = True
+
+            # File is stale, download a new copy
+            if forecast_is_stale:
+                try:
+                    import requests
+                    # if sys.version_info[0] >= 3:
+                        # from urllib.request import Request, urlopen
+                    # else:
+                        # # Python 2
+                        # from urllib2 import Request, urlopen
+
+                    user_agent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_4; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.472.63 Safari/534.3"
+                    headers = {"User-Agent": user_agent}
+
+                    # Current conditions
+                    if current_provider_list.count("builtin") > 0:
+                        try:
+                            reply = requests.get(forecast_current_url,headers=headers)
+                            if reply.status_code==200:
+                                current_page = json.loads(reply.content)
+                                current_page['source'] = forecast_current_source
+                            else:
+                                current_page = {'success':False,'error':{'code':str(reply.status_code),'description':str(reply.reason)},'source':forecast_current_source,'response':[]}
+                        except ConnectionError as e:
+                            current_page = {'success':False,'error':{'code':e.__name__,'description':str(e)},'source':forecast_current_source,'response':[]}
+                    else:
+                        current_page = {'success':False,'error':{'code':'N/A','description':'current not enabled.'},'source':forecast_current_source,'response':[]}
+
+                    if forecast_provider_list.count("builtin") > 0:
+                        # 1hr forecast
+                        try:
+                            reply = requests.get(forecast_1hr_url,headers=headers)
+                            if reply.status_code==200:
+                                forecast_1hr_page = json.loads(reply.content)
+                                forecast_1hr_page['source'] = forecast_xxhr_source
+                            else:
+                                forecast_1hr_page = {'success':False,'error':{'code':str(reply.status_code),'description':str(reply.reason)},'source':forecast_xxhr_source,'response':[]}
+                        except ConnectionError as e:
+                            forecast_1hr_page = {'success':False,'error':{'code':e.__name__,'description':str(e)},'source':forecast_xxhr_source,'response':[]}
+
+                        # 3hr forecast
+                        try:
+                            reply = requests.get(forecast_3hr_url,headers=headers)
+                            if reply.status_code==200:
+                                forecast_3hr_page = json.loads(reply.content)
+                                forecast_3hr_page['source'] = forecast_xxhr_source
+                            else:
+                                forecast_3hr_page = {'success':False,'error':{'code':str(reply.status_code),'description':str(reply.reason)},'source':forecast_xxhr_source,'response':[]}
+                        except ConnectionError as e:
+                            forecast_3hr_page = {'success':False,'error':{'code':e.__name__,'description':str(e)},'source':forecast_xxhr_source,'response':[]}
+
+                        # 24hr forecast
+                        try:
+                            reply = requests.get(forecast_24hr_url,headers=headers)
+                            if reply.status_code==200:
+                                forecast_24hr_page = json.loads(reply.content)
+                                forecast_24hr_page['source'] = forecast_xxhr_source
+                            else:
+                                forecast_24hr_page = {'success':False,'error':{'code':str(reply.status_code),'description':str(reply.reason)},'source':forecast_xxhr_source,'response':[]}
+                        except ConnectionError as e:
+                            forecast_24hr_page = {'success':False,'error':{'code':e.__name__,'description':str(e)},'source':forecast_xxhr_source,'response':[]}
+                    else:
+                        forecast_1hr_page = {'success':False,'error':{'code':'N/A','description':'forecast not enabled.'},'source':forecast_xxhr_source,'response':[]}
+                        forecast_3hr_page = {'success':False,'error':{'code':'N/A','description':'forecast not enabled.'},'source':forecast_xxhr_source,'response':[]}
+                        forecast_24hr_page = {'success':False,'error':{'code':'N/A','description':'forecast not enabled.'},'source':forecast_xxhr_source,'response':[]}
+
+                    # AQI
+                    if aqi_provider_list.count("builtin") > 0:
+                        try:
+                            reply = requests.get(forecast_aqi_url,headers=headers)
+                            if reply.status_code==200:
+                                aqi_page = json.loads(reply.content)
+                                aqi_page['source'] = forecast_aqi_source
+                            else:
+                                aqi_page = {'success':False,'error':{'code':str(reply.status_code),'description':str(reply.reason)},'source':forecast_aqi_source,'response':[]}
+                        except ConnectionError as e:
+                            aqi_page = {'success':False,'error':{'code':e.__name__,'description':str(e)},'source':forecast_aqi_source,'response':[]}
+                    else:
+                        aqi_page = {'success':False,'error':{'code':'N/A','description':'AQI not enabled.'},'source':forecast_aqi_source,'response':[]}
+
+                    # Alerts
+                    if alerts_provider_list.count("builtin") > 0:
+                        try:
+                            reply = requests.get(forecast_alerts_url,headers=headers)
+                            if reply.status_code==200:
+                                alerts_page = json.loads(reply.content)
+                                alerts_page['source'] = forecast_alerts_source
+                            else:
+                                alerts_page = {'success':False,'error':{'code':str(reply.status_code),'description':str(reply.reason)},'source':forecast_alerts_source,'response':[]}
+                        except ConnectionError as e:
+                            alerts_page = {'success':False,'error':{'code':e.__name__,'description':str(e)},'source':forecast_alerts_source,'response':[]}
+                    else:
+                        alerts_page = {'success':False,'error':{'code':'N/A','description':'AQI not enabled.'},'source':forecast_alerts_source,'response':[]}
+
+                    # Combine all into 1 file
+                    forecast_result = {'timestamp':int(time.time())}
+                    forecast_result['builtin'] = {
+                        'timestamp':int(time.time())
+                        ,'current': [current_page]
+                        ,'forecast_1hr': [forecast_1hr_page]
+                        ,'forecast_3hr': [forecast_3hr_page]
+                        ,'forecast_24hr': [forecast_24hr_page]
+                        ,'aqi': [aqi_page]
+                        ,'alerts': [alerts_page]
+                    }
+                    forecast_file_result = json.dumps(forecast_result,indent=4,ensure_ascii=False)
+
+                except Exception as error:
+                    current_page = {'success':False,'error':{'code':'Exception','description':str(error)},'source':forecast_current_source,'response':[]}
+                    forecast_1hr_page = {'success':False,'error':{'code':'Exception','description':str(error)},'source':forecast_xxhr_source,'response':[]}
+                    forecast_3hr_page = {'success':False,'error':{'code':'Exception','description':str(error)},'source':forecast_xxhr_source,'response':[]}
+                    forecast_24hr_page = {'success':False,'error':{'code':'Exception','description':str(error)},'source':forecast_xxhr_source,'response':[]}
+                    aqi_page = {'success':False,'error':{'code':'Exception','description':str(error)},'source':forecast_aqi_source,'response':[]}
+                    alerts_page = {'success':False,'error':{'code':'Exception','description':str(error)},'source':forecast_alerts_source,'response':[]}
+                    forecast_result = {'timestamp':int(time.time())}
+                    forecast_result['builtin'] = {
+                        'timestamp':int(time.time())
+                        ,'current': [current_page]
+                        ,'forecast_1hr': [forecast_1hr_page]
+                        ,'forecast_3hr': [forecast_3hr_page]
+                        ,'forecast_24hr': [forecast_24hr_page]
+                        ,'aqi': [aqi_page]
+                        ,'alerts': [alerts_page]
+                    }
+                    forecast_file_result = json.dumps(forecast_result,indent=4,ensure_ascii=False)
+                    raise Warning(
+                        "Error downloading forecast data. "
+                        "Check the URL in your configuration and try again. "
+                        "You are trying to use URL: %s, and the error is: %s"
+                        % (forecast_24hr_url, error)
+                    )
+
+                # Save forecast data to file. w+ creates the file if it doesn't
+                # exist, and truncates the file and re-writes it everytime
+                try:
+                    with open(forecast_file, "wb+") as file:
+                        try:
+                            # Python 2/3
+                            file.write(forecast_file_result.encode("utf-8"))
+                        except:
+                            # Catch errors caused by ASCII characters in Python2
+                            file.write(forecast_file_result)
+                        loginf("New forecast file downloaded to %s" % forecast_file)
+                except IOError as e:
+                    raise Warning(
+                        "Error writing forecast info to %s. Reason: %s"
+                        % (forecast_file, e)
+                    )
+
+
+        # ==============================================================================
+        # now read forecast file from built in forecast or external calls
+        # ==============================================================================
+
+
+        # forecast files available
+        external_forecast_available = "0"
+        builtin_forecast_available = "0"
+
+        # current obs data
+        current_obs_icon = "unknown.png"
+        current_obs_summary = "N/A"
+        current_obs_source = "N/A"
+        visibility = "N/A"
+        visibility_unit = ""
+        cloudcover = "N/A"
+        cloudcover_unit = ""
+
+        # AQI data
+        aqi = "N/A"
+        aqi_category = "N/A"
+        aqi_time = 0
+        aqi_location = "N/A"
+        aqi_api_success = False
+
+        # Alerts data
+
+        # using data depend from provider
+        forecast_data = {}
+        forecast_file_success = True
+
+        # external forecast file
+        if external_provider:
+            try:
+                with open(external_forecast_file, "r") as read_file:
+                    forecast_data = json.load(read_file)
+                external_forecast_available = "1"
+            except IOError as e:
+                forecast_file_success = False
+                raise Warning(
+                    "Error reading forecast info from %s. Reason: %s"
+                    % (external_forecast_file, e)
+                )
+
+        # built in forecast file
+        if builtin_provider:
+            try:
+                with open(builtin_forecast_file, "r") as read_file:
+                    builtin_data = json.load(read_file)
+                    forecast_data["builtin"] = builtin_data["builtin"]
+                builtin_forecast_available = "1"
+            except IOError as e:
+                forecast_file_success = False
+                raise Warning(
+                    "Error reading forecast info from %s. Reason: %s"
+                    % (builtin_forecast_file, e)
+                )
+
+        # Process the forecast data
+        if forecast_file_success:
             def aeris_coded_weather(data):
                 # https://www.aerisweather.com/support/docs/api/reference/weather-codes/
+                if data is None or data == "N/A":
+                    return "unknown"
+
                 output = ""
                 coverage_code = data.split(":")[0]
                 intensity_code = data.split(":")[1]
@@ -1650,17 +2045,20 @@ class getData(SearchList):
 
                 # Add the coverage if it's present, and full observation
                 # forecast is requested
-                if coverage_code:
+                if coverage_code and coverage_code in coverage_dict:
                     output += coverage_dict[coverage_code] + " "
                 # Add the intensity if it's present
-                if intensity_code:
+                if intensity_code and intensity_code in intensity_dict:
                     output += intensity_dict[intensity_code] + " "
                 # Weather output
-                output += weather_dict[weather_code]
+                if weather_code in weather_dict:
+                    output += weather_dict[weather_code]
                 return output
 
             def aeris_icon(data):
                 # https://www.aerisweather.com/support/docs/api/reference/icon-list/
+                if data is None:
+                    return 'unknown'
                 iconlist_file_path = os.path.join(
                     self.generator.config_dict["WEEWX_ROOT"],
                     self.generator.skin_dict["SKIN_ROOT"],
@@ -1676,388 +2074,142 @@ class getData(SearchList):
                     logerr("aeris-icon-list.json is missing in " + iconlist_file_path)
                     return 'unknown'
 
-            forecast_lang = self.generator.skin_dict["Extras"]["forecast_lang"].lower()
-            if self.generator.skin_dict["Extras"]["forecast_aeris_use_metar"] == "1":
-                forecast_current_url = (
-                    "https://api.aerisapi.com/observations/%s,%s?&format=json&filter=allstations&filter=metar&limit=1&client_id=%s&client_secret=%s"
-                    % (latitude, longitude, forecast_api_id, forecast_api_secret)
-                )
-            else:
-                forecast_current_url = (
-                    "https://api.aerisapi.com/observations/%s,%s?&format=json&filter=allstations&limit=1&client_id=%s&client_secret=%s"
-                    % (latitude, longitude, forecast_api_id, forecast_api_secret)
-                )
-            forecast_24hr_url = (
-                "https://api.aerisapi.com/forecasts/%s,%s?&format=json&filter=day&limit=7&client_id=%s&client_secret=%s"
-                % (latitude, longitude, forecast_api_id, forecast_api_secret)
-            )
-            forecast_3hr_url = (
-                "https://api.aerisapi.com/forecasts/%s,%s?&format=json&filter=3hr&limit=8&client_id=%s&client_secret=%s"
-                % (latitude, longitude, forecast_api_id, forecast_api_secret)
-            )
-            forecast_1hr_url = (
-                "https://api.aerisapi.com/forecasts/%s,%s?&format=json&filter=1hr&limit=16&client_id=%s&client_secret=%s"
-                % (latitude, longitude, forecast_api_id, forecast_api_secret)
-            )
-            aqi_url = (
-                "https://api.aerisapi.com/airquality/closest?p=%s,%s&format=json&radius=50mi&limit=1&client_id=%s&client_secret=%s"
-                % (latitude, longitude, forecast_api_id, forecast_api_secret)
-            )
-            if self.generator.skin_dict["Extras"]["forecast_alert_limit"]:
-                forecast_alert_limit = self.generator.skin_dict["Extras"][
-                    "forecast_alert_limit"
-                ]
-                forecast_alerts_url = "https://api.aerisapi.com/alerts/%s,%s?&format=json&limit=%s&lang=%s&client_id=%s&client_secret=%s" % (
-                    latitude,
-                    longitude,
-                    forecast_alert_limit,
-                    forecast_lang,
-                    forecast_api_id,
-                    forecast_api_secret,
-                )
-            else:
-                # Default to 1 alerts to show if the option is missing. Can go up to 10
-                forecast_alerts_url = "https://api.aerisapi.com/alerts/%s,%s?&format=json&limit=1&lang=%s&client_id=%s&client_secret=%s" % (
-                    latitude,
-                    longitude,
-                    forecast_lang,
-                    forecast_api_id,
-                    forecast_api_secret,
-                )
-
-            # Determine if the file exists and get it's modified time, enhanced
-            # for 1 hr forecast to load close to the hour
-            if os.path.isfile(forecast_file):
-                if (int(time.time()) - int(os.path.getmtime(forecast_file))) > int(
-                    forecast_stale_timer
-                ):
-                    forecast_is_stale = True
-                else:
-                    # catches repeated calls every archive interval (300secs)
-                    if (
-                        time.strftime("%M") < "05"
-                        and int(time.time()) - int(os.path.getmtime(forecast_file))
-                    ) > int(300):
-                        forecast_is_stale = True
-            else:
-                # File doesn't exist, download a new copy
-                forecast_is_stale = True
-
-            # forecast file created from forecast-pwsWeiherhammer
-            forecast_is_stale = False
-
-            # File is stale, download a new copy
-            if forecast_is_stale:
+            # current data
+            if (current_provider != ""):
                 try:
-                    if sys.version_info[0] >= 3:
-                        from urllib.request import Request, urlopen
-                    else:
-                        # Python 2
-                        from urllib2 import Request, urlopen
+                    current_api_success = False
+                    if forecast_data.get(current_provider) is None:
+                        raise Warning(
+                            "Forecast file does not contain provider %s"
+                            % (current_provider)
+                        )
+                    elif forecast_data[current_provider].get("current") is None:
+                        raise Warning(
+                            "Forecast file does not contain current data. Provider: %s"
+                            % (current_provider)
+                        )
+                    elif len(forecast_data[current_provider]["current"]) == 0:
+                        raise Warning(
+                            "Forecast file does not contain current list data. Provider: %s"
+                            % (current_provider)
+                        )
+                    elif "response" not in forecast_data[current_provider]["current"][0]:
+                        raise Warning(
+                            "Forecast file does not contain current/0/response data. Provider: %s"
+                            % (current_provider)
+                        )
+                    elif len(forecast_data[current_provider]["current"][0]["response"]) == 0:
+                        raise Warning(
+                            "Forecast file does not contain current response list data. Provider: %s"
+                            % (current_provider)
+                        )
+                    elif "ob" not in forecast_data[current_provider]["current"][0]["response"][0]:
+                        raise Warning(
+                            "Forecast file does not contain current response observations data. Provider: %s"
+                            % (current_provider)
+                        )
+                    elif "success" not in forecast_data[current_provider]["current"][0]:
+                        raise Warning(
+                            "Forecast file does not contain current success flag. Provider: %s"
+                            % (str(errcode), errdescr, current_provider)
+                        )
+                    elif not to_bool(forecast_data[current_provider]["current"][0]["success"]):
+                        err = {}
+                        if error in forecast_data[current_provider]["current"][0]:
+                            err = forecast_data[current_provider]["current"][0]["error"]
+                        errcode = err.get("code", "Code is not available in file.")
+                        errdescr = err.get("description", "Error decription is not available in file.")
+                        raise Warning(
+                            "Forecast file with false success and error: %s message: %s provider: %s"
+                            % (str(errcode), errdescr, current_provider)
+                        )
 
-                    user_agent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_4; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.472.63 Safari/534.3"
-                    headers = {"User-Agent": user_agent}
-                    if "forecast_dev_file" in self.generator.skin_dict["Extras"]:
-                        # Hidden option to use a pre-downloaded forecast file
-                        # rather than using API calls for no reason
-                        dev_forecast_file = self.generator.skin_dict["Extras"][
-                            "forecast_dev_file"
-                        ]
-                        req = Request(dev_forecast_file, None, headers)
-                        response = urlopen(req)
-                        forecast_file_result = response.read()
-                        response.close()
-                    else:
-                        # Current conditions
-                        req = Request(forecast_current_url, None, headers)
-                        response = urlopen(req)
-                        current_page = response.read()
-                        response.close()
-                        # 24hr forecast (was Forecast)
-                        req = Request(forecast_24hr_url, None, headers)
-                        response = urlopen(req)
-                        forecast_24hr_page = response.read()
-                        response.close()
-                        # 3hr forecast
-                        req = Request(forecast_3hr_url, None, headers)
-                        response = urlopen(req)
-                        forecast_3hr_page = response.read()
-                        response.close()
-                        # 1hr forecast
-                        req = Request(forecast_1hr_url, None, headers)
-                        response = urlopen(req)
-                        forecast_1hr_page = response.read()
-                        response.close()
-                        # AQI
-                        req = Request(aqi_url, None, headers)
-                        response = urlopen(req)
-                        aqi_page = response.read()
-                        response.close()
-                        if (
-                            self.generator.skin_dict["Extras"]["forecast_alert_enabled"]
-                            == "1"
-                        ):
-                            # Alerts
-                            req = Request(forecast_alerts_url, None, headers)
-                            response = urlopen(req)
-                            alerts_page = response.read()
-                            response.close()
+                    data = forecast_data[current_provider]["current"][0]
+                    current_api_success = True
 
-                        # Combine all into 1 file
-                        if (
-                            self.generator.skin_dict["Extras"]["forecast_alert_enabled"]
-                            == "1"
-                        ):
-                            try:
-                                forecast_file_result = json.dumps(
-                                    {
-                                        "timestamp": int(time.time()),
-                                        "current": [json.loads(current_page)],
-                                        "forecast_24hr": [
-                                            json.loads(forecast_24hr_page)
-                                        ],
-                                        "forecast_3hr": [json.loads(forecast_3hr_page)],
-                                        "forecast_1hr": [json.loads(forecast_1hr_page)],
-                                        "alerts": [json.loads(alerts_page)],
-                                        "aqi": [json.loads(aqi_page)],
-                                    }
-                                )
-                            except:
-                                forecast_file_result = json.dumps(
-                                    {
-                                        "timestamp": int(time.time()),
-                                        "current": [
-                                            json.loads(current_page.decode("utf-8"))
-                                        ],
-                                        "forecast_24hr": [
-                                            json.loads(
-                                                forecast_24hr_page.decode("utf-8")
-                                            )
-                                        ],
-                                        "forecast_3hr": [
-                                            json.loads(
-                                                forecast_3hr_page.decode("utf-8")
-                                            )
-                                        ],
-                                        "forecast_1hr": [
-                                            json.loads(
-                                                forecast_1hr_page.decode("utf-8")
-                                            )
-                                        ],
-                                        "alerts": [
-                                            json.loads(alerts_page.decode("utf-8"))
-                                        ],
-                                        "aqi": [json.loads(aqi_page.decode("utf-8"))],
-                                    }
-                                )
-                        else:
-                            try:
-                                forecast_file_result = json.dumps(
-                                    {
-                                        "timestamp": int(time.time()),
-                                        "current": [json.loads(current_page)],
-                                        "forecast_24hr": [
-                                            json.loads(forecast_24hr_page)
-                                        ],
-                                        "forecast_3hr": [json.loads(forecast_3hr_page)],
-                                        "forecast_1hr": [json.loads(forecast_1hr_page)],
-                                        "aqi": [json.loads(aqi_page)],
-                                    }
-                                )
-                            except:
-                                forecast_file_result = json.dumps(
-                                    {
-                                        "timestamp": int(time.time()),
-                                        "current": [
-                                            json.loads(current_page.decode("utf-8"))
-                                        ],
-                                        "forecast_24hr": [
-                                            json.loads(
-                                                forecast_24hr_page.decode("utf-8")
-                                            )
-                                        ],
-                                        "forecast_3hr": [
-                                            json.loads(
-                                                forecast_3hr_page.decode("utf-8")
-                                            )
-                                        ],
-                                        "forecast_1hr": [
-                                            json.loads(
-                                                forecast_1hr_page.decode("utf-8")
-                                            )
-                                        ],
-                                        "aqi": [json.loads(aqi_page.decode("utf-8"))],
-                                    }
-                                )
                 except Exception as error:
-                    raise Warning(
-                        "Error downloading forecast data. "
-                        "Check the URL in your configuration and try again. "
-                        "You are trying to use URL: %s, and the error is: %s"
-                        % (forecast_24hr_url, error)
-                    )
+                    logerr("Error getting valid current data from API. The error was: %s" % (error))
 
-                # Save forecast data to file. w+ creates the file if it doesn't
-                # exist, and truncates the file and re-writes it everytime
-                try:
-                    with open(forecast_file, "wb+") as file:
-                        try:
-                            # Python 2/3
-                            file.write(forecast_file_result.encode("utf-8"))
-                        except:
-                            # Catch errors caused by ASCII characters in Python2
-                            file.write(forecast_file_result)
-                        loginf("New forecast file downloaded to %s" % forecast_file)
-                except IOError as e:
-                    raise Warning(
-                        "Error writing forecast info to %s. Reason: %s"
-                        % (forecast_file, e)
-                    )
-
-            # Process the forecast file
-            with open(forecast_file, "r") as read_file:
-                data = json.load(read_file)
-
-            # 20221024,ho possible providers for current weather
-            current_provider_list = self.generator.skin_dict["Extras"].get("current_provider_list", "dwd")
-            current_provider_default = self.generator.skin_dict["Extras"].get("current_provider_default", "dwd")
-            current_provider_visible = self.generator.skin_dict["Extras"].get("current_provider_visible", 0)
-            try:
-                if (current_provider_default == "dwd"):
-                    data["current"] = data["dwd"]["current"]
-                elif (current_provider_default == "brightsky"):
-                    data["current"] = data["_brightsky"]["current"]
-                elif (current_provider_default == "owm"):
-                    data["current"] = data["_owm"]["current"]
-                elif (current_provider_default == "weatherbit"):
-                    data["current"] = data["_weatherbit"]["current"]
-                elif (current_provider_default == "metar"):
-                    data["current"] = data["aeris_metar"]["current"]
-                elif (current_provider_default == "conditions"):
-                    data["current"] = data["aeris_conditions"]["current"]
-            except Exception:
-                current_provider_list = "dwd"
-                current_provider_default = "dwd"
-                data["current"] = data["dwd"]["current"]
-                raise Warning("Error, no current data from %s" % current_provider_default)
-
-            try:
-                cloud_cover = "{} %".format(data["current"][0]["response"]["ob"]["sky"])
-            except Exception:
-                loginf("No cloud cover data from Aeris weather")
-                cloud_cover = ""
-
-            try:
-                if (
-                    len(data["aqi"][0]["response"]) > 0
-                ):
-                    aqi = data["aqi"][0]["response"][0]["periods"][0]["aqi"]
-                    aqi_category = data["aqi"][0]["response"][0]["periods"][0]["category"]
-                    aqi_time = data["aqi"][0]["response"][0]["periods"][0]["timestamp"]
-                    aqi_location = data["aqi"][0]["response"][0]["place"]["name"].title()
-                elif (
-                    data["aqi"][0]["error"]["code"] == "warn_no_data"
-                ):
-                    aqi = "No Data"
-                    aqi_category = ""
-                    aqi_time = 0
-                    aqi_location = ""
-            except Exception as error:
-                logerr(
-                    "Error getting AQI from Aeris weather. The error was: %s" % (error)
-                )
-                aqi = ""
-                aqi_category = ""
-                aqi_time = 0
-                aqi_location = ""
-                pass
-
-            # https://www.aerisweather.com/support/docs/api/reference/endpoints/airquality/
-            if aqi_category == "good":
-                aqi_category = label_dict["aqi_good"]
-            elif aqi_category == "moderate":
-                aqi_category = label_dict["aqi_moderate"]
-            elif aqi_category == "usg":
-                aqi_category = label_dict["aqi_usg"]
-            elif aqi_category == "unhealthy":
-                aqi_category = label_dict["aqi_unhealthy"]
-            elif aqi_category == "very unhealthy":
-                aqi_category = label_dict["aqi_very_unhealthy"]
-            elif aqi_category == "hazardous":
-                aqi_category = label_dict["aqi_hazardous"]
-            else:
-                # aqi_category = label_dict["aqi_unknown"]
-                aqi_category = aqi_category
-
-            if (
-                len(data["current"][0]["response"]) > 0
-                and self.generator.skin_dict["Extras"]["forecast_aeris_use_metar"]
-                == "0"
-            ):
-                # Non-metar responses do not contain these values. Set them to empty.
-                current_obs_summary = ""
-                current_obs_icon = ""
-                visibility = "N/A"
-                visibility_unit = ""
-            elif (
-                len(data["current"][0]["response"]) > 0
-                and self.generator.skin_dict["Extras"]["forecast_aeris_use_metar"]
-                == "1"
-            ):
-                try:
-                    current_obs_summary = aeris_coded_weather(
-                        data["current"][0]["response"]["ob"]["weatherPrimaryCoded"]
-                    )
-                    current_obs_icon = (
-                        aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png"
-                    )
-                except Exception:
-                    logerr("No obs icon and text from forecast.json")
-                    current_obs_summary = ""
-                    current_obs_icon = ""
-
-                if forecast_units in ("si", "ca"):
-                    if data["current"][0]["response"]["ob"]["visibilityKM"] is not None:
-                        visibility = locale.format(
-                            "%g", data["current"][0]["response"]["ob"]["visibilityKM"]
+                if current_api_success:
+                    try:
+                        current_obs_source = data.get("source", current_provider);
+                        current_obs_summary = aeris_coded_weather(
+                            data["response"][0]["ob"].get("weatherPrimaryCoded")
                         )
-                        visibility_unit = "km"
-                    else:
-                        visibility = "N/A"
-                        visibility_unit = ""
-                else:
-                    # us, uk2 and default to miles per hour
-                    if data["current"][0]["response"]["ob"]["visibilityMI"] is not None:
-                        visibility = locale.format(
-                            "%g",
-                            float(data["current"][0]["response"]["ob"]["visibilityMI"]),
+                        current_obs_icon = (
+                            aeris_icon(data["response"][0]["ob"].get("icon")) + ".png"
                         )
-                        visibility_unit = "miles"
-                    else:
-                        visibility = "N/A"
-                        visibility_unit = ""
-            else:
-                # If the user selected to not use METAR, then these
-                # observations are null.  If there's no data in the ob array
-                # then it's probably because of an error.
-                # Example:
-                # "code": "warn_no_data",
-                # "description": "Valid request. No results available based on
-                # your query parameters."
-                current_obs_summary = ""
-                current_obs_icon = ""
-                visibility = "N/A"
-                visibility_unit = ""
-        else:
-            current_obs_icon = ""
-            current_obs_summary = ""
-            visibility = "N/A"
-            visibility_unit = ""
-            cloud_cover = ""
+                    except Exception as error:
+                        logerr("Error getting current source, icon and summary data from API. The error was: %s" % (error))
+                        pass
+
+                    try:
+                        if current_units in ("si", "ca"):
+                            if data["response"][0]["ob"].get("visibilityKM") is not None:
+                                visibility = round(to_float(data["response"][0]["ob"]["visibilityKM"]), to_int(all_obs_rounding_json["visibility"]))
+                                visibility_unit = "km"
+                        else:
+                            # us, uk2 and default to miles per hour
+                            if data["response"][0]["ob"].get("visibilityMI") is not None:
+                                visibility = round(to_float(data["response"][0]["ob"]["visibilityMI"]), to_int(all_obs_rounding_json["visibility"]))
+                                visibility_unit = "miles"
+                    except Exception as error:
+                        logerr("Error getting valid visibility data from API. The error was: %s" % (error))
+                        pass
+
+                    try:
+                        if data["response"][0]["ob"].get("sky") is not None:
+                            cloudcover = round(to_float(data["response"][0]["ob"]["sky"]), to_int(all_obs_rounding_json["cloudcover"]))
+                            cloudcover_unit = "%"
+                    except Exception as error:
+                        logerr("Error getting valid cloudcover data from API. The error was: %s" % (error))
+                        pass
+
+            # AQI Data
+            if (aqi_provider != ""):
+                aqi_api_success = False
+                data = forecast_data.get(aqi_provider,{})
+                try:
+                    if (to_bool(data["aqi"][0]["success"]) and len(data["aqi"][0]["response"]) > 0):
+                        aqi_api_success = True
+                    elif not to_bool(data["aqi"][0]["success"]):
+                        errcode = data["aqi"][0]["error"]["code"]
+                        errdescr = data["aqi"][0]["error"]["description"]
+                        logerr("Error getting AQI data from API. Error: %s descr: %s" % (errcode,errdescr))
+                    elif len(data["aqi"][0]["response"]) == 0:
+                        logerr("Error getting AQI data from API. Error: No Data")
+                except Exception as error:
+                    logerr("Error getting valid AQI data from API. The error was: %s" % (error))
+                    pass
+                if aqi_api_success:
+                    try:
+                        aqi = data["aqi"][0]["response"][0]["periods"][0]["aqi"]
+                        aqi_category = data["aqi"][0]["response"][0]["periods"][0]["category"]
+                        aqi_time = data["aqi"][0]["response"][0]["periods"][0]["timestamp"]
+                        aqi_location = data["aqi"][0]["response"][0]["place"]["name"].title()
+
+                        # https://www.aerisweather.com/support/docs/api/reference/endpoints/airquality/
+                        if aqi_category == "good":
+                            aqi_category = label_dict["aqi_good"]
+                        elif aqi_category == "moderate":
+                            aqi_category = label_dict["aqi_moderate"]
+                        elif aqi_category == "usg":
+                            aqi_category = label_dict["aqi_usg"]
+                        elif aqi_category == "unhealthy":
+                            aqi_category = label_dict["aqi_unhealthy"]
+                        elif aqi_category == "very unhealthy":
+                            aqi_category = label_dict["aqi_very_unhealthy"]
+                        elif aqi_category == "hazardous":
+                            aqi_category = label_dict["aqi_hazardous"]
+                    except Exception as error:
+                        logerr("Error getting AQI data from API. The error was: %s" % (error))
+                        pass
+
 
         # ==============================================================================
         # Earthquake Data
         # ==============================================================================
+
 
         # Only process if Earthquake data is enabled
         if self.generator.skin_dict["Extras"]["earthquake_enabled"] == "1":
@@ -2297,19 +2449,21 @@ class getData(SearchList):
             eqbearing_raw = ""
             eq_distance_label = ""
 
+
         # ==============================================================================
-        # Get Current Station Observation Data for the table html
+        # get value dependent properties for observations
         # ==============================================================================
 
+
+        value_dependent_properties = self.generator.skin_dict.get("ValueDependedProperties",{})
+
+
+        # ==============================================================================
+        # All Current Station Observation Data as raw value (weewx_binding)
+        # ==============================================================================
+
+
         station_obs_binding = None
-        station_obs_json = OrderedDict()
-        station_obs_html = ""
-        station_observations = self.generator.skin_dict["Extras"][
-            "station_observations"
-        ]
-        # Check if this is a list. If not then we have 1 item, so force it into a list
-        if isinstance(station_observations, list) is False:
-            station_observations = station_observations.split()
         current_stamp = manager.lastGoodStamp()
         current_record = manager.getRecord(current_stamp)
         current = weewx.tags.CurrentObj(
@@ -2321,6 +2475,39 @@ class getData(SearchList):
             None,
             current_record
         )
+
+        current_obs_raw_json = OrderedDict()
+        for obs, val in current_obs_raw_dict.items():
+            obs_vh = getattr(current, str(obs))
+            if "?" in str(obs_vh):
+                current_obs_raw_json[obs] = None
+            else:
+                current_obs_raw_json[obs] = to_float(obs_vh.raw)
+
+
+        # ==============================================================================
+        # Get flexible current observations and build the html table
+        # ==============================================================================
+
+
+        station_obs_binding = None
+        current_stamp = manager.lastGoodStamp()
+        current_record = manager.getRecord(current_stamp)
+        current = weewx.tags.CurrentObj(
+            db_lookup,
+            station_obs_binding,
+            current_stamp,
+            self.generator.formatter,
+            self.generator.converter,
+            None,
+            current_record
+        )
+        station_observations_json = OrderedDict()
+        station_observations_html = ""
+        station_observations = self.generator.skin_dict["Extras"].get("station_observations", "")
+        # Check if this is a list. If not then we have 1 item, so force it into a list
+        if isinstance(station_observations, list) is False:
+            station_observations = station_observations.split()
         for obs in station_observations:
             if "data_binding" in obs:
                 station_obs_binding = obs[obs.find("(") + 1 : obs.rfind(")")].split(
@@ -2329,6 +2516,20 @@ class getData(SearchList):
                     1
                 ]  # Thanks https://stackoverflow.com/a/40811994/1177153
                 obs = obs.split("(")[0]
+            elif station_obs_binding is not None:
+                # reset to default binding 
+                station_obs_binding = None
+                current_stamp = manager.lastGoodStamp()
+                current_record = manager.getRecord(current_stamp)
+                current = weewx.tags.CurrentObj(
+                    db_lookup,
+                    station_obs_binding,
+                    current_stamp,
+                    self.generator.formatter,
+                    self.generator.converter,
+                    None,
+                    current_record
+                )
             if station_obs_binding is not None:
                 obs_binding_manager = self.generator.db_binder.get_manager(
                     station_obs_binding
@@ -2346,13 +2547,16 @@ class getData(SearchList):
                 )
 
             if obs == "visibility":
-                try:
+                if (visibility != "N/A"):
+                    visibility = locale.format("%g",visibility)
                     obs_output = str(visibility) + " " + str(visibility_unit)
-                except:
-                    raise Warning(
-                        "Error adding visiblity to station observations table. "
-                        "Check that you have forecast data, or remove visibility from your station_observations Extras option."
-                    )
+                else:
+                    obs_output = str(visibility)
+            elif obs == "cloudcover":
+                if (cloudcover != "N/A"):
+                    obs_output = str(cloudcover) + str(cloudcover_unit)
+                else:
+                    obs_output = str(cloudcover)
             elif obs == "rainWithRainRate":
                 # rainWithRainRate Rain shows rain daily sum and rain rate
                 obs_binder = weewx.tags.ObservationBinder(
@@ -2367,14 +2571,14 @@ class getData(SearchList):
                 dayRain_sum = getattr(obs_binder, "sum")
                 # Need to use dayRain for class name since that is weewx-mqtt
                 # payload's name
-                obs_rain_output = "<span class='dayRain'>%s</span><!-- AJAX -->" % str(dayRain_sum)
-                obs_rain_output += '<span class="rainRate border-left-rain-hum">%s</span><!-- AJAX -->' % str(getattr(current, "rainRate"))
+                obs_rain_output = '<span class="dayRain" rel="tooltip" title="">%s</span><!-- AJAX -->' % str(dayRain_sum)
+                obs_rain_output += '<span class="rainRate border-left-rain-hum" el="tooltip" title="">%s</span><!-- AJAX -->' % str(getattr(current, "rainRate"))
                 # Empty field for the JSON "current" output
                 obs_output = ""
-                if 'dayRain' not in station_obs_json:
-                    station_obs_json['dayRain'] = str(dayRain_sum)
-                if 'rainRate' not in station_obs_json:
-                    station_obs_json['rainRate'] = str(getattr(current, "rainRate"))
+                if 'dayRain' not in station_observations_json:
+                    station_observations_json['dayRain'] = str(dayRain_sum)
+                if 'rainRate' not in station_observations_json:
+                    station_observations_json['rainRate'] = str(getattr(current, "rainRate"))
             elif obs == "outHumidityWithAbs":
                 # outHumidityWithAbs rel humidity with abs humidity
                 # https://github.com/roe-dl/weewx-GTS/discussions/14
@@ -2382,21 +2586,19 @@ class getData(SearchList):
                 humrel_output = getattr(current,'outHumidity',None)
                 humabs_output = getattr(current,'outHumAbs',None)
                 if humrel_output is not None:
-                    obs_humidity_output += '<span class="outHumidity">%s</span><!-- AJAX -->' % str(humrel_output)
-                    if 'outHumidity' not in station_obs_json:
-                        station_obs_json['outHumidity'] = str(humrel_output)
+                    obs_humidity_output += '<span class="outHumidity" rel="tooltip" title="">%s</span><!-- AJAX -->' % str(humrel_output)
+                    if 'outHumidity' not in station_observations_json:
+                        station_observations_json['outHumidity'] = str(humrel_output)
                 if humabs_output is not None:
                     humabs_output = humabs_output.gram_per_meter_cubed
                     obs_humidity_output += '<span class="outHumAbs'
                     if humrel_output is not None:
                          obs_humidity_output += " border-left-rain-hum"
-                    obs_humidity_output += '">%s</span><!-- AJAX -->' % str(humabs_output)
-                    if 'outHumAbs' not in station_obs_json:
-                        station_obs_json['outHumAbs'] = str(humabs_output)
+                    obs_humidity_output += ' rel="tooltip" title="">%s</span><!-- AJAX -->' % str(humabs_output)
+                    if 'outHumAbs' not in station_observations_json:
+                        station_observations_json['outHumAbs'] = str(humabs_output)
                 # Empty field for the JSON "current" output
                 obs_output = ""
-            elif obs == "cloud_cover":
-                obs_output = cloud_cover
             elif obs == "aqi":
                 obs_output = aqi
             else:
@@ -2407,149 +2609,125 @@ class getData(SearchList):
                     obs_output = "Invalid observation"
 
             # Build the json "current" array for weewx_data.json for JavaScript
-            if obs not in station_obs_json:
-                station_obs_json[obs] = str(obs_output)
+            if obs not in station_observations_json:
+                station_observations_json[obs] = str(obs_output)
 
             # Build the HTML for the front page
-            station_obs_html += "<tr>"
-            station_obs_html += (
+            station_observations_html += "<tr>"
+            station_observations_html += (
                 '<td class="station-observations-label">%s</td>' % label_dict[obs]
             )
-            station_obs_html += '<td class="station-observations-data">'
+            station_observations_html += '<td class="station-observations-data">'
             if obs == "rainWithRainRate":
                 # Add special rain + rainRate one liner
-                station_obs_html += obs_rain_output
+                station_observations_html += obs_rain_output
             elif obs == "outHumidityWithAbs":
                 # Add special rel + abs humidity
-                station_obs_html += obs_humidity_output
+                station_observations_html += obs_humidity_output
             else:
-                station_obs_html += '<span class="%s">%s</span><!-- AJAX -->' % (
+                station_observations_html += '<span class="%s" rel="tooltip" title="">%s</span><!-- AJAX -->' % (
                     obs,
                     obs_output,
                 )
 
+            # Append span for trend arrow
             if re.search ('barometer|pressure|altimeter', obs.lower()):
-                # Append span for trend arrow
-                # https://github.com/chaunceygardiner/weewx-loopdata
-                trend = weewx.tags.TrendObj(
-                    10800,
-                    300,
-                    db_lookup,
-                    None,
-                    current_stamp,
-                    self.generator.formatter,
-                    self.generator.converter,
-                )
-                obs_trend = getattr(trend, obs)
-                # TODO get obs_trend as raw value?
-                finalRotation = -1.0
-                # if obs_trend > 6.0:
-                    # finalRotation = 0.0;
-                # elif obs_trend > 3.5:
-                    # finalRotation = 22.5;
-                # elif obs_trend > 1.5:
-                    # finalRotation = 45.0;
-                # elif obs_trend >= 0.1:
-                    # finalRotation = 67.5;
-                # elif obs_trend > -0.1:
-                    # finalRotation = 90.0;
-                # elif obs_trend >= -1.5:
-                    # finalRotation = 112.5;
-                # elif obs_trend >= -3.5:
-                    # finalRotation = 135.0;
-                # elif obs_trend >= -6.0:
-                    # finalRotation = 157.5;
-                # else:
-                    # finalRotation = 180.0;
-
-                if str(obs_trend) == "N/A":
-                    pass
-                elif "0,0" in str(obs_trend):
-                    finalRotation = 90.0
-                elif "-" in str(obs_trend):
-                    finalRotation = 112.5
-                else:
-                    finalRotation = 67.5
-
-                obs_trend_output = ""
-                if finalRotation >= 0.0:
-                    obs_trend_output = '<i class="fa fa-fw fa-long-';
-                    if finalRotation == 0.0:
-                        obs_trend_output += 'arrow-up';
-                    elif finalRotation == 90.0:
-                        obs_trend_output += 'arrow-right';
-                    elif finalRotation == 180.0:
-                        obs_trend_output += 'arrow-down';
-                    else:
-                        obs_trend_output += 'arrow-up" style="transform:rotate(%.1fdeg);' % finalRotation
-                    obs_trend_output += '"></i>';
-                station_obs_html += '<span class="trend_%s-symbol">%s</span><!-- AJAX -->' % (obs, obs_trend_output)
+                station_observations_html += '<span class="trend_%s_symbol" rel="tooltip" title=""></span><!-- AJAX -->' % obs
 
             # sunshine debug symbol
             if obs == "radiation":
-                station_obs_html += '<span class="sunshine-debug-symbol"></span><!-- AJAX -->'
+                station_observations_html += '<span class="debug_sunshine_symbol"></span><!-- AJAX -->'
             # cloudcover debug symbol
-            if obs == "cloud_cover":
-                station_obs_html += '<span class="cloudcover-debug-symbol"></span><!-- AJAX -->'
+            if obs == "cloudcover":
+                station_observations_html += '<span class="debug_cloudcover_symbol"></span><!-- AJAX -->'
 
-            station_obs_html += "</td>"
-            station_obs_html += "</tr>"
+            station_observations_html += "</td>"
+            station_observations_html += "</tr>"
+
 
         # ==============================================================================
-        # Get all observations and their rounding values
+        # Get flexible current observations for the modal box
+        # TODO nötig?
         # ==============================================================================
 
-        all_obs_rounding_json = OrderedDict()
-        all_obs_unit_labels_json = OrderedDict()
-        all_obs_unit_groups_json = OrderedDict()
-        for obs in sorted(weewx.units.obs_group_dict):
-            try:
-                # Find the unit from group (like group_temperature = degree_F)
-                obs_group = weewx.units.obs_group_dict[obs]
-                obs_unit = self.generator.converter.group_unit_dict[obs_group]
-                # Add to the rounding array
-                if obs not in all_obs_unit_groups_json:
-                    all_obs_unit_groups_json[obs] = str(obs_group)
-            except:
-                # Something's wrong. Continue this loop to ignore this group
-                # (like group_dust or something non-standard)
-                continue
-            try:
-                # Find the number of decimals to round to based on group name
-                obs_round = self.generator.skin_dict["Units"]["StringFormats"].get(
-                    obs_unit, "0"
-                )[2]
-            except:
-                obs_round = self.generator.skin_dict["Units"]["StringFormats"].get(
-                    obs_unit, "0"
-                )
-            # Add to the rounding array
-            if obs not in all_obs_rounding_json:
-                all_obs_rounding_json[obs] = str(obs_round)
-            # Get the unit's label
-            # Add to label array and strip whitespace if possible
-            if obs not in all_obs_unit_labels_json:
-                obs_unit_label = weewx.units.get_label_string(
-                    self.generator.formatter, self.generator.converter, obs
-                )
-                all_obs_unit_labels_json[obs] = obs_unit_label
+        station_observations_extras_json = {}
+        station_obs_binding = None
+        current_stamp = manager.lastGoodStamp()
+        current_record = manager.getRecord(current_stamp)
+        current = weewx.tags.CurrentObj(
+            db_lookup,
+            station_obs_binding,
+            current_stamp,
+            self.generator.formatter,
+            self.generator.converter,
+            None,
+            current_record
+        )
+        station_observations_extras = self.generator.skin_dict.get("StationObservationsExtras", {})
+        for obs_extra in station_observations_extras:
+            obs_json = OrderedDict()
+            if "obs" in station_observations_extras[obs_extra]:
+                obs_list = station_observations_extras[obs_extra].get("obs")
+                if obs_list is not None:
+                    
+                    # Check if this is a list. If not then we have 1 item, so force it into a list
+                    if isinstance(obs_list, list) is False:
+                        obs_list = obs_list.split()
 
-            # Special handling items
-            if visibility:
-                all_obs_rounding_json["visibility"] = "2"
-                all_obs_unit_labels_json["visibility"] = visibility_unit
-            else:
-                all_obs_rounding_json["visibility"] = ""
-                all_obs_unit_labels_json["visibility"] = ""
+                    for obs in obs_list:
+                        if "data_binding" in obs:
+                            station_obs_binding = obs[obs.find("(") + 1 : obs.rfind(")")].split(
+                                "="
+                            )[
+                            1
+                            ]  # Thanks https://stackoverflow.com/a/40811994/1177153
+                            obs = obs.split("(")[0]
+                        elif station_obs_binding is not None:
+                            # reset to default binding 
+                            station_obs_binding = None
+                            current_stamp = manager.lastGoodStamp()
+                            current_record = manager.getRecord(current_stamp)
+                            current = weewx.tags.CurrentObj(
+                                db_lookup,
+                                station_obs_binding,
+                                current_stamp,
+                                self.generator.formatter,
+                                self.generator.converter,
+                                None,
+                                current_record
+                            )
+                        if station_obs_binding is not None:
+                            obs_binding_manager = self.generator.db_binder.get_manager(
+                                station_obs_binding
+                            )
+                            current_stamp = obs_binding_manager.lastGoodStamp()
+                            current_record = obs_binding_manager.getRecord(current_stamp)
+                            current = weewx.tags.CurrentObj(
+                                db_lookup,
+                                station_obs_binding,
+                                current_stamp,
+                                self.generator.formatter,
+                                self.generator.converter,
+                                None,
+                                current_record
+                            )
+                        obs_output = getattr(current, obs)
+                        if "?" in str(obs_output):
+                            # Try to catch those invalid observations, like 'uv' needs
+                            # to be 'UV'.
+                            obs_output = "Invalid observation"
 
-        # 20220811,ho add absolute humidity to relative humidity
-        # https://github.com/roe-dl/weewx-GTS/discussions/14
-        all_obs_rounding_json["outHumAbs"] = 1
-        all_obs_unit_labels_json["outHumAbs"] = " g/m³"
+                        # Build the json "current" array for weewx_data.json for JavaScript
+                        if obs not in obs_json:
+                            obs_json[obs] = str(obs_output)
+
+            station_observations_extras_json[obs_extra] = obs_json
+
 
         # ==============================================================================
         # Social Share
         # ==============================================================================
+
 
         facebook_enabled = self.generator.skin_dict["Extras"]["facebook_enabled"]
         twitter_enabled = self.generator.skin_dict["Extras"]["twitter_enabled"]
@@ -2606,9 +2784,11 @@ class getData(SearchList):
                 social_html += twitter_html
             social_html += "</div>"
 
+
         #==============================================================================
         # MQTT settings for Kiosk page
-        # ==============================================================================
+        #==============================================================================
+
 
         if self.generator.skin_dict["Extras"]["mqtt_websockets_host_kiosk"] != "":
             if self.generator.skin_dict["Extras"]["mqtt_websockets_port_kiosk"] != "":
@@ -2624,9 +2804,11 @@ class getData(SearchList):
             mqtt_websockets_port_kiosk = self.generator.skin_dict["Extras"]["mqtt_websockets_port"]
             mqtt_websockets_ssl_kiosk = self.generator.skin_dict["Extras"]["mqtt_websockets_ssl"]
 
+
         #==============================================================================
         # MQTT settings for Console page
         # ==============================================================================
+
 
         if self.generator.skin_dict["Extras"]["mqtt_websockets_host_console"] != "":
             if self.generator.skin_dict["Extras"]["mqtt_websockets_port_console"] != "":
@@ -2643,6 +2825,10 @@ class getData(SearchList):
             mqtt_websockets_ssl_console = self.generator.skin_dict["Extras"]["mqtt_websockets_ssl"]
 
 
+        #==============================================================================
+        # custom css
+        #==============================================================================
+
 
         # Include custom.css if it exists in the HTML_ROOT folder
         custom_css_file = html_root + "/css/custom.css"
@@ -2651,19 +2837,23 @@ class getData(SearchList):
         custom_css_exists = os.path.isfile(custom_css_file)
         custom_css_min_exists = os.path.isfile(custom_css_min_file)
 
-        #==============================================================================
-        # indoor climate settings
-        #==============================================================================
-        indoorclimate_dict = {}
-        if self.indoorclimate_dict is None:
-            indoorclimate_section = self.generator.skin_dict['Extras'].get('indoorclimate_section')
-            if indoorclimate_section is not None:
-                indoorclimate_dict = self.generator.config_dict.get(indoorclimate_section, {})
-                self.indoorclimate_dict = copy.deepcopy(indoorclimate_dict)
-        else:
-            indoorclimate_dict = self.indoorclimate_dict
 
+        #==============================================================================
+        # Extension roomclimate settings
+        #==============================================================================
+
+
+        roomclimate_extension_config = {}
+        roomclimate_extension_section = self.generator.skin_dict['Extras'].get('roomclimate_extension_section')
+        if roomclimate_extension_section is not None:
+            roomclimate_extension_config = self.generator.config_dict.get(roomclimate_extension_section, {})
+
+
+        #==============================================================================
         # Build the search list with the new values
+        #==============================================================================
+
+
         search_list_extension = {
             "weiherhammer_version": VERSION,
             "weiherhammer_debug": weiherhammer_debug,
@@ -2691,7 +2881,6 @@ class getData(SearchList):
             "year_outTemp_range_min": year_outTemp_range_min,
             "at_outTemp_range_max": at_outTemp_range_max,
             "at_outTemp_range_min": at_outTemp_range_min,
-
             "rainiest_day": rainiest_day,
             "at_rainiest_day": at_rainiest_day,
             "year_rainiest_month": year_rainiest_month,
@@ -2701,7 +2890,6 @@ class getData(SearchList):
             "year_days_without_rain": year_days_without_rain,
             "at_days_with_rain": at_days_with_rain,
             "at_days_without_rain": at_days_without_rain,
-
             "thunderstormiest_day": thunderstormiest_day,
             "at_thunderstormiest_day": at_thunderstormiest_day,
             "year_thunderstormiest_month": year_thunderstormiest_month,
@@ -2711,7 +2899,6 @@ class getData(SearchList):
             "year_days_without_lsc": year_days_without_lsc,
             "at_days_with_lsc": at_days_with_lsc,
             "at_days_without_lsc": at_days_without_lsc,
-
             "sunniest_day": sunniest_day,
             "at_sunniest_day": at_sunniest_day,
             "year_sunniest_month": year_sunniest_month,
@@ -2722,23 +2909,51 @@ class getData(SearchList):
             "year_days_without_sunshine": year_days_without_sunshine,
             "at_days_with_sunshine": at_days_with_sunshine,
             "at_days_without_sunshine": at_days_without_sunshine,
-
             "windSpeedUnitLabel": windSpeed_unit_label,
             "noaa_header_html": noaa_header_html,
             "default_noaa_file": default_noaa_file,
+
+            "alerts_provider": alerts_provider,
+            "alerts_provider_list": alerts_provider_list,
+            "alerts_provider_toggle": alerts_provider_toggle,
+
+            "aqi": aqi,
+            "aqi_category": aqi_category,
+            "aqi_location": aqi_location,
+            "aqi_provider": aqi_provider,
+            "aqi_provider_list": aqi_provider_list,
+            "aqi_provider_toggle": aqi_provider_toggle,
+
             "current_obs_icon": current_obs_icon,
             "current_obs_summary": current_obs_summary,
+            "current_obs_source": current_obs_source,
+            "current_provider": current_provider,
             "current_provider_list": current_provider_list,
-            "current_provider_default": current_provider_default,
-            "current_provider_visible": current_provider_visible,
+            "current_provider_toggle": current_provider_toggle,
+
+            "forecast_provider": forecast_provider,
+            "forecast_provider_list": forecast_provider_list,
+            "forecast_provider_toogle": forecast_provider_toggle,
+            "forecast_interval_hours": forecast_interval_hours,
+
             "visibility": visibility,
             "visibility_unit": visibility_unit,
-            "cloud_cover": cloud_cover,
-            "station_obs_json": json.dumps(station_obs_json),
-            "station_obs_html": station_obs_html,
+            "cloudcover": cloudcover,
+            "cloudcover_unit": cloudcover_unit,
+
+            "builtin_forecast_file": builtin_forecast_file,
+            "builtin_forecast_available": builtin_forecast_available,
+            "external_forecast_file": external_forecast_file,
+            "external_forecast_available": external_forecast_available,
+
+            "station_observations_html": station_observations_html,
+            "station_observations_json": json.dumps(station_observations_json),
+            "station_observations_extras": station_observations_extras,
+            "station_observations_extras_json": json.dumps(station_observations_extras_json),
             "all_obs_rounding_json": json.dumps(all_obs_rounding_json),
             "all_obs_unit_labels_json": json.dumps(all_obs_unit_labels_json),
             "all_obs_unit_groups_json": json.dumps(all_obs_unit_groups_json),
+            "current_obs_raw_json": json.dumps(current_obs_raw_json),
             "earthquake_time": eqtime,
             "earthquake_url": equrl,
             "earthquake_place": eqplace,
@@ -2752,9 +2967,6 @@ class getData(SearchList):
             "social_html": social_html,
             "custom_css_exists": custom_css_exists,
             "custom_css_min_exists": custom_css_min_exists,
-            "aqi": aqi,
-            "aqi_category": aqi_category,
-            "aqi_location": aqi_location,
             "beaufort0": label_dict["beaufort0"],
             "beaufort1": label_dict["beaufort1"],
             "beaufort2": label_dict["beaufort2"],
@@ -2772,7 +2984,8 @@ class getData(SearchList):
             "mqtt_websockets_ssl_kiosk": mqtt_websockets_ssl_kiosk,
             "mqtt_websockets_port_console": mqtt_websockets_port_console,
             "mqtt_websockets_ssl_console": mqtt_websockets_ssl_console,
-            "indoorclimate_config": json.dumps(indoorclimate_dict),
+            "roomclimate_extension_config_json": json.dumps(roomclimate_extension_config),
+            "value_dependent_properties_json": json.dumps(value_dependent_properties)
         }
         # Finally, return our extension as a list:
         return [search_list_extension]
@@ -2781,7 +2994,6 @@ class getData(SearchList):
 # ======================================================================================
 # HighchartsJsonGenerator
 # ======================================================================================
-
 
 class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
     """Class for generating JSON files for the Highcharts.

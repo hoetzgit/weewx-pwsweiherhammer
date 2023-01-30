@@ -21,7 +21,7 @@
                     }
 
                     ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
-                        update_weewx_data(weewx_data); // Initial call to update (date, daily high, low, etc)
+                        update_with_weewx_data(weewx_data); // Initial call to update (date, daily high, low, etc)
 
                         #if $Extras.has_key("webpage_autorefresh") and $Extras.webpage_autorefresh != '0'
                         // Reload the page on an interval for updated data. This is for non-mqtt websocket websites

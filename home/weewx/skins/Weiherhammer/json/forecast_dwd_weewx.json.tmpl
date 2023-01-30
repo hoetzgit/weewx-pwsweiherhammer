@@ -1,0 +1,131 @@
+#encoding UTF-8
+#import datetime
+#errorCatcher Echo
+{
+    "timestamp": #echo int( time.time() )#,
+    "dwd_cdc": {
+        "timestamp": $current.cdc_DateTime.raw,
+        "current": [
+            {
+                "success": true,
+                "error": null,
+                "source": "DWD CDC Daten",
+                "response": {
+                    "dataSource": "dwd.py",
+                    "station_id": "$current.cdc_Station_id.raw"
+                    "dwd_station_id": "05397",
+                    "wmo_station_id": "10688",
+                    "loc": {
+                        "long": $current.cdc_Longitude.raw,
+                        "lat": $current.cdc_Latitude.raw
+                    },
+                    "place": {
+                        "name": "Weiden",
+                        "city": "Weiden",
+                        "state": "by",
+                        "country": "de"
+                    },
+                    "profile": {
+                        "tz": "Europe/Berlin",
+                        "tzname": "CET",
+                        "tzoffset": 3600,
+                        "isDST": false,
+##                        "elevM": $current.cdc_Altitude.raw
+                    },
+                    "ob": {
+##                        "timestamp": $current.cdc_DateTime.raw,
+##                        "dateTimeISO": "",
+##                        "tempC": $current.cdc_OutTemp.raw,
+##                        "dewpointC": $current.cdc_Dewpoint.raw,
+##                        "humidity": $current.cdc_OutHumidity.raw,
+##                        "pressureMB": $current.cdc_Pressure.raw,
+##                        "barometerMB": $current.cdc_Barometer.raw,
+##                        "windSpeedKPH": $current.cdc_WindSpeed.raw,
+##                        "windDir": "N/A",
+##                        "windDirDEG": $current.cdc_WindDir.raw,
+##                        "windGustKPH": $current.cdc_WindGust.raw,
+##                        "windGustDir": "N/A",
+##                        "windGustDirDEG": $current.cdc_WindGustDir.raw,
+##                        "visibilityKM": "N/A",
+##                        "weather": "bedeckt",
+##                        "weatherCoded": "::BK",
+##                        "weatherPrimary": "bedeckt",
+##                        "weatherPrimaryCoded": "::BK",
+##                        "cloudsCoded": "BK",
+##                        "icon": "$current.cdc_Icon.raw",
+##                        "icontitle": "$current.cdc_Icontitle.raw",
+##                        "solradWM2": $current.cdc_SolarRad.raw,
+##                        "radiationWM2": $current.cdc_Radiation.raw,
+##                        "sunshineDur": $current.cdc_SunshineDur.raw,
+##                        "rainDur": $current.cdc_RainDur.raw,
+##                        "rain": $current.cdc_Rain.raw,
+##                        "rainIndex": $current.cdc_RainIndex.raw,
+##                        "isDay": false,
+##                        "sky": "N/A"
+                    }
+                }
+            }
+        ]
+    },
+    "dwd_poi": {
+##        "timestamp": $current.poi_DateTime.raw,
+        "current": [
+            {
+                "success": true,
+                "error": null,
+                "source": "DWD POI Daten",
+                "response": {
+                    "dataSource": "dwd.py",
+                    "dwd_station_id": "05397",
+                    "wmo_station_id": "10688",
+                    "loc": {
+                        "long": 12.1845,
+                        "lat": 49.6662
+                    },
+                    "place": {
+                        "name": "Weiden",
+                        "city": "Weiden",
+                        "state": "by",
+                        "country": "de"
+                    },
+                    "profile": {
+                        "tz": "Europe/Berlin",
+                        "tzname": "CET",
+                        "tzoffset": 3600,
+                        "isDST": false,
+                        "elevM": 439.6
+                    },
+                    "ob": {
+##                        "timestamp": $current.poi_DateTime.raw,
+##                        "dateTimeISO": "2023-01-25T20:30:00+01:00",
+##                        "tempC": $current.poi_OutTemp.raw,
+##                        "dewpointC": $current.poi_Dewpoint.raw,
+##                        "humidity": $current.poi_OutHumidity.raw,
+##                        "pressureMB": "N/A",
+##                        "barometerMB": $current.poi_Barometer.raw,
+##                        "windSpeedKPH": $current.poi_WindSpeed.raw,
+##                        "windDir": "N/A",
+##                        "windDirDEG": $current.poi_WindDir.raw,
+##                        "windGustKPH": "N/A",
+##                        "windGustDir": "N/A",
+##                        "windGustDirDEG": "N/A",
+##                        "visibilityKM": $current.poi_Visibility.raw,
+##                        "weather": "bedeckt",
+##                        "weatherCoded": "::BK",
+##                        "weatherPrimary": "bedeckt",
+##                        "weatherPrimaryCoded": "::BK",
+##                        "cloudsCoded": "BK",
+##                        "cloudbase": $current.poi_Cloudbase.raw,
+##                        "icon": "mcloudyn.png",
+##                        "radiationWM2": $current.poi_Radiation.raw,
+##                        "solradWM2": $current.poi_SolarRad.raw,
+##                        "isDay": false,
+##                        "sky": $current.poi_Cloudcover.raw,
+##                        "rain": $current.poi_Rain.raw,
+##                        "snowDepth": $current.poi_SnowDepth.raw
+                    }
+                }
+            }
+        ]
+    }
+}

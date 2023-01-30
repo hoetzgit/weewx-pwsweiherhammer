@@ -1,30 +1,59 @@
 #errorCatcher Echo
 #encoding UTF-8
-#set global $page = "mqtt"
+#import datetime
+#set global $page = "mqttmon"
 #include "header.html.tmpl"
 #if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
-    #set $file = "css/weewx-mqtt.css"
-    #if os.path.exists($file)
+            #set $file = "css/" + $page +".css"
+            #if os.path.exists($file)
             <link rel="stylesheet" href="$relative_url/$file?ver=#echo int( time.time() ) #" type="text/css" media="all"/>
-    #end if
+            #end if
             <script type="text/javascript">
                 var finalRotation;
                 var homepage_graphgroup = "dummy";
                 
                 var mqttMsg;
-                var mqttclient = "weiherhammer_$page" + Math.floor(Math.random() * 999999999);
+                var mqttclient = "weiherhammer_" + "$page" + "_" + Math.floor(Math.random() * 999999999);
                 var moment_locale = "$system_locale_js";
                 moment.locale(moment_locale);
                 
-                function autoRefreshPage() {
-                    window.location = window.location.href;
+                #if $Extras.has_key("mqttmon_outdated_treshold") and $Extras.mqttmon_outdated_treshold != ""
+                const mqttmon_outdated_treshold = parseInt($Extras.mqttmon_outdated_treshold);
+                #else
+                const mqttmon_outdated_treshold = parseInt(#echo $archive_interval_ms / 1000#);
+                #end if
+                
+                #if $Extras.has_key("mqttmon_format_default") and $Extras.mqttmon_format_default != ""
+                const mqttmon_format_default = "$Extras.mqttmon_format_default";
+                #else
+                const mqttmon_format_default = "formatted";
+                #end if
+                #if $Extras.has_key("mqttmon_format_toggle") and $Extras.mqttmon_format_toggle == "1"
+                if ( sessionStorage.getItem("mqttmon_format_user") === null ) {
+                    sessionStorage.setItem("mqttmon_format_user", mqttmon_format_default);
                 }
+                var mqttmon_format_user = sessionStorage.getItem("mqttmon_format_user");
+                if (mqttmon_format_user == mqttmon_format_default) {
+                    var mqttmon_format_checked = true;
+                } else {
+                    var mqttmon_format_checked = false;
+                }
+                #else
+                var mqttmon_format_user = mqttmon_format_default;
+                #end if
                 
                 ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
-                    update_weewx_data(weewx_data); // Initial call to update (date, daily high, low, etc)
+                    update_with_weewx_data(weewx_data, false); // Initial call to update (date, daily high, low, etc)
                     weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
         
                     jQuery(document).ready(function() {
+                        #if $Extras.has_key("mqttmon_format_toggle") and $Extras.mqttmon_format_toggle == "1"
+                        jQuery("#" + "mqttmonFormatSwitch").prop("checked", mqttmon_format_checked);
+                        jQuery("#" + "mqttmonFormatSwitch").change(function () {
+                            mqttmon_switch_format();
+                        });
+                        #end if
+
                         // Update the Last Updated timestamp with moment.js,
                         updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
                         updated_text = "$obs.label.header_last_updated " + updated;
@@ -37,7 +66,7 @@
                             // If the Restart button is clicked, reconnect to mqtt and update weewx and forecast data
                             jQuery(document).on('click', '.restart-interval', function() { 
                                 ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
-                                    update_weewx_data(weewx_data); // Initial call to update (date, daily high, low, etc)
+                                    update_with_weewx_data(weewx_data, false); // Initial call to update (date, daily high, low, etc)
                                     weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
                                     connect(); // Restart mqtt after weewx data's re-loaded
                                 }).catch(function(e){
@@ -57,7 +86,7 @@
                         <!-- Top bar with city and share -->
                         <div class="wx-stn-info-container">
                             <div class="wx-stn-name">
-                                <h1>$obs.label.page_header_mqtt</h1>
+                                <h1>$obs.label.page_header_mqttmon</h1>
                             </div>
                             <div class="wx-stn-info">
                                 $obs.label.powered_by
@@ -76,27 +105,41 @@
                             <div class="last-updated-alert" style="display:none;"></div><!-- AJAX moment.js -->
                         </div>
                         #if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
-                        <div class="row mqtt-data">
-                            <div class="col-xs-12 mqtt-table-container">
-                                <table class="table table-striped mqtt-table">
-                                    <thead class="table-light mqtt-table-head">
+                        <div class="row mqttmon-row">
+                            <div class="col-xs-12 mqttmon-table-container">
+                                <table class="table table-striped mqttmon-table">
+                                    <thead class="table-light mqttmon-table-head">
                                         <tr>
-                                            <th scope="col" class="mqtt-table-head-headline" colspan=2><b>Broker:</b> $Extras.mqtt_websockets_host <b>Topic:</b> $Extras.mqtt_websockets_topic/#</th>
+                                            <th scope="col" class="mqttmon-table-head-headline" colspan=2>$gettext('broker') <b>$Extras.mqtt_websockets_host</b> $gettext('topics') <b>$Extras.mqtt_websockets_topic/#</b></th>
                                         </tr>
                                         <tr>
-                                            <th scope="row" class="mqtt-table-head-subheadline" colspan=2>
-                                                <div class="mqtt-rec-dot"></div>$gettext('received')
-                                                <div class="mqtt-rec-outdated-dot"></div>$gettext('outdated')
-                                                <div class="mqtt-rec-none-dot"></div>$gettext('not received yet')
+                                            <th scope="col" class="mqttmon-table-head-subheadline">
+                                                <div class="mqttmon-legend">
+                                                    <span class="mqttmon-rcv-dot"></span>$gettext('received')
+                                                    <span class="mqttmon-rcv-outdated-dot"></span>$gettext('outdated')
+                                                    <span class="mqttmon-rcv-none-dot"></span>$gettext('not received')
+                                                </div>
                                             </th>
+                                            #if $Extras.has_key("mqttmon_format_toggle") and $Extras.mqttmon_format_toggle == "1"
+                                            <th scope="col" class="mqttmon-table-head-subheadline">
+                                                <div class="form-check form-switch mqttmon-format-switch">
+                                                    <input class="form-check-input mqttmon-format-switch-input" type="checkbox" role="switch" id="mqttmonFormatSwitch"/>
+                                                    <label class="form-check-label mqttmon-format-switch-label" for="mqttmonFormatSwitch">$gettext('formatted')</label>
+                                                </div>
+                                            </th>
+                                            #end if
                                         </tr>
                                     </thead>
-                                    <tbody class="table-group-divider mqtt-table-body">
-                                        #set $file = $page + "/" + "weewx-mqtt.inc"
+                                    <tbody class="table-group-divider mqttmon-table-body mqttmon-data">
+                                        #set $file = $page + "/" + $page + ".inc"
                                         #if os.path.exists($file)
+
                                         <!-- Begin $file -->
+
                                         #include $file
+
                                         <!-- End $file -->
+
                                         #end if
                                     </tbody>
                                 </table>

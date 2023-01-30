@@ -8,14 +8,19 @@ USER=""
 PW=""
 PORT=1883
 QOS=1
-CLIENTID="${HOSTNAME}-weewx-mqtt-inc-generator"
+CLIENTID="${HOSTNAME}-mqttmon-inc-generator"
 MAINTOPIC="weewx-mqtt"
 TOPICFILTER="-T weewx-mqtt/loop"
+SUBSCRIBETIMEOUT=2
 
 TMPDIR="/tmp"
 TMPFILE="${TMPDIR}/${MAINTOPIC}.tmp"
-INCDESTDIR="/home/weewx/skins/Weiherhammer/mqtt"
+
+PAGE="mqttmon"
+INCDESTDIR="/home/weewx/skins/Weiherhammer/${PAGE}"
+INCDESTFILE="${INCDESTDIR}/${PAGE}.inc"
 CSSDESTDIR="/home/weewx/skins/Weiherhammer/css"
+CSSDESTFILE="${CSSDESTDIR}/${PAGE}.css"
 
 ME="$(basename "${BASH_ARGV0}")"
 DATETIME=$(date '+%d.%m.%Y %H:%M:%S')
@@ -47,24 +52,32 @@ do
   TOPICFILTER="${TOPICFILTER} -T ${WINDTOPIC}"
 done
 
+if [[ ! -e ${INCDESTDIR} ]]; then
+    mkdir -p ${INCDESTDIR}
+fi
+
+if [[ ! -e ${CSSDESTDIR} ]]; then
+    mkdir -p ${CSSDESTDIR}
+fi
+
 if [ -f "${TMPFILE}" ]; then
   rm -f "${TMPFILE}"
 fi
 echo "${TMPFILE}"
 
-TMPINCDESTFILE="${TMPDIR}/${MAINTOPIC}.inc"
+TMPINCDESTFILE="${TMPDIR}/${PAGE}.inc"
 if [ -f "${TMPINCDESTFILE}" ]; then
   rm -f "${TMPINCDESTFILE}"
 fi
 echo "${TMPINCDESTFILE}"
 
-TMPCSSDESTFILE="${TMPDIR}/${MAINTOPIC}.css"
+TMPCSSDESTFILE="${TMPDIR}/${PAGE}.css"
 if [ -f "${TMPCSSDESTFILE}" ]; then
   rm -f "${TMPCSSDESTFILE}"
 fi
 echo "${TMPCSSDESTFILE}"
 
-mosquitto_sub -h ${BROKER} ${USER} ${PW} -i ${CLIENTID} -q ${QOS} -t ${MAINTOPIC}/# -F %t ${TOPICFILTER} -W 1 >"${TMPFILE}"
+mosquitto_sub -h ${BROKER} ${USER} ${PW} -i ${CLIENTID} -q ${QOS} -t ${MAINTOPIC}/# -F %t ${TOPICFILTER} -W ${SUBSCRIBETIMEOUT} >"${TMPFILE}"
 
 #Die Liste nun mit allen windrun_* Topics erweitern
 for WINDTOPIC in ${WINDRUNTOPICS[@]}
@@ -75,6 +88,7 @@ done
 cmd="sed -i 's/${MAINTOPIC}\///g' ${TMPFILE}"
 bash -c "${cmd}"
 sort -o "${TMPFILE}" "${TMPFILE}"
+#uniq -u "${TMPFILE}" "${TMPFILE}"
 
 # write css file
 printf "/*\n" >>"${TMPCSSDESTFILE}"
@@ -82,68 +96,66 @@ printf "Generator: %s\n" "${ME}" >>"${TMPCSSDESTFILE}"
 printf "generated: %s\n" "${DATETIME}" >>"${TMPCSSDESTFILE}"
 printf "*/\n\n" >>"${TMPCSSDESTFILE}"
 printf ":root {\n" >>"${TMPCSSDESTFILE}"
-printf "  --mqtt-rec-none:#FF0000;\n" >>"${TMPCSSDESTFILE}"
-printf "  --mqtt-rec:#00bb00;\n" >>"${TMPCSSDESTFILE}"
-printf "  --mqtt-rec-outdated:#236d1b;\n" >>"${TMPCSSDESTFILE}"
+printf "  --mqttmon-rcv-none:#FF0000;\n" >>"${TMPCSSDESTFILE}"
+printf "  --mqttmon-rcv:#00bb00;\n" >>"${TMPCSSDESTFILE}"
+printf "  --mqttmon-rcv-outdated:#236d1b;\n" >>"${TMPCSSDESTFILE}"
 printf "}\n\n" >>"${TMPCSSDESTFILE}"
-printf ".mqtt-rec-none-dot {\n" >>"${TMPCSSDESTFILE}"
+printf ".mqttmon-rcv-none-dot {\n" >>"${TMPCSSDESTFILE}"
 printf "  height: 8px;\n" >>"${TMPCSSDESTFILE}"
 printf "  width: 8px;\n" >>"${TMPCSSDESTFILE}"
-printf "  background-color: var(--mqtt-rec-none);\n" >>"${TMPCSSDESTFILE}"
+printf "  background-color: var(--mqttmon-rcv-none);\n" >>"${TMPCSSDESTFILE}"
+printf "  border-radius: 50%s;\n" "%" >>"${TMPCSSDESTFILE}"
+printf "  display: inline-block;\n" >>"${TMPCSSDESTFILE}"
+printf "  margin-left: 5px;\n" >>"${TMPCSSDESTFILE}"
+printf "  margin-right: 5px;\n" >>"${TMPCSSDESTFILE}"
+printf "}\n\n" >>"${TMPCSSDESTFILE}"
+printf ".mqttmon-rcv-dot {\n" >>"${TMPCSSDESTFILE}"
+printf "  height: 8px;\n" >>"${TMPCSSDESTFILE}"
+printf "  width: 8px;\n" >>"${TMPCSSDESTFILE}"
+printf "  background-color: var(--mqttmon-rcv);\n" >>"${TMPCSSDESTFILE}"
 printf "  border-radius: 50%s;\n" "%" >>"${TMPCSSDESTFILE}"
 printf "  display: inline-block;\n" >>"${TMPCSSDESTFILE}"
 printf "  margin-left: 10px;\n" >>"${TMPCSSDESTFILE}"
 printf "  margin-right: 5px;\n" >>"${TMPCSSDESTFILE}"
 printf "}\n\n" >>"${TMPCSSDESTFILE}"
-printf ".mqtt-rec-dot {\n" >>"${TMPCSSDESTFILE}"
+printf ".mqttmon-rcv-outdated-dot {\n" >>"${TMPCSSDESTFILE}"
 printf "  height: 8px;\n" >>"${TMPCSSDESTFILE}"
 printf "  width: 8px;\n" >>"${TMPCSSDESTFILE}"
-printf "  background-color: var(--mqtt-rec);\n" >>"${TMPCSSDESTFILE}"
+printf "  background-color: var(--mqttmon-rcv-outdated);\n" >>"${TMPCSSDESTFILE}"
 printf "  border-radius: 50%s;\n" "%" >>"${TMPCSSDESTFILE}"
 printf "  display: inline-block;\n" >>"${TMPCSSDESTFILE}"
-printf "  margin-left: 10px;\n" >>"${TMPCSSDESTFILE}"
-printf "  margin-right: 5px;\n" >>"${TMPCSSDESTFILE}"
-printf "}\n\n" >>"${TMPCSSDESTFILE}"
-printf ".mqtt-rec-outdated-dot {\n" >>"${TMPCSSDESTFILE}"
-printf "  height: 8px;\n" >>"${TMPCSSDESTFILE}"
-printf "  width: 8px;\n" >>"${TMPCSSDESTFILE}"
-printf "  background-color: var(--mqtt-rec-outdated);\n" >>"${TMPCSSDESTFILE}"
-printf "  border-radius: 50%s;\n" "%" >>"${TMPCSSDESTFILE}"
-printf "  display: inline-block;\n" >>"${TMPCSSDESTFILE}"
-printf "  margin-left: 10px;\n" >>"${TMPCSSDESTFILE}"
+printf "  margin-left: 5px;\n" >>"${TMPCSSDESTFILE}"
 printf "  margin-right: 5px;\n" >>"${TMPCSSDESTFILE}"
 printf "}\n\n" >>"${TMPCSSDESTFILE}"
 
 # write inc file
-printf "                                        <!-- Generator: %s %s\n" "${ME}" "-->" >>"${TMPINCDESTFILE}"
-printf "                                        <!-- generated: %s %s\n" "${DATETIME}" "-->" >>"${TMPINCDESTFILE}"
+printf "    <!-- Generator: %s %s\n" "${ME}" "-->" >>"${TMPINCDESTFILE}"
+printf "    <!-- generated: %s %s\n" "${DATETIME}" "-->" >>"${TMPINCDESTFILE}"
 
 while IFS="=" read -r value
 do
   # write css file
-  printf ".%s-mqtt-rec-dot {\n" "${value}" >>"${TMPCSSDESTFILE}"
+  printf ".%s-mqttmon-rcv-dot {\n" "${value}" >>"${TMPCSSDESTFILE}"
   printf "  height: 8px;\n" >>"${TMPCSSDESTFILE}"
   printf "  width: 8px;\n" >>"${TMPCSSDESTFILE}"
-  printf "  background-color: var(--mqtt-rec-none);\n" >>"${TMPCSSDESTFILE}"
+  printf "  background-color: var(--mqttmon-rcv-none);\n" >>"${TMPCSSDESTFILE}"
   printf "  border-radius: 50%s;\n" "%" >>"${TMPCSSDESTFILE}"
   printf "  display: inline-block;\n" >>"${TMPCSSDESTFILE}"
   printf "  margin-right: 5px;\n" >>"${TMPCSSDESTFILE}"
   printf "}\n\n" >>"${TMPCSSDESTFILE}"
 
   # write inc file
-  printf "                                        <tr>\n" >>"${TMPINCDESTFILE}"
-  printf '                                            <th scope="row" class="mqtt-table-body-obs"><div class="%s-mqtt-rec-dot"></div><abbr rel="tooltip" title="$obs.label.%s">%s</abbr></th>\n' "${value}" "${value}" "${value}" >>"${TMPINCDESTFILE}"
-  printf '                                            <td class="mqtt-table-body-obs-val"><span class="%s" data-mqttrec="0">---</span></td><!-- AJAX -->\n' "${value}" >>"${TMPINCDESTFILE}"
-  printf "                                        </tr>\n" >>"${TMPINCDESTFILE}"
+  printf "    <tr>\n" >>"${TMPINCDESTFILE}"
+  printf '        <th scope="row" class="mqttmon-table-body-obs"><div class="%s-mqttmon-rcv-dot"></div><abbr rel="tooltip" title="$obs.label.%s">%s</abbr></th>\n' "${value}" "${value}" "${value}" >>"${TMPINCDESTFILE}"
+  printf '        <td class="mqttmon-table-body-obs-val"><span class="%s" rel="tooltip" title="">---</span></td>\n' "${value}" >>"${TMPINCDESTFILE}"
+  printf "    </tr>\n" >>"${TMPINCDESTFILE}"
 done < <(cat "${TMPFILE}")
 
 rm -f "${TMPFILE}"
 
-CSSDESTFILE="${CSSDESTDIR}/${MAINTOPIC}.css"
 echo "${CSSDESTFILE}"
 mv "${TMPCSSDESTFILE}" "${CSSDESTFILE}"
 
-INCDESTFILE="${INCDESTDIR}/${MAINTOPIC}.inc"
 echo "${INCDESTFILE}"
 mv "${TMPINCDESTFILE}" "${INCDESTFILE}"
 

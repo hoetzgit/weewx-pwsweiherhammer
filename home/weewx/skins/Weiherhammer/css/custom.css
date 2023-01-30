@@ -25,6 +25,8 @@
     --link-color:#337ab7;
     --tooltip-color:#fff;
     --tooltip-backgroud-color:#337ab7;
+    --color-summaries-obs-max:#ed7839;
+    --color-summaries-obs-min:#09a8e6;
 }
 
 /*
@@ -54,15 +56,6 @@ a:hover {
     text-decoration: revert;
 }
 
-.station-observation-extras-modal-link a {
-    text-decoration: none;
-}
-
-.station-observation-extras-modal-link a:hover {
-    color: var(--link-color);
-    text-decoration: revert;
-}
-
 .genesis-nav-menu a:hover, .dark .genesis-nav-menu a:hover {
     color: var(--link-color);
     display: block;
@@ -88,7 +81,7 @@ abbr[title] {
     color: var(--tooltip-color);
     background: var(--tooltip-backgroud-color);
     position: absolute;
-    z-index: 100;
+    z-index: 100000;
     padding: 15px;
     border-radius: 10px;
 }
@@ -128,75 +121,63 @@ abbr[title] {
             margin: 0;
         }
 
-/* MQTT Debug */
+/* MQTT Monitor */
 
-.mqtt-table-container {
+.mqttmon-table-container, .dark .mqttmon-table-container {
     padding-right: 0px;
     padding-left: 0px;
 }
 
-.dark .mqtt-table-container {
-    padding-right: 0px;
-    padding-left: 0px;
-}
-
-.mqtt-table {
+.mqttmon-table, .dark .mqttmon-table {
     font-size: calc(10px + 0.4vw);
 }
 
-.dark .mqtt-table {
-    font-size: calc(10px + 0.4vw);
-}
-
-.mqtt-table >thead>tr>th, .mqtt-table >thead>tr>td, .mqtt-table >tbody>tr>th, .mqtt-table >tbody>tr>td {
+.mqttmon-table >thead>tr>th, .mqttmon-table >thead>tr>td, .mqttmon-table >tbody>tr>th, .mqttmon-table >tbody>tr>td {
     vertical-align: middle;
     padding: 4px 0px 4px 0px;
     border-top: 1px solid #ddd;
 }
 
-.dark .mqtt-table >thead>tr>th, .dark .mqtt-table >thead>tr>td, .dark .mqtt-table >tbody>tr>th, .dark .mqtt-table >tbody>tr>td {
+.dark .mqttmon-table >thead>tr>th, .dark .mqttmon-table >thead>tr>td, .dark .mqttmon-table >tbody>tr>th, .dark .mqttmon-table >tbody>tr>td {
     vertical-align: middle;
     padding: 4px 0px 4px 0px;
     border-top: 1px solid #ddd;
 }
 
-.mqtt-table-head-headline {
-    text-align:center;
-    background:#D7D7D7;
-    color:#000;
-}
-.dark .mqtt-table-head-headline {
+.mqttmon-table-head-headline, .dark .mqttmon-table-head-headline {
     text-align:center;
     background:#D7D7D7;
     color:#000;
 }
 
-.mqtt-table-head-subheadline {
-    text-align:center;
-}
-
-.dark .mqtt-table-head-subheadline {
-    text-align:center;
-}
-
-.mqtt-table-body-obs {
+.mqttmon-table-body-obs, .dark .mqttmon-table-body-obs {
     padding-left: 10px !important;
 }
 
-.dark .mqtt-table-body-obs {
-    padding-left: 10px !important;
-}
-
-.mqtt-table-body-obs-val {
+.mqttmon-table-body-obs-val, .dark .mqttmon-table-body-obs-val {
     text-align: right;
-    padding-right: 20px !important;
+    padding-right: 10px !important;
 }
 
-.dark .mqtt-table-body-obs-val {
+.mqttmon-format-switch {
+    vertical-align: middle;
     text-align: right;
-    padding-right: 20px !important;
+    padding-right: 10px;
 }
 
+.mqttmon-format-switch >input[type=checkbox] {
+    margin: 0px;
+    line-height: normal;
+    vertical-align: middle;
+}
+
+.mqttmon-format-switch-label {
+    display: inline-block;
+    max-width: 100%;
+    margin-bottom: 0px;
+    font-weight: 400;
+    vertical-align: middle;
+}
 
 /* Status */
 
@@ -350,7 +331,7 @@ table.celestial td.label {
 }
 
 .obs-row-middle {
-    padding: 0px 5px 0px 0px;
+    padding: 10px 5px 0px 0px;
     margin: 0 -15px 0 -10px;
 }
 
@@ -382,65 +363,72 @@ table.celestial td.label {
 }
 
 .stn-high-low-table-title {
-    font-weight: 400;
+    font-weight: 300;
 }
 
 /* additional station observations modal window */
 
-.station-observation-extras-modal-link {
+.station-observations-extras-modal-link a {
+    text-decoration: none;
+}
+
+.station-observations-extras-modal-link a:hover {
+    color: var(--link-color);
+    text-decoration: revert;
+}
+
+.station-observations-extras-modal-link {
     width: 100%;
     text-align: center;
     margin: 0 auto;
     display: block;
 }
 
-.station-observation-extras-modal-header {
+.station-observations-extras-modal-header {
     padding: 10px 15px 0px 15px;
 }
 
-.station-observation-extras-modal-body {
+.station-observations-extras-modal-body {
     padding: 5px 15px 5px 15px;
 }
 
-.station-observation-extras-modal-updated {
+.station-observations-extras-modal-updated {
     font-size: calc(10px + 0.3vw);
 }
 
-.station-observation-extras-modal-title {
+.station-observations-extras-modal-title {
     text-align: left;
     font-size: calc(14px + 0.3vw);
     font-weight: 500;
 }
 
-/* additional station observations modal window content */
-
-.observation-extras-row {
+.station-observations-extras-row {
     padding: 0px 8px 10px 8px;
     margin: 0 -15px 0 -15px;
 }
 
-.observation-extras-row-left {
+.station-observations-extras-row-left {
 }
 
-.observation-extras-row-right {
+.station-observations-extras-row-right {
 }
 
-.observation-extras-title {
+.station-observations-extras-title {
     text-align: left;
     font-size: calc(14px + 0.3vw);
     font-weight: 500;
 }
 
-.observation-extras-table {
+.station-observations-extras-table {
     font-size: calc(11px + 0.3vw);
 }
 
-.observations-extras-label {
+.station-observations-extras-label {
     font-weight: 350;
     min-width: 260px;
 }
 
-.observations-extras-data {
+.station-observations-extras-data {
     text-align: right;
 }
 
@@ -478,9 +466,7 @@ table.celestial td.label {
 .pws-aqi-index {
     text-align: center;
     font-size: 20px;
-    padding-top: 4px;
-    padding-left: 0px;
-    padding-right: 0px;
+    padding-top: 10px;
 }
 
 .pws-aqi-table-container {
@@ -510,15 +496,16 @@ table.celestial td.label {
     padding-top: 0px;
 }
 
-.pws_aqi_pm2_5_dot, .pws_aqi_pm10_0_dot, .pws_aqi_o3_dot, .pws_aqi_no2_dot {
+.pws_aqi_dot, .pws_aqi_pm2_5_dot, .pws_aqi_pm10_0_dot, .pws_aqi_o3_dot, .pws_aqi_no2_dot {
   height: 8px;
   width: 8px;
   background-color: transparent;
   border-radius: 50%;
   display: inline-block;
+  margin-right: 5px;
 }
 
-.pws-aqi-category {
+.pws_aqi_text {
     background-color: transparent;
     border-radius: 6px;
     padding-left: 5px;
@@ -538,7 +525,8 @@ table.celestial td.label {
 .sun-moon-title {
     font-size: 25px;
     text-align: center;
-    padding-bottom: 10px;
+    padding-top: 2px;
+    padding-bottom: 0px;
 }
 
 /* Wind */
@@ -591,10 +579,7 @@ table.celestial td.label {
 .wind-speed-unit {
     text-align:center;
 }
-/*
-.wind-speed-beaufort{
-}
-*/
+
 .wind-run {
     text-align: center;
     padding-top: 10px;
@@ -662,15 +647,80 @@ table.celestial td.label {
     min-height: 428px !important;
 }
 
-/* Snapshot Stats */
+/* Summaries and Earthquake */
 
-.stn-quick-stats, .dark .stn-quick-stats {
-    padding-right: 0px !important;
+.summaries-earthquake-row {
+    border-bottom: 1px solid #D7D7D7;
 }
 
-.snapshot-data, .dark .snapshot-data {
+.summaries-title, .earthquake-title {
+    font-size: 24px;
+    text-align: center;
+    margin: 0px;
+}
+
+.summaries-container, .dark .summaries-container {
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.summaries-day-container, .summaries-month-container {
+    padding-left: 0px;
+    padding-right: 8px;
+}
+
+.dark .summaries-day-container, .dark .summaries-month-container {
+    padding-left: 0px;
+    padding-right: 8px;
+}
+
+.summaries-day-title-container, .summaries-month-title-container {
+    font-size: 20px;
+    font-weight: 300;
+    padding-left: 8px;
+}
+
+.dark .summaries-day-title-container, .dark .summaries-month-title-container {
+    font-size: 20px;
+    font-weight: 300;
+    padding-left: 8px;
+}
+
+.summaries-obs-label {
+    font-weight: 300;
+    text-align: left;
+    padding-left: 8px !important;
+}
+
+.summaries-obs {
     text-align: right;
-    padding-right: 10px !important;
+}
+
+.summaries-obs-temp-min, .summaries-obs-barometer-min, .summaries-obs-temp-min {
+    padding-right: 4px;
+    color: var(--color-summaries-obs-min);
+    font-weight: 900;
+}
+.summaries-obs-temp-max, .summaries-obs-barometer-max, .summaries-obs-rainrate-max, .summaries-obs-wind-max {
+    padding-right: 4px;
+    color: var(--color-summaries-obs-max);
+    font-weight: 900;
+}
+
+.summaries-obs-rain-sum {
+    padding-right: 4px;
+}
+
+.summaries-obs-wind-avg {
+    padding-right: 4px;
+}
+
+/* earthquake */
+
+.earthquake-container, .dark .earthquake-container {
+    font-size: 18px;
+    text-align: center;
+    min-height: 190px !important;
 }
 
 /* Border between rain/rainrate and humidity rel/abs */
@@ -687,13 +737,6 @@ span.highcharts-title {
     text-align: center !important;
 }
 
-/* earthquake */
-
-.earthquake-container, .dark .earthquake-container {
-    font-size: 18px;
-    text-align: center;
-    min-height: 180px !important;
-}
 
 /* weewx-DWD */
 
@@ -1088,11 +1131,6 @@ sub { top: 0.4em; }
     float: right;
 }
 
-.eq-stats-row {
-    border-bottom: 1px solid #D7D7D7;
-    /* margin-top: 15px; */
-}
-
 .snow-precip, .rain-precip, .humidity-forecast {
     color:#42b5e7;
 }
@@ -1115,11 +1153,6 @@ sub { top: 0.4em; }
     text-align: center;
 }
 
-/* stats */
-
-.stats-label {
-    font-weight: 400;
-}
 
 /* TODO */
 /* current weather conditions provider test **/
@@ -1391,13 +1424,13 @@ sub { top: 0.4em; }
         min-height: 110px;
     }
     /* Additional Station Observations */
-    .page .station-observation-extras-modal a {
+    .page .station-observations-extras-modal a {
         font-size: 20px;
     }
-    .observations-extras-label {
+    .station-observations-extras-label {
         min-width: 170px;
     }
-    .station-observation-extras-modal-link a {
+    .station-observations-extras-modal-link a {
         font-size: 20px;
     }
 }

@@ -5,58 +5,48 @@
 ## If you do this, you should also change the 'Content-Type' metadata below.
 #encoding UTF-8
 ##
-#set global $page = "home"
-    #include "header.html.tmpl"
-
+#set global $page = "homepage"
+#include "header.html.tmpl"
     <script type="text/javascript">
         var finalRotation;
         #if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
         var mqttMsg;
-        var mqttclient = "weiherhammer_$page" + Math.floor(Math.random() * 999999999);
+        var mqttclient = "weiherhammer_" + "$page" + "_" + Math.floor(Math.random() * 999999999);
         #end if
         var moment_locale = "$system_locale_js";
         moment.locale(moment_locale);
-        
         var homepage_graphgroup = "$Extras.highcharts_homepage_graphgroup";
 
         function autoRefreshPage() {
             window.location = window.location.href;
         }
-        
-        ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
-            update_weewx_data(weewx_data); // Initial call to update (date, daily high, low, etc)
-            weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
-            #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
-            // Load forecast
-            ajaxforecast(); // Initial call to load forecast data like 8 day outlook, weather icon and observation text
-            #end if
+        #if $Extras.has_key("webpage_autorefresh") and $Extras.webpage_autorefresh != "0"
+        // Reload the page on an interval for updated data. This is for non-mqtt websocket websites
+        setInterval('autoRefreshPage()', $Extras.webpage_autorefresh);
+        #end if
 
-            #if $Extras.has_key("webpage_autorefresh") and $Extras.webpage_autorefresh != '0'
-            // Reload the page on an interval for updated data. This is for non-mqtt websocket websites
-            setInterval('autoRefreshPage()', $Extras.webpage_autorefresh);
-            #end if
+        #if $Extras.has_key("mqttmon_outdated_treshold") and $Extras.mqttmon_outdated_treshold != ""
+        const mqttmon_outdated_treshold = parseInt($Extras.mqttmon_outdated_treshold);
+        #else
+        const mqttmon_outdated_treshold = parseInt(#echo $archive_interval_ms / 1000#);
+        #end if
+
+        #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
+        // Initial call to load forecast files
+        ajaxforecast(["none"]); 
+        #end if
+
+        ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
+            update_with_weewx_data(weewx_data, false); // Initial call to update value dependent data like colors, tooltip texts etc.
+            weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
 
             jQuery(document).ready(function() {
-                #if $Extras.has_key("aqi_enabled") and $Extras.aqi_enabled == '1'
-                get_aqi_color( "$aqi" );
-                #end if
-
-                #if $Extras.has_key("beaufort_category") and $Extras.beaufort_category == '1'
-                // weewx >= 4.2 can convert to Beaufort directly, but to improve backwards compatibility, convert windSpeed to
-                // knots and then use Javascript function to convert to Beaufort
-                jQuery(".beaufort").html( beaufort_cat( kts_to_beaufort( "$current.windSpeed.knot.toString(addLabel=False)" ) ) );
-                #end if
-
-                get_outTemp_color( "$unit.unit_type.outTemp", "$current.outTemp.formatted" );
-            
-                rotateThis( "$current.windDir.formatted" );
-
                 // Update the Last Updated timestamp with moment.js,
-                updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
+                updated = tzAdjustedMoment($current.dateTime.raw).format("$obs.label.time_last_updated");
                 updated_text = "$obs.label.header_last_updated " + updated;
-                jQuery(".updated").html( updated_text );
-            
-                #if $Extras.has_key('earthquake_enabled') and $Extras.earthquake_enabled == '1'            
+                jQuery(".updated").html(updated_text);
+
+                #if $Extras.has_key('earthquake_enabled') and $Extras.earthquake_enabled == '1'
                 if ( moment.unix( "$earthquake_time" ).isValid() ) {
                     // Check that the time is the time (number) and not the "no earthquake available" wording
                     jQuery(".earthquake-time").html( tzAdjustedMoment( "$earthquake_time" ).format( "$obs.label.time_earthquake" ) );
@@ -64,7 +54,11 @@
                     jQuery(".earthquake-time").html( "$earthquake_time" );
                 }
                 #end if
-            
+
+                #if $Extras.has_key("show_farmers_rules") and $Extras.show_farmers_rules == '1'
+                farmers_rules();
+                #end if
+
                 #if $Extras.has_key('highcharts_enabled') and $Extras.highcharts_enabled == '1'
                 var graphgroups_raw = $charts; // All charts and IDs
                 var thisPageGraphs = graphgroups_raw[homepage_graphgroup]; // Filter all charts down to the ones we want for this page
@@ -87,12 +81,9 @@
                     // If the Restart button is clicked, reconnect to mqtt and update weewx and forecast data
                     jQuery(document).on('click', '.restart-interval', function() { 
                         ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
-                            update_weewx_data(weewx_data); // Initial call to update (date, daily high, low, etc)
+                            update_with_weewx_data(weewx_data, true); // Initial call to update (date, daily high, low, etc)
                             weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
 
-                            #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
-                            ajaxforecast(); // Update forecast data
-                            #end if
                             ajaximages(); // Update radar and home page hook "img src" if present
                             connect(); // Restart mqtt after weewx data's re-loaded
                             #if $Extras.has_key('highcharts_enabled') and $Extras.highcharts_enabled == '1'
@@ -103,7 +94,7 @@
                         });
                     });
                 }
-            
+
                 #if $Extras.has_key("reload_hook_images") and $Extras.reload_hook_images == '1'
                 // Update any images in the radar section or hooks
         
@@ -111,7 +102,7 @@
                     var reload_radar_timer = $Extras.reload_images_radar * 1000; // convert to millis
                     setTimeout(function() { ajaximages("radar", $Extras.reload_images_radar); }, reload_radar_timer);
                 #end if
-            
+
                 #if $Extras.has_key("reload_images_hook_asi") and $Extras.reload_images_hook_asi != '-1'
                     var reload_asi_timer = $Extras.reload_images_hook_asi * 1000; // convert to millis
                     setTimeout(function() { ajaximages("index-hook-after-station-info", $Extras.reload_images_hook_asi); }, reload_asi_timer);
@@ -124,7 +115,7 @@
 
                 #if $Extras.has_key("reload_images_hook_as") and $Extras.reload_images_hook_as != '-1'
                     var reload_as_timer = $Extras.reload_images_hook_as * 1000; // convert to millis
-                    setTimeout(function() { ajaximages("index-hook-after-snapshot", $Extras.reload_images_hook_as); }, reload_as_timer);
+                    setTimeout(function() { ajaximages("index-hook-after-summaries", $Extras.reload_images_hook_as); }, reload_as_timer);
                 #end if
 
                 #if $Extras.has_key("reload_images_hook_ac") and $Extras.reload_images_hook_ac != '-1'
@@ -133,10 +124,9 @@
                 #end if
             
                 #end if
-            
+
                 #else
                 // MQTT Websockets not enabled
-
                 #if $Extras.has_key("show_last_updated_alert") and $Extras.show_last_updated_alert == '1'
                 // Check if we need to alert on old information - if time now, minus the last update is greater than the threshold, show an alert.
                 if ( ( Math.floor(new Date().getTime()/1000.0) - $Extras.last_updated_alert_threshold ) > $current.dateTime.raw ) {
@@ -146,34 +136,19 @@
                     jQuery(".last-updated-alert").show();
                 }
                 #end if
-                        
+
                 // Update the Last Updated timestamp with moment.js,
                 updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
                 updated_text = "$obs.label.header_last_updated " + updated;
                 jQuery(".updated").html( updated_text );
 
                 #end if
-
-                // 20220816,ho Farmers rules
-                #if $Extras.has_key("show_farmers_rules") and $Extras.show_farmers_rules == '1'
-                farmers_rules();
-                #end if
-
-                //  display the relevant forecast; a new session will display the default forecast, a reloaded session the currently displayed forecast
-                if ( sessionStorage.getItem ("forecastInterval")  ) {
-                    interval = sessionStorage.getItem("forecastInterval");
-                    sessionStorage.setItem ( "forecastInterval" , null );
-                    forecast_select( interval );
-                } else {
-                    sessionStorage.setItem ( "forecastInterval" , null );
-                    forecast_select( sessionStorage.getItem( "defaultInterval") );
-                }
             });
         }).catch(function(e) {
             console.log(e);
         });
-        
     </script>
+
     <div class="site-inner">
         <main class="content">
             <article class="weewx frontpage" itemscope="" itemtype="http://schema.org/CreativeWork">
@@ -200,7 +175,7 @@
                     #end if
                     <div class="clear"></div>
                     <div class="last-updated-alert" style="display:none;"></div><!-- AJAX moment.js -->
-                    #if $Extras.has_key("forecast_alert_enabled") and $Extras.forecast_alert_enabled == '1'
+                    #if $Extras.has_key("alerts_enabled") and $Extras.alerts_enabled == '1'
                     <div class="wx-stn-alert"><span class="wx-stn-alert-text"></span></div><!-- AJAX -->
                     #end if
                 </div>
@@ -219,39 +194,33 @@
                                         #end if
                                     </div>
                                     <div class="row current-obs-text">
-                                        $current_obs_summary
+                                        <span class="current_obs_summary">$current_obs_summary</span>
                                     </div>
-                                    #if $Extras.has_key('current_provider_visible') and $Extras.current_provider_visible == '1'
-                                      #set $providers = 'dwd'
-                                      #if $Extras.has_key('current_provider_list')
-                                        #set $providers = $Extras.current_provider_list
-                                      #end if
-                                      #set $current_provider_default = "dwd"
-                                      #if $Extras.has_key('current_provider_default')
-                                        #set $current_provider_default = $Extras.current_provider_default
-                                      #end if
-                                    <div class="row ProviderRadiosHead">Vergleich current provider:</div>
+                                    #if $Extras.has_key('current_provider_toggle') and $Extras.current_provider_toggle == '1'
+                                    <div class="row ProviderRadiosHead">$gettext('data provider')</div>
                                     <div class="row form-check form-check-inline ProviderRadios">
+                                      #set $providers = $to_list($Extras.get('current_provider_list', ['dwd_mosmix']))
+                                      #set $provider_default = $Extras.get('current_provider', 'dwd_mosmix')
                                       #for $provider in $providers
-                                        #set $id = "provider_radio_" + $provider
-                                        #if $provider == $current_provider_default
-                                          #set $checked=" checked"
+                                        #set $providerid = "provider_radio_" + $provider
+                                        #if $provider == $provider_default
+                                          #set $checked = " checked"
                                         #else
-                                          #set $checked=None
+                                          #set $checked = None
                                         #end if
-                                        <input class="form-check-input" type="radio" name="current_provider_radio" aria-label="..." id="$id" value="$provider"$checked>
+                                        <input class="form-check-input" type="radio" name="current_provider_radio" id="$providerid" value="$provider"$checked>
                                       #end for
                                     </div>
-                                    <div class="row ProviderRadiosSelected"></div><!-- AJAX -->
+                                    <div class="row ProviderRadiosSelected"><span class="current_provider_source_api">$current_obs_source</span></div><!-- AJAX -->
                                     #end if
                                 </div>
                                 <!-- current temperature and feelslike -->
                                 <div class="col-xs-6 current_temp">
-                                    <div class="row outtemp_outer"><span class="outtemp">$current.outTemp.formatted</span><sup class="outtempunitlabelsuper">$unit.label.outTemp</sup></div><!-- AJAX -->
+                                    <div class="row outtemp_outer"><span class="outTemp_formatted">$current.outTemp.formatted</span><sup class="outtempunitlabelsuper">$unit.label.outTemp</sup></div><!-- AJAX -->
                                     #if $current.thswIndex.has_data
-                                    <div class="row feelslike">$obs.label.feels_like: $current.thswIndex</div><!-- AJAX -->
+                                    <div class="row feelslike">$obs.label.feels_like <span class="thswIndex">$current.thswIndex</span></div><!-- AJAX -->
                                     #elif $current.appTemp.has_data
-                                    <div class="row feelslike">$obs.label.feels_like: $current.appTemp</div><!-- AJAX -->
+                                    <div class="row feelslike">$obs.label.feels_like <span class="appTemp">$current.appTemp</span></div><!-- AJAX -->
                                     #end if
                                     <div class="stn-high-low">
                                         <table class="stn-high-low-table">
@@ -261,8 +230,8 @@
                                                     <td class="stn-high-low-table-title border-left">$obs.label.highest_temperature</td>
                                                 </tr>
                                                 <tr>
-                                                    <td class="low">$day.outTemp.min</td>
-                                                    <td class="border-left high">$day.outTemp.max</td>
+                                                    <td class="low"><span class="day_outTemp_min" rel="tooltip" title="$obs.label.summaries_date_ttt$day.outTemp.mintime">$day.outTemp.min</span></td><!-- AJAX -->
+                                                    <td class="border-left high"><span class="day_outTemp_max" rel="tooltip" title="$obs.label.summaries_date_ttt$day.outTemp.maxtime">$day.outTemp.max</span></td><!-- AJAX -->
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -295,7 +264,7 @@
                                                 #end if
                                                 </span>
                                                 <span class="curwinddeg">
-                                                #if $current.windDir.raw is None:
+                                                #if $current.windDir.raw is None
                                                 -
                                                 #else
                                                 $current.windDir.format("%.0f")
@@ -316,10 +285,10 @@
                                                     </tr>
                                                     <tr>
                                                         <td class="wind-table-values">
-                                                            <span class="curwindspeed">$current.windSpeed.toString(addLabel=False, NONE_string="--")</span>
+                                                            <span class="curwindspeed windSpeed_formatted">$current.windSpeed.toString(addLabel=False, NONE_string="--")</span><!-- AJAX -->
                                                         </td>
                                                         <td class="border-left gust wind-table-values">
-                                                            <span class="curwindgust">$current.windGust.toString(addLabel=False, NONE_string="--")</span>
+                                                            <span class="curwindgust windGust_formatted">$current.windGust.toString(addLabel=False, NONE_string="--")</span><!-- AJAX -->
                                                         </td>
                                                     </tr>
                                                 </tbody>
@@ -328,16 +297,7 @@
                                         <div class="row mph wind-speed-unit">
                                             $unit.label.windSpeed
                                         </div>
-                                        ##TODO
-                                        #if $Extras.has_key("beaufort_category") and $Extras.beaufort_category == '1'
-                                        <div class="row beaufort wind-speed-beaufort">
-                                        </div>
-                                        #end if
-                                        #if $day.windrun.has_data
-                                        <div class="row wind-run">
-                                            $obs.label.windrun:&nbsp;$day.windrun.sum
-                                        </div>
-                                        #end if
+                                        <div class="row wind-run">$obs.label.windrun <span class="day_windrun_sum">$day.windrun.sum</span></div><!-- AJAX -->
                                     </div>
                                 </div>
 
@@ -352,38 +312,35 @@
                             </div>
                         </div>
 
-                        #if $Extras.has_key("pws_aqi_enabled") and $Extras.pws_aqi_enabled == '1'
+                        #if $Extras.has_key("aqi_enabled") and $Extras.aqi_enabled == '1'
                         <!-- AQI -->
                         <div class="row pws-aqi-row">
                             <div class="pws-aqi-index">
-                                 #if $current.pws_aqi_category.has_data
-                                 #if $current.pws_aqi_category.raw == 0.0
-                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" rel="tooltip" title="$obs.label.ttt_pws_aqi_very_good">$obs.label.pws_aqi_very_good</span>
-                                 #else if $current.pws_aqi_category.raw == 1.0
-                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" rel="tooltip" title="$obs.label.ttt_pws_aqi_good">$obs.label.pws_aqi_good</span>
-                                 #else if $current.pws_aqi_category.raw == 2.0
-                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" rel="tooltip" title="$obs.label.ttt_pws_aqi_moderate">$obs.label.pws_aqi_moderate</span>
-                                 #else if $current.pws_aqi_category.raw == 3.0
-                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" rel="tooltip" title="$obs.label.ttt_pws_aqi_poor">$obs.label.pws_aqi_poor</span>
-                                 #else if $current.pws_aqi_category.raw == 4.0
-                                 $obs.label.pws_aqi_long <span class="pws-aqi-category" rel="tooltip" title="$obs.label.ttt_pws_aqi_very_poor">$obs.label.pws_aqi_very_poor</span>
+                                 ##TODO kann eigentlich weg
+                                 #if $current.pws_aqi.has_data and $current.pws_aqi.format("%s") == "1.0"
+                                 $obs.label.pws_aqi_long <span class="pws_aqi_text" rel="tooltip" title="$pgettext('ttt_aqi', 'very good')">$gettext('very good')</span><!-- AJAX -->
+                                 #elif $current.pws_aqi.has_data and $current.pws_aqi.format("%s") == "2.0"
+                                 $obs.label.pws_aqi_long <span class="pws_aqi_text" rel="tooltip" title="$pgettext('ttt_aqi', 'good')">$gettext('good')</span><!-- AJAX -->
+                                 #elif $current.pws_aqi.has_data and $current.pws_aqi.format("%s") == "3.0"
+                                 $obs.label.pws_aqi_long <span class="pws_aqi_text" rel="tooltip" title="$pgettext('ttt_aqi', 'moderate')">$gettext('moderate')</span><!-- AJAX -->
+                                 #elif $current.pws_aqi.has_data and $current.pws_aqi.format("%s") == "4.0"
+                                 $obs.label.pws_aqi_long <span class="pws_aqi_text" rel="tooltip" title="$pgettext('ttt_aqi', 'poor')">$gettext('poor')</span><!-- AJAX -->
+                                 #elif $current.pws_aqi.has_data and $current.pws_aqi.format("%s") == "5.0"
+                                 $obs.label.pws_aqi_long <span class="pws_aqi_text" rel="tooltip" title="$pgettext('ttt_aqi', 'very poor')">$gettext('very poor')</span><!-- AJAX -->
                                  #else
-                                 $obs.label.pws_aqi_long <span class="pws-aqi-category">$obs.label.pws_aqi_unknown</span>
-                                 #end if
-                                 #else
-                                 $obs.label.pws_aqi_long <span class="pws-aqi-category">$obs.label.pws_aqi_unknown</span>
+                                 $obs.label.pws_aqi_long <span class="pws_aqi_text">$gettext('unknown')</span><!-- AJAX -->
                                  #end if
                             </div>
                             <div class="col-sm-6 pws-aqi-table-container">
                                 <table class="pws-aqi-table">
                                     <tbody>
                                         <tr>
-                                            <td class="pws-aqi-table-title" rel="tooltip" title="$obs.label.ttt_pm2_5_short"><span class="pws_aqi_pm2_5_dot"></span>&nbsp;$obs.label.sds011_pm2_5_short</td>
-                                            <td class="pws-aqi-table-title border-left" rel="tooltip" title="$obs.label.ttt_pm10_0_short"><span class="pws_aqi_pm10_0_dot"></span>&nbsp;$obs.label.sds011_pm10_0_short</td>
+                                            <td class="pws-aqi-table-title" rel="tooltip" title="$obs.label.ttt_pm2_5_short"><span class="pws_aqi_pm2_5_dot"></span>$obs.label.sds011_pm2_5_short</td><!-- AJAX -->
+                                            <td class="pws-aqi-table-title border-left" rel="tooltip" title="$obs.label.ttt_pm10_0_short"><span class="pws_aqi_pm10_0_dot"></span>$obs.label.sds011_pm10_0_short</td><!-- AJAX -->
                                         </tr>
                                         <tr>
-                                            <td class="pws-aqi-table-value sds011-pm2_5">$current.sds011_pm2_5</td>
-                                            <td class="pws-aqi-table-value border-left sds011-pm10_0">$current.sds011_pm10_0</td>
+                                            <td class="pws-aqi-table-value"><span class="sds011_pm2_5">$current.sds011_pm2_5</span></td><!-- AJAX -->
+                                            <td class="pws-aqi-table-value border-left"><span class="sds011_pm10_0">$current.sds011_pm10_0</span></td><!-- AJAX -->
                                         </tr>
                                     </tbody>
                                 </table>
@@ -392,12 +349,12 @@
                                 <table class="pws-aqi-table">
                                     <tbody>
                                         <tr>
-                                            <td class="pws-aqi-table-title border-left" rel="tooltip" title="$obs.label.ttt_o3_short"><span class="pws_aqi_o3_dot"></span>&nbsp;$obs.label.uba_o3_short</td>
-                                            <td class="pws-aqi-table-title border-left" rel="tooltip" title="$obs.label.ttt_no2_short"><span class="pws_aqi_no2_dot"></span>&nbsp;$obs.label.uba_no2_short</td>
+                                            <td class="pws-aqi-table-title border-left" rel="tooltip" title="$obs.label.ttt_o3_short"><span class="pws_aqi_o3_dot"></span>$obs.label.uba_o3_short</td><!-- AJAX -->
+                                            <td class="pws-aqi-table-title border-left" rel="tooltip" title="$obs.label.ttt_no2_short"><span class="pws_aqi_no2_dot"></span>$obs.label.uba_no2_short</td><!-- AJAX -->
                                         </tr>
                                         <tr>
-                                            <td class="pws-aqi-table-value border-left uba-o3">$current.uba_o3</td>
-                                            <td class="pws-aqi-table-value border-left uba-no2">$current.uba_no2</td>
+                                            <td class="pws-aqi-table-value border-left"><span class="uba_03">$current.uba_o3</span></td><!-- AJAX -->
+                                            <td class="pws-aqi-table-value border-left"><span class="uba_no2">$current.uba_no2</span></td><!-- AJAX -->
                                         </tr>
                                     </tbody>
                                 </table>
@@ -411,35 +368,37 @@
                         <div class="row obs-row-middle station-observations">
                             <table cellpadding="0" cellspacing="0">
                                 <tbody>
-                                    $station_obs_html
+                                    <span class="station-observations-table">$station_observations_html</span><!-- AJAX -->
                                 </tbody>
                             </table>
                             <div class="clear"></div>
-                            #if $Extras.has_key("station_observation_extras") and $Extras.station_observation_extras == '1'
+                            #if $Extras.has_key("station_observations_extras_enabled") and $Extras.station_observations_extras_enabled == '1'
                             <!-- Additional Station Observations -->
-                            <div class="station-observation-extras-modal-link"><a href="#station-observation-extras" data-toggle="modal" data-target="#station-observation-extras">$gettext('more values')</a></div>
-                            <div class="modal fade" id="station-observation-extras" tabindex="-1" role="dialog" aria-labelledby="station-observation-extras" aria-hidden="true">
+                            <div class="station-observations-extras-modal-link"><a href="#station-observations-extras" data-toggle="modal" data-target="#station-observations-extras">$gettext('more values')</a></div>
+                            <div class="modal fade" id="station-observations-extras" tabindex="-1" role="dialog" aria-labelledby="station-observations-extras" aria-hidden="true">
                                 <div class="modal-dialog modal-lg" role="document">
                                     <div class="modal-content">
-                                        <div class="modal-header station-observation-extras-modal-header">
+                                        <div class="modal-header station-observations-extras-modal-header">
                                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
-                                            <h4 class="modal-title" id="station-observation-extras">$gettext('more station observations')</h4>
+                                            <h4 class="modal-title" id="station-observations-extras">$gettext('station observations extras')</h4>
                                             <div class="updated-wrapper">
                                                 <div class="onlineMarkerOuter">
                                                     <span class="loadingMarker" style="display:none"></span>
                                                     <span class="onlineMarker" style="display:none"></span>
                                                     <span class="offlineMarker" style="display:none"></span>
-                                                    <div class="updated station-observation-extras-modal-updated"></div><!-- AJAX moment.js -->
+                                                    <div class="updated station-observations-extras-modal-updated"></div><!-- AJAX moment.js -->
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="modal-body station-observation-extras-modal-body">
-                                            #include "station-observation-extras/station-observation-extras.inc"
+                                        <div class="modal-body station-observations-extras-modal-body">
+                                            #include "station-observations-extras/station-observations-extras.inc"
                                         </div>
                                         <div class="modal-footer">
-                                            <a href="$relative_url/mqtt/" class="btn btn-primary" role="button">$gettext('MQTT monitor')</a>
+                                            #if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
+                                            <a href="$relative_url/mqttmon/" class="btn btn-primary" role="button">$gettext('MQTT monitor')</a>
+                                            #end if
                                             <button type="button" class="btn btn-primary" data-dismiss="modal">$gettext('close')</button>
                                         </div>
                                     </div>
@@ -537,112 +496,68 @@
                 </div>
                 <!-- End of index_hook_after_station_info row -->
                 #end if
-
-                <!-- Start of second row (forecast if enabled) -->
-                #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1' and (($Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours != '0') or not ($Extras.has_key("forecast_interval_hours")))
-                ## init forecast
-                #if $Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours == '1'
-                <script>forecast_default(1);</script>
-                #end if
-                #if $Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours == '3'
-                <script>forecast_default(3);</script>
-                #end if
-                #if ($Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours == '24') or not ($Extras.has_key("forecast_interval_hours"))
-                <script>forecast_default(24);</script>
-                #end if
-                #if $Extras.has_key("forecast_show_homepage") and $Extras.forecast_show_homepage == '1'
-                <div class="row forecastrow">
-                    <!-- Forecast -->
-                    <div class="col-lg-8 forecast-title">
-                        $obs.label.forecast_header <span class="forecast-subtitle"></span><!-- moment.js -->
-                    </div>
-                    <div class="col-lg-4 forecast-menu">
-                        $obs.label.forecast_interval_caption <div class="forecast-button" onclick="forecast_select(1);" id="button1">1</div>
-                        <div class="forecast-button" onclick="forecast_select(3);" id="button3">3</div>
-                        <div class="forecast-button" onclick="forecast_select(24);" id="button24">24</div>
-                    </div>
-                    
-                    #if $Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours != '0'
-                    <div id="1hour-selected-forecast" style="display: none;">
-                        <!-- 1hour Forecast -->
-                        <div class="col-lg-12 row 1hr_forecasts row-no-padding"></div><!-- JS -->
-                    </div>
-                    <div id="3hour-selected-forecast" style="display: none;">
-                        <!-- 3hour-Forecast -->
-                        <div class="col-lg-12 row 3hr_forecasts row-no-padding"></div><!-- JS -->
-                    </div>        
-                    
-                    <div id="24hour-selected-forecast" style="display: none;">
-                        <!-- 24hour-Forecast -->
-                        <div class="col-lg-12 row 24hr_forecasts row-no-padding"></div><!-- JS -->
-                    </div>
-                    #end if
-                </div>
-                #end if
-                #end if
-                <!-- End of second row -->
-                
-                #if os.path.exists("index_hook_after_forecast.inc")
-                <!-- Start of index_hook_after_forecast row -->
-                <div class="row index-hook-after-forecast border-bottom">
-                    #include "index_hook_after_forecast.inc"
-                </div>
-                <!-- End of index_hook_after_forecast row -->
-                #end if
                 
                 <!-- Start of third row -->
-                <div class="row eq-stats-row">
+                <div class="row summaries-earthquake-row">
                     #if $Extras.has_key('earthquake_enabled') and $Extras.earthquake_enabled == '1'
-                    <div class="col-lg-9 stn-quick-stats">
+                    <div class="col-lg-9 summaries-container">
                     #else
-                    <div class="col-lg-12 stn-quick-stats">
+                    <div class="col-lg-12 summaries-container">
                     #end if
-                        <!-- Snapshot Stats -->
+                        <!-- Summaries -->
                         <div class="row">
-                            <div class="snapshot-records-text">
-                                $obs.label.weather_snapshots <a href="$relative_url/extreme">$obs.label.weather_snapshots_link</a>
+                            <div class="summaries-title">
+                                $obs.label.summaries_title <a href="$relative_url/extreme">$obs.label.summaries_more_link</a>
                             </div>
                         </div>
                         
                         <div class="row">
-                            <!-- Today Snapshot Stats -->
-                            <div class="col-sm-6 stn-quick-stats">
-                                <div class="stats-title">
-                                    <span class="snapshot-records-today-header"></span><!-- JS and AJAX -->
+                            <!-- Day Summaries -->
+                            <div class="col-sm-6 summaries-day-container">
+                                <div class="summaries-day-title-container">
+                                    <span class="summaries-day-title"></span><!-- JS and AJAX -->
                                 </div>
                                 <table>
                                     <tr>
-                                        <td class="snapshot-label"><span class="stats-label">$obs.label.snapshot_low:</span></td><td class="snapshot-data"><span class="dailystatslow">$day.outTemp.min</span></td><!-- AJAX -->
-                                        <td class="snapshot-label"><span class="stats-label">$obs.label.snapshot_high:</span></td><td class="snapshot-data"><span class="dailystatshigh">$day.outTemp.max</span></td><!-- AJAX -->
+                                        <td class="summaries-obs-label">$obs.label.summaries_temp</td><td class="summaries-obs"><span class="summaries-obs-temp-min">$obs.label.summaries_temp_min</span><span class="day_outTemp_min" rel="tooltip" title="$obs.label.summaries_date_ttt$day.outTemp.mintime">$day.outTemp.min</span></td><!-- AJAX -->
+                                        <td class="summaries-obs-label">$obs.label.summaries_temp</td><td class="summaries-obs"><span class="summaries-obs-temp-max">$obs.label.summaries_temp_max</span><span class="day_outTemp_max" rel="tooltip" title="$obs.label.summaries_date_ttt$day.outTemp.maxtime">$day.outTemp.max</span></td><!-- AJAX -->
                                     </tr>
                                     <tr>
-                                        <td class="snapshot-label"><span class="stats-label">$obs.label.snapshot_today_avg_wind:</span></td><td class="snapshot-data"><span class="dailystatswindavg">$day.wind.avg</span></td><!-- AJAX -->
-                                        <td class="snapshot-label"><span class="stats-label">$obs.label.snapshot_today_high_wind:</span></td><td class="snapshot-data"><span class="dailystatswindmax">$day.wind.max</span></td><!-- AJAX -->
+                                        <td class="summaries-obs-label">$obs.label.summaries_barometer</td><td class="summaries-obs"><span class="summaries-obs-barometer-min">$obs.label.summaries_barometer_min</span><span class="day_barometer_min" rel="tooltip" title="$obs.label.summaries_date_ttt$day.barometer.mintime">$day.barometer.min</span></td><!-- AJAX -->
+                                        <td class="summaries-obs-label">$obs.label.summaries_barometer</td><td class="summaries-obs"><span class="summaries-obs-barometer-max">$obs.label.summaries_barometer_max</span><span class="day_barometer_max"  rel="tooltip" title="$obs.label.summaries_date_ttt$day.barometer.maxtime">$day.barometer.max</span></td><!-- AJAX -->
                                     </tr>
                                     <tr>
-                                        <td class="snapshot-label"><span class="stats-label">$obs.label.snapshot_today_rain:</span></td><td class="snapshot-data"><span class="dailystatsrain">$day.rain.sum</span></td><!-- AJAX -->
-                                        <td class="snapshot-label"><span class="stats-label">$obs.label.snapshot_today_rainrate:</span></td><td class="snapshot-data"><span class="dailystatsrainrate">$day.rainRate.max</span></td><!-- AJAX -->
+                                        <td class="summaries-obs-label">$obs.label.summaries_rain</td><td class="summaries-obs"><span class="summaries-obs-rain-sum">$obs.label.summaries_rain_sum</span><span class="dayRain" rel="tooltip" title="">$current.dayRain</span></td><!-- AJAX -->
+                                        <td class="summaries-obs-label">$obs.label.summaries_rainrate</td><td class="summaries-obs"><span class="summaries-obs-rainrate-max">$obs.label.summaries_rainrate_max</span><span class="day_rainRate_max" rel="tooltip" title="$obs.label.summaries_date_ttt$day.rainRate.maxtime">$day.rainRate.max</span></td><!-- AJAX -->
+                                    </tr>
+                                    <tr>
+                                        <td class="summaries-obs-label">$obs.label.summaries_wind</td><td class="summaries-obs"><span class="summaries-obs-wind-avg">$obs.label.summaries_wind_avg</span><span class="day_wind_avg" rel="tooltip" title="">$day.wind.avg</span></td><!-- AJAX -->
+                                        <td class="summaries-obs-label">$obs.label.summaries_windGust</td><td class="summaries-obs"><span class="summaries-obs-wind-max">$obs.label.summaries_wind_max</span><span class="day_wind_max" rel="tooltip" title="$obs.label.summaries_date_ttt$day.windrun.maxtime">$day.wind.max</span></td><!-- AJAX -->
                                     </tr>
                                 </table>
                             </div>
 
-                            <!-- This Month Snapshot Stats -->
-                            <div class="col-sm-6 stn-quick-stats border-left">
-                                <div class="stats-title">
-                                    <span class="snapshot-records-month-header"></span><!-- JS and AJAX -->
+                            <!-- Month Summaries -->
+                            <div class="col-sm-6 summaries-month-container border-left">
+                                <div class="summaries-month-title-container">
+                                    <span class="summaries-month-title"></span><!-- JS and AJAX -->
                                 </div>
                                 <table>
                                     <tr>
-                                        <td class="snapshot-label"><span class="stats-label">$obs.label.snapshot_low:</span></td><td class="snapshot-data"><span class="monthstatslow">$month.outTemp.min</span></td><!-- AJAX -->
-                                        <td class="snapshot-label"><span class="stats-label">$obs.label.snapshot_high:</span></td><td class="snapshot-data"><span class="monthstatshigh">$month.outTemp.max</span></td><!-- AJAX -->
+                                        <td class="summaries-obs-label">$obs.label.summaries_temp</td><td class="summaries-obs"><span class="summaries-obs-temp-min">$obs.label.summaries_temp_min</span><span class="month_outTemp_min" rel="tooltip" title="$obs.label.summaries_date_ttt$month.outTemp.mintime">$month.outTemp.min</span></td><!-- AJAX -->
+                                        <td class="summaries-obs-label">$obs.label.summaries_temp</td><td class="summaries-obs"><span class="summaries-obs-temp-max">$obs.label.summaries_temp_max</span><span class="month_outTemp_max" rel="tooltip" title="$obs.label.summaries_date_ttt$month.outTemp.maxtime">$month.outTemp.max</span></td><!-- AJAX -->
                                     </tr>
                                     <tr>
-                                        <td class="snapshot-label"><span class="stats-label">$obs.label.snapshot_month_avg_wind:</span></td><td class="snapshot-data"><span class="monthstatswindavg">$month.wind.avg</span></td><!-- AJAX -->
-                                        <td class="snapshot-label"><span class="stats-label">$obs.label.snapshot_month_high_wind:</span></td><td class="snapshot-data"><span class="monthstatswindmax">$month.wind.max</span></td><!-- AJAX -->
+                                        <td class="summaries-obs-label">$obs.label.summaries_barometer</td><td class="summaries-obs"><span class="summaries-obs-barometer-min">$obs.label.summaries_barometer_min</span><span class="month_barometer_min" rel="tooltip" title="$obs.label.summaries_date_ttt$month.barometer.mintime">$month.barometer.min</span></td><!-- AJAX -->
+                                        <td class="summaries-obs-label">$obs.label.summaries_barometer</td><td class="summaries-obs"><span class="summaries-obs-barometer-max">$obs.label.summaries_barometer_max</span><span class="month_barometer_max"  rel="tooltip" title="$obs.label.summaries_date_ttt$month.barometer.maxtime">$month.barometer.max</span></td><!-- AJAX -->
                                     </tr>
                                     <tr>
-                                        <td class="snapshot-label"><span class="stats-label">$obs.label.snapshot_month_rain:</span></td><td class="snapshot-data"><span class="monthstatsrain">$month.rain.sum</span></td><!-- AJAX -->
-                                        <td class="snapshot-label"><span class="stats-label">$obs.label.snapshot_month_rainrate:</span></td><td class="snapshot-data"><span class="monthstatsrainrate">$month.rainRate.max</span></td><!-- AJAX -->
+                                        <td class="summaries-obs-label">$obs.label.summaries_rain</td><td class="summaries-obs"><span class="summaries-obs-rain-sum">$obs.label.summaries_rain_sum</span><span class="monthRain" rel="tooltip" title="">$current.monthRain</span></td><!-- AJAX -->
+                                        <td class="summaries-obs-label">$obs.label.summaries_rainrate</td><td class="summaries-obs"><span class="summaries-obs-rainrate-max">$obs.label.summaries_rainrate_max</span><span class="month_rainRate_max" rel="tooltip" title="$obs.label.summaries_date_ttt$month.rainRate.maxtime">$month.rainRate.max</span></td><!-- AJAX -->
+                                    </tr>
+                                    <tr>
+                                        <td class="summaries-obs-label">$obs.label.summaries_wind</td><td class="summaries-obs"><span class="summaries-obs-wind-avg">$obs.label.summaries_wind_avg</span><span class="month_wind_avg" rel="tooltip" title="">$month.wind.avg</span></td><!-- AJAX -->
+                                        <td class="summaries-obs-label">$obs.label.summaries_windGust</td><td class="summaries-obs"><span class="summaries-obs-wind-max">$obs.label.summaries_wind_max</span><span class="month_wind_max" rel="tooltip" title="$obs.label.summaries_date_ttt$month.windrun.maxtime">$month.wind.max</span></td><!-- AJAX -->
                                     </tr>
                                 </table>
                             </div>
@@ -652,8 +567,8 @@
                     #if $Extras.has_key('earthquake_enabled') and $Extras.earthquake_enabled == '1'
                     <!-- Earthquake data -->
                     <div class="col-lg-3 earthquake-container border-left">
-                        <div class="eq-title">$obs.label.earthquake_title</div>
-                        <div class="eq-region">
+                        <div class="earthquake-title">$obs.label.earthquake_title</div>
+                        <div class="earthquake-region">
                             <span class="earthquake-time"></span><!-- moment.js -->
                             #if $earthquake_place != ''
                             <br>
@@ -673,12 +588,12 @@
                 </div>
                 <!-- End of third row -->
                 
-                #if os.path.exists("index_hook_after_snapshot.inc")
-                <!-- Start of index_hook_after_snapshot row -->
-                <div class="row index-hook-after-snapshot border-bottom">
-                    #include "index_hook_after_snapshot.inc"
+                #if os.path.exists("index_hook_after_summaries.inc")
+                <!-- Start of index_hook_after_summaries row -->
+                <div class="row index-hook-after-summaries border-bottom">
+                    #include "index_hook_after_summaries.inc"
                 </div>
-                <!-- End of index_hook_after_snapshot row -->
+                <!-- End of index_hook_after_summaries row -->
                 #end if
                 
                 #if $Extras.has_key('highcharts_enabled') and $Extras.highcharts_enabled == '1'

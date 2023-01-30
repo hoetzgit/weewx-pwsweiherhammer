@@ -24,7 +24,7 @@
         }
 
         ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
-            update_weewx_data(weewx_data); // Initial call to update (date, daily high, low, etc)
+            update_with_weewx_data(weewx_data); // Initial call to update (date, daily high, low, etc)
             weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
             #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
             // Load forecast
@@ -49,7 +49,7 @@
 
                 get_outTemp_color( "$unit.unit_type.outTemp", "$current.outTemp.formatted" );
 
-                rotateThis( "$current.windDir.formatted" );
+                rotateWindDir( "$current.windDir.formatted" );
 
                 // Update the Last Updated timestamp with moment.js,
                 updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
@@ -74,7 +74,7 @@
                     // If the Restart button is clicked, reconnect to mqtt and update weewx and forecast data
                     jQuery(document).on('click', '.restart-interval', function() {
                         ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
-                            update_weewx_data(weewx_data); // Initial call to update (date, daily high, low, etc)
+                            update_with_weewx_data(weewx_data); // Initial call to update (date, daily high, low, etc)
                             weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
 
                             #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'

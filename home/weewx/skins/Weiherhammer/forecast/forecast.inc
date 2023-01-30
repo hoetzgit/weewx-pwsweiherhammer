@@ -1,56 +1,9 @@
 #errorCatcher Echo
 #encoding UTF-8
 #import datetime
-<div class="entry-content about-outer">
-    <script type="text/javascript">
-        var moment_locale = "$system_locale_js";
-        moment.locale(moment_locale);
 
-        function autoRefreshPage() {
-            window.location = window.location.href;
-        }
-
-        ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
-            update_weewx_data(weewx_data); // Initial call to update (date, daily high, low, etc)
-            weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
-            #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
-            // Load forecast
-            ajaxforecast(); // Initial call to load forecast data like 8 day outlook, weather icon and observation text
-            #end if
-
-            #if $Extras.has_key("webpage_autorefresh") and $Extras.webpage_autorefresh != '0'
-            // Reload the page on an interval for updated data.
-            setInterval('autoRefreshPage()', $Extras.webpage_autorefresh);
-            #end if
-
-            jQuery(document).ready(function() {
-                // Update the Last Updated timestamp with moment.js,
-                updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
-                updated_text = "$obs.label.header_last_updated " + updated;
-                jQuery(".updated").html( updated_text );
-
-                // Update the Last Updated timestamp with moment.js,
-                updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
-                updated_text = "$obs.label.header_last_updated " + updated;
-                jQuery(".updated").html( updated_text );
-
-                //  display the relevant forecast; a new session will display the default forecast, a reloaded session the currently displayed forecast
-                if ( sessionStorage.getItem ("forecastInterval")  ) {
-                    interval = sessionStorage.getItem("forecastInterval");
-                    sessionStorage.setItem ( "forecastInterval" , null );
-                    forecast_select( interval );
-                } else {
-                    sessionStorage.setItem ( "forecastInterval" , null );
-                    forecast_select( sessionStorage.getItem( "defaultInterval") );
-                }
-            });
-        }).catch(function(e) {
-            console.log(e);
-        });
-    </script>
-
-    <!-- DWD Vorhersage -->
     #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1' and (($Extras.has_key("forecast_interval_hours") and $Extras.forecast_interval_hours != '0') or not ($Extras.has_key("forecast_interval_hours")))
+    <!-- DWD Vorhersage -->
     <script type='text/javascript'>
         setInterval(ajaxforecast, 60000); // Update forecast data
     </script>
@@ -128,7 +81,7 @@
     <div class="row">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_warnings_by
-            <spawn class="issued-DWD"> $obs.label.forecast_issuedWarnings_dwd</spawn>
+            <span class="issued-DWD"> $obs.label.forecast_issuedWarnings_dwd</span>
         </div>
         <div class="col-sm-12 forecast-content dwdwarningsbay" style="margin-top:5px;">
             <a href="https://www.dwd.de/DE/wetter/warnungen_gemeinden/warnWetter_node.html?ort=Weiherhammer&bundesland=bay" target="_blank" rel="noreferrer"><img itemprop="image" src="$relative_url/dwd/SchilderMS.jpg" alt="Die Warnlage in Bayern"></a>
@@ -159,12 +112,12 @@
     #end if
 
     #if os.path.exists("dwd/wbx_tab_BY.inc")
+    <div class="row">
     #set $start = 300
     #set $end = 1105
     #set $act = int(datetime.date.today().strftime("%m%d"))
     ## DWD Waldbrandgefahrenindex only in the period March to October
     #if $act > $start and $act < $end
-    <div class="row">
         #include "dwd/wbx_tab_BY.inc"
     #else
         <!-- DWD Waldbrandgefahrenindex -->
@@ -178,14 +131,15 @@
     <div class="row">
         <div class="col-md-12 forecast-headline" style="margin-top:30px;">
             $obs.label.forecast_header_bavaria
-            <spawn class="issued-DWD"> $obs.label.forecast_issuedText_dwd</spawn>
+            <span class="issued-DWD"> $obs.label.forecast_issuedText_dwd</span>
         </div>
     </div>
+
     #set $VHDL = "DWMG"
     #set $today = datetime.date.today()
     #set $headings = {54: $obs.label.forecast_header_current, 50: $obs.label.forecast_header_today, 51: $obs.label.forecast_header_tomorrow, 52: $obs.label.forecast_header_weekday + " " + ($today + datetime.timedelta(days=2)).strftime("%A"), 53: $obs.label.forecast_header_weekday + " " + ($today + datetime.timedelta(days=3)).strftime("%A")}
     #for $filenumber in [54, 50, 51, 52, 53]
-        #if os.path.exists("dwd/VHDL" + str($filenumber) + "_" + $VHDL + "_LATEST.html")
+    #if os.path.exists("dwd/VHDL" + str($filenumber) + "_" + $VHDL + "_LATEST.html")
     <div class="row">
         <div class="col-md-12 forecast-subheadline">
             $headings[$filenumber]
@@ -196,7 +150,7 @@
             </p>
         </div>
     </div>
-        #end if
+    #end if
     #end for
 
     #if os.path.exists("dwd/bwk_bodendruck_na_ana.png")
@@ -204,7 +158,7 @@
     <div class="row">
         <div class="col-md-12 forecast-headline">
             $obs.label.forecast_header_current_map
-            <spawn class="issued-DWD"> $obs.label.forecast_issuedMaps_dwd</spawn>
+            <span class="issued-DWD"> $obs.label.forecast_issuedMaps_dwd</span>
         </div>
         <div class="col-md-12 forecast-content dwdmapeu" style="margin-top:5px;">
             <a href="https://www.dwd.de/DE/leistungen/hobbymet_wk_europa/hobbyeuropakarten.html" target="_blank" rel="noreferrer"><img itemprop="image" src="$relative_url/dwd/bwk_bodendruck_na_ana.png" alt="Wetterkarte (Luftdruck am Boden)"></a>
@@ -230,4 +184,3 @@
         <div class="mtg-meteogram" id="meteogram"</div>
     </div>
     #end if
-</div>

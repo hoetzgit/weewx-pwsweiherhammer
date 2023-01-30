@@ -5,6 +5,52 @@
 
 #include "header.html.tmpl"
 
+            <script type="text/javascript">
+                var moment_locale = "$system_locale_js";
+                moment.locale(moment_locale);
+
+                function autoRefreshPage() {
+                    window.location = window.location.href;
+                }
+
+                #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
+                // Load forecast files
+                ajaxforecast(["none"]); // Initial call to load forecast files
+                #end if
+
+                ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
+                    update_with_weewx_data(weewx_data, false); // Initial call to update (date, daily high, low, etc)
+                    weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
+                    #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
+                    // Load and update forecast
+                    ajaxforecast(["forecast"]);
+
+                    //  display the relevant forecast; a new session will display the default forecast, a reloaded session the currently displayed forecast
+                    var interval = sessionStorage.getItem('forecastInterval');
+                    if (interval === null) {
+                        interval = $forecast_interval_hours;
+                        sessionStorage.setItem('forecastInterval', interval);
+                    }
+                    forecast_select(interval, true);
+
+                    #end if
+
+                    #if $Extras.has_key("webpage_autorefresh") and $Extras.webpage_autorefresh != '0'
+                    // Reload the page on an interval for updated data.
+                    setInterval('autoRefreshPage()', $Extras.webpage_autorefresh);
+                    #end if
+
+                    jQuery(document).ready(function() {
+                        // Update the Last Updated timestamp with moment.js,
+                        updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
+                        updated_text = "$obs.label.header_last_updated " + updated;
+                        jQuery(".updated").html( updated_text );
+                    });
+                }).catch(function(e) {
+                    console.log(e);
+                });
+            </script>
+
             <div class="site-inner">
                 <main class="content">
                     <article class="weewx $page" itemscope itemtype="https://schema.org/CreativeWork">

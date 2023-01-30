@@ -730,10 +730,10 @@ class ForecastPWS(object):
                 es = skin_dict['Extras']
             except Exception:
                 es = dict()
-            self.forecast_api_id = ew.get('forecast_api_id',es.get('forecast_api_id', None))
-            self.forecast_api_secret = ew.get('forecast_api_secret',es.get('forecast_api_secret', None))
-            self.current_provider_default = ew.get('current_provider_default',es.get('current_provider_default','dwd'))
-            self.current_provider_list = ew.get('current_provider_list',es.get('current_provider_list', self.current_provider_default))
+            self.aeris_api_id = ew.get('aeris_api_id',es.get('aeris_api_id', None))
+            self.aeris_api_secret = ew.get('aeris_api_secret',es.get('aeris_api_secret', None))
+            self.current_provider = ew.get('current_provider',es.get('current_provider','dwd_mosmix'))
+            self.current_provider_list = ew.get('current_provider_list',es.get('current_provider_list', self.current_provider))
             self.weatherbit_api_key = ew.get('weatherbit_api_key',es.get('weatherbit_api_key', None))
             self.owm_api_key = ew.get('owm_api_key',es.get('owm_api_key', None))
         except LookupError:
@@ -741,9 +741,9 @@ class ForecastPWS(object):
             self.belchertown_html_root = None
             self.belchertown_warning = None
             self.belchertown_forecast = None
-            self.forecast_api_id = None
-            self.forecast_api_secret = None
-            self.current_provider_list = 'dwd'
+            self.aeris_api_id = None
+            self.aeris_api_secret = None
+            self.current_provider_list = 'dwd_mosmix'
             self.weatherbit_api_key = None
             self.owm_api_key = None
         # Database
@@ -762,8 +762,8 @@ class ForecastPWS(object):
             print('vertical tab               : ',self.vertical_table)
             print('icon set                   : ',self.iconset)
             print('station location           : ','lat',self.latitude,'lon',self.longitude,'alt',self.altitude)
-            print('aeris api id               : ',self.forecast_api_id)
-            print('aeris api secret           : ',self.forecast_api_secret)
+            print('aeris api id               : ',self.aeris_api_id)
+            print('aeris api secret           : ',self.aeris_api_secret)
             print('SQLITE_ROOT                : ',self.SQLITE_ROOT)
             print('current provider list      : ',self.current_provider_list)
             print('weatherbit api key         : ',self.weatherbit_api_key)
@@ -1454,6 +1454,7 @@ class ForecastPWS(object):
                 'ForecastHourly':hours}
             json.dump(x,file,indent=4,ensure_ascii=False)
             
+
     def belchertown(self, placemark, days, recs3h, timesteps, daynights, issue, dryrun):
         geo = placemark['coordinates']
         """
@@ -1502,7 +1503,7 @@ class ForecastPWS(object):
             rel_dist_mi = None
         now = time.time()
         # creation time
-        forecast = {'timestamp':int(now)}
+        forecast_dwd = {'timestamp':int(now)}
         #ho Test mit idxold, ob nicht der Wert der aktuellen Stunde für "current" besser ist, als der Wert der nächsten Stunde
         idxold = None
         for idx,ii in enumerate(timesteps):
@@ -1518,30 +1519,33 @@ class ForecastPWS(object):
             loginf("current NEW: now %s timestep %s" % (time.strftime('%H:%M:%S',time.localtime(now)),time.strftime('%H:%M:%S',time.localtime(timesteps[idx]*0.001))))
         night = daynights[idx]
         wwcode = weather_decode([placemark['Forecast']['ww'][idx]],placemark['Forecast']['Neff'][idx],night)
-        forecast['current'] = [{
+        forecast_dwd['current'] = [{
             'success':True,
             'error':None,
-            'response':{
+            'source':'DWD MOSMIX',
+            'response':[{
                 'id':placemark['id'],
                 'dataSource':issue['ReferenceModel']['name'],
                 'loc':{
                     'long':geo[0],
-                    'lat':geo[1]},
+                    'lat':geo[1]
+                },
                 'place':{
                     'name':placemark['description'],
                     'city':placemark['description'],
                     'state':geodata['state'] if geodata else '',
-                    'country':geodata['country_code'] if geodata else ''},
+                    'country':geodata['country_code'] if geodata else ''
+                },
                 'profile':{
                     'tz':'Europe/Berlin',
                     'tzname':'CET',
                     'tzoffset':3600,
                     'isDST':False,
-                    'elevM':geo[2]},
+                    'elevM':geo[2]
+                },
                 'obTimestamp':int(issue['IssueTime']*0.001),
                 'obDateTime':issue['IssueTimeISO'],
                 'ob':{
-                    'source_api':'DWD MOSMIX', #ho Debug
                     'timestamp':int(timesteps[idx]*0.001),
                     'dateTimeISO':ForecastPWS.isoformat(timesteps[idx]*0.001),
                     'tempC':nround(placemark['Forecast']['TTT'][idx],1),
@@ -1562,7 +1566,7 @@ class ForecastPWS(object):
                     'solradWM2':placemark['Forecast']['Rad1h'][idx],
                     'isDay':not night,
                     'sky':int(placemark['Forecast']['N'][idx]),
-                    'ww':wwcode[0], #ho Debug
+                    'ww':wwcode[0]
                 },
                 'raw':'',
                 'relativeTo':{
@@ -1571,7 +1575,8 @@ class ForecastPWS(object):
                     'distanceKM':nround(rel_dist_km,1),
                     'distanceMI':nround(rel_dist_mi,1)
                 }
-            }}]
+            }]
+        }]
         belchertown_days = []
         for day in days:
             wwcode = weather_decode(days[day]['ww'],days[day]['Neffavg'],False)
@@ -1606,7 +1611,7 @@ class ForecastPWS(object):
                 'ww':wwcode[0], #ho Debug
             })
             if len(belchertown_days)>=self.belchertown_max_days: break
-        forecast['forecast_24hr'] = [{
+        forecast_dwd['forecast_24hr'] = [{
             'success':True,
             'error':None,
             'response':[{
@@ -1657,7 +1662,7 @@ class ForecastPWS(object):
                     }
                 belchertown_hours.append(hour)
             if len(belchertown_hours)>=8: break
-        forecast['forecast_3hr'] = [{
+        forecast_dwd['forecast_3hr'] = [{
             'success':len(belchertown_hours)>0,
             'error':'',
             'response':[{
@@ -1711,7 +1716,7 @@ class ForecastPWS(object):
                 }
             belchertown_hours.append(hour)
             if len(belchertown_hours)>=16: break
-        forecast['forecast_1hr'] = [{
+        forecast_dwd['forecast_1hr'] = [{
             'success':True,
             'error':None,
             'response':[{
@@ -1767,245 +1772,188 @@ class ForecastPWS(object):
             success = True
             err = ''
         except Exception as e:
+            if self.log_failure or self.verbose:
+                logerr(e)
             success = False
             err = str(e)
             alerts = []
-        forecast['alerts'] = [{
+        forecast_dwd['alerts'] = [{
             'success':success,
             'error':None if success else {'code':str(err),'description':str(err)},
             'response':belchertown_alerts }]
         # AQI
         if self.belchertown_aqi_source=='aeris':
             try:
-                if self.forecast_api_id and self.forecast_api_secret:
-                    forecast['aqi'] = self.download_aeris('aqi')
+                if self.aeris_api_id and self.aeris_api_secret:
+                    forecast_dwd['aqi'] = self.download_aeris('aqi')
                 else:
                     raise Exception
             except Exception as e:
-                print(e)
-                forecast['aqi'] = [{
+                if self.log_failure or self.verbose:
+                    logerr(e)
+                forecast_dwd['aqi'] = [{
                     'success':False,
                     'error':{'code':e.__name__,
                              'description':str(e)},
                     'response':[] }]
         elif self.belchertown_aqi_source[0:3]=='uba':
             try:
-                forecast['aqi'] = self.download_uba('aqi',self.belchertown_aqi_source[3:])
+                forecast_dwd['aqi'] = self.download_uba('aqi',self.belchertown_aqi_source[3:])
             except Exception as e:
-                print(e)
-                forecast['aqi'] = [{
+                if self.log_failure or self.verbose:
+                    logerr(e)
+                forecast_dwd['aqi'] = [{
                     'success':False,
                     'error':{'code':e.__name__,
                              'description':str(e)},
                     'response':[] }]
-        
         else:
-            forecast['aqi'] = [{
+            forecast_dwd['aqi'] = [{
                 'success':False,
                 'error':{'code':'not_configured',
                          'description':'no AQI source configured'},
                 'response':[] }]
-        #ho TEST: dwd own section
-        try:
-            forecast['dwd'] = {
-                'success':forecast['current'][0]['success'],
-                'error':forecast['current'][0]['error'],
-                'current':[{'response':forecast['current'][0]['response']}],
-                'forecast_24hr':[{'response':forecast['forecast_24hr'][0]['response']}],
-                'forecast_3hr':[{'response':forecast['forecast_3hr'][0]['response']}],
-                'forecast_1hr':[{'response':forecast['forecast_1hr'][0]['response']}],
-            }
-        except Exception as e:
-            print(e)
-            forecast['dwd'] = {
-                'success':False,
-                'error':{'code':e.__name__,'description':str(e)},
-                'current':[{'response':[]}],
-                'forecast_24hr':[{'response':[]}],
-                'forecast_3hr':[{'response':[]}],
-                'forecast_1hr':[{'response':[]}],
+        
+        ###############################################
+        #
+        # final forecast result data
+        #
+        ###############################################
+
+        # DWD_MOSMIX
+        forecast_result = {'timestamp':int(now)}
+        forecast_result['dwd_mosmix'] = forecast_dwd
+
+        # Brightsky (no API Limit)
+        #TODO: stale timer
+        #TODO: forecast
+        #TODO: alerts
+        #TODO: aqi
+        src = "API Brightsky"
+        if ('brightsky' in self.current_provider_list):
+            try:
+                data = self.download_brightsky('current_weather')
+                forecast_result['brightsky'] = {
+                    'timestamp':int(now),
+                    'current': data
                 }
-
-        #ho TEST: additional weather source Brightsky
-        #TODO: forecast
-        try:
-            data = self.download_brightsky('current_weather')
-            forecast['brightsky'] = {
-                'success':data[0]['success'],
-                'error':data[0]['error'],
-                'current':[{'response':data[0]['response']}],
-                'forecast_24hr':[{'response':[]}],
-                'forecast_3hr':[{'response':[]}],
-                'forecast_1hr':[{'response':[]}],
-            }
-        except Exception as e:
-            print(e)
-            forecast['brightsky'] = {
-                'success':False,
-                'error':{'code':e.__name__,'description':str(e)},
-                'current':[{'response':[]}],
-                'forecast_24hr':[{'response':[]}],
-                'forecast_3hr':[{'response':[]}],
-                'forecast_1hr':[{'response':[]}],
+            except Exception as e:
+                if self.log_failure or self.verbose:
+                   logerr(e)
+                forecast_result['brightsky'] = {
+                    'timestamp':int(now),
+                    'current':[{'success':False,'error':{'code':e.__name__,'description':str(e)},'source':src,'response':[]}],
+                }
+        else:
+            forecast_result['brightsky'] = {
+                'timestamp':int(now),
+                'current':[{'success':False,'error':{'code':'N/A','description':'brightsky is not enabled'},'source':src,'response':[]}]
             }
 
-        #ho TEST: additional weather source Weatherbit.io
+        # Weatherbit.io (API Limit)
+        #TODO: stale timer
         #TODO: forecast
+        #TODO: alerts
+        #TODO: aqi
+        src = "API Weatherbit"
         if ('weatherbit' in self.current_provider_list):
             data = self.download_weatherbit('current')
             try:
-                forecast['weatherbit'] = {
-                    'success':data[0]['success'],
-                    'error':data[0]['error'],
-                    'current':[{'response':data[0]['response']}],
-                    'forecast_24hr':[{'response':[]}],
-                    'forecast_3hr':[{'response':[]}],
-                    'forecast_1hr':[{'response':[]}],
+                forecast_result['weatherbit'] = {
+                    'timestamp':int(now),
+                    'current': data
                 }
             except Exception as e:
-                print(e)
-                forecast['weatherbit'] = {
-                    'success':False,
-                    'error':{'code':e.__name__,'description':str(e)},
-                    'current':[{'response':[]}],
-                    'forecast_24hr':[{'response':[]}],
-                    'forecast_3hr':[{'response':[]}],
-                    'forecast_1hr':[{'response':[]}],
+                if self.log_failure or self.verbose:
+                   logerr(e)
+                forecast_result['weatherbit'] = {
+                   'timestamp':int(now),
+                   'current':[{'success':False,'error':{'code':e.__name__,'description':str(e)},'source':src,'response':[]}],
                 }
         else:
-            forecast['weatherbit'] = {
-                'success':False,
-                'error':'disabled',
-                'current':[{'response':[]}],
-                'forecast_24hr':[{'response':[]}],
-                'forecast_3hr':[{'response':[]}],
-                'forecast_1hr':[{'response':[]}],
+            forecast_result['weatherbit'] = {
+                'timestamp':int(now),
+                'current':[{'success':False,'error':{'code':'N/A','description':'weatherbit is not enabled'},'source':src,'response':[]}]
             }
 
-        #ho TEST: additional weather source OpenWeatherMap API
+        # OpenWeatherMap (no API Limit)
+        #TODO: stale timer
         #TODO: forecast
+        #TODO: alerts
+        #TODO: aqi
+        src = "API OpenWeatherMap"
         if ('owm' in self.current_provider_list):
             try:
                 data = self.download_owm('weather')
-                forecast['owm'] = {
-                    'success':data[0]['success'],
-                    'error':data[0]['error'],
-                    'current':[{'response':data[0]['response']}],
-                    'forecast_24hr':[{'response':[]}],
-                    'forecast_3hr':[{'response':[]}],
-                    'forecast_1hr':[{'response':[]}],
+                forecast_result['owm'] = {
+                    'timestamp':int(now),
+                    'current': data
                 }
             except Exception as e:
-                print(e)
-                forecast['owm'] = {
-                    'success':False,
-                    'error':{'code':e.__name__,'description':str(e)},
-                    'current':[{'response':[]}],
-                    'forecast_24hr':[{'response':[]}],
-                    'forecast_3hr':[{'response':[]}],
-                    'forecast_1hr':[{'response':[]}],
+                if self.log_failure or self.verbose:
+                   logerr(e)
+                forecast_result['owm'] = {
+                   'timestamp':int(now),
+                   'current':[{'success':False,'error':{'code':e.__name__,'description':str(e)},'source':src,'response':[]}],
                 }
         else:
-            forecast['owm'] = {
-                'success':False,
-                'error':'disabled',
-                'current':[{'response':[]}],
-                'forecast_24hr':[{'response':[]}],
-                'forecast_3hr':[{'response':[]}],
-                'forecast_1hr':[{'response':[]}],
+            forecast_result['owm'] = {
+                'timestamp':int(now),
+                'current':[{'success':False,'error':{'code':'N/A','description':'owm is not enabled'},'source':src,'response':[]}]
             }
 
-        #ho TEST: additional weather source AerisWeather "metar"
+        # AerisWeather "Metar ETIC" (API Limit)
+        #TODO: stale timer
         #TODO: forecast
-        if ('metar' in self.current_provider_list):
+        #TODO: alerts
+        #TODO: aqi
+        src = "API Aeris METAR ETIC"
+        if ('aeris_metar' in self.current_provider_list):
             try:
-                data = self.download_aeris('metar')
-                forecast['aeris_metar'] = {
-                    'success':data[0]['success'],
-                    'error':data[0]['error'],
-                    'current':[{'response':data[0]['response']}],
-                    'forecast_24hr':[{'response':[]}],
-                    'forecast_3hr':[{'response':[]}],
-                    'forecast_1hr':[{'response':[]}],
+                data = self.download_aeris('aeris_metar')
+                forecast_result['aeris_metar'] = {
+                   'timestamp':int(now),
+                   'current': data
                 }
             except Exception as e:
-                print(e)
-                forecast['aeris_metar'] = {
-                    'success':False,
-                    'error':{'code':e.__name__,'description':str(e)},
-                    'current':[{'response':[]}],
-                    'forecast_24hr':[{'response':[]}],
-                    'forecast_3hr':[{'response':[]}],
-                    'forecast_1hr':[{'response':[]}],
+                if self.log_failure or self.verbose:
+                   logerr(e)
+                forecast_result['aeris_metar'] = {
+                   'timestamp':int(now),
+                   'current':[{'success':False,'error':{'code':e.__name__,'description':str(e)},'source':src,'response':[]}],
                 }
         else:
-            forecast['aeris_metar'] = {
-                'success':False,
-                'error':'disabled',
-                'current':[{'response':[]}],
-                'forecast_24hr':[{'response':[]}],
-                'forecast_3hr':[{'response':[]}],
-                'forecast_1hr':[{'response':[]}],
+            forecast_result['aeris_metar'] = {
+                'timestamp':int(now),
+                'current':[{'success':False,'error':{'code':'N/A','description':'aeris_metar is not enabled'},'source':src,'response':[]}]
             }
 
-        #ho TEST: additional weather source AerisWeather "conditions"
+        # AerisWeather "conditions" (API Limit)
+        #TODO: stale timer
         #TODO: forecast
-        if ('conditions' in self.current_provider_list):
+        #TODO: alerts
+        #TODO: aqi
+        src = "API Aeris Mesonet F0887"
+        if ('aeris_mesonet' in self.current_provider_list):
             try:
-                data = self.download_aeris('conditions')
-                forecast['aeris_conditions'] = {
-                    'success':data[0]['success'],
-                    'error':data[0]['error'],
-                    'current':[{'response':data[0]['response']}],
-                    'forecast_24hr':[{'response':[]}],
-                    'forecast_3hr':[{'response':[]}],
-                    'forecast_1hr':[{'response':[]}],
+                data = self.download_aeris('aeris_mesonet')
+                forecast_result['aeris_mesonet'] = {
+                   'timestamp':int(now),
+                   'current': data
                 }
             except Exception as e:
-                print(e)
-                forecast['aeris_conditions'] = {
-                    'success':False,
-                    'error':{'code':e.__name__,'description':str(e)},
-                    'current':[{'response':[]}],
-                    'forecast_24hr':[{'response':[]}],
-                    'forecast_3hr':[{'response':[]}],
-                    'forecast_1hr':[{'response':[]}],
+                if self.log_failure or self.verbose:
+                   logerr(e)
+                forecast_result['aeris_mesonet'] = {
+                   'timestamp':int(now),
+                   'current':[{'success':False,'error':{'code':e.__name__,'description':str(e)},'source':src,'response':[]}],
                 }
         else:
-            forecast['aeris_conditions'] = {
-                'success':False,
-                'error':'disabled',
-                'current':[{'response':[]}],
-                'forecast_24hr':[{'response':[]}],
-                'forecast_3hr':[{'response':[]}],
-                'forecast_1hr':[{'response':[]}],
+            forecast_result['aeris_mesonet'] = {
+                'timestamp':int(now),
+                'current':[{'success':False,'error':{'code':'N/A','description':'aeris_mesonet is not enabled'},'source':src,'response':[]}]
             }
 
-        #ho TEST: additional weather source AerisWeather "allstations"
-        #TODO: download current
-        #TODO: forecast
-        if ('allstations' in self.current_provider_list):
-            try:
-                if self.forecast_api_id and self.forecast_api_secret:
-                    forecast.update(self.download_aeris('allstations'))
-                else:
-                    raise Exception
-            except Exception as e:
-                print(e)
-                forecast['allstations'] = [{
-                    'success':False,
-                    'error':{'code':e.__name__,
-                             'description':str(e)},
-                    'response':[] }]
-        else:
-            forecast['allstations'] = {
-                'success':False,
-                'error':'disabled',
-                'current':[{'response':[]}],
-                'forecast_24hr':[{'response':[]}],
-                'forecast_3hr':[{'response':[]}],
-                'forecast_1hr':[{'response':[]}],
-            }
 
         if self.belchertown_html_root and self.belchertown_forecast and self.belchertown_forecast==placemark['id']:
             fn = os.path.join(self.belchertown_html_root,'json','forecast.json')
@@ -2014,104 +1962,74 @@ class ForecastPWS(object):
             fn = os.path.join(self.target_path,'forecast-%s-belchertown.json' % placemark['id'])
             fnt = os.path.join(self.target_path,'forecast-%s-belchertown.json.tmp' % placemark['id'])
         if dryrun:
-            s = json.dumps(forecast,indent=4,ensure_ascii=False)
+            s = json.dumps(forecast_result,indent=4,ensure_ascii=False)
             print(s)
         else:
             if self.verbose:
                 loginf("write Belchertown JSON file to %s" % fnt)
             try:
                 with open(fnt,"w") as file:
-                    json.dump(forecast,file,indent=4,ensure_ascii=False)
+                    json.dump(forecast_result,file,indent=4,ensure_ascii=False)
                     if self.verbose:
                         loginf("move Belchertown JSON file to %s" % fn)
                     shutil.move(fnt, fn)
             except Exception as e:
                 logerr("error writing to '%s': %s" % (fn,e))
-
     
+    # Aeris Weather API download
     def download_aeris(self, what):
-        if what=='aqi':
+        src = "API Aeris"
+        if what=='aqi' or what=='aeris_aqi':
+            src = src + " Airquality"
             url = (
                 "https://api.aerisapi.com/airquality/closest?p=%s,%s&format=json&radius=50mi&limit=1&client_id=%s&client_secret=%s"
-                % (self.latitude, self.longitude, self.forecast_api_id, self.forecast_api_secret)
+                % (self.latitude, self.longitude, self.aeris_api_id, self.aeris_api_secret)
                 )
-        elif what=='metar':
+        elif what=='aeris_metar':
+            src = src + " METAR ETIC"
             url = (
                 "https://api.aerisapi.com/observations/closest?p=%s,%s&format=json&filter=metar&limit=1&client_id=%s&client_secret=%s"
-                % (self.latitude, self.longitude, self.forecast_api_id, self.forecast_api_secret)
+                % (self.latitude, self.longitude, self.aeris_api_id, self.aeris_api_secret)
                 )
-        elif what=='conditions':
+        elif what=='aeris_mesonet':
+            src = src + " Mesonet F0887"
             url = (
-                "https://api.aerisapi.com/conditions/weiherhammer,de?format=json&plimit=1&filter=1min&client_id=%s&client_secret=%s"
-                % (self.forecast_api_id, self.forecast_api_secret)
-                )
-        elif what=='allstations':
-            url = (
-                "https://api.aerisapi.com/observations/closest?p=%s,%s&format=json&radius=15km&limit=10&filter=allstations&client_id=%s&client_secret=%s"
-                % (self.latitude, self.longitude, self.forecast_api_id, self.forecast_api_secret)
+                "https://api.aerisapi.com/observations/closest?p=%s,%s&format=json&filter=mesonet&limit=1&client_id=%s&client_secret=%s"
+                % (self.latitude, self.longitude, self.aeris_api_id, self.aeris_api_secret)
                 )
         else:
-            return []
+            if self.log_failure or self.verbose:
+                logerr('%s not configured' % what)
+            return [{'success':False,'error':{'code':'not configured','description':'%s not configured' % what,'source':src,'response':[]}}]
 
         headers={'User-Agent':'weewx-DWD'}
         try:
             reply = requests.get(url,headers=headers)
         except ConnectionError as e:
-            if self.log_failure:
+            if self.log_failure or self.verbose:
                 logerr(e)
-            return []
+            return [{'success':False,'error':{'code':e.__name__,'description':str(e)},'source':src,'response':[]}]
         
         if reply.status_code==200:
             if self.log_success or self.verbose:
                 loginf('successfully downloaded %s' % reply.url)
             try:
-                rtn = json.loads(reply.content)
-                res = dict()
-                if what == 'allstations':
-                    for ii in rtn:
-                        if ii=='response':
-                            for station in rtn[ii]:
-                                id = station['id']
-                                if id in AERIS_VALID_ALLSTATIONS:
-                                    res[AERIS_VALID_ALLSTATIONS[id]] = [{'success':True,'error':False,'response':station}]
-                elif what == 'conditions':
-                    for ii in rtn:
-                        if ii=='response':
-                            res['response'] = rtn[ii][0]
-                            res['response']['ob'] = rtn[ii][0]['periods'][0]
-                    res['response'].pop('periods')
-                elif what == 'metar':
-                    for ii in rtn:
-                        if ii=='response':
-                            res['response'] = rtn[ii][0]
-                else:
-                    for ii in rtn:
-                        if ii=='response':
-                            res['response'] = rtn[ii][0]
-                if what == 'allstations' or what == 'conditions':
-                    res['response']['ob']['source_api'] = 'Aeris ' + what
-                elif what == 'metar':
-                    res['response']['ob']['source_api'] = 'Aeris METAR ETIC'
-                else:
-                    res['response']['ob']['source_api'] = 'Aeris'
-                res = [{'success':True,'error':False,'response':res['response'],'original':rtn}]
-                return res
+                res = json.loads(reply.content)
+                res['source'] = src
+                return [res]
             except Exception as e:
-                return [{'success':False,'error':{'code':e.__name__,'description':str(e)},'response':[]}]
+                if self.log_failure or self.verbose:
+                    logerr(e)
+                return [{'success':False,'error':{'code':e.__name__,'description':str(e)},'source':src,'response':[]}]
         else:
-            if self.log_failure or self.verbose:
-                logerr('error downloading %s: %s %s' % (reply.url,reply.status_code,reply.reason))
-            if what == 'allstations':
-                res = dict()
-                for id in AERIS_VALID_ALLSTATIONS:
-                    res[AERIS_VALID_ALLSTATIONS[id]] = [{'success':True,'error':{'code':reply.status_code,'description':reply.reason},'response':[]}]
-                return res
-            else:
-                return [{
-                    'success':False,
-                    'error':{'code':reply.status_code,'description':reply.reason},
-                    'response':[] }]
+            return [{
+                'success':False,
+                'error':{'code':reply.status_code,'description':reply.reason},
+                'source':src,
+                'response':[] 
+            }]
 
+    # AQI API download
     def download_uba(self, what, station, lang='de'):
         """ Download air quality data from Umweltbundesamt """
         # get data from yesterday
@@ -2146,7 +2064,9 @@ class ForecastPWS(object):
         elif what=='meta':
             url = 'meta/json?use=%s&date_from=%s&date_to=%s&lang=%s' % (use,dt0,dt,lang)
         else:
-            return []
+            if self.log_failure or self.verbose:
+                logerr('%s not configured' % what)
+            return [{'success':False,'error':{'code':'not configured','description':'%s not configured' % what,'response':[]}}]
         url = 'https://www.umweltbundesamt.de/api/air_data/v2/' + url
 
         # download data
@@ -2154,9 +2074,9 @@ class ForecastPWS(object):
         try:
             reply = requests.get(url,headers=headers)
         except ConnectionError as e:
-            if self.log_failure:
+            if self.log_failure or self.verbose:
                 logerr(e)
-            return []
+            return [{'success':False,'error':{'code':e.__name__,'description':str(e)},'response':[]}]
         
         if reply.status_code==200:
             if self.log_success or self.verbose:
@@ -2164,6 +2084,8 @@ class ForecastPWS(object):
             try:
                 rtn = json.loads(reply.content)
             except Exception as e:
+                if self.log_failure or self.verbose:
+                    logerr(e)
                 return [{'success':False,'error':{'code':e.__name__,'description':str(e)},'response':[]}]
             if what in ['aqi','airquality']:
                 res = dict()
@@ -2272,23 +2194,26 @@ class ForecastPWS(object):
                 'error':{'code':reply.status_code,'description':reply.reason},
                 'response':[] }]
 
-    #ho Brightsky API Download
+    #Brightsky API Download
     def download_brightsky(self, what):
+        src = 'API Brightsky (DWD Daten)'
         if what=='current_weather':
             url = (
                "https://api.brightsky.dev/current_weather?tz=Europe/Berlin&units=dwd&wmo_station_id=%s"
                 % (self.belchertown_forecast)
                 )
         else:
-            return []
+            if self.log_failure or self.verbose:
+                logerr('%s not configured' % what)
+            return [{'success':False,'error':{'code':'not configured','description':'%s not configured' % what,'source':src,'response':[]}}]
 
         headers={'User-Agent':'weewx-DWD'}
         try:
             reply = requests.get(url,headers=headers)
         except ConnectionError as e:
-            if self.log_failure:
+            if self.log_failure or self.verbose:
                 logerr(e)
-            return []
+            return [{'success':False,'error':{'code':e.__name__,'description':str(e)},'source':src,'response':[]}]
         
         if reply.status_code==200:
             if self.log_success or self.verbose:
@@ -2311,35 +2236,33 @@ class ForecastPWS(object):
                 # Icons nach https://github.com/jdemaeyer/brightsky/blob/master/brightsky/web.py#L146-L174
                 # condition - dry┃fog┃rain┃sleet┃snow┃hail┃thunderstorm┃
                 # icon - clear-day┃clear-night┃partly-cloudy-day┃partly-cloudy-night┃cloudy┃fog┃wind┃rain┃sleet┃snow┃hail┃thunderstorm┃
-
-                res = dict()
                 res = [{
                     'success':True,
                     'error':None,
-                    'response':{
+                    'source':src,
+                    'response':[{
                         'id':rtn['sources'][0]['id'],
                         'dataSource':rtn['sources'][0]['observation_type'],
                         'dwd_station_id':rtn['sources'][0]['dwd_station_id'],
                         'wmo_station_id':rtn['sources'][0]['wmo_station_id'],
                         'loc':{
                             'long':rtn['sources'][0]['lon'],
-                            'lat':rtn['sources'][0]['lat'],
+                            'lat':rtn['sources'][0]['lat']
                         },
                        'place':{
                            'name':rtn['sources'][0]['station_name'],
                            'city':'Weiden',
                            'state':'by',
-                           'country':'de',
+                           'country':'de'
                         },
                         'profile':{
                             'tz':'Europe/Berlin',
                             'tzname':'CET',
                             'tzoffset':3600,
                             'isDST':False,
-                            'elevM':rtn['sources'][0]['height'],
+                            'elevM':rtn['sources'][0]['height']
                         },
                         'ob':{
-                            'source_api':'DWD Brightsky',
                             'timestamp':ts,
                             'dateTimeISO':rtn['weather']['timestamp'],
                             'tempC':nround(rtn['weather']['temperature'],1),
@@ -2359,39 +2282,45 @@ class ForecastPWS(object):
                             'icon':bscode[6]+('n' if night else '')+'.png',
                             'solradWM2':None,
                             'isDay':not night,
-                            'sky':cloudcover,
+                            'sky':cloudcover
                         }
-                    }
+                    }]
                 }]
 
                 return res
             except Exception as e:
-                return [{'success':False,'error':{'code':e.__name__,'description':str(e)},'response':[]}]
+                if self.log_failure or self.verbose:
+                    logerr(e)
+                return [{'success':False,'error':{'code':e.__name__,'description':str(e)},'source':src,'response':[]}]
         else:
             if self.log_failure or self.verbose:
                 logerr('error downloading %s: %s %s' % (reply.url,reply.status_code,reply.reason))
             return [{
                 'success':False,
                 'error':{'code':reply.status_code,'description':reply.reason},
+                'source':src,
                 'response':[] }]
 
-    #ho Weatherbit.io API Download
+    #Weatherbit.io API Download
     def download_weatherbit(self, what):
+        src = 'API Weatherbit'
         if what=='current':
             url = (
                "https://api.weatherbit.io/v2.0/current?lat=%s&lon=%s&units=M&lang=de&key=%s"
                 % (self.latitude, self.longitude, self.weatherbit_api_key)
                 )
         else:
-            return []
+            if self.log_failure or self.verbose:
+                logerr('%s not configured' % what)
+            return [{'success':False,'error':{'code':'not configured','description':'%s not configured' % what,'source':src,'response':[]}}]
 
         headers={'User-Agent':'weewx-DWD'}
         try:
             reply = requests.get(url,headers=headers)
         except ConnectionError as e:
-            if self.log_failure:
+            if self.log_failure or self.verbose:
                 logerr(e)
-            return []
+            return [{'success':False,'error':{'code':e.__name__,'description':str(e)},'response':[]}]
         
         if reply.status_code==200:
             if self.log_success or self.verbose:
@@ -2408,32 +2337,31 @@ class ForecastPWS(object):
                 cloudcover = int(rtn['data'][0]['clouds'])
                 wbcode = weather_decode(code,cloudcover,night,'weatherbit')
 
-                res = dict()
                 res = [{
                     'success':True,
                     'error':None,
-                    'response':{
+                    'source':src,
+                    'response':[{
                         'id':rtn['data'][0]['station'],
                         'dataSource':None,
                         'loc':{
                             'long':None,
-                            'lat':None,
+                            'lat':None
                         },
                        'place':{
                            'name':'Schirmitz',
                            'city':'Schirmitz',
                            'state':'by',
-                           'country':rtn['data'][0]['country_code'],
+                           'country':rtn['data'][0]['country_code']
                         },
                         'profile':{
                             'tz':'Europe/Berlin',
                             'tzname':'CET',
                             'tzoffset':3600,
                             'isDST':False,
-                            'elevM':None,
+                            'elevM':None
                         },
                         'ob':{
-                            'source_api':'Weatherbit.io',
                             'timestamp':rtn['data'][0]['ts'],
                             'dateTimeISO':ForecastPWS.isoformat(rtn['data'][0]['ts']),
                             'tempC':nround(rtn['data'][0]['temp'],1),
@@ -2453,39 +2381,45 @@ class ForecastPWS(object):
                             'icon':wbcode[6]+('n' if night else '')+'.png',
                             'solradWM2':rtn['data'][0]['solar_rad'],
                             'isDay':not night,
-                            'sky':cloudcover,
+                            'sky':cloudcover
                         },
-                    }
+                    }]
                 }]
 
                 return res
             except Exception as e:
-                return [{'success':False,'error':{'code':e.__name__,'description':str(e)},'response':[]}]
+                if self.log_failure or self.verbose:
+                    logerr(e)
+                return [{'success':False,'error':{'code':e.__name__,'description':str(e)},'source':src,'response':[]}]
         else:
             if self.log_failure or self.verbose:
                 logerr('error downloading %s: %s %s' % (reply.url,reply.status_code,reply.reason))
             return [{
                 'success':False,
                 'error':{'code':reply.status_code,'description':reply.reason},
+                'source':src,
                 'response':[] }]
 
     #ho OpenWeatherMap API Download
     def download_owm(self, what):
+        src = 'API OpenWeatherMap'
         if what=='weather':
             url = (
                "https://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&units=metric&lang=de&appid=%s"
                 % (self.latitude, self.longitude, self.owm_api_key)
                 )
         else:
-            return []
+            if self.log_failure or self.verbose:
+                logerr('%s not configured' % what)
+            return [{'success':False,'error':{'code':'not configured','description':'%s not configured' % what,'source':src,'response':[]}}]
 
         headers={'User-Agent':'weewx-DWD'}
         try:
             reply = requests.get(url,headers=headers)
         except ConnectionError as e:
-            if self.log_failure:
+            if self.log_failure or self.verbose:
                 logerr(e)
-            return []
+            return [{'success':False,'error':{'code':e.__name__,'description':str(e)},'source':src,'response':[]}]
         
         if reply.status_code==200:
             if self.log_success or self.verbose:
@@ -2502,32 +2436,31 @@ class ForecastPWS(object):
                 cloudcover = int(rtn['clouds']['all'])
                 owmcode = weather_decode(code,cloudcover,night,'owm')
 
-                res = dict()
                 res = [{
                     'success':True,
                     'error':None,
-                    'response':{
+                    'source':src,
+                    'response':[{
                         'id':rtn['id'],
                         'dataSource':rtn['base'],
                         'loc':{
                             'long':rtn['coord']['lon'],
-                            'lat':rtn['coord']['lat'],
+                            'lat':rtn['coord']['lat']
                         },
                        'place':{
                            'name':rtn['name'],
                            'city':rtn['name'],
                            'state':'by',
-                           'country':rtn['sys']['country'],
+                           'country':rtn['sys']['country']
                         },
                         'profile':{
                             'tz':'Europe/Berlin',
                             'tzname':'CEST',
                             'tzoffset':rtn['timezone'],
                             'isDST':False,
-                            'elevM':None,
+                            'elevM':None
                         },
                         'ob':{
-                            'source_api':'OpenWeatherMap',
                             'timestamp':ts,
                             'dateTimeISO':ForecastPWS.isoformat(ts),
                             'tempC':nround(rtn['main']['temp'],1),
@@ -2547,22 +2480,24 @@ class ForecastPWS(object):
                             'icon':owmcode[6]+('n' if night else '')+'.png',
                             'solradWM2':None,
                             'isDay':not night,
-                            'sky':cloudcover,
+                            'sky':cloudcover
                         },
-                    }
+                    }]
                 }]
 
                 return res
             except Exception as e:
-                return [{'success':False,'error':{'code':e.__name__,'description':str(e)},'response':[]}]
+                if self.log_failure or self.verbose:
+                    logerr(e)
+                return [{'success':False,'error':{'code':e.__name__,'description':str(e)},'source':src,'response':[]}]
         else:
             if self.log_failure or self.verbose:
                 logerr('error downloading %s: %s %s' % (reply.url,reply.status_code,reply.reason))
             return [{
                 'success':False,
                 'error':{'code':reply.status_code,'description':reply.reason},
+                'source':src,
                 'response':[] }]
-
     
     def calculate_3hr_forecast(self, placemark, timesteps, daynights, lang='de'):
         """ """

@@ -2309,15 +2309,15 @@ class EcowittClient(Consumer):
         LABEL_MAP = {
             'baromabsin': 'pressure',
             'baromrelin': 'barometer',
-            #'batt1': 'battery_1',
-            #'batt2': 'battery_2',
-            #'batt3': 'battery_3',
+            'batt1': 'battery_1',
+            'batt2': 'battery_2',
+            'batt3': 'battery_3',
             'batt4': 'battery_4',
             'batt5': 'battery_5',
             'batt6': 'battery_6',
             'batt7': 'battery_7',
             'batt8': 'battery_8',
-            #'brightness': 'luminosity',
+            'brightness': 'luminosity',
             'cloudf': 'foshk_cloudbase',
             'co2': 'co2',
             'co2_24h': 'co2_24h',
@@ -2339,6 +2339,7 @@ class EcowittClient(Consumer):
             'humidity7': 'humidity_7',
             'humidity8': 'humidity_8',
             'humidityin': 'humidity_in',
+            'interval': 'station_interval',
             'isintvl': 'foshk_interval',
             'leaf_batt1': 'leaf_batt1',
             'leaf_batt2': 'leaf_batt2',
@@ -2367,7 +2368,7 @@ class EcowittClient(Consumer):
             'lightning': 'lightning_distance',
             'lightning_num': 'lightning_num',
             'lightning_time': 'lightning_time',
-            # 'maxdailygust': 'maxdailygust',
+            'maxdailygust': 'maxdailygust',
             'model': 'model',
             'monthlyrainin': 'monthlyrain',
             'pm10_24h_co2': 'pm10_24h_co2',
@@ -2388,7 +2389,7 @@ class EcowittClient(Consumer):
             'pm25batt4': 'pm25batt4',
             'rainratein': 'rain_rate',
             'rainyear': 'rainyear',
-            #'soilbatt1': 'soilbatt1',
+            'soilbatt1': 'soilbatt1',
             'soilbatt2': 'soilbatt2',
             'soilbatt3': 'soilbatt3',
             'soilbatt4': 'soilbatt4',
@@ -2441,8 +2442,8 @@ class EcowittClient(Consumer):
             'wh25batt': 'wh25batt',
             'wh26batt': 'wh26batt',
             'wh40batt': 'wh40batt',
-            #'wh57batt': 'wh57batt',
-            #'wh65batt': 'wh65batt',
+            'wh57batt': 'wh57batt',
+            'wh65batt': 'wh65batt',
             'wh68batt': 'wh65batt',
             'wh80batt': 'wh80batt',
             'wh90batt': 'wh90batt',
@@ -2458,12 +2459,11 @@ class EcowittClient(Consumer):
 
         IGNORED_LABELS = [
             # Ecowitt
-            'PASSKEY', 'dateutc', 'freq',
+            'PASSKEY', 'dateutc', 'freq'
             # get it from weewx-gw1000
-            'batt1', 'batt2', 'batt3', 'soilbatt1', 'wh57batt', 'wh65batt', 'maxdailygust', 'brightness',
+            ,'batt1', 'batt2', 'batt3', 'soilbatt1', 'wh57batt', 'wh65batt', 'maxdailygust', 'brightness'
             # FOSHKplugin
-            'ptrend1', 'pchange1', 'ptrend3', 'pchange3', 'runtime',
-            'isintvl10', 'osunhours', 'nsunhours'
+            ,'ptrend1', 'pchange1', 'ptrend3', 'pchange3', 'runtime', 'isintvl10', 'osunhours', 'nsunhours'
         ]
 
         def __init__(self):
