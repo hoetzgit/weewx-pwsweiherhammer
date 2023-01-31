@@ -1,6 +1,6 @@
 /*
 Generator: generate_mqttmon_inc.sh
-generated: 29.01.2023 22:43:27
+generated: 30.01.2023 16:08:10
 */
 
 :root {
@@ -1416,15 +1416,6 @@ generated: 29.01.2023 22:43:27
   margin-right: 5px;
 }
 
-.om_CurrentDateTime-mqttmon-rcv-dot {
-  height: 8px;
-  width: 8px;
-  background-color: var(--mqttmon-rcv-none);
-  border-radius: 50%;
-  display: inline-block;
-  margin-right: 5px;
-}
-
 .om_DateTime-mqttmon-rcv-dot {
   height: 8px;
   width: 8px;
@@ -1453,15 +1444,6 @@ generated: 29.01.2023 22:43:27
 }
 
 .om_FreezinglevelHeight-mqttmon-rcv-dot {
-  height: 8px;
-  width: 8px;
-  background-color: var(--mqttmon-rcv-none);
-  border-radius: 50%;
-  display: inline-block;
-  margin-right: 5px;
-}
-
-.om_HourlyDateTime-mqttmon-rcv-dot {
   height: 8px;
   width: 8px;
   background-color: var(--mqttmon-rcv-none);
@@ -1525,15 +1507,6 @@ generated: 29.01.2023 22:43:27
 }
 
 .om_SnowDepth-mqttmon-rcv-dot {
-  height: 8px;
-  width: 8px;
-  background-color: var(--mqttmon-rcv-none);
-  border-radius: 50%;
-  display: inline-block;
-  margin-right: 5px;
-}
-
-.om_SnowfallHeight-mqttmon-rcv-dot {
   height: 8px;
   width: 8px;
   background-color: var(--mqttmon-rcv-none);

@@ -7,7 +7,7 @@
     <ul class="nav nav-tabs tabs-menu" role="tablist">
         <li role="presentation" class="active"><a href="#radar" aria-controls="radar" role="tab" data-toggle="tab">$obs.label.radar_tab_windy</a></li>
         <li role="presentation"><a href="#dwdradar" aria-controls="dwdradar" role="tab" data-toggle="tab">$obs.label.radar_tab_dwd</a></li>
-##        <li role="presentation"><a href="#meteosat" aria-controls="meteosat" role="tab" data-toggle="tab">$obs.label.radar_tab_meteosat</a></li>
+        <li role="presentation"><a href="#meteosat" aria-controls="meteosat" role="tab" data-toggle="tab">$obs.label.radar_tab_meteosat</a></li>
 ##        <li role="presentation"><a href="#precipitation" aria-controls="precipitation" role="tab" data-toggle="tab">$obs.label.radar_tab_precipitation</a></li>
 ##        <li role="presentation"><a href="#webcamrpi" aria-controls="webcamrpi" role="tab" data-toggle="tab">RPi</a></li>
         <li role="presentation"><a href="#webcam" aria-controls="webcam" role="tab" data-toggle="tab">Webcam</a></li>
@@ -29,12 +29,12 @@
                 <a href="https://www.dwd.de/DE/leistungen/radarbild_film/radarbild_film.html?cl2Categories_Bundesland=rdbf_bay&cl2Categories_Darstellung=rdbf_akt&cl2Categories_Format=radarbild" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/radar/radfilm_bay_akt.gif" alt="DWD Radar" width="420px" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
             </div>
         </div>
-##        <div id="meteosat" class="tab-content">
-##            <div class="meteosat_image">
-####                <a href="https://www.dwd.de/DE/leistungen/satellit_metsat/satellit_metsat.html" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/sat/bilder/meteosat/satbild_hrvir_akt.png" alt="Meteosat" width="488px" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
-##                <a href="http://de.sat24.com/de" target="_blank" rel="noreferrer"><img src="https://api.sat24.com/animated/DE/infraPolair/1/W_dot_%20Europe%20Standard%20Time/4277781" alt="Meteosat" width="488px" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
-##            </div>
-##        </div>
+        <div id="meteosat" class="tab-content">
+            <div class="meteosat_image">
+##                <a href="https://www.dwd.de/DE/leistungen/satellit_metsat/satellit_metsat.html" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/sat/bilder/meteosat/satbild_hrvir_akt.png" alt="Meteosat" width="488px" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
+                <a href="http://de.sat24.com/de" target="_blank" rel="noreferrer"><img src="https://api.sat24.com/animated/DE/infraPolair/1/W_dot_%20Europe%20Standard%20Time/4277781" alt="Meteosat" width="488px" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
+            </div>
+        </div>
 ##        <div id="precipitation" class="tab-content">
 ##            <div class="precipitation_image">
 ##                <a href="https://www.dwd.de/DE/leistungen/wolken_niederschlagsart/wolken_niederschlagsart.html" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/sat/satwetter/njob_satrad.png" alt="DWD Niederschlagsdaten" width="420px" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
@@ -73,7 +73,7 @@
     jQuery(document).ready(function() {
         // All additional images according to standard Windy Radar
         setInterval('reloadRadarTabImages("dwdradar_image")', 300000);
-##        setInterval('reloadRadarTabImages("meteosat_image")', 300000);
+        setInterval('reloadRadarTabImages("meteosat_image")', 300000);
 ##        setInterval('reloadRadarTabImages("precipitation_image")', 300000);
         setInterval('reloadRadarTabImages("webcam_image")', 60000);
 ##        setInterval('reloadRadarTabImages("webcamrpi_image")', 60000);

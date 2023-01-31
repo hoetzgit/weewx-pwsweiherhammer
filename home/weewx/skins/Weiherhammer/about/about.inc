@@ -325,7 +325,7 @@
                 <li>Latitude: $station.latitude[0]&deg; $station.latitude[1]' $station.latitude[2]</li>
                 <li>Longitude: $station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]</li>
                 <li>H&ouml;he ca.: $station.altitude</li>
-                <li>Konsole Software EasyWeather Version: 1.6.4</li>
+                <li>Konsole Software EasyWeather Version: 1.6.5</li>
                 <li>Ecowitt GW1100 Gateway Software Version: 2.2.1</li>
                 <li>Backend- und WebServer: Diverse virtuelle VMware ESXi basierende Rechner mit Ubuntu 22.04.1 LTS, Webseite self hosted</li>
                 <li>WeeWX Server uptime: $station.os_uptime</li>

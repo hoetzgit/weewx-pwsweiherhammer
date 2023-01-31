@@ -1,0 +1,909 @@
+// Makeshift debug function
+function debug ( msg ) {
+    console.log( "Info: " + msg );
+}
+
+jQuery(document).ready(function() {
+    // Inital call to populate site with data
+    drawCompassRose();
+    drawCompassArrow();
+    get_forecast();
+    get_archive();
+    mqttconnect()
+});
+
+/////////////////////////
+// Connect to mqtt server
+/////////////////////////
+function mqttconnect() {
+    client = new Paho.Client("$Extras.websocket_host", $Extras.websocket_port, mqttclient);
+
+    const mqtt_options = {
+        useSSL: true,
+        reconnect: true,
+        onSuccess: onConnect,
+        onFailure: onFailure
+    }
+    client.onConnectionLost = onConnectionLost;
+    client.onMessageArrived = onMessageArrived;
+    client.connect( mqtt_options );
+
+
+    function onConnect () {
+        client.subscribe( "$Extras.websocket_topic" );
+        debug("Successfully connected to mqtt server");
+    }
+
+    function onFailure () {
+        debug("Connection to mqtt server FAILED");
+    }
+
+    function onConnectionLost ( responseObject ) {
+        if ( responseObject.errorCode !== 0 ) {
+            debug("MQTT disconnected: " + responseObject.errorMessage);
+        }
+    }
+
+    function onMessageArrived ( message ) {
+        process_payload ( message.payloadString  );
+    }
+}
+///////////////////////////////////////////////////////////////////////
+// Global functions available to live, archive, and forecast data sets
+///////////////////////////////////////////////////////////////////////
+
+// Colorize Temps
+function colorizeTemp ( temp ) {
+    if ( temp >= 120 ) { return "rgb(160,0,128)"; }
+    if ( temp >= 115 ) { return "rgb(176,0,112)"; }
+    if ( temp >= 110 ) { return "rgb(192,0,96)"; }
+    if ( temp >= 105 ) { return "rgb(208,0,80)"; }
+    if ( temp >= 100 ) { return "rgb(224,0,60)"; }
+    if ( temp >= 95 ) { return "rgb(225,0,0)"; }
+    if ( temp >= 90 ) { return "rgb(225,86,25)"; }
+    if ( temp >= 85 ) { return "rgb(240,128,50)"; }
+    if ( temp >= 80 ) { return "rgb(240,160,70)"; }
+    if ( temp >= 75 ) { return "rgb(228,196,85)"; }
+    if ( temp >= 70 ) { return "rgb(240,228,85)"; }
+    if ( temp >= 65 ) { return "rgb(212,240,60)"; }
+    if ( temp >= 60 ) { return "rgb(160,240,0)"; }
+    if ( temp >= 55 ) { return "rgb(0,240,0)"; }
+    if ( temp >= 50 ) { return "rgb(0,240,144)"; }
+    if ( temp >= 45 ) { return "rgb(0,224,176)"; }
+    if ( temp >= 40 ) { return "rgb(0,208,208)"; }
+    if ( temp >= 35 ) { return "rgb(32,196,240)"; }
+    if ( temp >= 30 ) { return "rgb(64,160,240)"; }
+    if ( temp >= 25 ) { return "rgb(64,128,240)"; }
+    if ( temp >= 20 ) { return "rgb(64,64,255)"; }
+    if ( temp >= 15 ) { return "rgb(128,0,255)"; }
+    if ( temp >= 10 ) { return "rgb(144,32,224)"; }
+    if ( temp >= 5 ) { return "rgb(160,32,208)"; }
+    if ( temp >= 0 ) { return "rgb(176,32,192)"; }
+    if ( temp >= -5 ) { return "rgb(160,64,176)"; }
+    if ( temp >= -10 ) { return "rgb(144,96,160)"; }
+    if ( temp >= -15 ) { return "rgb(128,112,14)"; }
+    if ( temp >= -20 ) { return "rgb(144,128,160)"; }
+    if ( temp >= -25 ) { return "rgb(160,144,176)"; }
+    if ( temp >= -30 ) { return "rgb(176,160,192)"; }
+    if ( temp >= -35 ) { return "rgb(200,181,200)"; }
+    if ( temp >= -40 ) { return "rgb(219,210,220)"; }
+    if ( temp >= -45 ) { return "rgb(220,220,225)"; }
+    if ( temp >= -50 ) { return "rgb(240,240,240)"; }
+}
+
+// https://stackoverflow.com/a/19872672/1177153
+var finalRotation;
+function rotateThis(newRotation) {
+    if ( newRotation == "N/A") { return; }
+
+    finalRotation = finalRotation || 0; // if finalRotation undefined or 0, make 0, else finalRotation
+    let currentRotation = finalRotation % 360;
+
+    if ( currentRotation < 0 ) { currentRotation += 360; }
+    if ( currentRotation < 180 && (newRotation > (currentRotation + 180)) ) { finalRotation -= 360; }
+    if ( currentRotation >= 180 && (newRotation <= (currentRotation - 180)) ) { finalRotation += 360; }
+
+    finalRotation += (newRotation - currentRotation);
+    jQuery(".arrow").css( "transform", "rotate(" + finalRotation + "deg)" );
+}
+
+var windometerMax = 10;
+function rotateSpd(data) {
+    // Highest wind in last hour
+    let lastHourWindMaximum = parseFloat(windometerMax);
+    let windCurrent = data;
+    let scaleMax = 20;
+
+    if ( lastHourWindMaximum > scaleMax ) {
+        scaleMax = lastHourWindMaximum;
+    }
+
+    jQuery(".windometer-max").html( scaleMax );
+
+    // Convert speeds into angles
+    let windSpeedometer = ( windCurrent / scaleMax * 180 ) - 90;
+    let windSpeedometerHi = ( lastHourWindMaximum / scaleMax * 180 ) - 90;
+
+    // Keep the meter from over-shooting
+    if ( windSpeedometer > 90 ) {
+        windSpeedometer = 90;
+    }
+
+    jQuery(".windometer-arrow").css( "transform", "rotate(" + windSpeedometer + "deg)" );
+    jQuery(".windometer-tickmark-recentHi").css( "transform", "rotate(" + windSpeedometerHi + "deg)" );
+}
+
+// Calcuations and jQueries for animated rain bucket
+function rainBucket(data) {
+    let someRain = parseFloat(data).toFixed(2);
+    let rainLevel = ((( 1 - someRain ) * 112 ) + 1);
+    if (rainLevel < 1) {
+        rainLevel = 1;
+    }
+    jQuery(".raingauge-dayRain").html( someRain + '"' );
+    jQuery(".raingauge-rain").css({ 'top': rainLevel + 'px' });
+}
+
+/////////////////////
+// Process Live Data
+/////////////////////
+function process_payload ( data ) {
+    data = jQuery.parseJSON ( data );
+
+    // interval_minute is unique to mqtt archive updates, signaling json data has been updated
+    if ( data.hasOwnProperty( 'interval_minute' ) ) {
+        // 15 sec delay to allow new json files to be fully updated
+        setTimeout( function() {
+            get_forecast();
+        }, 15000);
+        // Same for archive data
+        setTimeout( function() {
+            get_archive();
+        }, 15000);
+    }
+
+    // Update webpage with the live data
+    let status_date = dayjs().format("dddd, MMM D");
+    let status_time = dayjs().format("h:mm:ss A");
+    jQuery(".websocket-date").html( status_date );
+    jQuery(".websocket-time").html( status_time );
+
+    if ( data.hasOwnProperty( 'altimeter' ) ) {
+        jQuery('.altimeter').html( data.altimeter );
+    }
+    if ( data.hasOwnProperty( 'appTemp_F' ) ) {
+        jQuery('.feels-like').html( parseFloat(data.appTemp_F).toFixed(1) + '<sup>&deg;</sup>' );
+    }
+    if ( data.hasOwnProperty('barometer_inHg') ) {
+        jQuery('.barometer').html('Barometer: ' + parseFloat( data.barometer_inHg ).toFixed(2) );
+    }
+    if ( data.hasOwnProperty( 'dayRain_in' ) ) {
+        rainBucket( data.dayRain_in );
+    }
+    if ( data.hasOwnProperty( 'dewpoint_F' ) ) {
+        jQuery('.dewpoint').html('Dewpoint: ' +  parseFloat( data.dewpoint_F ).toFixed(1) + '&deg;' );
+    }
+    if ( data.hasOwnProperty( 'extraHumid1' ) ) {
+        jQuery('.extraHumid1').html('extraHumid1: ' +  parseFloat( data.extraHumid1 ).toFixed(0) );
+    }
+    if ( data.hasOwnProperty( 'extraHumid2' ) ) {
+        jQuery('.extraHumid2').html('extraHumid2: ' +  parseFloat( data.extraHumid2 ).toFixed(0) );
+    }
+    if ( data.hasOwnProperty( 'extraTemp1_F' ) ) {
+        jQuery('.extraTemp1').html('Living Area: ' +  parseFloat( data.extraTemp1_F ).toFixed(1) );
+    }
+    if ( data.hasOwnProperty( 'extraTemp2_F' ) ) {
+        jQuery('.extraTemp2').html('Bedroom: ' +  parseFloat( data.extraTemp2_F ).toFixed(1) );
+    }
+    if ( data.hasOwnProperty( 'inDewpoint_F' ) ) {
+        jQuery('.inDewpoint').html('inDewpoint: ' +  parseFloat( data.inDewpoint_F ).toFixed(1) );
+    }
+    if ( data.hasOwnProperty( 'inHumidity' ) ) {
+        jQuery('.inHumidity').html('Raspi Humidity: ' +  parseFloat( data.inHumidity ).toFixed(0) );
+    }
+    if ( data.hasOwnProperty( 'inTemp_F' ) ) {
+        jQuery('.inTemp').html('Raspi Temp: ' +  parseFloat( data.inTemp_F ).toFixed(1) );
+    }
+    if ( data.hasOwnProperty( 'outHumidity' ) ) {
+        jQuery('.outHumidity').html( 'Humidity: ' + parseFloat( data.outHumidity ).toFixed(1) + '&percnt;');
+    }
+    if ( data.hasOwnProperty( 'outTemp_F' ) ) {
+        jQuery('.outTemp').html( parseFloat( data.outTemp_F ).toFixed(1) + '<sup>&deg;</sup>' );
+        jQuery('.outTemp').css( 'color', colorizeTemp( data.outTemp_F) );
+    }
+    if ( data.hasOwnProperty( 'rainRate_inch_per_hour') ) {
+        jQuery('.raingauge-rainRate').html( parseFloat(data.rainRate_inch_per_hour).toFixed(2) + '"/hr');
+    }
+    if ( data.hasOwnProperty( 'windDir' )) {
+        rotateThis (data.windDir);
+        jQuery('.wind-direction-deg').html( parseFloat(data.windDir).toFixed(0) );
+    }
+    if ( data.hasOwnProperty('windSpeed_mph') ) {
+        rotateSpd( data.windSpeed_mph );
+        jQuery('.wind-speed-mph').html( parseFloat(data.windSpeed_mph).toFixed(0) );
+    }
+    if ( data.hasOwnProperty( 'UV' ) ) {
+        jQuery('.uv').html( parseInt(data.UV) );
+    }
+}
+
+/////////////////////////////
+// Process archive.json data 
+/////////////////////////////
+
+function get_archive () {
+    jQuery.getJSON ( "archive.json", process_archive );
+}
+
+function process_archive ( data ) {
+    // Out Temp Hi-Lo
+    jQuery(".outTemp-day-high").html( data.today.outTemp.max );
+    jQuery(".outTemp-day-low").html( data.today.outTemp.min );
+
+    // Wind
+    windometerMax = data.today.wind.windGust_lastHr;
+    jQuery(".windDir-2hrAvg").html( data.today.wind.windDir_2hrAvg );
+    jQuery(".windSpd-2hrAvg").html( data.today.wind.windSpd_2hrAvg );
+    jQuery(".wind-max").html( data.today.wind.max );
+    jQuery(".wind-max-time").html( data.today.wind.maxtime );
+
+    // Rain 
+    jQuery(".k-dailystatsrainrate").html( parseFloat(data.today.rain.maxRate).toFixed(2) + '"/hr' );
+    jQuery(".k-yesterdaystatsrain").html( parseFloat(data.today.rain.sum.yesterday).toFixed(2) + '"' );
+    jQuery(".k-weekstatsrain").html( parseFloat(data.today.rain.sum.week).toFixed(2) + '"' );
+    jQuery(".k-monthstatsrain").html( parseFloat(data.today.rain.sum.month).toFixed(2) + '"' );
+    jQuery(".k-yearstatsrain").html( parseFloat(data.today.rain.sum.year).toFixed(2) + '"' );
+
+    // Alamanac
+    const daylightRaw = parseInt(data.almanac.sun.daylight);
+    const daylight = {
+        hrs: parseInt( daylightRaw / 3600 ),
+        mins: parseInt( daylightRaw / 3600 % 1 * 60 ),
+        secs: parseInt( daylightRaw / 3600 % 1 * 60 % 1 * 60 )
+    }
+    
+    jQuery(".sunrise-time").html(dayjs( parseInt( data.almanac.sun.rise ) * 1000 ).format("h:mm"));
+    jQuery(".sunset-time").html(dayjs( parseInt(  data.almanac.sun.set ) * 1000 ).format("h:mm"));
+    jQuery(".daylight-time").html( daylight.hrs + "hrs " + daylight.mins + "mins");
+    jQuery(".moonrise-time").html(dayjs( parseInt( data.almanac.moon.rise ) * 1000 ).format("h:mm a"));
+    jQuery(".moonset-time").html(dayjs( parseInt( data.almanac.moon.set ) * 1000 ).format("h:mm a"));
+    if ( data.almanac.moon.phase == "New" || data.almanac.moon.phase == "Full" ) {
+        jQuery(".moon-phase").html( data.almanac.moon.phase + " Moon");
+    } else {
+        jQuery(".moon-phase").html( data.almanac.moon.phase );
+    }
+
+    // Draw sun and moon widget
+    drawAlmanac( data );
+}
+
+//////////////////////////////
+// Process forecast.json data
+//////////////////////////////
+
+// Fetch the data from forecast.json
+function get_forecast () {
+    jQuery.getJSON ( "forecast.json", process_forecast );
+}
+
+// Update page with new json data
+function process_forecast ( data ) {
+
+    // Current Wx Icon
+    let icon = data.current[0].response[0].periods[0].icon;
+    icon = icon.split(".");
+    jQuery(".current-wx-icon").html('<img src="./icons/' + icon[0] + '@2x.png">');
+    jQuery(".current-wx-text").html( data.current[0].response[0].periods[0].weatherPrimary );
+
+    // Alerts
+    if ( data.alerts[0].success && data.alerts[0].error === null ) {
+
+        let wx_alert_html = "";
+        // Build alerts HTML
+        for ( let i = 0; i < data.alerts[0].response.length; i++ ) {
+
+            let wx_alert = data.alerts[0].response[i].details.name;
+            let wx_alert_start = dayjs(new Date( data.alerts[0].response[i].timestamps.beginsISO )).format('ddd h:mm A');
+            let wx_alert_end = dayjs(new Date( data.alerts[0].response[i].timestamps.expiresISO )).format('ddd h:mm A');
+            let wx_alert_color = data.alerts[0].response[i].details.color;
+
+            wx_alert_html += '<div class="wx-alert-' + i + '" style="color:#' + wx_alert_color + ';">' + wx_alert + " - " + wx_alert_start + ' until ' + wx_alert_end + '</div>';
+        }
+        // Update the page with alert html
+        jQuery(".weather-alerts").html( wx_alert_html );
+    } else {
+        // No alerts to disaply
+        jQuery(".weather-alerts").html( "" );
+    }
+
+    // More updates
+    // jQuery(".KMEM-wind-direction-deg").html( data.current[0].response[0].ob.windDirDEG + " &deg;");
+    // jQuery(".KMEM-wind-speed-mph").html( data.current[0].response[0].ob.windSpeedMPH + " mph" );
+
+    // Loop through METAR data for each station
+    for ( let i = 0; i < data.observations[0].response.length; i++ ) {
+
+        // Display station ID and update times, color code depending on age of the data 
+        function metarColorCode ( loc , time ) {
+
+            // Display time of observations
+            jQuery("." + loc + "-location").html( loc );
+            jQuery("." + loc + "-id-updated").html( dayjs.unix(time).format("h:mm A") );
+
+            // New bottom row info
+            // if ( loc == "KMEM" ) {
+            //     jQuery(".airport1-id").html( loc + " " + dayjs.unix(time).format("h:mm A") );
+            //     jQuery(".airport1-temp").html( "OAT: " + data.observations[0].response[i].ob.tempF );
+            // }
+            // jQuery(".KOLVupdated").html( "OLV Updated: " + dayjs.unix(time).format("h:mm A") );
+
+            // Color code station ID based on age of observation
+            let timeDiff = dayjs().unix() - dayjs(time);
+            if ( timeDiff < 1200 ) {
+                // Fresh data, less than 20 minutes old
+                jQuery("." + loc + "-id-updated").css( "color", "rgb(90, 170, 90)" );
+            } else if ( timeDiff > 1200 && timeDiff < 2400 ) {
+                // Semistale data - between 20 and 40 minutes old 
+                jQuery("." + loc + "-id-updated").css( "color", "rgb(244, 198, 113)" );
+            } else if ( timeDiff > 2400 && timeDiff < 3600 ) {
+                // Stale data - between 40 and 60 minutes old
+                jQuery("." + loc + "-id-updated").css( "color", "rgb(220, 120, 120)" );
+            } else {
+                // Old data - older than an hour
+                jQuery("." + loc + "-id-updated").css( "color", "rgb(160, 90, 90)" );
+            }
+        }
+
+        // Rotate wind direction widgit arrow
+        function rotateWindDir ( loc , k_newRotation ) {
+            if ( k_newRotation == "N/A") { return; }
+
+            let k_currentRotation;
+            let k_finalRotation;
+
+            k_finalRotation = k_finalRotation || 0; // if k_finalRotation undefined or 0, make 0, else k_finalRotation
+            k_currentRotation = k_finalRotation % 360;
+
+            if ( k_currentRotation < 0 ) { k_currentRotation += 360; }
+            if ( k_currentRotation < 180 && (k_newRotation > (k_currentRotation + 180)) ) { k_finalRotation -= 360; }
+            if ( k_currentRotation >= 180 && (k_newRotation <= (k_currentRotation - 180)) ) { k_finalRotation += 360; }
+
+            k_finalRotation += (k_newRotation - k_currentRotation);
+
+            jQuery("." + loc + "-windDirectionArrow").css( "transform", "rotate(" + k_finalRotation + "deg)" );
+            // if ( loc == "KMEM" ) {
+            //     jQuery(".arrow").css( "transform", "rotate(" + k_finalRotation + "deg)" );
+            // }
+        }
+
+        // Rotate wind speed widget arrow
+        function rotateWindSpeed ( loc , windSpeed ) {
+            // Set default highest speed of the meter
+            let scaleMax = 20;
+
+            if ( windSpeed > scaleMax ) {
+                scaleMax = windSpeed;
+            }
+            jQuery("." + loc + "-windometer-legend-hi").html( scaleMax );
+
+            // Convert speeds into angles
+            let windSpeedometer = ( windSpeed / scaleMax * 180 ) - 90;
+
+            // Keep the meter from over-shooting
+            if ( windSpeedometer > 90 ) {
+                windSpeedometer = 90;
+            }
+
+            jQuery("." + loc + "-wind-speed-arrow").css( "transform", "rotate(" + windSpeedometer + "deg)" );
+        }
+
+        // Display wind gusts if observed
+        function windGusts ( loc , gustMPH , gustKTS ) {
+
+            if ( !gustMPH ){
+                jQuery("." + loc + "-wind-gust-mph").html( "" );
+                jQuery("." + loc + "-wind-gust-kts").html( "" );
+            } else {
+                jQuery("." + loc + "-wind-gust-mph").html( "G" + gustMPH );
+                jQuery("." + loc + "-wind-gust-kts").html( "G" + gustKTS );
+            }
+        }
+
+        // Display and color code flight rules
+        function flightRules ( loc , rules ) {
+
+            jQuery("." + loc + "-rules").html( rules );
+            if ( rules === "MVFR" ) {
+                jQuery("." + loc + "-rules").css( "color", "rgb(102, 102, 255)" );
+            } else if ( rules === "IFR" ) {
+                jQuery("." + loc + "-rules").css( "color", "red" );
+            } else if ( rules === "LIFR" ) {
+                jQuery("." + loc + "-rules").css( "color", "rgb(204, 0, 204)" );
+            } else if ( rules === "VFR" ) {
+                jQuery("." + loc + "-rules").css( "color", "rgba(0,0,0,0)" );
+            }
+        }
+
+        // Split up raw metar to display reported cloud layers
+        function sky ( loc , raw ) {
+
+            let rawSplit = raw.split(" ");
+            let sky_html = "Sky:";
+
+            for ( let j = 0; j < rawSplit.length; j++ ) {
+                if ( rawSplit[j].slice(0,3) === "FEW" || rawSplit[j].slice(0,3) === "SCT"  || rawSplit[j].slice(0,3) === "BKN" || rawSplit[j].slice(0,3) === "OVC" ) {
+                    sky_html += " " + rawSplit[j];
+                } else if ( rawSplit[j] === "CLR" ) {
+                    sky_html += " Clear";
+                }
+            }
+
+            jQuery("." + loc + "-sky").html( sky_html );
+        }
+
+        // Station location identifier
+        let location = data.observations[0].response[i].id;
+
+        metarColorCode ( location , data.observations[0].response[i].ob.timestamp );
+        rotateWindDir( location , data.observations[0].response[i].ob.windDirDEG );
+        rotateWindSpeed ( location , data.observations[0].response[i].ob.windSpeedMPH );
+        windGusts ( location , data.observations[0].response[i].ob.windGustMPH , data.observations[0].response[i].ob.windGustKTS );
+        flightRules ( location, data.observations[0].response[i].ob.flightRule );
+        sky ( location , data.observations[0].response[i].raw );
+
+        jQuery("." + location + "-wind-direction").html( data.observations[0].response[i].ob.windDir );
+        jQuery("." + location + "-wind-speed-mph").html( data.observations[0].response[i].ob.windSpeedMPH );
+        jQuery("." + location + "-wind-speed-kts").html( data.observations[0].response[i].ob.windSpeedKTS + " kts" );
+        jQuery("." + location + "-vis").html("Vis:  " + data.observations[0].response[i].ob.visibilityMI + "sm" );
+        // jQuery("." + location + "-appTemp").html( data.observations[0].response[i].ob.feelslikeF + "&deg;");
+        // jQuery("." + location + "-appTemp").css( "color", colorizeTemp ( parseInt( data.observations[0].response[i].ob.feelslikeF ))); 
+
+        if ( data.observations[0].response[i].ob.windDirDEG >= 0 ) {
+            jQuery("." + location + "-wind-direction-deg").html( data.observations[0].response[i].ob.windDirDEG );
+        } else {
+            jQuery("." + location + "-wind-direction-deg").html( "--" );
+        }
+    }
+
+    //// Forecasts for Day Night Periods ////
+    // Loop through each day-night forecast period and build forecast section HTML
+    for (let i = 0; i < data.daynight[0].response[0].periods.length; i++) {
+
+        if (data.daynight[0].response[0].periods[i].isDay) {
+            if (i === 0) {
+                jQuery(".forecast-p" + i + "-date").html("Today");
+            } else {
+                jQuery(".forecast-p" + i + "-date").html( dayjs.unix(data.daynight[0].response[0].periods[i].timestamp).format('dddd')  );
+            }
+            let temp =  parseFloat(data.daynight[0].response[0].periods[i].maxTempF).toFixed(0);
+            jQuery(".forecast-p" + i + "-hilo-txt").html( "High: " );
+            jQuery(".forecast-p" + i + "-hilo-temp").html( temp + "&deg;" );
+            jQuery(".forecast-p" + i + "-hilo-temp").css( "color", colorizeTemp( temp ) );
+
+        } else {
+            if (i === 0 || i === 1) {
+                jQuery(".forecast-p" + i + "-date").html("Tonight");
+            } else {
+                jQuery(".forecast-p" + i + "-date").html( dayjs.unix(data.daynight[0].response[0].periods[i].timestamp).format("ddd") + " Night"  );
+            }
+            let temp = parseFloat(data.daynight[0].response[0].periods[i].minTempF).toFixed(0);
+            jQuery(".forecast-p" + i + "-hilo-txt").html( "Low: " );
+            jQuery(".forecast-p" + i + "-hilo-temp").html( temp + "&deg;" );
+            jQuery(".forecast-p" + i + "-hilo-temp").css( "color", colorizeTemp( temp ) );
+        }
+
+        if (data.daynight[0].response[0].periods[i].windSpeedMinMPH === data.daynight[0].response[0].periods[i].windSpeedMaxMPH ){
+            jQuery(".forecast-p" + i + "-windSpd").html(data.daynight[0].response[0].periods[i].windSpeedMPH + '');
+        } else {
+            jQuery(".forecast-p" + i + "-windSpd").html(data.daynight[0].response[0].periods[i].windSpeedMinMPH + ' - ' + data.daynight[0].response[0].periods[i].windSpeedMaxMPH + '');
+        }
+
+        jQuery(".forecast-p" + i + "-windDir").html(data.daynight[0].response[0].periods[i].windDir);
+        jQuery(".forecast-p" + i + "-icon").html('<img src="./icons/' + data.daynight[0].response[0].periods[i].icon + '" align="right">');
+        jQuery(".forecast-p" + i + "-wxPriCode").html( data.daynight[0].response[0].periods[i].weatherPrimary );
+        jQuery(".forecast-p" + i + "-pop").html(data.daynight[0].response[0].periods[i].pop + '%');
+        jQuery(".forecast-p" + i + "-precip").html(data.daynight[0].response[0].periods[i].precipIN + '"');
+    }
+}
+
+///////////////////////
+// Sun and Moon canvas 
+///////////////////////
+console.log("J-727");
+
+// Initialize and call all drawing functions in correct order
+function drawAlmanac ( data ) {
+    const canvasSunPath = document.querySelector('#arcs');
+    const ctx = canvasSunPath.getContext('2d');
+
+    // The circular path which the sun, moon, and markings travel upon
+    // changing radius here will scale entire drawing
+    sunPath = {
+        cx: canvasSunPath.width / 2,
+        cy: canvasSunPath.height / 2,
+        radius: 60,
+        strA: 0,
+        endA: Math.PI * 2
+    };
+    ctx.clearRect( 0 , 0, canvasSunPath.width , canvasSunPath.height );
+
+    drawSunPath();
+    drawTickMarks();
+    //drawSunLight();
+    drawSun();
+    drawMoon();
+    drawMoonPhase();
+
+    // Point returns an object containing information about a point on the canvass
+    // required paramter 'time_angle' can be a time or an angle. timestamps are expected to be much much bigger than an angle
+    // optional 'radius' paramter defaults to a point along the sunPath.radius circle 
+    function Point ( time_angle , radius ) {
+
+        if ( time_angle > 3600 ){
+            angle = timeToAngle( time_angle );
+        } else {
+            angle = time_angle;
+        }
+
+        // return an angle from the percent of time passed in the midnight to midnight 24hr time period
+        function timeToAngle (time) {
+            //const dayStart = new Date().setHours(0,0,0,0) / 1000;
+            //const dayEnd = new Date().setHours(23,59,59,999) / 1000;
+            const dayStart = data.almanac.sun.antitransit.previous;
+            const dayEnd = data.almanac.sun.antitransit.next;
+            return ( ( time - dayStart ) / ( dayEnd - dayStart ) * 360 ) ;
+        } 
+
+        // build the Point object
+        this.degrees = ( angle );
+        this.radians = ( angle + 90 ) * Math.PI / 180;
+        this.radius = radius === undefined ? sunPath.radius : radius;
+        this.x = sunPath.cx + ( this.radius * Math.cos( this.radians ) );
+        this.y = sunPath.cy + ( this.radius * Math.sin( this.radians ) );
+    }
+
+    function drawSunPath () {
+        ctx.beginPath();
+        ctx.arc( sunPath.cx, sunPath.cy, sunPath.radius, sunPath.strA, sunPath.endA );
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgb(20, 20, 20)';
+        ctx.stroke();
+    }
+
+    function drawTickMarks () {
+        const innerRadius = 2;
+         const outerRadius = 9;
+         const riseTick = {
+             innerPoint: new Point( parseInt( data.almanac.sun.rise ), sunPath.radius + innerRadius ),
+             outerPoint: new Point( parseInt( data.almanac.sun.rise ), sunPath.radius + outerRadius )
+         };
+         const setTick = {
+             innerPoint: new Point( parseInt( data.almanac.sun.set ), sunPath.radius + innerRadius ),
+             outerPoint: new Point( parseInt( data.almanac.sun.set ), sunPath.radius + outerRadius )
+         };
+         const noonTick = {
+             innerPoint: new Point( parseInt( data.almanac.sun.transit ), sunPath.radius + innerRadius ),
+             outerPoint: new Point( parseInt( data.almanac.sun.transit ), sunPath.radius + outerRadius )
+         };
+         ctx.beginPath();
+         ctx.arc( sunPath.cx, sunPath.cy, sunPath.radius + innerRadius, riseTick.innerPoint.radians, setTick.innerPoint.radians );
+         ctx.lineWidth = 2;
+         ctx.strokeStyle = "rgb(255, 215, 0)";
+         ctx.stroke();
+
+         ctx.beginPath();
+         ctx.moveTo( riseTick.innerPoint.x, riseTick.innerPoint.y );
+         ctx.lineTo( riseTick.outerPoint.x, riseTick.outerPoint.y );
+         ctx.lineWidth = 1;
+         ctx.stroke();
+
+        // const tick = {
+        //     color: "rgb(128, 128, 128)",
+        //     width: 3,
+        //     radius: {
+        //         inner: 1,
+        //         outer: 8
+        //     },
+        //     times: [
+        //         parseInt( data.almanac.sun.rise ),
+        //         parseInt( data.almanac.sun.set ),
+        //         parseInt( data.almanac.sun.transit )
+        //     ]
+        // }
+
+        // ctx.beginPath();
+        // for ( i = 0; i < tick.times.length; i++ ) {
+        //     const point1 = new Point ( tick.times[i] , sunPath.radius + tick.radius.outer );
+        //     const point2 = new Point ( tick.times[i] , sunPath.radius + tick.radius.inner );
+        //     ctx.moveTo( point1.x, point1.y );
+        //     ctx.lineTo( point2.x, point2.y );
+        // }
+        // ctx.lineWidth = tick.width;
+        // ctx.strokeStyle = tick.color;
+        // ctx.stroke();
+    }
+
+    function drawSunLight() {
+        // consider moving this into tick marks or visaversa using end markers 
+        const sunrise = new Point( parseInt( data.almanac.sun.rise ) );
+        const sunset = new Point( parseInt( data.almanac.sun.set ) );
+
+        const gradient = ctx.createRadialGradient( sunPath.cx , sunPath.cy , 0 , sunPath.cx, sunPath.cy , sunPath.radius + 1 );
+        gradient.addColorStop(0.85, 'rgb(13, 13, 13');
+        gradient.addColorStop(1, 'rgb(102, 87, 0)');
+
+        // Sunlight slice
+        ctx.beginPath();
+        ctx.moveTo( sunPath.cx , sunPath.cy ); // Center of circle
+        ctx.arc( sunPath.cx , sunPath.cy , sunPath.radius , sunrise.radians , sunset.radians );
+        ctx.fillStyle = gradient;
+        ctx.fill();
+    }
+
+    function drawSun() {
+        const point = new Point( parseInt( data.timestamp ) );
+
+        const sun = {
+            x: point.x,
+            y: point.y,
+            sunRadius: 7,
+            startAngle: 0, 
+            endAngle: 2*Math.PI,
+            color: "yellow"
+        }
+        ctx.beginPath();
+        ctx.arc( sun.x, sun.y, sun.sunRadius, sun.startAngle, sun.endAngle );
+        ctx.fillStyle = sun.color;
+        ctx.fill();
+    }
+
+    function drawMoon() {
+        const lunarDay = {
+            now: parseInt( data.timestamp ),
+            antitransit: {
+                previous: parseInt( data.almanac.moon.antitransit.previous ),
+                next: parseInt( data.almanac.moon.antitransit.next )
+            }
+        }
+        const angle = ( ( lunarDay.now - lunarDay.antitransit.previous ) / ( lunarDay.antitransit.next - lunarDay.antitransit.previous ) ) * 360;
+        const point = new Point ( angle );
+        const moon = {
+            x: point.x,
+            y: point.y,
+            moonRadius: 5,
+            startAngle: 0,
+            endAngle: 2*Math.PI,
+            color: "white"
+        }
+
+        ctx.beginPath();
+        ctx.arc( moon.x , moon.y , moon.moonRadius , moon.startAngle , moon.endAngle );
+        ctx.fillStyle = moon.color;
+        ctx.fill();
+    }
+
+    function drawMoonPhase() {
+        const percentfull = parseInt( data.almanac.moon.percentfull );
+        const phaseTimes = {
+            timestamp: parseInt( data.timestamp ),
+            timelimit: 864000,
+            newmoon: {
+                previous: parseInt( data.almanac.moon.new.previous ),
+                next: parseInt ( data.almanac.moon.new.next )
+            },
+            fullmoon: {
+                previous: parseInt( data.almanac.moon.full.previous ),
+                next: parseInt( data.almanac.moon.full.next )
+            }
+        }
+        const moon = {
+            x: sunPath.cx,
+            y: sunPath.cy+20,
+            r: 20,
+            lightColor: "rgb(139, 138, 143)",
+            darkColor: "rgb(0, 0, 0)",
+        };
+
+        // determine which quarter needs to be drawn
+        if ( percentfull == 0 ) {
+
+        } else if ( percentfull < 50 && phaseTimes.timestamp - phaseTimes.newmoon.previous < phaseTimes.timelimit ) {
+            drawNewToFirst(percentfull);
+
+        } else if ( percentfull > 50 && phaseTimes.fullmoon.next - phaseTimes.timestamp < phaseTimes.timelimit ) { 
+            drawFirstToFull(percentfull);
+
+        } else if ( percentfull > 50 && phaseTimes.timestamp - phaseTimes.fullmoon.previous < phaseTimes.timelimit ) { 
+            drawFullToLast(percentfull);
+
+        } else if ( percentfull < 50 && phaseTimes.newmoon.next - phaseTimes.timestamp < phaseTimes.timelimit ) { 
+            drawLastToNew(percentfull);
+
+        } else {
+            console.log("Error: Moon phase not drawn");
+        }
+
+        // ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle)
+        function drawNewToFirst(percent) {
+            const radiusMod = (100-(percent*2))/100;
+            // Draw light on right side
+            ctx.beginPath();
+            ctx.ellipse (moon.x , moon.y , moon.r , moon.r , 0 , 3*Math.PI/2 , Math.PI/2 );
+            ctx.fillStyle = moon.lightColor;
+            ctx.fill();
+            // Draw waxing light by un-shadowing it
+            ctx.beginPath();
+            ctx.ellipse (moon.x , moon.y , moon.r * radiusMod , moon.r , 0 , 3*Math.PI/2 , Math.PI/2 );
+            ctx.fillStyle = moon.darkColor;
+            ctx.fill();
+        }
+        function drawFirstToFull(percent) {
+            const radiusMod = 2*(percent-50)/100;
+            // Draw light on right side
+            ctx.beginPath();
+            ctx.ellipse (moon.x , moon.y , moon.r , moon.r , 0 , 3*Math.PI/2 , Math.PI/2 );
+            ctx.fillStyle = moon.lightColor;
+            ctx.fill();
+            // Draw waxing light on left side
+            ctx.beginPath();
+            ctx.ellipse (moon.x , moon.y , moon.r * radiusMod , moon.r , 0 , Math.PI/2, 3*Math.PI/2 ) ;
+            ctx.fillStyle = moon.lightColor;
+            ctx.fill();
+        }
+        function drawFullToLast(percent) {
+            const radiusMod = 2*(percent-50)/100;
+            // Draw light on left side
+            ctx.beginPath();
+            ctx.ellipse (moon.x , moon.y , moon.r , moon.r , 0 , Math.PI/2 , 3*Math.PI/2 );
+            ctx.fillStyle = moon.lightColor;
+            ctx.fill();
+            // Draw waning light on right side
+            ctx.beginPath();
+            ctx.ellipse (moon.x , moon.y , moon.r * radiusMod , moon.r , 0 , 3*Math.PI/2 , Math.PI/2 );
+            ctx.fillStyle = moon.lightColor;
+            ctx.fill();
+        }
+        function drawLastToNew(percent){
+            const radiusMod = (100-(percent*2))/100;
+            // Draw light on left side
+            ctx.beginPath();
+            ctx.ellipse (moon.x , moon.y , moon.r , moon.r , 0 , Math.PI/2 , 3*Math.PI/2 );
+            ctx.fillStyle = moon.lightColor;
+            ctx.fill();
+            // Draw waxing light by shadowing light
+            ctx.beginPath();
+            ctx.ellipse (moon.x , moon.y , moon.r * radiusMod , moon.r , 0 , Math.PI/2 , 3*Math.PI/2 );
+            ctx.fillStyle = moon.darkColor;
+            ctx.fill();
+        }
+    }
+}
+
+//////////
+// Wind Compass Rose
+// //////
+function drawCompassRose(){
+    const canvasRose = document.getElementById("rose");
+    const rose = canvasRose.getContext("2d");
+
+    const roseObj = {
+        cx: canvasRose.height/2,
+        cy: canvasRose.width/2,
+        r: 70,
+        color1: "rgb(75,57,28)",
+        divisions: 16,
+        major: {
+            inner: 0,
+            outer: 55,
+            color: "rgb(255, 215, 0)"
+        },
+        middle: {
+            inner: 0,
+            outer: 50,
+            color: "grey"
+        },
+        minor: {
+            inner: 0,
+            outer: 40,
+            color: "grey"
+        }
+    }
+
+    drawRoseTicks();
+    drawPeddles();
+    drawDegreeBox();
+
+    //     function drawRose(rose,roseObj){
+    //         //draw compass rose
+    //         //arc(x, y, radius, startAngle, endAngle, counterclockwise)
+    // 
+    function Point ( angle , radius ) {
+        // build the Point object
+        this.degrees = ( angle );
+        this.radians = ( angle + 90 ) * Math.PI / 180;
+        this.radius = radius === undefined ? roseObj.r : radius;
+        this.x = roseObj.cx + ( this.radius * Math.cos( this.radians ) );
+        this.y = roseObj.cy + ( this.radius * Math.sin( this.radians ) );
+    }
+
+    function drawRoseTicks() {
+        rose.beginPath();
+        for (let i = 0; i < 36; i++ ){
+            const p1 = new Point (10*i , roseObj.r - 2);
+            const p2 = new Point (10*i , roseObj.r + 2);
+            rose.moveTo(p1.x,p1.y);
+            rose.lineTo(p2.x,p2.y);
+        }
+        rose.lineWidth = 2;
+        rose.strokeStyle = 'grey';
+        rose.stroke();
+    }
+
+    function drawPeddles() {
+        rose.beginPath();
+        for ( let i = 0; i < roseObj.divisions; i++ ){
+            if ( i%4 == 0 ){
+                const p1 = new Point (360 / roseObj.divisions * i , roseObj.major.inner );
+                const p2 = new Point (360 / roseObj.divisions * i , roseObj.major.outer );
+                rose.moveTo(p1.x, p1.y);
+                rose.lineTo(p2.x, p2.y);
+                rose.strokeStyle = roseObj.major.color;
+                rose.lineWidth = 2;
+            } else if ( i%4 == 1 || i%4 == 3) {
+                const p1 = new Point (360 / roseObj.divisions * i , roseObj.minor.inner );
+                const p2 = new Point (360 / roseObj.divisions * i , roseObj.minor.outer );
+                rose.moveTo(p1.x, p1.y);
+                rose.lineTo(p2.x, p2.y);
+                rose.lineWidth = 2;
+                rose.strokeStyle = roseObj.minor.color;
+            } else if ( i%4 == 2 ) {
+                const p1 = new Point (360 / roseObj.divisions * i , roseObj.middle.inner );
+                const p2 = new Point (360 / roseObj.divisions * i , roseObj.middle.outer );
+                rose.moveTo(p1.x, p1.y);
+                rose.lineTo(p2.x, p2.y);
+                rose.lineWidth = 2;
+                rose.strokeStyle = roseObj.middle.color;
+            }
+        }
+        rose.strokeStyle = 'grey';
+        rose.stroke();
+    }
+
+    function drawDegreeBox () {
+        rose.beginPath();
+        rose.arc(roseObj.cx, roseObj.cy, 22, 0, 2*Math.PI);
+        rose.fillStyle = 'rgb(40,40,40)';
+        rose.fill();
+
+        rose.beginPath();
+        rose.arc(roseObj.cx, roseObj.cy, 22, 0, 2*Math.PI);
+        rose.lineWidth = 2;
+        rose.strokeStyle = 'rgb(150, 150, 150)';
+        rose.stroke();
+
+        // Enable this when re-configuring this for live data
+        // rose.font = "20px lucida";
+        // rose.textAlign = "center";
+        // rose.textBaseline = "middle";
+        // rose.fillStyle = "white";
+        // rose.fillText( windDir, roseObj.cx, roseObj.cy );
+
+    }
+}
+function drawCompassArrow(){
+    const canvasArrow = document.getElementById("rose-arrow");
+    const arrow = canvasArrow.getContext("2d");
+
+    const arrowObj = {
+        cx: canvasArrow.height/2,
+        cy: canvasArrow.width/2,
+        r: 70,
+    }
+
+    arrow.beginPath();
+    arrow.moveTo(arrowObj.cx,arrowObj.cy-65);
+    arrow.lineTo(arrowObj.cx,arrowObj.cy-75);
+    arrow.lineWidth = 3;
+    arrow.strokeStyle = "red";
+    arrow.stroke();
+}
