@@ -143,6 +143,18 @@
                 jQuery(".updated").html( updated_text );
 
                 #end if
+
+                // only temporary test
+                #if $Extras.has_key('current_provider_toggle') and $Extras.current_provider_toggle == '1'
+                jQuery(".current-obs-symbol").dblclick(function(){
+                    if (jQuery(".ProviderRadios").is(":visible")) {
+                        jQuery(".ProviderRadios").hide();
+                    } else {
+                        jQuery(".ProviderRadios").show();
+                    }
+                });
+                #end if
+
             });
         }).catch(function(e) {
             console.log(e);
@@ -198,7 +210,8 @@
                                     </div>
                                     #if $Extras.has_key('current_provider_toggle') and $Extras.current_provider_toggle == '1'
                                     <div class="row ProviderRadiosHead">$gettext('data provider')</div>
-                                    <div class="row form-check form-check-inline ProviderRadios">
+                                    <div class="row ProviderRadiosSelected"><span class="current_provider_source_api">$current_obs_source</span></div><!-- AJAX -->
+                                    <div class="row form-check form-check-inline ProviderRadios" hidden>
                                       #set $providers = $to_list($Extras.get('current_provider_list', ['dwd_mosmix']))
                                       #set $provider_default = $Extras.get('current_provider', 'dwd_mosmix')
                                       #for $provider in $providers
@@ -208,10 +221,9 @@
                                         #else
                                           #set $checked = None
                                         #end if
-                                        <input class="form-check-input" type="radio" name="current_provider_radio" id="$providerid" value="$provider"$checked>
+                                        <input class="form-check-input ProviderRadios" type="radio" name="current_provider_radio" id="$providerid" value="$provider"$checked hidden>
                                       #end for
                                     </div>
-                                    <div class="row ProviderRadiosSelected"><span class="current_provider_source_api">$current_obs_source</span></div><!-- AJAX -->
                                     #end if
                                 </div>
                                 <!-- current temperature and feelslike -->
@@ -335,12 +347,12 @@
                                 <table class="pws-aqi-table">
                                     <tbody>
                                         <tr>
-                                            <td class="pws-aqi-table-title" rel="tooltip" title="$obs.label.ttt_pm2_5_short"><span class="pws_aqi_pm2_5_dot"></span>$obs.label.sds011_pm2_5_short</td><!-- AJAX -->
-                                            <td class="pws-aqi-table-title border-left" rel="tooltip" title="$obs.label.ttt_pm10_0_short"><span class="pws_aqi_pm10_0_dot"></span>$obs.label.sds011_pm10_0_short</td><!-- AJAX -->
+                                            <td class="pws-aqi-table-title" rel="tooltip" title="$obs.label.ttt_pm2_5_short"><span class="pws_aqi_pm2_5_dot"></span>$obs.label.airrohr_pm2_5_short</td><!-- AJAX -->
+                                            <td class="pws-aqi-table-title border-left" rel="tooltip" title="$obs.label.ttt_pm10_0_short"><span class="pws_aqi_pm10_0_dot"></span>$obs.label.airrohr_pm10_0_short</td><!-- AJAX -->
                                         </tr>
                                         <tr>
-                                            <td class="pws-aqi-table-value"><span class="sds011_pm2_5">$current.sds011_pm2_5</span></td><!-- AJAX -->
-                                            <td class="pws-aqi-table-value border-left"><span class="sds011_pm10_0">$current.sds011_pm10_0</span></td><!-- AJAX -->
+                                            <td class="pws-aqi-table-value"><span class="airrohr_pm2_5">$current.airrohr_pm2_5</span></td><!-- AJAX -->
+                                            <td class="pws-aqi-table-value border-left"><span class="airrohr_pm10_0">$current.airrohr_pm10_0</span></td><!-- AJAX -->
                                         </tr>
                                     </tbody>
                                 </table>

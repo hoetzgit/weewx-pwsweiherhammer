@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 # Wettervorhersage
-# Henry Ott
-# based on scripts by Johanna Roedenbeck
-# https://github.com/roe-dl
+# Copyright (C) 2022 Johanna Roedenbeck
+# licensed under the terms of the General Public License (GPL) v3
+# https://github.com/roe-dl/weewx-DWD/blob/master/usr/local/bin/dwd-mosmix
 
-# TODO seperate forecast for each provider
+# nicht aktueller Stand von dwd-mosmix temporär zum Testen mit einigen API calls ergänzt
 
 from __future__ import absolute_import
 from __future__ import print_function
@@ -1829,10 +1829,10 @@ class ForecastPWS(object):
         #TODO: forecast
         #TODO: alerts
         #TODO: aqi
-        src = "API Brightsky"
+        src = "Brightsky (DWD Daten)"
         if ('brightsky' in self.current_provider_list):
             try:
-                data = self.download_brightsky('current_weather')
+                data = self.download_brightsky('current_weather', src)
                 forecast_result['brightsky'] = {
                     'timestamp':int(now),
                     'current': data
@@ -1855,9 +1855,9 @@ class ForecastPWS(object):
         #TODO: forecast
         #TODO: alerts
         #TODO: aqi
-        src = "API Weatherbit"
+        src = "Weatherbit"
         if ('weatherbit' in self.current_provider_list):
-            data = self.download_weatherbit('current')
+            data = self.download_weatherbit('current', src)
             try:
                 forecast_result['weatherbit'] = {
                     'timestamp':int(now),
@@ -1881,10 +1881,10 @@ class ForecastPWS(object):
         #TODO: forecast
         #TODO: alerts
         #TODO: aqi
-        src = "API OpenWeatherMap"
+        src = "OpenWeatherMap"
         if ('owm' in self.current_provider_list):
             try:
-                data = self.download_owm('weather')
+                data = self.download_owm('weather', src)
                 forecast_result['owm'] = {
                     'timestamp':int(now),
                     'current': data
@@ -1907,10 +1907,10 @@ class ForecastPWS(object):
         #TODO: forecast
         #TODO: alerts
         #TODO: aqi
-        src = "API Aeris METAR ETIC"
+        src = "AerisWeather METAR ETIC"
         if ('aeris_metar' in self.current_provider_list):
             try:
-                data = self.download_aeris('aeris_metar')
+                data = self.download_aeris('aeris_metar', src)
                 forecast_result['aeris_metar'] = {
                    'timestamp':int(now),
                    'current': data
@@ -1933,10 +1933,10 @@ class ForecastPWS(object):
         #TODO: forecast
         #TODO: alerts
         #TODO: aqi
-        src = "API Aeris Mesonet F0887"
+        src = "AerisWeather Mesonet F0887"
         if ('aeris_mesonet' in self.current_provider_list):
             try:
-                data = self.download_aeris('aeris_mesonet')
+                data = self.download_aeris('aeris_mesonet', src)
                 forecast_result['aeris_mesonet'] = {
                    'timestamp':int(now),
                    'current': data
@@ -1977,8 +1977,7 @@ class ForecastPWS(object):
                 logerr("error writing to '%s': %s" % (fn,e))
     
     # Aeris Weather API download
-    def download_aeris(self, what):
-        src = "API Aeris"
+    def download_aeris(self, what, src=""):
         if what=='aqi' or what=='aeris_aqi':
             src = src + " Airquality"
             url = (
@@ -1986,13 +1985,11 @@ class ForecastPWS(object):
                 % (self.latitude, self.longitude, self.aeris_api_id, self.aeris_api_secret)
                 )
         elif what=='aeris_metar':
-            src = src + " METAR ETIC"
             url = (
                 "https://api.aerisapi.com/observations/closest?p=%s,%s&format=json&filter=metar&limit=1&client_id=%s&client_secret=%s"
                 % (self.latitude, self.longitude, self.aeris_api_id, self.aeris_api_secret)
                 )
         elif what=='aeris_mesonet':
-            src = src + " Mesonet F0887"
             url = (
                 "https://api.aerisapi.com/observations/closest?p=%s,%s&format=json&filter=mesonet&limit=1&client_id=%s&client_secret=%s"
                 % (self.latitude, self.longitude, self.aeris_api_id, self.aeris_api_secret)
@@ -2195,8 +2192,7 @@ class ForecastPWS(object):
                 'response':[] }]
 
     #Brightsky API Download
-    def download_brightsky(self, what):
-        src = 'API Brightsky (DWD Daten)'
+    def download_brightsky(self, what, src):
         if what=='current_weather':
             url = (
                "https://api.brightsky.dev/current_weather?tz=Europe/Berlin&units=dwd&wmo_station_id=%s"
@@ -2302,8 +2298,7 @@ class ForecastPWS(object):
                 'response':[] }]
 
     #Weatherbit.io API Download
-    def download_weatherbit(self, what):
-        src = 'API Weatherbit'
+    def download_weatherbit(self, what, src):
         if what=='current':
             url = (
                "https://api.weatherbit.io/v2.0/current?lat=%s&lon=%s&units=M&lang=de&key=%s"
@@ -2401,8 +2396,7 @@ class ForecastPWS(object):
                 'response':[] }]
 
     #ho OpenWeatherMap API Download
-    def download_owm(self, what):
-        src = 'API OpenWeatherMap'
+    def download_owm(self, what, src):
         if what=='weather':
             url = (
                "https://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&units=metric&lang=de&appid=%s"

@@ -4,21 +4,21 @@
 {
     "timestamp": #echo int( time.time() )#,
     "openmeteo_current": {
-        ##"timestamp": $latest.om_DateTime.raw,
+        "timestamp": $current.om_DateTime.raw,
         "current": [
             {
                 "success": true,
                 "error": null,
-                "source": "Open-Meteo (DWD Daten)",
-                "response": {
+                "source": "Open-Meteo (DWD ICON)",
+                "response": [{
                     "dataSource": "dwd.py",
                     "loc": {
-                        "latitude": 49.632270,
-                        "longitude": 12.056186,
-                        "altitudeM": 394
+                        "latitude": $station.stn_info.latitude_f,
+                        "longitude": $station.stn_info.longitude_f,
+                        "altitude": "$station.altitude"
                     },
                     "place": {
-                        "name": "Weiherhammer",
+                        "name": "$station.location",
                         "city": "Weiherhammer",
                         "state": "by",
                         "country": "de"
@@ -28,57 +28,36 @@
                         "tzname": "GMT",
                         "tzoffset": 0
                     },
-                    ##"obTimestamp": $latest.om_DateTime.raw,
+                    "obTimestamp": $current.om_DateTime.raw,
                     "ob": {
-                        ##"timestamp": $latest.om_DateTime.raw,
-                        ##"apptempC": $latest.om_AppTemp.raw,
-                        ##"barometerMB": $latest.om_Barometer.raw,
-                        ##"dewpointC": $latest.cdc_Dewpoint.raw,
-                        ##"et": $latest.om_Et.raw,
-                        ##"FreezinglevelHeight ": $latest.om_FreezinglevelHeight .raw,
-                        ##"humidity": $latest.om_OutHumidity.raw,
-                        ##"icon": "$latest.om_Icon.raw",
-                        ##"radiationWM2": $latest.om_Radiation.raw,
-                        ##"rain": $latest.om_Rain.raw,
-                        ##"shower": $latest.om_Shower.raw,
-                        ##"sky": $latest.om_Cloudcover.raw,
-                        ##"snow": $latest.om_Snow.raw,
-                        ##"snowdepth": $latest.om_SnowDepth.raw,
-                        ##"tempC": $latest.om_OutTemp.raw,
-                        ##"weather": "$latest.om_Icontitle.raw",
-                        ##"weathercode": $latest.om_Weathercode.raw,
-                        ##"weatherPrimary": "$latest.om_Icontitle.raw",
-                        ##"windDirDEG": $latest.om_WindDir.raw,
-                        ##"windGustDirDEG": $latest.om_WindGustDir.raw,
-                        ##"windGustKPH": $latest.om_WindGust.raw,
-                        ##"windSpeedKPH": $latest.in_WindSpeed.raw,
-                        ####if $latest.om_snowfallHeight.has_data
-                        ##"snowfallHeight ": $latest.om_snowfallHeight.raw,
-                        ####else
-                        "snowfallHeight ": null,
-                        ####end if
-                        "isDay": false
+                        "timestamp": $current.om_DateTime.raw,
+                        "icon": "$current.om_Icon.raw",
+                        "sky": $current.om_Cloudcover.raw,
+                        "weather": "$current.om_Icontitle.raw",
+                        "weathercode": $current.om_Weathercode.raw,
+                        "weatherPrimary": "$current.om_Icontitle.raw",
+                        "visibilityKM": null
                     }
-                }
+                }]
             }
         ]
     },
-    "dwd_cdc": {
-##        "timestamp": $latest.cdc_DateTime.raw,
+    "dwd_poi": {
+        "timestamp": $current.poi_DateTime.raw,
         "current": [
             {
                 "success": true,
                 "error": null,
-                "source": "DWD CDC Daten",
-                "response": {
+                "source": "DWD POI",
+                "response": [{
                     "dataSource": "dwd.py",
                     "loc": {
-                        "latitude": 49.632270,
-                        "longitude": 12.056186,
-                        "altitudeM": 394
+                        "latitude": $station.stn_info.latitude_f,
+                        "longitude": $station.stn_info.longitude_f,
+                        "altitude": "$station.altitude"
                     },
                     "place": {
-                        "name": "Weiherhammer",
+                        "name": "$station.location",
                         "city": "Weiherhammer",
                         "state": "by",
                         "country": "de"
@@ -88,32 +67,17 @@
                         "tzname": "GMT",
                         "tzoffset": 0
                     },
-##                    "obTimestamp": $latest.cdc_DateTime.raw,
+                    "obTimestamp": $current.poi_DateTime.raw,
                     "ob": {
-                        ## "timestamp": $latest.cdc_DateTime.raw,
-                        ## "tempC": $latest.cdc_OutTemp.raw,
-                        ## "dewpointC": $latest.cdc_Dewpoint.raw,
-                        ## "humidity": $latest.cdc_OutHumidity.raw,
-                        ## "pressureMB": $latest.cdc_Pressure.raw,
-                        ## "barometerMB": $latest.cdc_Barometer.raw,
-                        ## "windSpeedKPH": $latest.cdc_WindSpeed.raw,
-                        ## "windDirDEG": $latest.cdc_WindDir.raw,
-                        ## "windGustKPH": $latest.cdc_WindGust.raw,
-                        ## "windGustDirDEG": $latest.cdc_WindGustDir.raw,
-                        ## "visibilityKM": none,
-                        ## "weather": "$latest.cdc_Icontitle.raw",
-                        ## "weatherPrimary": "$latest.cdc_Icontitle.raw",
-                        ## "icon": "$latest.cdc_Icon.raw",
-                        ## "solradWM2": $latest.cdc_SolarRad.raw,
-                        ## "radiationWM2": $latest.cdc_Radiation.raw,
-                        ## "sunshineDur": $latest.cdc_SunshineDur.raw,
-                        ## "rainDur": $latest.cdc_RainDur.raw,
-                        ## "rain": $latest.cdc_Rain.raw,
-                        ## "rainindex": $latest.cdc_RainIndex.raw,
-                        ## "isDay": false,
-                        ## "sky": none
+                        "timestamp": $current.poi_DateTime.raw,
+                        "icon": "$current.poi_Icon.raw",
+                        "sky": $current.poi_Cloudcover.raw,
+                        "weather": "$current.poi_Icontitle.raw",
+                        "weathercode": $current.poi_PresentWeather.raw,
+                        "weatherPrimary": "$current.poi_Icontitle.raw",
+                        "visibilityKM": $current.poi_Visibility.raw
                     }
-                }
+                }]
             }
         ]
     }

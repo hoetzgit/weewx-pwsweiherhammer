@@ -98,7 +98,7 @@ class LuftdatenAirqualityLocal(object):
 
         # Output file config data
         file_dict = config_dict['API_Luftdaten_Airquality_Local']['FILE']
-        self.filename = file_dict.get('filename','api_sds011.json')
+        self.filename = file_dict.get('filename','api_airrohr.json')
 
         # MQTT config data
         mqtt_dict = config_dict['API_Luftdaten_Airquality_Local']['MQTT']

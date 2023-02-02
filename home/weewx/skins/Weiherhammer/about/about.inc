@@ -91,14 +91,14 @@
     <!-- Nova PM Sensor SDS011 -->
     <div class="row about-row">
         <div class="col-sm-12">
-            <h3>Nova PM Sensor SDS011 - airRohr</h3>
-            <p>Seit M&auml;rz 2022 ist ein Feinstaubsensor und ein DHT22 Sensor installiert. Dabei habe ich mich an dieser 
+            <h3>AirRohr Feinstaubmessungen</h3>
+            <p>Seit M&auml;rz 2022 ist ein Feinstaubsensor Nova PM SDS011 und ein DHT22 Sensor installiert. Dabei habe ich mich an dieser 
             <a href="https://sensor.community/de/sensors/airrohr/" target="_blank" rel="noreferrer">Anleitung</a> der 
             <a href="https://sensor.community/de/" target="_blank" rel="noreferrer">Sensor.Community</a> orientiert.</p>
         </div>
 
         <div class="col-sm-4">
-            <img src="$relative_url/images/airRohr_SDS011.jpg" alt="Nova PM Sensor SDS011 airRohr der Wetterstation in Weiherhammer" rel="tooltip" title="Nova PM Sensor SDS011 airRohr der Wetterstation in Weiherhammer" style="horizontal-align: middle;"/>
+            <img src="$relative_url/images/airRohr_SDS011.jpg" alt="AirRohr Feinstaubsensor Nova PM SDS011 PWS Weiherhammer" rel="tooltip" title="AirRohr Feinstaubsensor Nova PM SDS011 PWS Weiherhammer" style="horizontal-align: middle;"/>
             <p><small>Feinstaubsensor am Balkon in ca. 4,5m H&ouml;he</small></p>
         </div>
 
@@ -221,7 +221,7 @@
                 <li>Anzeige von Erdbeben mit Daten der <a href="http://earthquake.usgs.gov/fdsnws/event/1/" target="_blank" rel="noreferrer">USGS.gov Earthquake Catalog Developer API</a></li>
             </ul>
             <h3>Luftqualit&auml;t</h3>
-            <p>Erg&auml;nzend zu meinen airRohr-Feinstaubdaten (PM<sub>2.5</sub>/PM<sub>10</sub>) werden zur Berechnung des Luftqualit&auml;tslevels weitere Daten - Ozon (O<sub>3</sub>) und Stickstoffdioxid (NO<sub>2</sub>) - der <a href="https://www.umweltbundesamt.de/daten/luft/luftdaten/stationen/" target="_blank" rel="noreferrer">Station Weiden i.d. OPf</a>, Nikolaistra&szlig;e (Stationscode DEBY075) geladen.
+            <p>Erg&auml;nzend zu meinen AirRohr-Feinstaubdaten (PM<sub>2.5</sub>/PM<sub>10</sub>) werden zur Berechnung des Luftqualit&auml;tslevels weitere Daten - Ozon (O<sub>3</sub>) und Stickstoffdioxid (NO<sub>2</sub>) - der <a href="https://www.umweltbundesamt.de/daten/luft/luftdaten/stationen/" target="_blank" rel="noreferrer">Station Weiden i.d. OPf</a>, Nikolaistra&szlig;e (Stationscode DEBY075) geladen.
             Die Berechnung und Einteilung der Luftqualit&auml;t orientiert sich an den <a href="https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex" target="_blank" rel="noreferrer">Berechnungsgrundlagen Luftqualit&auml;tsindex</a> des <a href="https://www.umweltbundesamt.de" target="_blank" rel="noreferrer">Umweltbundesamtes</a> (UBA).</p>
             <ul>
                 <li><a href="https://www.umweltbundesamt.de/daten/luft/luftdaten/doc" target="_blank" rel="noreferrer">Umweltbundesamt Air Data API</a></li>

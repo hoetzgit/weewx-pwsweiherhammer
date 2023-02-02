@@ -1670,6 +1670,7 @@ class getData(SearchList):
         alerts_limit = to_int(self.generator.skin_dict["Extras"].get("alerts_limit", 1))
 
         external_forecast_file = html_root + "/json/forecast.json"
+        external_forecast_file_2 = html_root + "/json/weewx_dwd.json" #TODO, Test
         builtin_forecast_file = html_root + "/json/forecast_builtin.json"
 
         builtin_provider = (
@@ -1697,7 +1698,7 @@ class getData(SearchList):
             longitude = self.generator.config_dict["Station"]["longitude"]
             forecast_is_stale = False
             
-            forecast_source = "API Aeris"
+            forecast_source = "AerisWeather"
             if to_bool(self.generator.skin_dict["Extras"].get("aeris_metar", False)):
                 forecast_current_source = forecast_source + " METAR ETIC"
                 forecast_current_url = (
@@ -1712,7 +1713,7 @@ class getData(SearchList):
                     "https://api.aerisapi.com/observations/closest?p=%s,%s&format=json&filter=mesonet&limit=1&client_id=%s&client_secret=%s"
                     % (latitude, longitude, forecast_api_id, forecast_api_secret)
                 )
-            forecast_xxhr_source = "API Aeris Forecast"
+            forecast_xxhr_source = "AerisWeather Forecast"
             forecast_24hr_url = (
                 "https://api.aerisapi.com/forecasts/%s,%s?&format=json&filter=day&limit=8&client_id=%s&client_secret=%s"
                 % (latitude, longitude, forecast_api_id, forecast_api_secret)
@@ -1725,12 +1726,12 @@ class getData(SearchList):
                 "https://api.aerisapi.com/forecasts/%s,%s?&format=json&filter=1hr&limit=16&client_id=%s&client_secret=%s"
                 % (latitude, longitude, forecast_api_id, forecast_api_secret)
             )
-            forecast_aqi_source = "API Aeris Airquality"
+            forecast_aqi_source = "AerisWeather Airquality"
             forecast_aqi_url = (
                 "https://api.aerisapi.com/airquality/closest?p=%s,%s&format=json&radius=50mi&limit=1&client_id=%s&client_secret=%s"
                 % (latitude, longitude, forecast_api_id, forecast_api_secret)
             )
-            forecast_alerts_source = "API Aeris Alerts"
+            forecast_alerts_source = "AerisWeather Alerts"
             forecast_alerts_url = "https://api.aerisapi.com/alerts/%s,%s?&format=json&limit=%s&lang=%s&client_id=%s&client_secret=%s" % (
                     latitude,
                     longitude,
@@ -1903,7 +1904,7 @@ class getData(SearchList):
 
 
         # ==============================================================================
-        # now read forecast file from built in forecast or external calls
+        # now read forecast file from built or external calls in forecast
         # ==============================================================================
 
 
@@ -1938,6 +1939,23 @@ class getData(SearchList):
             try:
                 with open(external_forecast_file, "r") as read_file:
                     forecast_data = json.load(read_file)
+
+                # temp. Test with weewx_dwd.json
+                forecast_data_2 = None
+                try:
+                    with open(external_forecast_file_2, "r") as read_file:
+                        forecast_data_2 = json.load(read_file)
+                except IOError as e:
+                    raise Warning(
+                        "Error reading forecast info from %s. Reason: %s"
+                        % (external_forecast_file_2, e)
+                    )
+                    forecast_data_2 = None
+                    pass
+
+                if forecast_data_2 is not None:
+                    forecast_data.update(forecast_data_2)
+
                 external_forecast_available = "1"
             except IOError as e:
                 forecast_file_success = False
@@ -2133,12 +2151,22 @@ class getData(SearchList):
                 if current_api_success:
                     try:
                         current_obs_source = data.get("source", current_provider);
-                        current_obs_summary = aeris_coded_weather(
-                            data["response"][0]["ob"].get("weatherPrimaryCoded")
-                        )
-                        current_obs_icon = (
-                            aeris_icon(data["response"][0]["ob"].get("icon")) + ".png"
-                        )
+                        if data["response"][0]["ob"].get("weatherPrimaryCoded") is not None:
+                            current_obs_summary = aeris_coded_weather(
+                                data["response"][0]["ob"].get("weatherPrimaryCoded")
+                            )
+                        elif data["response"][0]["ob"].get("weatherPrimary") is not None:
+                            current_obs_summary = data["response"][0]["ob"].get("weatherPrimary")
+                        else:
+                            current_obs_summary = "N/A"
+
+                        if data["response"][0]["ob"].get("icon") is not None:
+                            current_obs_icon = (
+                                aeris_icon(data["response"][0]["ob"].get("icon")) + ".png"
+                            )
+                        else:
+                            current_obs_icon = 'unknown.png'
+
                     except Exception as error:
                         logerr("Error getting current source, icon and summary data from API. The error was: %s" % (error))
                         pass

@@ -4,10 +4,6 @@
 #set global $page = "mqttmon"
 #include "header.html.tmpl"
 #if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
-            #set $file = "css/" + $page +".css"
-            #if os.path.exists($file)
-            <link rel="stylesheet" href="$relative_url/$file?ver=#echo int( time.time() ) #" type="text/css" media="all"/>
-            #end if
             <script type="text/javascript">
                 var finalRotation;
                 var homepage_graphgroup = "dummy";
@@ -115,9 +111,9 @@
                                         <tr>
                                             <th scope="col" class="mqttmon-table-head-subheadline">
                                                 <div class="mqttmon-legend">
-                                                    <span class="mqttmon-rcv-dot"></span>$gettext('received')
-                                                    <span class="mqttmon-rcv-outdated-dot"></span>$gettext('outdated')
-                                                    <span class="mqttmon-rcv-none-dot"></span>$gettext('not received')
+                                                    <span class="mqttmon-rcv-dot" style="margin-left: 10px;background-color: var(--mqttmon-rcv-dot-current);"></span>$gettext('current')
+                                                    <span class="mqttmon-rcv-dot" style="margin-left: 5px;background-color: var(--mqttmon-rcv-dot-outdated);"></span>$gettext('older') 60s
+                                                    <span class="mqttmon-rcv-dot" style="margin-left: 5px;background-color: var(--mqttmon-rcv-dot-none);"></span>$gettext('not yet received')
                                                 </div>
                                             </th>
                                             #if $Extras.has_key("mqttmon_format_toggle") and $Extras.mqttmon_format_toggle == "1"

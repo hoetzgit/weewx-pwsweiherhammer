@@ -32,7 +32,7 @@
         <div id="meteosat" class="tab-content">
             <div class="meteosat_image">
 ##                <a href="https://www.dwd.de/DE/leistungen/satellit_metsat/satellit_metsat.html" target="_blank" rel="noreferrer"><img src="https://www.dwd.de/DWD/wetter/sat/bilder/meteosat/satbild_hrvir_akt.png" alt="Meteosat" width="488px" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
-                <a href="http://de.sat24.com/de" target="_blank" rel="noreferrer"><img src="https://api.sat24.com/animated/DE/infraPolair/1/W_dot_%20Europe%20Standard%20Time/4277781" alt="Meteosat" width="488px" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
+                <a href="https://de.sat24.com/de" target="_blank" rel="noreferrer"><img src="https://api.sat24.com/animated/DE/infraPolair/1/W_dot_%20Europe%20Standard%20Time/4277781" alt="Meteosat" width="488px" rel="tooltip" title="$obs.label.radar_content_ttt"></a>
             </div>
         </div>
 ##        <div id="precipitation" class="tab-content">

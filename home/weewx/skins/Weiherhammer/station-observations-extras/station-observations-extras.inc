@@ -141,7 +141,7 @@ $gettext('no')
                         #for $x in $station_observations_extras.airrohr.obs
                         <tr>
                             <td class="station-observations-extras-label">$obs.label[$x]</td>
-                            #if $x == 'sds011_barometer'
+                            #if $x == 'airrohr_barometer'
                             #set $class_trend_symbol = 'trend_%s_symbol' % $x
                             #set $class_trend_value = 'trend_%s_formatted' % $x
                             <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span> (<span class="$class_trend_value" rel="tooltip" title="">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="$class_trend_symbol" rel="tooltip" title=""></span>)</td><!-- AJAX -->

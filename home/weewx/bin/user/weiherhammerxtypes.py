@@ -194,39 +194,39 @@ class WXXTypes(weewx.xtypes.XType):
 
     @staticmethod
     def calc_solar_wetBulb(key, data, db_manager=None):
-        if 'solar_temperature' not in data or 'solar_humidity' not in data or 'solar_pressure' not in data:
+        if 'solar_outTemp' not in data or 'solar_outHumidity' not in data or 'solar_pressure' not in data:
             raise weewx.CannotCalculate(key)
 
         if data['usUnits'] == weewx.US:
-            val = user.weiherhammerformulas.wetbulbF(data['solar_temperature'], data['solar_humidity'], data['solar_pressure'])
+            val = user.weiherhammerformulas.wetbulbF(data['solar_outTemp'], data['solar_outHumidity'], data['solar_pressure'])
             u = 'degree_F'
         else:
-            val = user.weiherhammerformulas.wetbulbC(data['solar_temperature'], data['solar_humidity'], data['solar_pressure'])
+            val = user.weiherhammerformulas.wetbulbC(data['solar_outTemp'], data['solar_outHumidity'], data['solar_pressure'])
             u = 'degree_C'
         return ValueTuple(val, u, 'group_temperature')
 
     def calc_solar_heatindex(self, key, data, db_manager=None):
-        if 'solar_temperature' not in data or 'solar_humidity' not in data:
+        if 'solar_outTemp' not in data or 'solar_outHumidity' not in data:
             raise weewx.CannotCalculate(key)
         if data['usUnits'] == weewx.US:
-            val = weewx.wxformulas.heatindexF(data['solar_temperature'], data['solar_humidity'],
+            val = weewx.wxformulas.heatindexF(data['solar_outTemp'], data['solar_outHumidity'],
                                               algorithm=self.solar_heatindex_algo)
             u = 'degree_F'
         else:
-            val = weewx.wxformulas.heatindexC(data['solar_temperature'], data['solar_humidity'],
+            val = weewx.wxformulas.heatindexC(data['solar_outTemp'], data['solar_outHumidity'],
                                               algorithm=self.solar_heatindex_algo)
             u = 'degree_C'
         return ValueTuple(val, u, 'group_temperature')
 
     @staticmethod
     def calc_solar_dewpoint(key, data, db_manager=None):
-        if 'solar_temperature' not in data or 'solar_humidity' not in data:
+        if 'solar_outTemp' not in data or 'solar_outHumidity' not in data:
             raise weewx.CannotCalculate(key)
         if data['usUnits'] == weewx.US:
-            val = weewx.wxformulas.dewpointF(data['solar_temperature'], data['solar_humidity'])
+            val = weewx.wxformulas.dewpointF(data['solar_outTemp'], data['solar_outHumidity'])
             u = 'degree_F'
         else:
-            val = weewx.wxformulas.dewpointC(data['solar_temperature'], data['solar_humidity'])
+            val = weewx.wxformulas.dewpointC(data['solar_outTemp'], data['solar_outHumidity'])
             u = 'degree_C'
         return ValueTuple(val, u, 'group_temperature')
 
@@ -256,16 +256,16 @@ class WXXTypes(weewx.xtypes.XType):
 
     @staticmethod
     def calc_solar_windchill(key, data, db_manager=None):
-        if 'solar_temperature' not in data or 'windSpeed' not in data:
+        if 'solar_outTemp' not in data or 'windSpeed' not in data:
             raise weewx.CannotCalculate(key)
         if data['usUnits'] == weewx.US:
-            val = weewx.wxformulas.windchillF(data['solar_temperature'], data['windSpeed'])
+            val = weewx.wxformulas.windchillF(data['solar_outTemp'], data['windSpeed'])
             u = 'degree_F'
         elif data['usUnits'] == weewx.METRIC:
-            val = weewx.wxformulas.windchillMetric(data['solar_temperature'], data['windSpeed'])
+            val = weewx.wxformulas.windchillMetric(data['solar_outTemp'], data['windSpeed'])
             u = 'degree_C'
         elif data['usUnits'] == weewx.METRICWX:
-            val = weewx.wxformulas.windchillMetricWX(data['solar_temperature'], data['windSpeed'])
+            val = weewx.wxformulas.windchillMetricWX(data['solar_outTemp'], data['windSpeed'])
             u = 'degree_C'
         else:
             raise weewx.ViolatedPrecondition("Unknown unit system %s" % data['usUnits'])
@@ -273,29 +273,29 @@ class WXXTypes(weewx.xtypes.XType):
 
     @staticmethod
     def calc_solar_humidex(key, data, db_manager=None):
-        if 'solar_temperature' not in data or 'solar_humidity' not in data:
+        if 'solar_outTemp' not in data or 'solar_outHumidity' not in data:
             raise weewx.CannotCalculate(key)
         if data['usUnits'] == weewx.US:
-            val = weewx.wxformulas.humidexF(data['solar_temperature'], data['solar_humidity'])
+            val = weewx.wxformulas.humidexF(data['solar_outTemp'], data['solar_outHumidity'])
             u = 'degree_F'
         else:
-            val = weewx.wxformulas.humidexC(data['solar_temperature'], data['solar_humidity'])
+            val = weewx.wxformulas.humidexC(data['solar_outTemp'], data['solar_outHumidity'])
             u = 'degree_C'
         return ValueTuple(val, u, 'group_temperature')
 
     @staticmethod
     def calc_solar_appTemp(key, data, db_manager=None):
-        if 'solar_temperature' not in data or 'solar_humidity' not in data or 'windSpeed' not in data:
+        if 'solar_outTemp' not in data or 'solar_outHumidity' not in data or 'windSpeed' not in data:
             raise weewx.CannotCalculate(key)
         if data['usUnits'] == weewx.US:
-            val = weewx.wxformulas.apptempF(data['solar_temperature'], data['solar_humidity'],
+            val = weewx.wxformulas.apptempF(data['solar_outTemp'], data['solar_outHumidity'],
                                             data['windSpeed'])
             u = 'degree_F'
         else:
             # The metric equivalent needs wind speed in mps. Convert.
             windspeed_vt = weewx.units.as_value_tuple(data, 'windSpeed')
             windspeed_mps = weewx.units.convert(windspeed_vt, 'meter_per_second')[0]
-            val = weewx.wxformulas.apptempC(data['solar_temperature'], data['solar_humidity'], windspeed_mps)
+            val = weewx.wxformulas.apptempC(data['solar_outTemp'], data['solar_outHumidity'], windspeed_mps)
             u = 'degree_C'
         return ValueTuple(val, u, 'group_temperature')
 
@@ -314,14 +314,14 @@ class WXXTypes(weewx.xtypes.XType):
 
     @staticmethod
     def calc_solar_thwIndex(key, data, db_manager=None):
-        if 'solar_temperature' not in data or 'solar_humidity' not in data or 'windSpeed' not in data:
+        if 'solar_outTemp' not in data or 'solar_outHumidity' not in data or 'windSpeed' not in data:
             raise weewx.CannotCalculate(key)
 
         if data['usUnits'] == weewx.US:
-            val = user.weiherhammerformulas.thwIndexF(data['solar_temperature'], data['solar_humidity'], data['windSpeed'])
+            val = user.weiherhammerformulas.thwIndexF(data['solar_outTemp'], data['solar_outHumidity'], data['windSpeed'])
             u = 'degree_F'
         else:
-            val = user.weiherhammerformulas.thwIndexC(data['solar_temperature'], data['solar_humidity'], data['windSpeed'])
+            val = user.weiherhammerformulas.thwIndexC(data['solar_outTemp'], data['solar_outHumidity'], data['windSpeed'])
             u = 'degree_C'
         return ValueTuple(val, u, 'group_temperature')
 
@@ -340,14 +340,14 @@ class WXXTypes(weewx.xtypes.XType):
 
     @staticmethod
     def calc_solar_thswIndex(key, data, db_manager=None):
-        if 'solar_temperature' not in data or 'outHumidity' not in data or 'windSpeed' not in data or 'radiation' not in data:
+        if 'solar_outTemp' not in data or 'outHumidity' not in data or 'windSpeed' not in data or 'radiation' not in data:
             raise weewx.CannotCalculate(key)
 
         if data['usUnits'] == weewx.US:
-            val = user.weiherhammerformulas.thswIndexF(data['solar_temperature'], data['solar_humidity'], data['windSpeed'], data['radiation'])
+            val = user.weiherhammerformulas.thswIndexF(data['solar_outTemp'], data['solar_outHumidity'], data['windSpeed'], data['radiation'])
             u = 'degree_F'
         else:
-            val = user.weiherhammerformulas.thswIndexC(data['solar_temperature'], data['solar_humidity'], data['windSpeed'], data['radiation'])
+            val = user.weiherhammerformulas.thswIndexC(data['solar_outTemp'], data['solar_outHumidity'], data['windSpeed'], data['radiation'])
             u = 'degree_C'
         return ValueTuple(val, u, 'group_temperature')
 
@@ -565,7 +565,7 @@ class PressureCooker(weewx.xtypes.XType):
             if any(key not in record for key in ['usUnits', 'asky_box_temperature', 'asky_box_barometer', 'asky_box_humidity']):
                 raise weewx.CannotCalculate(obs)
         elif obs == 'solar_pressure':
-            if any(key not in record for key in ['usUnits', 'solar_temperature', 'solar_barometer', 'solar_humidity']):
+            if any(key not in record for key in ['usUnits', 'solar_outTemp', 'solar_barometer', 'solar_outHumidity']):
                 raise weewx.CannotCalculate(obs)
 
         # Get the temperature in Fahrenheit from 12 hours ago
@@ -599,17 +599,17 @@ class PressureCooker(weewx.xtypes.XType):
             temp_12h_vt = self._get_solar_temp_12h(record['dateTime'], dbmanager)
             if temp_12h_vt is None \
                     or temp_12h_vt[0] is None \
-                    or record['solar_temperature'] is None \
+                    or record['solar_outTemp'] is None \
                     or record['solar_barometer'] is None \
-                    or record['solar_humidity'] is None:
+                    or record['solar_outHumidity'] is None:
                 pressure = None
             else:
                 # The following requires everything to be in US Customary units.
                 # Rather than convert the whole record, just convert what we need:
                 record_US = weewx.units.to_US({'usUnits': record['usUnits'],
-                                               'solar_temperature': record['solar_temperature'],
+                                               'solar_outTemp': record['solar_outTemp'],
                                                'solar_barometer': record['solar_barometer'],
-                                               'solar_humidity': record['solar_humidity']})
+                                               'solar_outHumidity': record['solar_outHumidity']})
                 # Get the altitude in feet
                 altitude_ft = weewx.units.convert(self.altitude_vt, "foot")
                 # The outside temperature in F.
@@ -617,9 +617,9 @@ class PressureCooker(weewx.xtypes.XType):
                 pressure = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(
                     record_US['solar_barometer'],
                     altitude_ft[0],
-                    record_US['solar_temperature'],
+                    record_US['solar_outTemp'],
                     temp_12h_F[0],
-                    record_US['solar_humidity']
+                    record_US['solar_outHumidity']
                 )
 
         return ValueTuple(pressure, 'inHg', 'group_pressure')
@@ -657,7 +657,7 @@ class PressureCooker(weewx.xtypes.XType):
             if 'asky_box_pressure' not in record or 'asky_box_temperature' not in record:
                 raise weewx.CannotCalculate(obs)
         elif obs == 'solar_barometer':
-            if 'solar_pressure' not in record or 'solar_temperature' not in record:
+            if 'solar_pressure' not in record or 'solar_outTemp' not in record:
                 raise weewx.CannotCalculate(obs)
 
         # Convert altitude to same unit system of the incoming record
@@ -674,7 +674,7 @@ class PressureCooker(weewx.xtypes.XType):
         if obs == 'asky_box_barometer':
             barometer = formula(record['asky_box_pressure'], altitude[0], record['asky_box_temperature'])
         elif obs == 'solar_barometer':
-            barometer = formula(record['solar_pressure'], altitude[0], record['solar_temperature'])
+            barometer = formula(record['solar_pressure'], altitude[0], record['solar_outTemp'])
 
         return ValueTuple(barometer, u, 'group_pressure')
 

@@ -4,21 +4,21 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-<div id='sds011_widget' class="widget">
+<div id='airrohr_widget' class="widget">
   <div class="widget_title">
-    $gettext("SDS011 Conditions")
+    $gettext("AirRohr Conditions")
     <a class="widget_control"
-      onclick="toggle_widget('sds011')">&diams;</a>
+      onclick="toggle_widget('airrohr')">&diams;</a>
   </div>
 
   <div class="widget_contents">
   <table>
     <tbody>
 
-#if 'observations_sds011' in $DisplayOptions
-#for $x in $DisplayOptions.observations_sds011
+#if 'observations_airrohr' in $DisplayOptions
+#for $x in $DisplayOptions.observations_airrohr
   #if $getVar('year.%s.has_data' % $x)
-    #if $x == 'sds011_barometer'
+    #if $x == 'airrohr_barometer'
       <tr>
         <td class="label">$obs.label.barometer</td>
         <td class="data">$current.barometer ($trend.barometer.formatted)</td>

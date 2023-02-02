@@ -1703,6 +1703,7 @@ function ajaxforecast(options=['']) {
     //console.log("ajaxforecast", options);
     var forecast_external = {};
     var forecast_builtin = {};
+    var weewx_dwd = {};
     jQuery.when(
         #if $external_forecast_available == "1"
         // Get the forecast from external calls
@@ -1718,15 +1719,20 @@ function ajaxforecast(options=['']) {
             forecast_builtin = forecast;
         }),
         #end if
+        // Test
+        jQuery.getJSON(get_relative_url() + "/json/weewx_dwd.json", function(forecast) {
+            //console.log("weewx_dwd.json", forecast);
+            weewx_dwd = forecast;
+        }),
         // Get the iconlist - original source is // https://www.aerisweather.com/support/docs/api/reference/icon-list/
         jQuery.getJSON(get_relative_url() + '/images/aeris-icon-list.json', function(iconlist) {
         icon_dict = iconlist;
         })
     ).then(function() {
         // Merge external and builtin forecast
-        forecast_data = Object.assign({}, forecast_external, forecast_builtin);
-
+        forecast_data = Object.assign({}, forecast_external, forecast_builtin, weewx_dwd);
         //console.log("forecast_data", forecast_data);
+
         if (options == "none") {
             return true;
         }
@@ -2093,7 +2099,7 @@ function aeris_icon(data) {
     if (icon_dict.hasOwnProperty(icon_name)) {
         return icon_dict[icon_name]
     } else {
-        return "$gettext('unknown')"
+        return "unknown"
     }
 }
 
@@ -2266,27 +2272,49 @@ function update_current_data(data, options="all") {
         }
         if (options == "all") {
             var current_update = tzAdjustedMoment(obs_data["timestamp"]).format('$obs.label.time_forecast_last_updated');
-            var visibility = obs_data["visibilityKM"];
-            if (visibility !== null) {
-                visibility = parseFloat(parseFloat(visibility)).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["visibility"], maximumFractionDigits: unit_rounding_array["visibility"]}) + " " + unit_label_array["visibility"];
-            } else {
-                visibility = "N/A"
-            }
-            var cloudcover = parseFloat(parseFloat(obs_data["sky"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["cloudcover"], maximumFractionDigits: unit_rounding_array["cloudcover"]}) + unit_label_array["cloudcover"];
-            jQuery(".current-obs-text").html(aeris_coded_weather(obs_data["weatherPrimaryCoded"], true));
-            if (data["current"][0].hasOwnProperty("source")) {
-                jQuery(".current_provider_source_api").text(data["current"][0]["source"]);
-            } else {
-                jQuery(".current_provider_source_api").text(current_provider);
+
+            var visibility = "N/A"
+            if (obs_data.hasOwnProperty("visibilityKM")) {
+                visibility = obs_data["visibilityKM"];
+                if (visibility !== null) {
+                    visibility = parseFloat(parseFloat(visibility)).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["visibility"], maximumFractionDigits: unit_rounding_array["visibility"]}) + " " + unit_label_array["visibility"];
+                } else {
+                    visibility = "N/A"
+                }
             }
             jQuery(".visibility").html(visibility);
+
+            var cloudcover = "N/A";
+            if (obs_data.hasOwnProperty("sky")) {
+                cloudcover = obs_data["sky"]
+                if (cloudcover !== null) {
+                    cloudcover = parseFloat(parseFloat(obs_data["sky"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["cloudcover"], maximumFractionDigits: unit_rounding_array["cloudcover"]}) + unit_label_array["cloudcover"];
+                } else {
+                    cloudcover = "N/A"
+                }
+            }
             jQuery(".cloudcover").html(cloudcover);
+
+            if (obs_data.hasOwnProperty("weatherPrimaryCoded")) {
+                jQuery(".current-obs-text").html(aeris_coded_weather(obs_data["weatherPrimaryCoded"], true));
+            } else if (obs_data.hasOwnProperty("weatherPrimary")) {
+                jQuery(".current-obs-text").html(obs_data["weatherPrimary"]);
+            } else {
+                jQuery(".current-obs-text").html("$gettext('unknown')");
+            }
+
+            if (data["current"][0].hasOwnProperty("source")) {
+                jQuery(".current_provider_source_api").html(data["current"][0]["source"]);
+            } else {
+                jQuery(".current_provider_source_api").html(current_provider);
+            }
         }
     } catch (err) {
         jQuery("#wxicon").attr("src", get_relative_url() + "/images/unknown.png");
+        jQuery(".current-obs-text").html("$gettext('unknown')");
         jQuery(".visibility").html("N/A");
         jQuery(".cloudcover").html("N/A");
-        jQuery(".current_provider_source_api").text(current_provider);
+        jQuery(".current_provider_source_api").html(current_provider);
         console.error("Error update_current_data", err);
         console.log(current_provider);
         console.log(data);
@@ -2993,7 +3021,7 @@ function mqttmon_mark_outdated() {
             if (last_ts > 0) {
                 if (now_ts - last_ts > mqttmon_outdated_treshold) {
                    // update element as received
-                   jQuery('.' + elementClass + '-mqttmon-rcv-dot').css('background-color', 'var(--mqttmon-rcv-outdated)');
+                   jQuery('.' + elementClass + '-mqttmon-rcv-dot').css('background-color', 'var(--mqttmon-rcv-dot-outdated)');
                 }
             }
         });
@@ -3344,7 +3372,7 @@ function update_with_mqtt_data(data) {
                     return true;
                 }
                 // update element as received
-                jQuery('.' + data_class + '-mqttmon-rcv-dot').css('background-color', 'var(--mqttmon-rcv)');
+                jQuery('.' + data_class + '-mqttmon-rcv-dot').css('background-color', 'var(--mqttmon-rcv-dot-current)');
                 jQuery('.' + data_class).data('received_ts', data_received_ts);
 
                 if (!unit_rounding_array.hasOwnProperty(data_class)) {
@@ -4001,7 +4029,7 @@ function showChart(json_file, prepend_renderTo = false) {
                 // yAxis AQI PlotLines PM10
                 // PM10 Umweltbundesamt LQI levels, labels and colors
                 // https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex
-                if (s.obsType == "sds011_pm10_0") {
+                if (s.obsType.includes('pm10_0')) {
                     var yAxis_plotlines = [];
 
                     const plconf = [{
@@ -4051,7 +4079,7 @@ function showChart(json_file, prepend_renderTo = false) {
                 // yAxis AQI PlotLines PM2.5
                 // PM2.5 LQI levels, labels and colors
                 // https://de.euronews.com/wetter/copernicus-air-quality-index
-                if (s.obsType == "sds011_pm2_5") {
+                if (s.obsType.includes('pm2_5')) {
                     var yAxis_plotlines = [];
 
                     const plconf = [{

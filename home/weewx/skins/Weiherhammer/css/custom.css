@@ -27,6 +27,9 @@
     --tooltip-backgroud-color:#337ab7;
     --color-summaries-obs-max:#ed7839;
     --color-summaries-obs-min:#09a8e6;
+    --mqttmon-rcv-dot-none:#FF0000;
+    --mqttmon-rcv-dot-current:#00bb00;
+    --mqttmon-rcv-dot-outdated:#236d1b;
 }
 
 /*
@@ -122,6 +125,14 @@ abbr[title] {
         }
 
 /* MQTT Monitor */
+
+.mqttmon-rcv-dot {
+    height: 8px;
+    width: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
 
 .mqttmon-table-container, .dark .mqttmon-table-container {
     padding-right: 0px;
@@ -1160,7 +1171,7 @@ sub { top: 0.4em; }
 .ProviderRadiosHead, .dark .ProviderRadiosHead {
     font-size:10px;
     text-align:center;
-    padding-top: 5px;
+    /* padding-top: 5px; */
     padding-bottom: 0px;
 }
 

@@ -203,9 +203,9 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('solar_dewpoint', 'REAL'),
 ('solar_heatindex', 'REAL'),
 ('solar_humidex', 'REAL'),
-('solar_humidity', 'REAL'),
+('solar_outHumidity', 'REAL'),
 ('solar_pressure', 'REAL'),
-('solar_temperature', 'REAL'),
+('solar_outTemp', 'REAL'),
 ('solar_thswIndex', 'REAL'),
 ('solar_thwIndex', 'REAL'),
 ('solar_voltage', 'REAL'),
@@ -213,10 +213,10 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('solar_windchill', 'REAL'),
 #
 # Nova PM Sensor SDS011
-('sds011_pm2_5', 'REAL'),
-('sds011_pm10_0', 'REAL'),
-('sds011_temperature', 'REAL'),
-('sds011_humidity', 'REAL'),
+('airrohr_pm2_5', 'REAL'),
+('airrohr_pm10_0', 'REAL'),
+('airrohr_outTemp', 'REAL'),
+('airrohr_outHumidity', 'REAL'),
 #
 # ****** API / Extensions ******
 #
