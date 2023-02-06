@@ -11,7 +11,7 @@
                 "error": null,
                 "source": "Open-Meteo (DWD ICON)",
                 "response": [{
-                    "dataSource": "dwd.py",
+                    "dataSource": "Open-Meteo DWD-ICON",
                     "loc": {
                         "latitude": $station.stn_info.latitude_f,
                         "longitude": $station.stn_info.longitude_f,
@@ -25,8 +25,8 @@
                     },
                     "profile": {
                         "tz": "Europe/Berlin",
-                        "tzname": "GMT",
-                        "tzoffset": 0
+                        "tzname": "CET",
+                        "tzoffset": 3600
                     },
                     "obTimestamp": $current.om_DateTime.raw,
                     "ob": {
@@ -50,7 +50,7 @@
                 "error": null,
                 "source": "DWD POI",
                 "response": [{
-                    "dataSource": "dwd.py",
+                    "dataSource": "DWD POI",
                     "loc": {
                         "latitude": $station.stn_info.latitude_f,
                         "longitude": $station.stn_info.longitude_f,
@@ -64,8 +64,8 @@
                     },
                     "profile": {
                         "tz": "Europe/Berlin",
-                        "tzname": "GMT",
-                        "tzoffset": 0
+                        "tzname": "CET",
+                        "tzoffset": 3600
                     },
                     "obTimestamp": $current.poi_DateTime.raw,
                     "ob": {

@@ -93,7 +93,7 @@ else:
 
 
 # Print version in syslog for easier troubleshooting
-VERSION = "1.3b2"
+VERSION = "1.0"
 loginf("version %s" % VERSION)
 
 # Define these as global so they can be used in both the search list extension

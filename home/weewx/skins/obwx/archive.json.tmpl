@@ -1,53 +1,75 @@
 #encoding UTF-8
-#import datetime
 #errorCatcher Echo
-## If extended almanac information is available, do extra calculations.
-#if $almanac.hasExtras
-  #import locale
-  #set $sun_azimuth = locale.format_string( "%.1f&deg;", $almanac.sun.az )
-  #set $sun_ra = locale.format_string( "%.1f&deg;", $almanac.sun.ra )
-  #set $sun_dec = locale.format_string( "%.1f&deg;", $almanac.sun.dec )
-  #set $moon_azimuth = locale.format_string( "%.1f&deg;", $almanac.moon.az )
-  #set $moon_altitude = locale.format_string( "%.1f&deg;", $almanac.moon.alt )
-  #set $moon_ra = locale.format_string( "%.1f&deg;", $almanac.moon.ra )
-  #set $moon_dec = locale.format_string( "%.1f&deg;", $almanac.moon.dec )
-  #set $sun_altitude = $almanac.sun.alt
-  #if $sun_altitude < 0
-    #set $sun_None="<i>(%s)</i>" % $obs.label.sun_always_down
-    #set $daylight_str = "00:00"
-  #else
-    #set $sun_None="<i>(%s)</i>" % $obs.label.sun_always_up
-    #set $daylight_str = "24:00"
-  #end if
-  #set $sunrise_ts = $almanac.sun.rise.raw
-  #set $sunset_ts = $almanac.sun.set.raw
-  #if $sunrise_ts and $sunset_ts
-    #set $now = $current.dateTime.raw
-    #set $today_daylight = $sunset_ts -  $sunrise_ts
-    #set $seconds = $today_daylight
-    #set $hours = $seconds // 3600
-    #set $seconds %= 3600
-    #set $minutes = $seconds // 60
-    #set $seconds %= 60
-    #set $daylight_str = "%d %s, %d %s, %d %s" % ($hours, $obs.label.hour[0] if ( $hours == 1 ) else $obs.label.hour[1], $minutes, $obs.label.minute[0] if ( $minutes == 1 ) else $obs.label.minute[1], $seconds, $obs.label.second[0] if ( $seconds == 1 ) else $obs.label.second[1])
-    #set $yesterday = $now - 24*3600
-    #set $yesterday_daylight = $almanac($almanac_time=$yesterday).sun.set.raw - $almanac($almanac_time=$yesterday).sun.rise.raw
-    #set $difference = $today_daylight - $yesterday_daylight
-    #if $difference
-      #set $delta = abs($difference)
-      #set $minute_difference = (int($delta) // 60)
-      #set $minutes_text = $obs.label.minute[0] if ( $minute_difference == 1 ) else $obs.label.minute[1]
-      #set $seconds_text = $obs.label.second[0] if ( int($delta) == 1 ) else $obs.label.second[1]
-      #set $amt_str = "%s%d %s" % (str(int($delta) // 60) + ' ' + $minutes_text + ', ' if ($delta // 60) > 0 else '', $delta % 60 if ($delta // 60) > 0 else $delta, $seconds_text)
-      #if $difference > 0
-        #set $delta_str = "%s %s" % ( $amt_str, $obs.label.more_than_yesterday )
-      #else
-        #set $delta_str = "%s %s" % ( $amt_str, $obs.label.less_than_yesterday )
-      #end if
-      #set $daylight_str = "%s<br/>%s" % ($daylight_str, $delta_str)
-    #end if
-  #end if
-  #set $sun_altitude = locale.format_string( "%.1f&deg;", $almanac.sun.alt )  
-#end if
-
-## DUMMY
+#set $daylight = $almanac.sun.set.raw - $almanac.sun.rise.raw
+{
+    "timestamp": "$current.dateTime.raw",
+    "station": {
+        "latitude": "$station.stn_info.latitude_f",
+        "longitude": "$station.stn_info.longitude_f",
+        "altitude": "$station.altitude",
+        "serveruptime": "$station.os_uptime"
+    },
+    "today": {
+        "outTemp": {
+            "max": "$day.outTemp.max",
+            "maxtime": "$day.outTemp.maxtime",
+            "min": "$day.outTemp.min",
+            "mintime": "$day.outTemp.mintime"
+        },
+        "wind": {
+            "max": "$day.wind.max",
+            "maxtime": "$day.wind.maxtime",
+            "min": "$day.wind.min",
+            "mintime": "$day.wind.mintime",
+            "windGust_lastHr": "$span($hour_delta=1).windGust.max",
+            "windSpd_1hrAvg": "$span($hour_delta=1).windSpeed.avg",
+            "windDir_1hrAvg": "$span($hour_delta=1).windDir.avg.ordinal_compass"
+        },
+        "barometer": {
+            "max": "$day.barometer.max",
+            "maxtime": "$day.barometer.maxtime",
+            "min": "$day.barometer.min",
+            "mintime": "$day.barometer.mintime"
+        },
+        "rain": {
+            "maxRate": "$day.rainRate.max",
+            "sum": {
+                "yesterday": "$day($days_ago=1).rain.sum",
+                "week": "$day($days_ago=1).rain.sum",
+                "month": "$month.rain.sum",
+                "year": "$year.rain.sum"
+            }
+        }
+    },
+    "almanac": {
+        "sun": {
+            "rise": "$almanac.sun.rise.raw",
+            "transit": "$almanac.sun.transit.raw",
+            "set": "$almanac.sun.set.raw",
+            "daylight": "$daylight",
+            "antitransit": {
+                "previous": "$almanac.sun.previous_antitransit.raw",
+                "next": "$almanac.sun.next_antitransit.raw"
+            }
+        },
+        "moon": {
+            "rise": "$almanac.moon.rise.raw",
+            "set": "$almanac.moon.set.raw",
+            "phase": "$almanac.moon_phase",
+            "percentfull": "$almanac.moon_fullness",
+            "index": "$almanac.moon_index",
+            "antitransit": {
+                "previous": "$almanac.moon.previous_antitransit.raw",
+                "next": "$almanac.moon.next_antitransit.raw"
+            },
+            "new": {
+                "previous": "$almanac.previous_new_moon.raw",
+                "next": "$almanac.next_new_moon.raw"
+            },
+            "full": {
+                "previous": "$almanac.previous_full_moon.raw",
+                "next": "$almanac.next_full_moon.raw"
+            }
+        }
+    }
+}

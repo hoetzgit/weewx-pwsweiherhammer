@@ -263,7 +263,8 @@ table.celestial td.label {
 /* Online Marker */
 
 .onlineMarkerOuter {
-    padding: 6px 0 0 15px;
+    padding-top: 6px;
+    padding-left: 20px;
     float: left;
 }
 
@@ -379,6 +380,10 @@ table.celestial td.label {
 
 /* additional station observations modal window */
 
+.station-observations-extras-modal-title {
+
+}
+
 .station-observations-extras-modal-link a {
     text-decoration: none;
 }
@@ -400,7 +405,7 @@ table.celestial td.label {
 }
 
 .station-observations-extras-modal-body {
-    padding: 5px 15px 5px 15px;
+    padding: 5px 10px 5px 10px;
 }
 
 .station-observations-extras-modal-updated {
@@ -410,7 +415,8 @@ table.celestial td.label {
 .station-observations-extras-modal-title {
     text-align: left;
     font-size: calc(14px + 0.3vw);
-    font-weight: 500;
+    font-weight: 400;
+    padding-left: 5px;
 }
 
 .station-observations-extras-row {
@@ -1384,7 +1390,8 @@ sub { top: 0.4em; }
     }
 /* Online Marker */
     .onlineMarkerOuter {
-        padding: 6px 0 0 15px;
+        padding-top: 6px;
+        padding-left: 15px;
         float: none;
     }
     .loadingMarker:before {
@@ -1435,6 +1442,9 @@ sub { top: 0.4em; }
         min-height: 110px;
     }
     /* Additional Station Observations */
+    .station-observations-extras-modal-title {
+        padding-left: 0px;
+    }
     .page .station-observations-extras-modal a {
         font-size: 20px;
     }

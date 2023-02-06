@@ -415,7 +415,7 @@ function update_aqi_properties(data, aqi, value, options=[]) {
         // fallback for all possible properties
         var title = "$gettext('unknown')";
         var txt = "$gettext('unknown')";
-        var color = "inherit";
+        var color = "#dfdfdf";
 
         // data for all possible properties
         if (data.hasOwnProperty("aqilevel") && data["aqilevel"].hasOwnProperty(value)) {
@@ -848,7 +848,7 @@ function update_pressure_trend_properties(data, trend_obs, value=null) {
     const FALLING_QUICKLY = "-3";
     const FALLING_VERY_RAPIDLY = "-4";
     var trend_value = null;
-    var trend_code = "unknown";
+    var trend_code = "$gettext('unknown')";
     var symbol_rotation = null;
     var symbol_output = "";
 
@@ -892,7 +892,7 @@ function update_pressure_trend_properties(data, trend_obs, value=null) {
 
         if (!data["trend"].hasOwnProperty("pressuretrend")) {
             if (!data["trend"]["pressuretrend"].hasOwnProperty(trend_code)) {
-                trend_code = "unknown";
+                trend_code = "$gettext('unknown')";
             }
         } else {
             if (trend_code == RISING_VERY_RAPIDLY) {
@@ -2099,7 +2099,9 @@ function aeris_icon(data) {
     if (icon_dict.hasOwnProperty(icon_name)) {
         return icon_dict[icon_name]
     } else {
-        return "unknown"
+        //return "unknown"
+        //TODO?
+        return icon_name
     }
 }
 
@@ -3435,6 +3437,7 @@ function update_with_mqtt_data(data) {
         //
         // Correct value dependent properties (colors, tooltip, values as text etc.)
         //
+/*
         if (mqttmon_data_formatted) {
             #if $Extras.has_key("aqi_enabled") and $Extras.aqi_enabled == '1'
             // aqi properties
@@ -3556,6 +3559,7 @@ function update_with_mqtt_data(data) {
                 console.error("Error update_with_mqtt_data", err);
             }
         }
+*/
     }
 };
 #end if
