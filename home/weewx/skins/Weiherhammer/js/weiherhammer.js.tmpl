@@ -3089,6 +3089,10 @@ function update_with_mqtt_data(data) {
         // all obs with class = obs or class = obs_formatted
         try {
             jQuery.each(data, function(data_class, data_raw) {
+                //TODO
+                if (data_class == "sum_sunshineDur_sum") {
+                    return;
+                }
                 if (!unit_rounding_array.hasOwnProperty(data_class)) {
                     unit_rounding_array[data_class] = unit_rounding_array["default"]
                 }
@@ -3318,19 +3322,22 @@ function update_with_mqtt_data(data) {
             console.error("Error update_with_mqtt_data", err);
         }
 
-        // Debug symbols
-        // sunshine debug symbol
+        //TODO
+        // sunshine debug symbol and text
         try {
             if (data.hasOwnProperty("sunshine")) {
                 if (parseInt(data["sunshine"]) > 0) {
                     jQuery(".debug_sunshine_symbol").attr('style', 'padding-left: 5px;');
                     jQuery(".debug_sunshine_symbol").html('<i class="fa fa-fw fa-sun-o"></i>');
+                    jQuery(".sunshine_text").html("$gettext('yes')");
                 } else {
                     jQuery(".debug_sunshine_symbol").html("");
                     jQuery(".debug_sunshine_symbol").removeAttr("style");
+                    jQuery(".sunshine_text").html("$gettext('no')");
                 }
             } else {
                 jQuery(".sunshineThreshold").html("$gettext('No evaluation available')");
+                jQuery(".sunshine_text").html("");
             }
 
             // cloudcover debug symbol

@@ -1941,20 +1941,16 @@ class getData(SearchList):
                     forecast_data = json.load(read_file)
 
                 # temp. Test with weewx_dwd.json
-                forecast_data_2 = None
                 try:
                     with open(external_forecast_file_2, "r") as read_file:
                         forecast_data_2 = json.load(read_file)
+                        forecast_data.update(forecast_data_2)
                 except IOError as e:
                     raise Warning(
                         "Error reading forecast info from %s. Reason: %s"
                         % (external_forecast_file_2, e)
                     )
-                    forecast_data_2 = None
                     pass
-
-                if forecast_data_2 is not None:
-                    forecast_data.update(forecast_data_2)
 
                 external_forecast_available = "1"
             except IOError as e:
@@ -1969,7 +1965,7 @@ class getData(SearchList):
             try:
                 with open(builtin_forecast_file, "r") as read_file:
                     builtin_data = json.load(read_file)
-                    forecast_data["builtin"] = builtin_data["builtin"]
+                    forecast_data.update(builtin_data)
                 builtin_forecast_available = "1"
             except IOError as e:
                 forecast_file_success = False
@@ -2087,7 +2083,7 @@ class getData(SearchList):
                     icon_name = data.split(".")[0]  # Remove .png
                     with open(iconlist_file_path, "r") as dict:
                         icon_dict = json.load(dict)
-                    return icon_dict[icon_name]
+                    return icon_dict.get(icon_name)
                 else:
                     logerr("aeris-icon-list.json is missing in " + iconlist_file_path)
                     return 'unknown'
@@ -2161,14 +2157,17 @@ class getData(SearchList):
                             current_obs_summary = "N/A"
 
                         if data["response"][0]["ob"].get("icon") is not None:
-                            current_obs_icon = (
-                                aeris_icon(data["response"][0]["ob"].get("icon")) + ".png"
-                            )
+                            icon_tmp = aeris_icon(data["response"][0]["ob"].get("icon"))
+                            if icon_tmp is not None:
+                                current_obs_icon = icon_tmp + ".png"
+                            else:
+                                current_obs_icon = data["response"][0]["ob"].get("icon")
                         else:
                             current_obs_icon = 'unknown.png'
 
                     except Exception as error:
                         logerr("Error getting current source, icon and summary data from API. The error was: %s" % (error))
+                        logerr("Data %s" % data)
                         pass
 
                     try:

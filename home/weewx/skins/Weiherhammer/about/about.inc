@@ -16,7 +16,7 @@
             <h2>Allgemein</h2>
             <p>Wie wird denn das Wetter in <a href="https://www.weiherhammer.de/" target="_blank" rel="noreferrer">Weiherhammer</a> heute? &Uuml;blich war der Blick aus dem Fenster und auf das analoge Thermometer. Es sollte aber eine smartere L&ouml;sung her. 
             Nach einigen Funkthermometern mit Display und diversen selbstgebastelten und selbst programmierten Wetterstationen entschied ich mich, eine fertige Station zu installieren.</p>
-            <p>Seit dem 25. August 2019 nutze ich meine private Wetterstation (PWS) in Weiherhammer. Durch meine Webseite habe ich das aktuelle Wetter vor Ort jederzeit und &uuml;berall im Blick.
+            <p>Seit dem 25. August 2019 nutze ich meine private Wetterstation (PWS) in Weiherhammer. Mit der Webseite habe ich das aktuelle Wetter vor Ort jederzeit und &uuml;berall im Blick.
             Ein Kombisensor ist sicher nicht optimal und auch der Aufstellstandort entspricht keiner Vorgabe, aber die Station und die Webseite erfüllt ihren Zweck und hat den Blick auf mein Fensterthermometer ersetzt.</p>
         </div>
     </div>

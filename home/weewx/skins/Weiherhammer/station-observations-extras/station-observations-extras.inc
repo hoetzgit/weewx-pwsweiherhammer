@@ -4,7 +4,7 @@
 #def get_boolean_status($val, $mode)
 #if $val is None
 $gettext('unknown')
-#elif $val == '1'
+#elif $val > 0.0
 #if $mode == 'onoff'
 $gettext('on')
 #elif $mode == 'yesno'
@@ -51,13 +51,15 @@ $gettext('no')
                             #elif $x == 'sunshine'
                             <tr>
                                 <td class="station-observations-extras-label">$obs.label[$x]</td>
-                                #if $current.sunshine is not None
-                                <td class="station-observations-extras-data"><span class="current-sunshine-text" rel="tooltip" title="">$get_boolean_status($getVar('current.%s' % $x), 'yesno')</span><br>
+                                #if $getVar('current.sunshine.has_data') and $getVar('current.sunshine') is not None
+                                <td class="station-observations-extras-data"><span class="sunshine_text" rel="tooltip" title="">$get_boolean_status($getVar('current.%s.raw' % $x), 'yesno')</span><br>
                                 #else
                                 <td class="station-observations-extras-data">
                                 #end if
                                 ##TODO AJAX
+                                #if $getVar('day.sunshineDur.has_data')
                                 <span class="day_sunshineDur_sum">$day.sunshineDur.sum.format('%(hour)d%(hour_label)s, %(minute)d%(minute_label)s')</span>
+                                #end if
                                 </td>
                             </tr>
                             #elif $x == 'lastRain'
@@ -174,7 +176,7 @@ $gettext('no')
                             <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span> (<span class="$class_trend_value" rel="tooltip" title="">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="$class_trend_symbol" rel="tooltip" title=""></span>)</td><!-- AJAX -->
                             #elif $x == 'asky_dome_heater' or $x == 'asky_box_fan' or $x == 'asky_cpu_fan'
                             #set $class_text = '%s_text' % $x
-                            <td class="station-observations-extras-data"><span class="$class_text" rel="tooltip" title="">$get_boolean_status($getVar('current.%s' % $x), 'onoff')</span></td><!-- AJAX -->
+                            <td class="station-observations-extras-data"><span class="$class_text" rel="tooltip" title="">$get_boolean_status($getVar('current.%s.raw' % $x), 'onoff')</span></td><!-- AJAX -->
                             #else
                             <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span></td><!-- AJAX -->
                             #end if
