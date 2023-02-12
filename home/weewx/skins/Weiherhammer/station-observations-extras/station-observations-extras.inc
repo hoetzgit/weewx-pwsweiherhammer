@@ -58,15 +58,15 @@ $gettext('no')
                                 #end if
                                 ##TODO AJAX
                                 #if $getVar('day.sunshineDur.has_data')
-                                <span class="day_sunshineDur_sum">$day.sunshineDur.sum.format('%(hour)d%(hour_label)s, %(minute)d%(minute_label)s')</span>
+                                <span class="day_sunshineDur_sum">$day.sunshineDur.sum.long_form</span>
                                 #end if
                                 </td>
                             </tr>
                             #elif $x == 'lastRain'
                             <tr>
-                                ##TODO AJAX
+                                ##TODO AJAX, TODO Format Date
                                 <td class="station-observations-extras-label">$gettext("last rain")</td>
-                                <td class="station-observations-extras-data">$last_rain<br>$time_since_last_rain</td>
+                                <td class="station-observations-extras-data">$last_rain<br>$time_since_last_rain.long_form</td>
                             </tr>
                             #else
                             <tr>

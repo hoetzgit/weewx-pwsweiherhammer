@@ -32,8 +32,8 @@
         "altitude (meters)": $station.altitude.meter.raw,
         "link": "$station.station_url",
         "hardware": "$station.hardware",
-        "serveruptime": "$station.os_uptime",
-        "weewxuptime": "$station.uptime"
+        "serveruptime": "$station.os_uptime.long_form",
+        "weewxuptime": "$station.uptime.long_form"
     },
     "generation": {
         "time": "$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")",
@@ -41,7 +41,7 @@
     },
     "test": {
         "day.sunshineDur.sum.raw": "$day.sunshineDur.sum.raw",
-        "day.sunshineDur.sum.format": "$day.sunshineDur.sum.format('%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s')",
+        "day.sunshineDur.sum.format": "$day.sunshineDur.sum.long_form",
         "current.sunshine": "$current.sunshine",
         "current.sunshine.raw": "$current.sunshine.raw",
         "formattedSunshine": "$current.sunshine.formatted",

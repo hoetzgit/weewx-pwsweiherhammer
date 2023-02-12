@@ -31,4 +31,7 @@ DWD OM/POI Daten
 
 Anderes
 
-"day_sunshineDur_sum" = $day.sunshineDur.sum.format('%(hour)d%(hour_label)s, %(minute)d%(minute_label)s')
+"day_sunshineDur_sum" = $day.sunshineDur.sum.long_form
+"day_sunshineDur_sum" = $day.sunshineDur.sum.long_form('%(minute)d%(minute_label)s, %(second)d%(second_label)s')
+"day_sunshineDur_sum" = $day.sunshineDur.sum.long_form('%(hour)d%(hour_label)s, %(minute)d%(minute_label)s')
+"day_sunshineDur_sum" = $day.sunshineDur.sum.long_form(format_string="%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s")

@@ -37,6 +37,7 @@
 #set $observations = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
 
 #for $x in $observations
+  ##if $getVar('year.%s.has_data' % $x)
     #if $x == 'barometer'
       <tr>
         <td class="label">$obs.label.barometer</td>
@@ -70,7 +71,7 @@
         #else
           <td class="data">
         #end if
-        $day.sunshineDur.sum.format('%(hour)d%(hour_label)s, %(minute)d%(minute_label)s')
+        $day.sunshineDur.sum.long_form
         </td>
       </tr>
     #elif $x == 'sunshineThreshold'
@@ -81,7 +82,7 @@
     #elif $x == 'lastRain'
       <tr>
         <td class="label">$gettext("Last rain")</td>
-        <td class="data">$last_rain<br>$time_since_last_rain</td>
+        <td class="data">$last_rain<br>$time_since_last_rain.long_form</td>
       </tr>
     #else
       <tr>
@@ -89,11 +90,12 @@
         <td class="data">$getVar('current.' + $x)</td>
       </tr>
     #end if
+  ##end if
 #end for
 #if $almanac.hasExtras
      <tr>
        <td class="label">$gettext("Total daylight")</td>
-       <td class="data">$almanac.sun.visible<br/>$sun_visible_change $change_str</td>
+       <td class="data">$almanac.sun.visible.long_form<br/>$sun_visible_change.long_form $change_str</td>
      </tr>
 #end if
     </tbody>

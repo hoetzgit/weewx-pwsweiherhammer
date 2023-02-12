@@ -5,7 +5,7 @@
     <li>Diese Webseite wird nicht geschäftsmässig betrieben.</li>
     <li>Der Betreiber verfolgt mit dieser Webseite keine kommerziellen Interessen.</li>
     <li>Fehler, Verstöße jeglicher Art gegen Regelungen und Gesetze oder Verletzung von Rechten Dritter auf dieser Webseite erfolgen vom Betreiber nicht vorsätzlich oder beabsichtigt grob fahrlässig.</li>
-    <li>Der Betreiber bittet daher menschliche Nutzer der Webseite bei Erkennung von Verstößen jeglicher Art gegen Regelungen und Gesetze oder bei Verletzung von Rechten Dritter um sofortige Kontaktaufnahme
+    <li>Der Betreiber bittet daher menschliche Nutzer der Webseite bei Erkennung von Verstößen jeglicher Art gegen Regelungen und Gesetze oder bei Verletzung von Rechten Dritter um Kontaktaufnahme
     über die in der Datenschutzerklärung unter "Hinweis zur verantwortlichen Stelle" hinterlegten Kontaktdaten. Bei berechtigten Hinweisen wird versucht, die Ursache umgehend zu beseitigen. Vielen Dank für die Unterstützung.
     </li>
     <li>Eine über Punkt 6 hinausgehende Nutzung der angegebenen Kontaktdaten darf ausschlie&szlig;lich zur Kontaktaufnahme im direkten Zusammenhang mit dieser Webseite erfolgen.</li>

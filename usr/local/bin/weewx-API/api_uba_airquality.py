@@ -502,6 +502,7 @@ To:
                                         }
                                         comp[vv[0]] = components[str(vv[0])]
                                 res[ii][jj].append(point)
+                            res[ii][jj].sort(key=lambda x:x['date start'])
                     else:
                         res[ii] = rtn[ii]
                 res['components'] = comp

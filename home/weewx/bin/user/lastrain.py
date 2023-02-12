@@ -87,8 +87,7 @@ class lastRainTags(SearchList):
         # Wrap our ts in a ValueHelper
         delta_time_vt = (delta_time, 'second', 'group_deltatime')
         try:
-            # 4.6.0 breaking change - must specify either context='short_delta' or context='long_delta'
-            delta_time_vh = ValueHelper(delta_time_vt, context='long_delta', formatter=self.generator.formatter, converter=self.generator.converter)
+            delta_time_vh = ValueHelper(delta_time_vt, context='week', formatter=self.generator.formatter, converter=self.generator.converter)
         except:
             # this works for prior to 4.6.0
            delta_time_vh = ValueHelper(delta_time_vt, formatter=self.generator.formatter, converter=self.generator.converter)
