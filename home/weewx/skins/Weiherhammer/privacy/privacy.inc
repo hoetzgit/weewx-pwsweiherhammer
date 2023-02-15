@@ -64,7 +64,7 @@
     <!-- Allgemeine Hinweise des Betreibers-->
     <div class="row"  style="padding-top:15px;">
         <div class="col-sm-12">
-            #set $file = "general/general_notes.inc"
+            #set $file = "common/general_notes.inc"
             #if os.path.exists($file)
             <!-- Begin $file -->
             #include $file

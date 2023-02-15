@@ -49,6 +49,8 @@
         #set $head_title = $obs.label.html_title_extreme
     #else if $page == "mqttmon"
         #set $head_title = $obs.label.html_title_mqttmon
+    #else if $page == "test"
+        #set $head_title = "Test"
     #else
         #set $head_title = $obs.label.html_title
     #end if
@@ -79,6 +81,8 @@
         #set $head_desc = $obs.label.html_description_extreme
     #else if $page == "mqttmon"
         #set $head_desc = $obs.label.html_description_mqttmon
+    #else if $page == "test"
+        #set $head_desc = "Test"
     #else
         #set $head_desc = $obs.label.html_description
     #end if
@@ -150,9 +154,10 @@
         <link rel="apple-touch-icon" sizes="168x168" href="$relative_url/images/station168.png">
         <link rel="apple-touch-icon" sizes="192x192" href="$relative_url/images/station192.png">
         
-        <link rel="stylesheet" href="$relative_url/libs/bootstrap/3.4.1/css/bootstrap.min.css" type="text/css" media="all"/>
         <link rel="stylesheet" href="$relative_url/libs/roboto/css/roboto.css" type="text/css" media="all"/>
-        <link rel="stylesheet" href="$relative_url/libs/font-awesome/4.7.0/css/font-awesome.min.css" type="text/css" media="all"/>
+        <link rel="stylesheet" href="$relative_url/libs/bootstrap/3.4.1/css/bootstrap.min.css" type="text/css" media="all"/>
+        <link rel="stylesheet" href="$relative_url/libs/bootstrap-icons/1.10.3/font/bootstrap-icons.min.css" type="text/css" media="all"/>
+        <link rel="stylesheet" href="$relative_url/libs/font-awesome/4.7.0/css/all.min.css" type="text/css" media="all"/>
         <link rel="stylesheet" href="$relative_url/libs/weather-icons/2.0.12/css/weather-icons.min.css" type="text/css" media="all"/>
         #if $page == "forecast" or $page == "console"
         <!-- Forecast Page - add wind icon css -->
@@ -175,7 +180,7 @@
         <link rel="stylesheet" href="$relative_url/css/console.min.css?ver=#echo int( time.time() ) #" type="text/css" media="all" id="weiherhammerConsoleStyle"/>
         #end if
         
-        <script type="text/javascript" src="$relative_url/libs/jquery/3.6.1/jquery.min.js"></script>
+        <script type="text/javascript" src="$relative_url/libs/jquery/3.6.3/jquery.min.js"></script>
         <script type="text/javascript" src="$relative_url/libs/moment.js/2.29.4/moment-with-locales.min.js"></script>
         <script type="text/javascript" src="$relative_url/libs/moment-timezone/0.5.37/moment-timezone-with-data.min.js"></script>
         <script type="text/javascript" src="$relative_url/libs/bootstrap/3.4.1/js/bootstrap.min.js"></script>

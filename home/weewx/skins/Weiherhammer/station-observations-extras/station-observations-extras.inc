@@ -33,10 +33,10 @@ $gettext('no')
                         #for $x in $station_observations_extras.station.obs
                             #if $x == 'barometer'
                             <tr>
-                                #set $class_trend_symbol = 'trend_%s_symbol' % $x
-                                #set $class_trend_value = 'trend_%s_formatted' % $x
+                                #set $class_symbol = 'trend_%s_symbol' % $x
+                                #set $class_value = 'trend_%s_formatted' % $x
                                 <td class="station-observations-extras-label">$obs.label[$x]</td>
-                                <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span> (<span class="$class_trend_value" rel="tooltip" title="">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="$class_trend_symbol" rel="tooltip" title=""></span>)</td><!-- AJAX -->
+                                <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span> (<span class="$class_value" rel="tooltip" title="">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="$class_symbol" rel="tooltip" title=""></span>)</td><!-- AJAX -->
                             </tr>
                             #elif $x == 'windSpeed'
                             <tr>
@@ -117,9 +117,12 @@ $gettext('no')
                         <tr>
                             <td class="station-observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'solar_barometer'
-                            #set $class_trend_symbol = 'trend_%s_symbol' % $x
-                            #set $class_trend_value = 'trend_%s_formatted' % $x
-                            <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span> (<span class="$class_trend_value" rel="tooltip" title="">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="$class_trend_symbol" rel="tooltip" title=""></span>)</td><!-- AJAX -->
+                            #set $class_symbol = 'trend_%s_symbol' % $x
+                            #set $class_value = 'trend_%s_formatted' % $x
+                            <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span> (<span class="$class_value" rel="tooltip" title="">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="$class_symbol" rel="tooltip" title=""></span>)</td><!-- AJAX -->
+                            #elif $x == 'solar_voltage'
+                            #set $class_symbol = '%s_symbol' % $x
+                            <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span> (<span class="$class_symbol" rel="tooltip" title=""></span>)</td><!-- AJAX -->
                             #else
                             <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</td><!-- AJAX -->
                             #end if
@@ -144,9 +147,9 @@ $gettext('no')
                         <tr>
                             <td class="station-observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'airrohr_barometer'
-                            #set $class_trend_symbol = 'trend_%s_symbol' % $x
-                            #set $class_trend_value = 'trend_%s_formatted' % $x
-                            <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span> (<span class="$class_trend_value" rel="tooltip" title="">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="$class_trend_symbol" rel="tooltip" title=""></span>)</td><!-- AJAX -->
+                            #set $class_symbol = 'trend_%s_symbol' % $x
+                            #set $class_value = 'trend_%s_formatted' % $x
+                            <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span> (<span class="$class_value" rel="tooltip" title="">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="$class_symbol" rel="tooltip" title=""></span>)</td><!-- AJAX -->
                             #else
                             <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span></td><!-- AJAX -->
                             #end if
@@ -171,9 +174,9 @@ $gettext('no')
                         <tr>
                             <td class="station-observations-extras-label">$obs.label[$x]</td>
                             #if $x == 'asky_box_barometer'
-                            #set $class_trend_symbol = 'trend_%s_symbol' % $x
-                            #set $class_trend_value = 'trend_%s_formatted' % $x
-                            <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span> (<span class="$class_trend_value" rel="tooltip" title="">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="$class_trend_symbol" rel="tooltip" title=""></span>)</td><!-- AJAX -->
+                            #set $class_symbol = 'trend_%s_symbol' % $x
+                            #set $class_value = 'trend_%s_formatted' % $x
+                            <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span> (<span class="$class_value" rel="tooltip" title="">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="$class_symbol" rel="tooltip" title=""></span>)</td><!-- AJAX -->
                             #elif $x == 'asky_dome_heater' or $x == 'asky_box_fan' or $x == 'asky_cpu_fan'
                             #set $class_text = '%s_text' % $x
                             <td class="station-observations-extras-data"><span class="$class_text" rel="tooltip" title="">$get_boolean_status($getVar('current.%s.raw' % $x), 'onoff')</span></td><!-- AJAX -->

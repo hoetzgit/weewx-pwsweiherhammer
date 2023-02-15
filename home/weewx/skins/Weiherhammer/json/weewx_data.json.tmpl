@@ -549,27 +549,27 @@
         "1": {
             "text": "$gettext('very good')",
             "ttt": "$pgettext('ttt_aqi', 'very good')",
-            "color": "#50F0E6"
+            "color": "var(--aqi-very-good)"
         },
         "2": {
             "text": "$gettext('good')",
             "ttt": "$pgettext('ttt_aqi', 'good')",
-            "color": "#50CDAA"
+            "color": "var(--aqi-good)"
         },
         "3": {
             "text": "$gettext('moderate')",
             "ttt": "$pgettext('ttt_aqi', 'moderate')",
-            "color": "#F0E641"
+            "color": "var(--aqi-moderate)"
         },
         "4": {
             "text": "$gettext('poor')",
             "ttt": "$pgettext('ttt_aqi', 'poor')",
-            "color": "#FF5050"
+            "color": "var(--aqi-poor)"
         },
         "5": {
             "text": "$gettext('very poor')",
             "ttt": "$pgettext('ttt_aqi', 'very poor')",
-            "color": "#960032"
+            "color": "var(--aqi-very-poor)"
         },
         "unknown": {
             "text": "$gettext('unknown')",
@@ -587,66 +587,66 @@
             "-2": {
                 "text": "$gettext('very cold')",
                 "ttt": "$pgettext('ttt_roomclimate_temperature', 'very cold')",
-                "color": "#0000FF"
+                "color": "var(--indoor-temp-very-cold)"
             },
             "-1": {
                 "text": "$gettext('cold')",
                 "ttt": "$pgettext('ttt_roomclimate_temperature', 'cold')",
-                "color": "#0088FF"
+                "color": "var(--indoor-temp-cold)"
             },
             "0": {
                 "text": "$gettext('optimal')",
                 "ttt": "$pgettext('ttt_roomclimate_temperature', 'optimal')",
-                "color": "#84D862"
+                "color": "var(--indoor-temp-optimal)"
             },
             "1": {
                 "text": "$gettext('warm')",
                 "ttt": "$pgettext('ttt_roomclimate_temperature', 'warm')",
-                "color": "#FF8800"
+                "color": "var(--indoor-temp-warm)"
             },
             "2": {
                 "text": "$gettext('very warm')",
                 "ttt": "$pgettext('ttt_roomclimate_temperature', 'very warm')",
-                "color": "#FF0000"
+                "color": "var(--indoor-temp-very-warm)"
             }
         },
         "humidity": {
             "-2": {
                 "text": "$gettext('very dry')",
                 "ttt": "$pgettext('ttt_roomclimate_humidity', 'very dry')",
-                "color": "#FF8800"
+                "color": "var(--indoor-humidity-very-dry)"
             },
             "-1": {
                 "text": "$gettext('dry')",
                 "ttt": "$pgettext('ttt_roomclimate_humidity', 'dry')",
-                "color": "#B2DF8A"
+                "color": "var(--indoor-humidity-dry)"
             },
             "0": {
                 "text": "$gettext('optimal')",
                 "ttt": "$pgettext('ttt_roomclimate_humidity', 'optimal')",
-                "color": "#84D862"
+                "color": "var(--indoor-humidity-optimal"
             },
             "1": {
                 "text": "$gettext('moist')",
                 "ttt": "$pgettext('ttt_roomclimate_humidity', 'moist')",
-                "color": "#B2DF8A"
+                "color": "var(--indoor-humidity-moist)"
             },
             "2": {
                 "text": "$gettext('very moist')",
                 "ttt": "$pgettext('ttt_roomclimate_humidity', 'very moist')",
-                "color": "#0077FF"
+                "color": "var(--indoor-humidity-very-moist)"
             }
         },
         "room": {
             "0": {
                 "text": "$gettext('optimal')",
                 "ttt": "$pgettext('ttt_roomclimate_room', 'optimal')",
-                "color": "#84D862"
+                "color": "var(--indoor-room-optimal)"
             },
             "1": {
                 "text": "$gettext('action required')",
                 "ttt": "$pgettext('ttt_roomclimate_room', 'action required')",
-                "color": "#B2DF8A"
+                "color": "var(--indoor-room-action)"
             }
         },
         "unknown": {
@@ -660,62 +660,73 @@
             "0": {
                 "text": "$gettext('ok')",
                 "ttt": "$pgettext('ttt_batterylevel', 'ok')",
-                "color": "#84D862"
+                "color": "var(--battery-full)",
+                "symbol": "bi bi-battery-full"
             },
             "1": {
                 "text": "$gettext('low')",
                 "ttt": "$pgettext('ttt_batterylevel', 'low')",
-                "color": "#FF0000"
+                "color": "var(--battery-low)",
+                "symbol": "bi bi-battery"
             }
         },
         "wh57": {
             "0": {
                 "text": "$gettext('low')",
                 "ttt": "$pgettext('ttt_batterylevel', 'low')",
-                "color": "#FF0000"
+                "color": "var(--battery-low)",
+                "symbol": "bi bi-battery"
             },
             "1": {
                 "text": "$gettext('low')",
                 "ttt": "$pgettext('ttt_batterylevel', 'low')",
-                "color": "#FF0000"
+                "color": "var(--battery-low)",
+                "symbol": "bi bi-battery"
             },
             "2": {
                 "text": "$gettext('sufficient')",
                 "ttt": "$pgettext('ttt_batterylevel', 'sufficient')",
-                "color": "#FF8800"
+                "color": "var(--battery-half)",
+                "symbol": "bi bi-battery-half"
             },
             "3": {
                 "text": "$gettext('sufficient')",
                 "ttt": "$pgettext('ttt_batterylevel', 'sufficient')",
-                "color": "#FF8800"
+                "color": "var(--battery-half)",
+                "symbol": "bi bi-battery-half"
             },
             "4": {
                 "text": "$gettext('ok')",
                 "ttt": "$pgettext('ttt_batterylevel', 'ok')",
-                "color": "#84D862"
+                "color": "var(--battery-full)",
+                "symbol": "bi bi-battery-full"
             },
             "5": {
                 "text": "$gettext('ok')",
                 "ttt": "$pgettext('ttt_batterylevel', 'ok')",
-                "color": "#84D862"
+                "color": "var(--battery-full)",
+                "symbol": "bi bi-battery-full"
             }
         },
         "wh65": {
             "0": {
                 "text": "$gettext('ok')",
                 "ttt": "$pgettext('ttt_batterylevel', 'ok')",
-                "color": "#84D862"
+                "color": "var(--battery-full)",
+                "symbol": "bi bi-battery-full"
             },
             "1": {
                 "text": "$gettext('low')",
                 "ttt": "$pgettext('ttt_batterylevel', 'low')",
-                "color": "#FF0000"
+                "color": "var(--battery-low)",
+                "symbol": "bi bi-battery"
             }
         },
         "unknown": {
             "text": "$gettext('unknown')",
             "ttt": "$gettext('unknown')",
-            "color": "inherit"
+            "color": "inherit",
+            "symbol": "bi bi-question"
         }
     },
     "voltagelevel": {
@@ -723,116 +734,135 @@
             "4": {
                 "text": "$gettext('ok')",
                 "ttt": "$pgettext('ttt_batterylevel', 'ok')",
-                "color": "#84D862"
+                "color": "var(--battery-full)",
+                "symbol": "bi bi-battery-full"
             },
             "3": {
                 "text": "$gettext('low')",
                 "ttt": "$pgettext('ttt_batterylevel', 'low')",
-                "color": "#FF0000"
+                "color": "var(--battery-low)",
+                "symbol": "bi bi-battery"
             }
         },
         "wh51": {
             "1.9": {
                 "text": "$gettext('ok')",
                 "ttt": "$pgettext('ttt_batterylevel', 'ok')",
-                "color": "#84D862"
+                "color": "var(--battery-full)",
+                "symbol": "bi bi-battery-full"
             },
             "1.8": {
                 "text": "$gettext('ok')",
                 "ttt": "$pgettext('ttt_batterylevel', 'ok')",
-                "color": "#84D862"
+                "color": "var(--battery-full)",
+                "symbol": "bi bi-battery-full"
             },
             "1.7": {
                 "text": "$gettext('ok')",
                 "ttt": "$pgettext('ttt_batterylevel', 'ok')",
-                "color": "#84D862"
+                "color": "var(--battery-full)",
+                "symbol": "bi bi-battery-full"
             },
             "1.6": {
                 "text": "$gettext('ok')",
                 "ttt": "$pgettext('ttt_batterylevel', 'ok')",
-                "color": "#84D862"
+                "color": "var(--battery-full)",
+                "symbol": "bi bi-battery-full"
             },
             "1.5": {
                 "text": "$gettext('ok')",
                 "ttt": "$pgettext('ttt_batterylevel', 'ok')",
-                "color": "#84D862"
+                "color": "var(--battery-full)",
+                "symbol": "bi bi-battery-full"
             },
             "1.4": {
                 "text": "$gettext('sufficient')",
                 "ttt": "$pgettext('ttt_batterylevel', 'sufficient')",
-                "color": "#FF8800"
+                "color": "var(--battery-half)",
+                "symbol": "bi bi-battery-half"
             },
             "1.3": {
                 "text": "$gettext('sufficient')",
                 "ttt": "$pgettext('ttt_batterylevel', 'sufficient')",
-                "color": "#FF8800"
+                "color": "var(--battery-half)",
+                "symbol": "bi bi-battery-half"
             },
             "1.2": {
                 "text": "$gettext('low')",
                 "ttt": "$pgettext('ttt_batterylevel', 'low')",
-                "color": "#FF0000"
+                "color": "var(--battery-low)",
+                "symbol": "bi bi-battery"
             },
             "1.1": {
                 "text": "$gettext('low')",
                 "ttt": "$pgettext('ttt_batterylevel', 'low')",
-                "color": "#FF0000"
+                "color": "var(--battery-low)",
+                "symbol": "bi bi-battery"
             },
             "1.0": {
                 "text": "$gettext('low')",
                 "ttt": "$pgettext('ttt_batterylevel', 'low')",
-                "color": "#FF0000"
+                "color": "var(--battery-low)",
+                "symbol": "bi bi-battery"
             }
         },
         "unknown": {
             "text": "$gettext('unknown')",
             "ttt": "$gettext('unknown')",
-            "color": "inherit"
+            "color": "inherit",
+            "symbol": "bi bi-question"
         }
     },
     "signallevel": {
         "0": {
             "text": "$gettext('very poor')",
             "ttt": "$pgettext('ttt_signallevel', 'very poor')",
-            "color": "#FF0000"
+            "color": "var(--signal-very-poor)",
+            "symbol": "bi bi-reception-0"
         },
         "1": {
             "text": "$gettext('poor')",
             "ttt": "$pgettext('ttt_signallevel', 'poor')",
-            "color": "#FF0000"
+            "color": "var(--signal-poor)",
+            "symbol": "bi bi-reception-1"
         },
         "2": {
             "text": "$gettext('sufficient')",
             "ttt": "$pgettext('ttt_signallevel', 'sufficient')",
-            "color": "#FF8800"
+            "color": "var(--signal-sufficient)",
+            "symbol": "bi bi-reception-2"
         },
         "3": {
             "text": "$gettext('good')",
             "ttt": "$pgettext('ttt_signallevel', 'good')",
-            "color": "#84D862"
+            "color": "var(--signal-good)",
+            "symbol": "bi bi-reception-3"
         },
         "4": {
             "text": "$gettext('very good')",
             "ttt": "$pgettext('ttt_signallevel', 'very good')",
-            "color": "#84D862"
+            "color": "var(--signal-very-good)",
+            "symbol": "bi bi-reception-4"
         },
         "unknown": {
             "text": "$gettext('unknown')",
             "ttt": "$gettext('unknown')",
-            "color": "inherit"
+            "color": "inherit",
+            "symbol": "bi bi-question"
         }
     },
     "switchlevel": {
         "0": {
             "text": "$gettext('off')",
             "ttt": "$pgettext('ttt_switchlevel', 'off')",
-            "color_ok": "#84D862",
-            "color_nok": "#FF0000"
+            "color_ok": "var(--ok-off-color)",
+            "color_nok": "var(--ok-on-color)"
         },
         "1": {
             "text": "$gettext('on')",
             "ttt": "$pgettext('ttt_switchevel', 'on')",
-            "color_ok": "#FF0000",
-            "color_nok": "#84D862"
+            "color_ok": "var(--ok-on-color)",
+            "color_nok": "var(--ok-on-color)"
         },
         "unknown": {
             "text": "$gettext('unknown')",
@@ -842,9 +872,9 @@
     },
     "trend": {
         "pressuretrend": {
-            "fa-symbol-up": "fa-long-arrow-up",
-            "fa-symbol-right": "fa-long-arrow-right",
-            "fa-symbol-down": "fa-long-arrow-down",
+            "symbol-up": "fa fa-fw fa-long-arrow-up",
+            "symbol-right": "fa fa-fw fa-long-arrow-right",
+            "symbol-down": "fa fa-fw fa-long-arrow-down",
             "-4": {
                 "text": "$gettext('falling very rapidly')",
                 "ttt": "$pgettext('ttt_pressuretrend', 'falling very rapidly')"

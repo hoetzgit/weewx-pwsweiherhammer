@@ -1,17 +1,16 @@
 :root {
     --hival-color:#aa4444;
     --loval-color:#4444aa;
-    /* --ok-color:#44aa44; */
     --ok-color:#84D862;
-    /* --ok-on-color:#aa4444; */
     --ok-on-color:#FF0000;
-    /* --ok-off-color:#44aa44; */
     --ok-off-color:#84D862;
-    /* --low-color:#aa4444; */
+    --alarm-color:#FF0000;
     --low-color:#FF0000;
     --middle-color:#FF8800;
-    /* --unknown-color:#dfdfdf; */
+    --high-color:#84D862;
     --unknown-color:#FF0000;
+    --indoor-room-action:#FF8800;
+    --indoor-room-optimal:#84D862;
     --indoor-temp-very-cold:#0000FF;
     --indoor-temp-cold:#0088FF;
     --indoor-temp-optimal:#84D862;
@@ -30,6 +29,19 @@
     --mqttmon-rcv-dot-none:#FF0000;
     --mqttmon-rcv-dot-current:#00bb00;
     --mqttmon-rcv-dot-outdated:#236d1b;
+    --aqi-very-good:#50F0E6;
+    --aqi-good:#50CDAA;
+    --aqi-moderate:#F0E641;
+    --aqi-poor:#FF5050;
+    --aqi-very-poor:#960032;
+    --battery-full:#84D862;
+    --battery-half:#FF8800;
+    --battery-low:#FF0000;
+    --signal-very-good:#84D862;
+    --signal-good:#84D862;
+    --signal-sufficient:#FF8800;
+    --signal-poor:#FF8800;
+    --signal-very-poor:#FF0000;
 }
 
 /*
@@ -209,6 +221,9 @@ abbr[title] {
 }
 .status_unknown {
     color: var(--unknown-color);
+}
+.status_alarm {
+    color: var(--alarm-color);
 }
 
 /* Almanac */

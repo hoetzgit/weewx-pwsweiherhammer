@@ -8,7 +8,7 @@
 #set global $hemisphere = "northern-hemisphere"
 #end if
 
-var pages = ["graphs", "records", "reports", "about", "pi", "webcam", "imprint", "privacy", "forecast", "extreme", "mqttmon"];
+var pages = ["graphs", "records", "reports", "about", "pi", "webcam", "imprint", "privacy", "forecast", "extreme", "mqttmon", "test"];
 var pageName = "";
 function get_pageName() {
     var sPath = window.location.pathname.replace(/\/$/, "");
@@ -466,6 +466,7 @@ function update_battery_properties(data, sensor, sensorclass, value, options=[])
         var title = "$gettext('unknown')";
         var txt = "$gettext('unknown')";
         var color = "inherit";
+        var symbol = "bi bi-question";
 
         // data for all possible properties
         if (data.hasOwnProperty("batterylevel") && 
@@ -480,6 +481,9 @@ function update_battery_properties(data, sensor, sensorclass, value, options=[])
             if (data["batterylevel"][sensorclass][value]["color"]) {
                 color = data["batterylevel"][sensorclass][value]["color"];
             }
+            if (data["batterylevel"][sensorclass][value]["symbol"]) {
+                symbol = data["batterylevel"][sensorclass][value]["symbol"];
+            }
         }
 
         var cnt = options.length; // 0 = all
@@ -492,14 +496,19 @@ function update_battery_properties(data, sensor, sensorclass, value, options=[])
                 jQuery("." + sensor).prop("title", title);
                 jQuery("." + sensor + "_text").prop("title", title);
                 jQuery("." + sensor + "_percent").prop("title", title);
-            }
-            if (options[i] == "all" || options[i] == "text") {
-                jQuery("." + sensor + "_text").html(txt);
+                jQuery("." + sensor + "_symbol").prop("title", title);
             }
             if (options[i] == "all" || options[i] == "color") {
                 jQuery("." + sensor).css("color", color);
                 jQuery("." + sensor + "_text").css("color", color);
                 jQuery("." + sensor + "_percent").css("color", color);
+                jQuery("." + sensor + "_symbol").css("color", color);
+            }
+            if (options[i] == "all" || options[i] == "text") {
+                jQuery("." + sensor + "_text").html(txt);
+            }
+            if (options[i] == "all" || options[i] == "symbol") {
+                jQuery("." + sensor + "_symbol").html('<i class="' + symbol + '"</i>');
             }
         }
     } catch (e) {
@@ -520,6 +529,7 @@ function update_voltage_properties(data, sensor, sensorclass, value, options=[])
         var title = "$gettext('unknown')";
         var txt = "$gettext('unknown')";
         var color = "inherit";
+        var symbol = "bi bi-question";
 
         // data for all possible properties
         if (data.hasOwnProperty("voltagelevel") && 
@@ -534,6 +544,9 @@ function update_voltage_properties(data, sensor, sensorclass, value, options=[])
             if (data["voltagelevel"][sensorclass][value]["color"]) {
                 color = data["voltagelevel"][sensorclass][value]["color"];
             }
+            if (data["voltagelevel"][sensorclass][value]["symbol"]) {
+                symbol = data["voltagelevel"][sensorclass][value]["symbol"];
+            }
         }
 
         var cnt = options.length; // 0 = all
@@ -546,14 +559,19 @@ function update_voltage_properties(data, sensor, sensorclass, value, options=[])
                 jQuery("." + sensor).prop("title", title);
                 jQuery("." + sensor + "_text").prop("title", title);
                 jQuery("." + sensor + "_percent").prop("title", title);
-            }
-            if (options[i] == "all" || options[i] == "text") {
-                jQuery("." + sensor + "_text").html(txt);
+                jQuery("." + sensor + "_symbol").prop("title", title);
             }
             if (options[i] == "all" || options[i] == "color") {
                 jQuery("." + sensor).css("color", color);
                 jQuery("." + sensor + "_text").css("color", color);
                 jQuery("." + sensor + "_percent").css("color", color);
+                jQuery("." + sensor + "_symbol").css("color", color);
+            }
+            if (options[i] == "all" || options[i] == "text") {
+                jQuery("." + sensor + "_text").html(txt);
+            }
+            if (options[i] == "all" || options[i] == "symbol") {
+                jQuery("." + sensor + "_symbol").html('<i class="' + symbol + '"</i>');
             }
         }
     } catch (e) {
@@ -570,6 +588,7 @@ function update_signal_properties(data, sensor, value, options=[]) {
         var title = "$gettext('unknown')";
         var txt = "$gettext('unknown')";
         var color = "inherit";
+        var symbol = "bi bi-question";
 
         // data for all possible properties
         if (data.hasOwnProperty("signallevel") && data["signallevel"].hasOwnProperty(value)) {
@@ -581,6 +600,9 @@ function update_signal_properties(data, sensor, value, options=[]) {
             }
             if (data["signallevel"][value]["color"]) {
                 color = data["signallevel"][value]["color"];
+            }
+            if (data["signallevel"][value]["symbol"]) {
+                symbol = data["signallevel"][value]["symbol"];
             }
         }
 
@@ -594,14 +616,19 @@ function update_signal_properties(data, sensor, value, options=[]) {
                 jQuery("." + sensor).prop("title", title);
                 jQuery("." + sensor + "_text").prop("title", title);
                 jQuery("." + sensor + "_percent").prop("title", title);
-            }
-            if (options[i] == "all" || options[i] == "text") {
-                jQuery("." + sensor + "_text").html(txt);
+                jQuery("." + sensor + "_symbol").prop("title", title);
             }
             if (options[i] == "all" || options[i] == "color") {
                 jQuery("." + sensor).css("color", color);
                 jQuery("." + sensor + "_text").css("color", color);
                 jQuery("." + sensor + "_percent").css("color", color);
+                jQuery("." + sensor + "_symbol").css("color", color);
+            }
+            if (options[i] == "all" || options[i] == "text") {
+                jQuery("." + sensor + "_text").html(txt);
+            }
+            if (options[i] == "all" || options[i] == "symbol") {
+                jQuery("." + sensor + "_symbol").html('<i class="' + symbol + '"</i>');
             }
         }
     } catch (e) {
@@ -916,17 +943,16 @@ function update_pressure_trend_properties(data, trend_obs, value=null) {
             }
         }
 
-        // TODO error handling data["trend"]["pressuretrend"]["fa-symbol-***"]
         if (symbol_rotation != null) {
-            symbol_output = '<i class="fa fa-fw ';
+            symbol_output = '<i class="';
             if (symbol_rotation == 0.0) {
-                symbol_output += data["trend"]["pressuretrend"]["fa-symbol-up"];
+                symbol_output += data["trend"]["pressuretrend"]["symbol-up"];
             } else if (symbol_rotation == 90.0) {
-                symbol_output += data["trend"]["pressuretrend"]["fa-symbol-right"];
+                symbol_output += data["trend"]["pressuretrend"]["symbol-right"];
             } else if (symbol_rotation == 180.0) {
-                symbol_output += data["trend"]["pressuretrend"]["fa-symbol-down"];
+                symbol_output += data["trend"]["pressuretrend"]["symbol-down"];
             } else {
-                symbol_output += data["trend"]["pressuretrend"]["fa-symbol-up"];
+                symbol_output += data["trend"]["pressuretrend"]["symbol-up"];
                 symbol_output += '" style="transform:rotate(' + symbol_rotation + 'deg);';
             }
             symbol_output += '"></i>';

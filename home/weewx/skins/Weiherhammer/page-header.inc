@@ -29,6 +29,8 @@
                 <h1>$obs.label.page_header_privacy</h1>
                 #else if $page == "extreme"
                 <h1>$obs.label.page_header_extreme</h1>
+                #else if $page == "test"
+                <h1>Test</h1>
                 #end if
             </div>
         </div>

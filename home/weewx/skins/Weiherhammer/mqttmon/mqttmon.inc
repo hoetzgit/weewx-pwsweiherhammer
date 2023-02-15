@@ -1,6 +1,6 @@
 
     <!-- Generator: generate_mqttmon_inc.sh -->
-    <!-- generated: 02.02.2023 10:41:37 -->
+    <!-- generated: 15.02.2023 18:30:06 -->
 
 
     <tr>
@@ -46,6 +46,14 @@
     <tr>
         <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot airrohr_pm2_5-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.airrohr_pm2_5">airrohr_pm2_5</abbr></th>
         <td class="mqttmon-table-body-obs-val"><span class="airrohr_pm2_5" rel="tooltip" title="">---</span></td>
+    </tr>
+    <tr>
+        <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot airrohr_sig-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.airrohr_sig">airrohr_sig</abbr></th>
+        <td class="mqttmon-table-body-obs-val"><span class="airrohr_sig" rel="tooltip" title="">---</span></td>
+    </tr>
+    <tr>
+        <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot airrohr_sig_percent-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.airrohr_sig_percent">airrohr_sig_percent</abbr></th>
+        <td class="mqttmon-table-body-obs-val"><span class="airrohr_sig_percent" rel="tooltip" title="">---</span></td>
     </tr>
     <tr>
         <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot altimeter-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.altimeter">altimeter</abbr></th>
@@ -102,6 +110,14 @@
     <tr>
         <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot asky_dome_temperature-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.asky_dome_temperature">asky_dome_temperature</abbr></th>
         <td class="mqttmon-table-body-obs-val"><span class="asky_dome_temperature" rel="tooltip" title="">---</span></td>
+    </tr>
+    <tr>
+        <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot asky_sig-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.asky_sig">asky_sig</abbr></th>
+        <td class="mqttmon-table-body-obs-val"><span class="asky_sig" rel="tooltip" title="">---</span></td>
+    </tr>
+    <tr>
+        <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot asky_sig_percent-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.asky_sig_percent">asky_sig_percent</abbr></th>
+        <td class="mqttmon-table-body-obs-val"><span class="asky_sig_percent" rel="tooltip" title="">---</span></td>
     </tr>
     <tr>
         <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot barometer-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.barometer">barometer</abbr></th>
