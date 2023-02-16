@@ -408,6 +408,7 @@
                                             #include "station-observations-extras/station-observations-extras.inc"
                                         </div>
                                         <div class="modal-footer">
+                                            <a href="$relative_url/sensormon/" class="btn btn-primary" role="button">$gettext('sensor monitor')</a>
                                             #if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
                                             <a href="$relative_url/mqttmon/" class="btn btn-primary" role="button">$gettext('MQTT monitor')</a>
                                             #end if

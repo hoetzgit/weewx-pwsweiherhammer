@@ -206,6 +206,22 @@ abbr[title] {
     vertical-align: middle;
 }
 
+/* Sensor Monitor */
+
+.sensors-monitor-headline, .dark .sensors-monitor-headline {
+    font-size: calc(20px + 0.3vw);
+    text-align: left;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.sensors-monitor-table-head-sig, .sensors-monitor-table-head-batt, .sensors-monitor-table-body-sig, .sensors-monitor-table-body-batt {
+    text-align: center;
+    vertical-align: middle;
+}
+
 /* Status */
 
 .status_ok {

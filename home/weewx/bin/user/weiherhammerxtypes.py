@@ -120,6 +120,7 @@ weewx.units.obs_group_dict['wh57_batt_percent'] = "group_percent"
 weewx.units.obs_group_dict['solar_altimeter'] = "group_pressure"
 weewx.units.obs_group_dict['solar_appTemp'] = "group_temperature"
 weewx.units.obs_group_dict['solar_barometer'] = "group_pressure"
+weewx.units.obs_group_dict['solar_batt_percent'] = "group_percent"
 weewx.units.obs_group_dict['solar_dewpoint'] = "group_temperature"
 weewx.units.obs_group_dict['solar_heatindex'] = "group_temperature"
 weewx.units.obs_group_dict['solar_humidex'] = "group_temperature"
@@ -131,7 +132,6 @@ weewx.units.obs_group_dict['solar_thwIndex2'] = "group_temperature" #test
 weewx.units.obs_group_dict['solar_wetBulb'] = "group_temperature"
 weewx.units.obs_group_dict['solar_wetBulb2'] = "group_temperature" #test
 weewx.units.obs_group_dict['solar_windchill'] = "group_temperature"
-weewx.units.obs_group_dict['solar_voltage_percent'] = "group_percent"
 # AllSky camera
 weewx.units.obs_group_dict['asky_box_altimeter'] = 'group_pressure'
 weewx.units.obs_group_dict['asky_box_barometer'] = 'group_pressure'
@@ -413,11 +413,11 @@ class WXXTypes(weewx.xtypes.XType):
         return ValueTuple(sunshine, 'count', 'group_count')
 
     @staticmethod
-    def calc_solar_voltage_percent(key, data, db_manager=None):
-        if 'solar_voltage' not in data or data['solar_voltage'] is None:
+    def calc_solar_batt_percent(key, data, db_manager=None):
+        if 'solar_batt' not in data or data['solar_batt'] is None:
             raise weewx.CannotCalculate(key)
         # 3.8V = 0%, 4.2V = 100%
-        val = user.weiherhammerformulas.batt_to_percent(data['solar_voltage'], 3.8, 4.2)
+        val = user.weiherhammerformulas.batt_to_percent(data['solar_batt'], 3.8, 4.2)
         return ValueTuple(val, 'percent', 'group_percent')
 
     @staticmethod

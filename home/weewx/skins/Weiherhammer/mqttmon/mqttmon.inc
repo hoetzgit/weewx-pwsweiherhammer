@@ -1,6 +1,6 @@
 
     <!-- Generator: generate_mqttmon_inc.sh -->
-    <!-- generated: 16.02.2023 11:20:57 -->
+    <!-- generated: 16.02.2023 17:18:03 -->
 
 
     <tr>
@@ -980,6 +980,14 @@
         <td class="mqttmon-table-body-obs-val"><span class="solar_barometer" rel="tooltip" title="">---</span></td>
     </tr>
     <tr>
+        <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot solar_batt-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.solar_batt">solar_batt</abbr></th>
+        <td class="mqttmon-table-body-obs-val"><span class="solar_batt" rel="tooltip" title="">---</span></td>
+    </tr>
+    <tr>
+        <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot solar_batt_percent-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.solar_batt_percent">solar_batt_percent</abbr></th>
+        <td class="mqttmon-table-body-obs-val"><span class="solar_batt_percent" rel="tooltip" title="">---</span></td>
+    </tr>
+    <tr>
         <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot solar_dewpoint-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.solar_dewpoint">solar_dewpoint</abbr></th>
         <td class="mqttmon-table-body-obs-val"><span class="solar_dewpoint" rel="tooltip" title="">---</span></td>
     </tr>
@@ -1022,14 +1030,6 @@
     <tr>
         <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot solar_thwIndex-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.solar_thwIndex">solar_thwIndex</abbr></th>
         <td class="mqttmon-table-body-obs-val"><span class="solar_thwIndex" rel="tooltip" title="">---</span></td>
-    </tr>
-    <tr>
-        <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot solar_voltage-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.solar_voltage">solar_voltage</abbr></th>
-        <td class="mqttmon-table-body-obs-val"><span class="solar_voltage" rel="tooltip" title="">---</span></td>
-    </tr>
-    <tr>
-        <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot solar_voltage_percent-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.solar_voltage_percent">solar_voltage_percent</abbr></th>
-        <td class="mqttmon-table-body-obs-val"><span class="solar_voltage_percent" rel="tooltip" title="">---</span></td>
     </tr>
     <tr>
         <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot solar_wetBulb-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.solar_wetBulb">solar_wetBulb</abbr></th>

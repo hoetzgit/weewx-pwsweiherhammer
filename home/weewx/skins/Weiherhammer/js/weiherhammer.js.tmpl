@@ -8,7 +8,7 @@
 #set global $hemisphere = "northern-hemisphere"
 #end if
 
-var pages = ["graphs", "records", "reports", "about", "pi", "webcam", "imprint", "privacy", "forecast", "extreme", "mqttmon", "test"];
+var pages = ["graphs", "records", "reports", "about", "pi", "webcam", "imprint", "privacy", "forecast", "extreme", "mqttmon", "sensormon", "test"];
 var pageName = "";
 function get_pageName() {
     var sPath = window.location.pathname.replace(/\/$/, "");
@@ -1551,7 +1551,9 @@ function update_with_weewx_data(data, data_update=false) {
             console.error("Error update_with_weewx_data", err);
         }
         #end if
+    }
 
+    if (pageName == "homepage" || pageName == "sensormon") {
         // ========================================================
         // obs value dependent properties if enabled
         // ========================================================
@@ -3083,6 +3085,9 @@ function update_with_mqtt_data(data) {
         }
         else {
             setTimeout(showChart, 20000, homepage_graphgroup); // Load updated charts.
+            if (pageName == "sensormon") {
+                setTimeout(showChart, 20000, pageName); // Load updated charts.
+            }
         }
         ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
             //TODO brauch ich das wirklich?
@@ -3111,7 +3116,7 @@ function update_with_mqtt_data(data) {
     jQuery(".offlineMarker").hide();
     jQuery(".loadingMarker").hide();
 
-    if (pageName == "homepage") {
+    if (pageName == "homepage" || pageName == "sensormon") {
         // all obs with class = obs or class = obs_formatted
         try {
             jQuery.each(data, function(data_class, data_raw) {

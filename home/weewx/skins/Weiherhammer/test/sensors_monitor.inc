@@ -16,16 +16,9 @@
 ## where 'WeeWX sensor battery state field name' is the WeeWX field holding the
 ## battery state data and 'decode function name' is set as follows depending on
 ## the sensor type:
-##      WH24: 'get_binary_battery_status'
-##      WH25: 'get_binary_battery_status'
-##      WH26: 'get_binary_battery_status'
 ##      WH31: 'get_binary_battery_status'
-##      WH32: 'get_binary_battery_status'
-##      WH40: 'get_binary_battery_status'
-##      WH41: 'get_multi_battery_status'
-##      WH51: 'get_binary_battery_status'
-##      WH55: 'get_multi_battery_status'
-##      WH57: 'get_multi_battery_status'
+##      WH51: 'get_volt_battery_status'
+##      WH57: 'get_level6_battery_status'
 ##      WH65: 'get_binary_battery_status'
 ##
 
@@ -62,9 +55,9 @@
     ,{'obs': 'wh31_ch1_batt', 'func': 'get_binary_battery_status'}
     ,{'obs': 'wh31_ch2_batt', 'func': 'get_binary_battery_status'}
     ,{'obs': 'wh31_ch3_batt', 'func': 'get_binary_battery_status'}
-    ,{'obs': 'wh57_batt',     'func': 'get_multi_battery_status'}
-    ,{'obs': 'wh51_ch1_batt', 'func': 'get_level8_battery_status'}
-    ,{'obs': 'solar_voltage', 'func': 'get_accu_4v_status'}
+    ,{'obs': 'wh57_batt',     'func': 'get_level6_battery_status'}
+    ,{'obs': 'wh51_ch1_batt', 'func': 'get_volt_battery_status'}
+    ,{'obs': 'solar_batt',    'func': 'get_accu_4v_status'}
     ,{'obs': 'na',            'func': 'get_na'}
     ,{'obs': 'na',            'func': 'get_na'}
 ]
@@ -81,7 +74,7 @@
     #end if
 #end def
 
-#def get_level8_battery_status($x)
+#def get_volt_battery_status($x)
     #set $val = '%.1fV' % $x
     #if $x <= 1.2
     <span class="battery_alarm">$gettext('empty')</span>
@@ -94,14 +87,16 @@
     #end if
 #end def
 
-#def get_multi_battery_status($x)
+#def get_level6_battery_status($x)
     #if $x <= 1
     <span class="battery_alarm"><i class="bi bi-battery"></i></span>
-    #elif $x <= 3
+    #elif $x == 2
     <span class="battery_low"><i class="bi bi-battery"></i></span>
-    #elif $x <= 4
-    <span class="battery_half"><i class="bi bi-battery-half"></i></span>
-    #elif $x <= 5
+    #elif $x == 3
+    <span class="battery_low"><i class="bi bi-battery-half"></i></span>
+    #elif $x == 4
+    <span class="battery_half"><i class="bi bi-battery-full"></i></span>
+    #elif $x == 5
     <span class="battery_full"><i class="bi bi-battery-full"></i></span>
     #elif $x == 6
     <span class="battery_charging"><i class="bi bi-battery-charging"></i></span>
