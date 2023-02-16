@@ -2482,7 +2482,7 @@ class getData(SearchList):
         # ==============================================================================
 
 
-        value_dependent_properties = self.generator.skin_dict.get("ValueDependedProperties",{})
+        value_dependent_properties = self.generator.skin_dict.get("ValueDependentProperties",{})
 
 
         # ==============================================================================

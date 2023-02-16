@@ -7,6 +7,7 @@
     --alarm-color:#FF0000;
     --low-color:#FF0000;
     --middle-color:#FF8800;
+    --half-color:#FF8800;
     --high-color:#84D862;
     --unknown-color:#FF0000;
     --indoor-room-action:#FF8800;
@@ -37,11 +38,14 @@
     --battery-full:#84D862;
     --battery-half:#FF8800;
     --battery-low:#FF0000;
+    --battery-alarm:#FF0000;
+    --battery-charging:#84D862;
     --signal-very-good:#84D862;
     --signal-good:#84D862;
     --signal-sufficient:#FF8800;
     --signal-poor:#FF8800;
     --signal-very-poor:#FF0000;
+    --signal-alarm:#FF0000;
 }
 
 /*
@@ -219,11 +223,49 @@ abbr[title] {
 .status_middle {
     color: var(--middle-color);
 }
+.status_half {
+    color: var(--half-color);
+}
 .status_unknown {
     color: var(--unknown-color);
 }
 .status_alarm {
     color: var(--alarm-color);
+}
+
+.battery_alarm {
+    color: var(--battery-alarm);
+}
+.battery_full {
+    color: var(--battery-full);
+}
+.battery_half {
+    color: var(--battery-half);
+}
+.battery_low {
+    color: var(--battery-low);
+}
+.battery_charging {
+    color: var(--battery-charging);
+}
+
+.signal_very_good {
+    color: var(--signal-very-good);
+}
+.signal_good {
+    color: var(--signal-good);
+}
+.signal_sufficient {
+    color: var(--signal-sufficient);
+}
+.signal_poor {
+    color: var(--signal-poor);
+}
+.signal_very_poor {
+    color: var(--signal-very-poor);
+}
+.signal_alarm {
+    color: var(--signal-alarm);
 }
 
 /* Almanac */

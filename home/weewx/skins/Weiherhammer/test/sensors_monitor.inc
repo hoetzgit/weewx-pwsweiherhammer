@@ -29,6 +29,10 @@
 ##      WH65: 'get_binary_battery_status'
 ##
 
+##
+## This template is only for testing
+##
+
 #set $sensor_name = (
      $gettext('sensor_wh65')
     ,$gettext('sensor_wh31_ch1')
@@ -36,6 +40,9 @@
     ,$gettext('sensor_wh31_ch3')
     ,$gettext('sensor_wh57')
     ,$gettext('sensor_wh51_ch1')
+    ,$gettext('sensor_solar')
+    ,$gettext('sensor_airrohr')
+    ,$gettext('sensor_allsky')
 )
 
 #set $sensor_sig_data = [
@@ -45,6 +52,9 @@
     ,{'obs': 'wh31_ch3_sig', 'func': 'get_transmit_signal'}
     ,{'obs': 'wh57_sig',     'func': 'get_transmit_signal'}
     ,{'obs': 'wh51_ch1_sig', 'func': 'get_transmit_signal'}
+    ,{'obs': 'solar_sig',    'func': 'get_transmit_signal'}
+    ,{'obs': 'airrohr_sig',  'func': 'get_transmit_signal'}
+    ,{'obs': 'asky_sig',     'func': 'get_transmit_signal'}
 ]
 
 #set $sensor_batt_data = [
@@ -54,49 +64,71 @@
     ,{'obs': 'wh31_ch3_batt', 'func': 'get_binary_battery_status'}
     ,{'obs': 'wh57_batt',     'func': 'get_multi_battery_status'}
     ,{'obs': 'wh51_ch1_batt', 'func': 'get_level8_battery_status'}
+    ,{'obs': 'solar_voltage', 'func': 'get_accu_4v_status'}
+    ,{'obs': 'na',            'func': 'get_na'}
+    ,{'obs': 'na',            'func': 'get_na'}
 ]
+
+#def get_na($x)
+    <span class="status_ok">$x</span>
+#end def
 
 #def get_binary_battery_status($x)
     #if $x == 0
-    <span class="status_ok"><i class="bi bi-battery-full"></i></span>
+    <span class="battery_full"><i class="bi bi-battery-full"></i></span>
     #else
-    <span class="status_alarm"><i class="bi bi-battery"></i></span>
+    <span class="battery_low"><i class="bi bi-battery"></i></span>
     #end if
 #end def
 
 #def get_level8_battery_status($x)
     #set $val = '%.1fV' % $x
     #if $x <= 1.2
-    <span class="status_alarm">$gettext('empty')</span>
+    <span class="battery_alarm">$gettext('empty')</span>
     #elif $x <= 1.3
-    <span class="status_alarm">$val</span>
+    <span class="battery_low">$val</span>
     #elif $x <= 1.4
-    <span class="status_low">$val</span>
+    <span class="battery_half">$val</span>
     #else
-    <span class="status_ok">$val</span>
+    <span class="battery_full">$val</span>
     #end if
 #end def
 
 #def get_multi_battery_status($x)
     #if $x <= 1
-    <span class="status_alarm"><i class="bi bi-battery"></i></span>
+    <span class="battery_alarm"><i class="bi bi-battery"></i></span>
+    #elif $x <= 3
+    <span class="battery_low"><i class="bi bi-battery"></i></span>
     #elif $x <= 4
-    <span class="status_low"><i class="bi bi-battery-half"></i></span>
+    <span class="battery_half"><i class="bi bi-battery-half"></i></span>
     #elif $x <= 5
-    <span class="status_ok"><i class="bi bi-battery-full"></i></span>
+    <span class="battery_full"><i class="bi bi-battery-full"></i></span>
     #elif $x == 6
-    <span class="status_ok"><i class="bi bi-battery-charging"></i></span>
+    <span class="battery_charging"><i class="bi bi-battery-charging"></i></span>
+    #end if
+#end def
+
+#def get_accu_4v_status($x)
+    #set $val = '%.1fV' % $x
+    #if $x <= 3.0
+    <span class="battery_low">$val</span>
+    #else
+    <span class="battery_full">$val</span>
     #end if
 #end def
 
 #def get_transmit_signal($x)
     #set $class_icon = 'bi bi-reception-%.0f' % $x
     #if $x < 1.0
-      #set $class_status = 'status_alarm'
-    #elif $x < 3.0
-      #set $class_status = 'status_low'
+      #set $class_status = 'signal_alarm'
+    #elif $x == 1.0
+      #set $class_status = 'signal_poor'
+    #elif $x == 2.0
+      #set $class_status = 'signal_sufficient'
+    #elif $x == 3.0
+      #set $class_status = 'signal_good'
     #else 
-      #set $class_status = 'status_ok'
+      #set $class_status = 'signal_very_good'
     #end if
     <span class="$class_status"><i class="$class_icon"></i></span>
 #end def
@@ -119,20 +151,29 @@
                     <th scope="row" class="sensors-monitor-table-body-sensor">$sensor</th>
     #try
         #set $sig_data = $sensor_sig_data[$count]
-        #set $sig = getattr(self, $sig_data['func'])(getattr($current, $sig_data['obs']).raw)
+        #if $sig_data['obs'] != 'na'
+            #set $sig = getattr(self, $sig_data['func'])(getattr($current, $sig_data['obs']).raw)
+        #else 
+            #set $sig = getattr(self, $sig_data['func'])('---')
+        #end if
                     <td class="sensors-monitor-table-body-sig">$sig</td>
+
     #except (AttributeError, TypeError)
-                    <td class="sensors-monitor-table-body-sig">$gettext('not avalable')</td>
+                    <td class="sensors-monitor-table-body-sig"><span class="status_alarm">$gettext('not avalable')</span></td>
         ## there is no data for that sensor
         #pass
     #end try
 
     #try
         #set $batt_data = $sensor_batt_data[$count]
-        #set $batt = getattr(self, $batt_data['func'])(getattr($current, $batt_data['obs']).raw)
+        #if $batt_data['obs'] != 'na'
+            #set $batt = getattr(self, $batt_data['func'])(getattr($current, $batt_data['obs']).raw)
+        #else
+            #set $batt = getattr(self, $batt_data['func'])('---')
+        #end if
                     <td class="sensors-monitor-table-body-batt">$batt</td>
     #except (AttributeError, TypeError)
-                    <td class="sensors-monitor-table-body-batt">$gettext('not avalable')</td>
+                    <td class="sensors-monitor-table-body-batt"><span class="status_alarm">$gettext('not avalable')</span></td>
         #pass
     #end try
 

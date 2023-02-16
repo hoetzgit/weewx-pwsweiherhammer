@@ -120,9 +120,9 @@ $gettext('no')
                             #set $class_symbol = 'trend_%s_symbol' % $x
                             #set $class_value = 'trend_%s_formatted' % $x
                             <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span> (<span class="$class_value" rel="tooltip" title="">$getVar('trend.%s.%s' % ($x,'formatted'))</span> <span class="$class_symbol" rel="tooltip" title=""></span>)</td><!-- AJAX -->
-                            #elif $x == 'solar_voltage'
-                            #set $class_symbol = '%s_symbol' % $x
-                            <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span> (<span class="$class_symbol" rel="tooltip" title=""></span>)</td><!-- AJAX -->
+                            ###elif $x == 'solar_voltage'
+                            ###set $class_symbol = '%s_symbol' % $x
+                            ##<td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span> (<span class="$class_symbol" rel="tooltip" title=""></span>)</td><!-- AJAX -->
                             #else
                             <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</td><!-- AJAX -->
                             #end if

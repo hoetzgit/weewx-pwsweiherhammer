@@ -1556,7 +1556,7 @@ function update_with_weewx_data(data, data_update=false) {
         // obs value dependent properties if enabled
         // ========================================================
 
-        #if $Extras.has_key("value_depended_properties_enabled") and $Extras.value_depended_properties_enabled == '1'
+        #if $Extras.has_key("value_dependent_properties_enabled") and $Extras.value_dependent_properties_enabled == '1'
 
         // Temperature properties
         if (vdp_array.hasOwnProperty("station")) {

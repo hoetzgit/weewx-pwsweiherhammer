@@ -540,7 +540,7 @@
             "moon_set_epoch": "$almanac.moon.set.raw"
         }
     },
-    #if $Extras.has_key("value_depended_properties_enabled") and $Extras.value_depended_properties_enabled == '1'
+    #if $Extras.has_key("value_dependent_properties_enabled") and $Extras.value_dependent_properties_enabled == '1'
     "value_dependent_properties": $value_dependent_properties_json,
     #else
     "value_dependent_properties": {},
@@ -577,7 +577,7 @@
             "color": "inherit"
         }
     },
-    #if $Extras.has_key("value_depended_properties_enabled") and $Extras.value_depended_properties_enabled == '1'
+    #if $Extras.has_key("value_dependent_properties_enabled") and $Extras.value_dependent_properties_enabled == '1'
     "roomclimate_extension_config": $roomclimate_extension_config_json,
     #else
     "roomclimate_extension_config": {},

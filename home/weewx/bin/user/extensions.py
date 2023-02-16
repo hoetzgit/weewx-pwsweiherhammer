@@ -149,6 +149,7 @@ weewx.units.obs_group_dict['solar_outTemp'] = 'group_temperature'
 weewx.units.obs_group_dict['solar_pressure'] = 'group_pressure'
 weewx.units.obs_group_dict['solar_sig'] = 'group_count'
 weewx.units.obs_group_dict['solar_sig_percent'] = 'group_percent'
+weewx.units.obs_group_dict['solar_signal_level'] = 'group_signal_strength'
 weewx.units.obs_group_dict['solar_thswIndex'] = 'group_temperature'
 weewx.units.obs_group_dict['solar_thwIndex'] = 'group_temperature'
 weewx.units.obs_group_dict['solar_voltage'] = 'group_volt'
@@ -163,6 +164,7 @@ weewx.units.obs_group_dict['airrohr_pm10_0'] = 'group_concentration'
 weewx.units.obs_group_dict['airrohr_pm2_5'] = 'group_concentration'
 weewx.units.obs_group_dict['airrohr_sig'] = 'group_count'
 weewx.units.obs_group_dict['airrohr_sig_percent'] = 'group_percent'
+weewx.units.obs_group_dict['airrohr_signal_level'] = 'group_signal_strength'
 #
 # Allsky 01 Kamera (BME280 und DS18B20)
 weewx.units.obs_group_dict['asky_box_altimeter'] = 'group_pressure'
@@ -181,6 +183,7 @@ weewx.units.obs_group_dict['asky_dome_heatindex'] = 'group_temperature'
 weewx.units.obs_group_dict['asky_dome_temperature'] = 'group_temperature'
 weewx.units.obs_group_dict['asky_sig'] = 'group_count'
 weewx.units.obs_group_dict['asky_sig_percent'] = 'group_percent'
+weewx.units.obs_group_dict['asky_signal_level'] = 'group_signal_strength'
 #
 # FOSHKplugin
 weewx.units.obs_group_dict['foshk_cloudbase'] = 'group_altitude'
@@ -455,6 +458,9 @@ weewx.units.obs_group_dict['day_sunshineDur_sum2'] = 'group_deltatime'
 weewx.units.USUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
 weewx.units.MetricUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
 weewx.units.MetricWXUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
+weewx.units.USUnits['group_signal_strength'] = 'decibels_relative_to_one_milliwatt'
+weewx.units.MetricUnits['group_signal_strength'] = 'decibels_relative_to_one_milliwatt'
+weewx.units.MetricWXUnits['group_signal_strength'] = 'decibels_relative_to_one_milliwatt'
 #
 # default values for formats and labels
 weewx.units.default_unit_format_dict['count'] = '%.0f'
@@ -466,6 +472,7 @@ weewx.units.default_unit_format_dict['uv_index'] = '%.0f'
 weewx.units.default_unit_format_dict['watt_hour_per_meter_squared'] = '%.0f'
 weewx.units.default_unit_format_dict['gram_per_meter_cubed'] = '%.1f'
 weewx.units.default_unit_format_dict['milligram_per_meter_cubed'] = '%.1f'
+weewx.units.default_unit_format_dict['decibels_relative_to_one_milliwatt'] = '%.0f'
 # Ecowitt uvradiation
 weewx.units.default_unit_format_dict['microwatt_per_meter_squared'] = '%.0f'
 #
@@ -478,6 +485,7 @@ weewx.units.default_unit_label_dict['N_per_meter_squared'] = ' N/m²'
 weewx.units.default_unit_label_dict['watt_hour_per_meter_squared'] = ' Wh/m²'
 weewx.units.default_unit_label_dict['gram_per_meter_cubed'] = ' g/m³'
 weewx.units.default_unit_label_dict['milligram_per_meter_cubed'] = ' mg/m³'
+weewx.units.default_unit_label_dict['decibels_relative_to_one_milliwatt'] = ' dBm'
 # Ecowitt uvradiation
 weewx.units.default_unit_label_dict['microwatt_per_meter_squared'] = ' μW/m²'
 #
