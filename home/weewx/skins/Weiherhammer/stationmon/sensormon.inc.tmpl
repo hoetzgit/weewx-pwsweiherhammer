@@ -1,0 +1,169 @@
+#errorCatcher Echo
+#encoding UTF-8
+#def signal_symbol($obs)
+    #set $sig = getattr($current, $obs).raw
+    #set $class_span = '%s_symbol' % $obs
+    #set $class_icon = 'bi bi-reception-%.0f' % $sig
+    <span class="$class_span" rel="tooltip" title=""><i class="$class_icon"></i></span>
+#end def
+
+#def battery_level2_symbol($obs)
+    #set $batt = getattr($current, $obs).raw
+    #set $class_span = '%s_symbol' % $obs
+    #if $batt == 0.0
+    #set $class_icon = 'bi bi-battery-full'
+    #else
+    #set $class_icon = 'bi bi-battery'
+    #end if
+    <span class="$class_span" rel="tooltip" title=""><i class="$class_icon"></i></span>
+#end def
+
+#def battery_level6_symbol($obs)
+    #set $batt = getattr($current, $obs).raw
+    #set $class_span = '%s_symbol' % $obs
+    #if $batt <= 1.0
+    #set $class_icon = 'bi bi-battery'
+    #elif $batt == 2.0
+    #set $class_icon = 'bi bi-battery'
+    #elif $batt == 3.0
+    #set $class_icon = 'bi bi-battery-half'
+    #elif $batt == 4.0
+    #set $class_icon = 'bi bi-battery-full'
+    #elif $batt == 5.0
+    #set $class_icon = 'bi bi-battery-full'
+    #elif $batt == 6.0
+    #set $class_icon = 'bi bi-battery-charging'
+    #end if
+    <span class="$class_span" rel="tooltip" title=""><i class="$class_icon"></i></span>
+#end def
+
+#def battery_volt2_symbol($obs)
+    #set $batt = getattr($current, $obs)
+    #set $class_span = $obs
+    <span class="$class_span" rel="tooltip" title="">$batt</span>
+#end def
+
+#def battery_volt4_symbol($obs)
+    #set $batt = getattr($current, $obs)
+    #set $class_span = $obs
+    <span class="$class_span" rel="tooltip" title="">$batt</span>
+#end def
+
+#def battery_dummy_symbol($obs)
+    #set $class_span = '%s_symbol' % $obs
+    <span class="$class_span" rel="tooltip" title=""></span>
+#end def
+
+<script type="text/javascript">
+    ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
+        update_with_weewx_data(weewx_data, false); // Initial call to update (date, daily high, low, etc)
+        weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
+
+        jQuery(document).ready(function() {
+            // Update the Last Updated timestamp with moment.js,
+            updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
+            updated_text = "$obs.label.header_last_updated " + updated;
+            jQuery(".updated").html( updated_text );
+        });
+    }).catch(function(e) {
+        console.error(e);
+    });
+</script>
+
+<div class="row sensormon-row">
+    <div class="col-md-12 sensormon-headline">$gettext('sensors outdoor')</div>
+</div>
+
+<div class="row sensormon-row">
+    <div class="sensormon-table-container">
+        <table class="table table-striped table-sm sensormon-table">
+            <thead class="thead-light sensormon-table-head">
+                <tr>
+                    <th scope="col" class="sensormon-table-head-headline sensormon-table-head-sensor">$gettext('sensor')</th>
+                    <th scope="col" class="sensormon-table-head-headline sensormon-table-head-sig">$gettext('signal')</th>
+                    <th scope="col" class="sensormon-table-head-headline sensormon-table-head-batt">$gettext('battery')</th>
+                </tr>
+            </thead>
+            <tbody class="table-group-divider sensormon-table-body sensormon-data">
+                <tr>
+                    <th scope="row" class="sensormon-table-body-sensor">$gettext('sensor_wh65')</th>
+                    <td class="sensormon-table-body-sig">$signal_symbol("wh65_sig")</span></td>
+                    <td class="sensormon-table-body-batt">$battery_level2_symbol("wh65_batt")</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="sensormon-table-body-sensor">$gettext('sensor_wh57')</th>
+                    <td class="sensormon-table-body-sig">$signal_symbol("wh57_sig")</span></td>
+                    <td class="sensormon-table-body-batt">$battery_level6_symbol("wh57_batt")</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="sensormon-table-body-sensor">$gettext('sensor_wh51_ch1')</th>
+                    <td class="sensormon-table-body-sig">$signal_symbol("wh51_ch1_sig")</span></td>
+                    <td class="sensormon-table-body-batt">$battery_volt2_symbol("wh51_ch1_batt")</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="sensormon-table-body-sensor">$gettext('sensor_solar')</th>
+                    <td class="sensormon-table-body-sig">$signal_symbol("solar_sig")</span></td>
+                    <td class="sensormon-table-body-batt">$battery_volt4_symbol("solar_batt")</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="sensormon-table-body-sensor">$gettext('sensor_airrohr')</th>
+                    <td class="sensormon-table-body-sig">$signal_symbol("airrohr_sig")</span></td>
+                    <td class="sensormon-table-body-batt">$battery_dummy_symbol("airrohr_batt")</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="sensormon-table-body-sensor">$gettext('sensor_allsky')</th>
+                    <td class="sensormon-table-body-sig">$signal_symbol("asky_sig")</span></td>
+                    <td class="sensormon-table-body-batt">$battery_dummy_symbol("asky_batt")</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="row sensormon-row" style="margin-top:15px;">
+    <div class="graph-outer">
+        <div class="col-sm-6 col-md-6" id="OutdoorSignalQuality"></div>
+        <div class="col-sm-6 col-md-6" id="OutdoorBatteryStatus"></div>
+    </div>
+</div>
+
+<div class="row sensormon-row">
+    <div class="col-md-12 sensormon-headline">$gettext('sensors indoor')</div>
+</div>
+<div class="row sensormon-row">
+    <div class="sensormon-table-container">
+        <table class="table table-striped table-sm sensormon-table">
+            <thead class="thead-light sensormon-table-head">
+                <tr>
+                    <th scope="col" class="sensormon-table-head-headline sensormon-table-head-sensor">$gettext('sensor')</th>
+                    <th scope="col" class="sensormon-table-head-headline sensormon-table-head-sig">$gettext('signal')</th>
+                    <th scope="col" class="sensormon-table-head-headline sensormon-table-head-batt">$gettext('battery')</th>
+                </tr>
+            </thead>
+            <tbody class="table-group-divider sensormon-table-body sensormon-data">
+                <tr>
+                    <th scope="row" class="sensormon-table-body-sensor">$gettext('sensor_wh31_ch1')</th>
+                    <td class="sensormon-table-body-sig">$signal_symbol("wh31_ch1_sig")</span></td>
+                    <td class="sensormon-table-body-batt">$battery_level2_symbol("wh31_ch1_batt")</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="sensormon-table-body-sensor">$gettext('sensor_wh31_ch2')</th>
+                    <td class="sensormon-table-body-sig">$signal_symbol("wh31_ch2_sig")</span></td>
+                    <td class="sensormon-table-body-batt">$battery_level2_symbol("wh31_ch2_batt")</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="sensormon-table-body-sensor">$gettext('sensor_wh31_ch3')</th>
+                    <td class="sensormon-table-body-sig">$signal_symbol("wh31_ch3_sig")</span></td>
+                    <td class="sensormon-table-body-batt">$battery_level2_symbol("wh31_ch3_batt")</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="row sensormon-row" style="margin-top:15px;">
+    <div class="graph-outer">
+        <div class="col-sm-6 col-md-6" id="IndoorSignalQuality"></div>
+        <div class="col-sm-6 col-md-6" id="IndoorBatteryStatus"></div>
+    </div>
+</div>

@@ -8,11 +8,31 @@
 #set global $hemisphere = "northern-hemisphere"
 #end if
 
-var pages = ["graphs", "records", "reports", "about", "pi", "webcam", "imprint", "privacy", "forecast", "extreme", "mqttmon", "sensormon", "test"];
+var pages = ["graphs", "records", "reports", "about", "pi", "webcam", "imprint", "privacy", "forecast", "extreme", "stationmon", "mqttmon", "sensormon", "test"];
 var pageName = "";
 function get_pageName() {
     var sPath = window.location.pathname.replace(/\/$/, "");
     var name = sPath.substring(sPath.lastIndexOf('/') + 1);
+
+    //TODO Trickdingserei muss hier weg
+    if (name === "stationmon") {
+        var monitor = getURLvar("monitor");
+        var stationmon_pages = $Extras.stationmon_pages; // All monitoring pages
+        if (monitor === undefined) {
+            // If no URL VAR, default to the Monitor in Extras
+            monitor = "$Extras.stationmon_page_default";
+        }
+        if (!jQuery.isArray(stationmon_pages) && (jQuery.type(stationmon_pages) === "string")) {
+            stationmon_pages = stationmon_pages.split();
+        }
+        if (!stationmon_pages.includes(monitor)) {
+             monitor = "$Extras.stationmon_page_default";
+        }
+        if (monitor !== "") {
+            name = monitor;
+        }
+    }
+
     if (name == "" ) {
         name = "homepage";
     }
@@ -1560,13 +1580,33 @@ function update_with_weewx_data(data, data_update=false) {
 
         #if $Extras.has_key("value_dependent_properties_enabled") and $Extras.value_dependent_properties_enabled == '1'
 
-        // Temperature properties
-        if (vdp_array.hasOwnProperty("station")) {
-            if (vdp_array["station"].hasOwnProperty("obs")) {
-                if (vdp_array["station"]["obs"].includes('outTemp')) {
-                   get_outTemp_color("$unit.unit_type.outTemp", data["current"]["outTemp_formatted"]);
+        // (out)Temperature properties
+        try {
+            if (vdp_array.hasOwnProperty("outTemperature")) {
+                if (vdp_array["outTemperature"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["outTemperature"]["obs"];
+                    if (!jQuery.isArray(vals) && (jQuery.type(vals) === "string")) {
+                        vals = vals.split();
+                    }
+                    //console.log("outTemperature all obs", vals);
+                    for (var i = 0; i < vals.length; i++) {
+                        //console.log("outTemperature obs", vals[i]);
+                        var color = 'inherit';
+                        if (data["raw"].hasOwnProperty(vals[i])) {
+                            // TODO unit
+                            color = get_outTemp_color("degree_C", data["raw"][vals[i]], true);
+                            jQuery("." + vals[i]).css("color", color);
+                            // special outTemp on Homepage
+                            if (vals[i] == 'outTemp') {
+                                jQuery(".outtemp_outer").css("color", color);
+                            }
+                        }
+                    }
                 }
             }
+        } catch (err) {
+            // Returned data does not have this value
+            console.error("Error update_with_weewx_data", err);
         }
 
         // aqi properties
@@ -1575,6 +1615,9 @@ function update_with_weewx_data(data, data_update=false) {
             if (vdp_array.hasOwnProperty("aqi")) {
                 if (vdp_array["aqi"].hasOwnProperty("obs")) {
                     var vals = vdp_array["aqi"]["obs"];
+                    if (!jQuery.isArray(vals) && (jQuery.type(vals) === "string")) {
+                        vals = vals.split();
+                    }
                     //console.log("aqi all obs", vals);
                     for (var i = 0; i < vals.length; i++) {
                         //console.log("aqi obs", vals[i]);
@@ -1595,6 +1638,9 @@ function update_with_weewx_data(data, data_update=false) {
             if (vdp_array.hasOwnProperty("pressure_trend")) {
                 if (vdp_array["pressure_trend"].hasOwnProperty("obs")) {
                     var vals = vdp_array["pressure_trend"]["obs"];
+                    if (!jQuery.isArray(vals) && (jQuery.type(vals) === "string")) {
+                        vals = vals.split();
+                    }
                     for (var i = 0; i < vals.length; i++) {
                         if (data["trend"].hasOwnProperty(vals[i])) {
                             if (data["trend"][vals[i]].hasOwnProperty("raw")) {
@@ -1614,9 +1660,15 @@ function update_with_weewx_data(data, data_update=false) {
             if (vdp_array.hasOwnProperty("batt")) {
                 if (vdp_array["batt"].hasOwnProperty("obs")) {
                     var vals = vdp_array["batt"]["obs"];
+                    if (!jQuery.isArray(vals) && (jQuery.type(vals) === "string")) {
+                        vals = vals.split();
+                    }
                 }
                 if (vdp_array["batt"].hasOwnProperty("group")) {
                     var groups = vdp_array["batt"]["group"];
+                    if (!jQuery.isArray(groups) && (jQuery.type(groups) === "string")) {
+                        groups = groups.split();
+                    }
                 }
                 if (vals.length == groups.length) {
                     for (var i = 0; i < vals.length; i++) {
@@ -1636,9 +1688,15 @@ function update_with_weewx_data(data, data_update=false) {
             if (vdp_array.hasOwnProperty("voltage")) {
                 if (vdp_array["voltage"].hasOwnProperty("obs")) {
                     var vals = vdp_array["voltage"]["obs"];
+                    if (!jQuery.isArray(vals) && (jQuery.type(vals) === "string")) {
+                        vals = vals.split();
+                    }
                 }
                 if (vdp_array["voltage"].hasOwnProperty("group")) {
                     var groups = vdp_array["voltage"]["group"];
+                    if (!jQuery.isArray(groups) && (jQuery.type(groups) === "string")) {
+                        groups = groups.split();
+                    }
                 }
                 if (vals.length == groups.length) {
                     for (var i = 0; i < vals.length; i++) {
@@ -1658,6 +1716,9 @@ function update_with_weewx_data(data, data_update=false) {
             if (vdp_array.hasOwnProperty("sig")) {
                 if (vdp_array["sig"].hasOwnProperty("obs")) {
                     var vals = vdp_array["sig"]["obs"];
+                    if (!jQuery.isArray(vals) && (jQuery.type(vals) === "string")) {
+                        vals = vals.split();
+                    }
                     for (var i = 0; i < vals.length; i++) {
                         if (data["raw"].hasOwnProperty(vals[i])) {
                             update_signal_properties(data, vals[i], data["raw"][vals[i]]);
@@ -1675,9 +1736,15 @@ function update_with_weewx_data(data, data_update=false) {
             if (vdp_array.hasOwnProperty("switch")) {
                 if (vdp_array["switch"].hasOwnProperty("obs")) {
                     var vals = vdp_array["switch"]["obs"];
+                    if (!jQuery.isArray(vals) && (jQuery.type(vals) === "string")) {
+                        vals = vals.split();
+                    }
                 }
                 if (vdp_array["switch"].hasOwnProperty("group")) {
                     var groups = vdp_array["switch"]["group"];
+                    if (!jQuery.isArray(groups) && (jQuery.type(groups) === "string")) {
+                        groups = groups.split();
+                    }
                 }
                 if (vals.length == groups.length) {
                     for (var i = 0; i < vals.length; i++) {
@@ -3084,8 +3151,9 @@ function update_with_mqtt_data(data) {
             weiherhammer_debug("Skipping chart update for page " + pageName + ", no charts to be updated.");
         }
         else {
-            setTimeout(showChart, 20000, homepage_graphgroup); // Load updated charts.
-            if (pageName == "sensormon") {
+            if (pageName == "homepage") {
+                setTimeout(showChart, 20000, homepage_graphgroup); // Load updated charts.
+            } else if (pageName == "sensormon") {
                 setTimeout(showChart, 20000, pageName); // Load updated charts.
             }
         }
@@ -3181,25 +3249,6 @@ function update_with_mqtt_data(data) {
             console.error("Error update_with_mqtt_data", err);
         }
 
-        // aqi
-        #if $Extras.has_key("aqi_enabled") and $Extras.aqi_enabled == '1'
-        try {
-            // aqi properties
-            if (vdp_array.hasOwnProperty("aqi")) {
-                if (vdp_array["aqi"].hasOwnProperty("obs")) {
-                    var vals = vdp_array["aqi"]["obs"];
-                    for (var i = 0; i < vals.length; i++) {
-                        if (data.hasOwnProperty(vals[i])) {
-                            update_aqi_properties(weewx_data, vals[i], data[vals[i]], ["all"]);
-                        }
-                    }
-                }
-            }
-        } catch (err) {
-            console.error("Error update_with_mqtt_data", err);
-        }
-        #end if
-
         // Snapshot Stats Section
         try {
             // Daily Snapshot Stats Section
@@ -3251,10 +3300,69 @@ function update_with_mqtt_data(data) {
             console.error("Error update_with_mqtt_data", err);
         }
 
-        // update pressure trend values
+        // ========================================================
+        // obs value dependent properties if enabled
+        // ========================================================
+
+        #if $Extras.has_key("value_dependent_properties_enabled") and $Extras.value_dependent_properties_enabled == '1'
+
+        // (out)Temperature properties
+        try {
+            if (vdp_array.hasOwnProperty("outTemperature")) {
+                if (vdp_array["outTemperature"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["outTemperature"]["obs"];
+                    if (!jQuery.isArray(vals) && (jQuery.type(vals) === "string")) {
+                        vals = vals.split();
+                    }
+                    //console.log("outTemperature all obs", vals);
+                    for (var i = 0; i < vals.length; i++) {
+                        //console.log("outTemperature obs", vals[i]);
+                        var color = 'inherit';
+                        if (data.hasOwnProperty(vals[i])) {
+                            // TODO unit
+                            color = get_outTemp_color("degree_C", data[vals[i]], true);
+                            jQuery("." + vals[i]).css("color", color);
+                            // special outTemp on Homepage
+                            if (vals[i] == 'outTemp') {
+                                jQuery(".outtemp_outer").css("color", color);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            // Returned data does not have this value
+            console.error("Error update_with_mqtt_data", err);
+        }
+
+        // aqi properties
+        #if $Extras.has_key("aqi_enabled") and $Extras.aqi_enabled == '1'
+        try {
+            if (vdp_array.hasOwnProperty("aqi")) {
+                if (vdp_array["aqi"].hasOwnProperty("obs")) {
+                    var vals = vdp_array["aqi"]["obs"];
+                    if (!jQuery.isArray(vals) && (jQuery.type(vals) === "string")) {
+                        vals = vals.split();
+                    }
+                    for (var i = 0; i < vals.length; i++) {
+                        if (data.hasOwnProperty(vals[i])) {
+                            update_aqi_properties(weewx_data, vals[i], data[vals[i]], ["all"]);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Error update_with_mqtt_data", err);
+        }
+        #end if
+
+        // pressure trend properties
         try {
             if (vdp_array.hasOwnProperty("pressure_trend")) {
                 if (vdp_array["pressure_trend"].hasOwnProperty("obs")) {
+                    if (!jQuery.isArray(vals) && (jQuery.type(vals) === "string")) {
+                        vals = vals.split();
+                    }
                     var vals = vdp_array["pressure_trend"]["obs"];
                     for (var i = 0; i < vals.length; i++) {
                         if (data.hasOwnProperty("trend_" + vals[i])) {
@@ -3272,9 +3380,15 @@ function update_with_mqtt_data(data) {
             if (vdp_array.hasOwnProperty("batt")) {
                 if (vdp_array["batt"].hasOwnProperty("obs")) {
                     var vals = vdp_array["batt"]["obs"];
+                    if (!jQuery.isArray(vals) && (jQuery.type(vals) === "string")) {
+                        vals = vals.split();
+                    }
                 }
                 if (vdp_array["batt"].hasOwnProperty("group")) {
                     var groups = vdp_array["batt"]["group"];
+                    if (!jQuery.isArray(groups) && (jQuery.type(groups) === "string")) {
+                        groups = groups.split();
+                    }
                 }
                 if (vals.length == groups.length) {
                     for (var i = 0; i < vals.length; i++) {
@@ -3293,9 +3407,15 @@ function update_with_mqtt_data(data) {
             if (vdp_array.hasOwnProperty("voltage")) {
                 if (vdp_array["voltage"].hasOwnProperty("obs")) {
                     var vals = vdp_array["voltage"]["obs"];
+                    if (!jQuery.isArray(vals) && (jQuery.type(vals) === "string")) {
+                        vals = vals.split();
+                    }
                 }
                 if (vdp_array["voltage"].hasOwnProperty("group")) {
                     var groups = vdp_array["voltage"]["group"];
+                    if (!jQuery.isArray(groups) && (jQuery.type(groups) === "string")) {
+                        groups = groups.split();
+                    }
                 }
                 if (vals.length == groups.length) {
                     for (var i = 0; i < vals.length; i++) {
@@ -3314,6 +3434,9 @@ function update_with_mqtt_data(data) {
             if (vdp_array.hasOwnProperty("sig")) {
                 if (vdp_array["sig"].hasOwnProperty("obs")) {
                     var vals = vdp_array["sig"]["obs"];
+                    if (!jQuery.isArray(vals) && (jQuery.type(vals) === "string")) {
+                        vals = vals.split();
+                    }
                     for (var i = 0; i < vals.length; i++) {
                         if (data.hasOwnProperty(vals[i])) {
                             update_signal_properties(weewx_data, vals[i], data[vals[i]], ["all"]);
@@ -3330,9 +3453,15 @@ function update_with_mqtt_data(data) {
             if (vdp_array.hasOwnProperty("switch")) {
                 if (vdp_array["switch"].hasOwnProperty("obs")) {
                     var vals = vdp_array["switch"]["obs"];
+                    if (!jQuery.isArray(vals) && (jQuery.type(vals) === "string")) {
+                        vals = vals.split();
+                    }
                 }
                 if (vdp_array["switch"].hasOwnProperty("group")) {
                     var groups = vdp_array["switch"]["group"];
+                    if (!jQuery.isArray(groups) && (jQuery.type(groups) === "string")) {
+                        groups = groups.split();
+                    }
                 }
                 if (vals.length == groups.length) {
                     for (var i = 0; i < vals.length; i++) {
@@ -3352,6 +3481,8 @@ function update_with_mqtt_data(data) {
         } catch (err) {
             console.error("Error update_with_mqtt_data", err);
         }
+
+        #end if
 
         //TODO
         // sunshine debug symbol and text
@@ -3471,133 +3602,6 @@ function update_with_mqtt_data(data) {
 
         // mark outdated topics
         mqttmon_mark_outdated();
-
-        //
-        // Correct value dependent properties (colors, tooltip, values as text etc.)
-        //
-/*
-        if (mqttmon_data_formatted) {
-            #if $Extras.has_key("aqi_enabled") and $Extras.aqi_enabled == '1'
-            // aqi properties
-            try {
-                if (vdp_array.hasOwnProperty("aqi")) {
-                    if (vdp_array["aqi"].hasOwnProperty("obs")) {
-                        var vals = vdp_array["aqi"]["obs"];
-                        for (var i = 0; i < vals.length; i++) {
-                            if (data.hasOwnProperty(vals[i])) {
-                                update_aqi_properties(weewx_data, vals[i], data[vals[i]], ["title"]);
-                            }
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error("Error update_with_mqtt_data", err);
-            }
-            #end if
-
-            // pressure trend properties
-            try {
-                if (vdp_array.hasOwnProperty("pressure_trend")) {
-                    if (vdp_array["pressure_trend"].hasOwnProperty("obs")) {
-                        var vals = vdp_array["pressure_trend"]["obs"];
-                        for (var i = 0; i < vals.length; i++) {
-                            if (data.hasOwnProperty("trend_" + vals[i])) {
-                                update_pressure_trend_properties(weewx_data, vals[i], data["trend_" + vals[i]], ["title"]);
-                            }
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error("Error update_with_mqtt_data", err);
-            }
-
-            // battery properties
-            try {
-                if (vdp_array.hasOwnProperty("batt")) {
-                    if (vdp_array["batt"].hasOwnProperty("obs")) {
-                        var vals = vdp_array["batt"]["obs"];
-                    }
-                    if (vdp_array["batt"].hasOwnProperty("group")) {
-                        var groups = vdp_array["batt"]["group"];
-                    }
-                    if (vals.length == groups.length) {
-                        for (var i = 0; i < vals.length; i++) {
-                            if (data.hasOwnProperty(vals[i])) {
-                                update_battery_properties(weewx_data, vals[i], groups[i], data[vals[i]], ["title"]);
-                            }
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error("Error update_with_mqtt_data", err);
-            }
-
-            // voltage properties
-            try {
-                if (vdp_array.hasOwnProperty("voltage")) {
-                    if (vdp_array["voltage"].hasOwnProperty("obs")) {
-                        var vals = vdp_array["voltage"]["obs"];
-                    }
-                    if (vdp_array["voltage"].hasOwnProperty("group")) {
-                        var groups = vdp_array["voltage"]["group"];
-                    }
-                    if (vals.length == groups.length) {
-                        for (var i = 0; i < vals.length; i++) {
-                            if (data.hasOwnProperty(vals[i])) {
-                                update_voltage_properties(weewx_data, vals[i], groups[i], data[vals[i]], ["title"]);
-                            }
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error("Error update_with_mqtt_data", err);
-            }
-
-            // signal properties
-            try {
-                if (vdp_array.hasOwnProperty("sig")) {
-                    if (vdp_array["sig"].hasOwnProperty("obs")) {
-                        var vals = vdp_array["sig"]["obs"];
-                        for (var i = 0; i < vals.length; i++) {
-                            if (data.hasOwnProperty(vals[i])) {
-                                update_signal_properties(weewx_data, vals[i], data[vals[i]], ["title"]);
-                            }
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error("Error update_with_mqtt_data", err);
-            }
-
-            // switch properties
-            try {
-                if (vdp_array.hasOwnProperty("switch")) {
-                    if (vdp_array["switch"].hasOwnProperty("obs")) {
-                        var vals = vdp_array["switch"]["obs"];
-                    }
-                    if (vdp_array["switch"].hasOwnProperty("group")) {
-                        var groups = vdp_array["switch"]["group"];
-                    }
-                    if (vals.length == groups.length) {
-                        for (var i = 0; i < vals.length; i++) {
-                            if (data.hasOwnProperty(vals[i])) {
-                                update_switch_properties(weewx_data, vals[i], groups[i], data[vals[i]], ["title"]);
-                            }
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error("Error update_with_mqtt_data", err);
-            }
-
-            // room climate properties
-            try {
-                update_roomclimate_properties(data, ["title"]);
-            } catch (err) {
-                console.error("Error update_with_mqtt_data", err);
-            }
-        }
-*/
     }
 };
 #end if

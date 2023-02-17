@@ -1,0 +1,88 @@
+#errorCatcher Echo
+#encoding UTF-8
+#import datetime
+#if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
+<script type="text/javascript">
+    #if $Extras.has_key("mqttmon_outdated_treshold") and $Extras.mqttmon_outdated_treshold != ""
+    const mqttmon_outdated_treshold = parseInt($Extras.mqttmon_outdated_treshold);
+    #else
+    const mqttmon_outdated_treshold = parseInt(#echo $archive_interval_ms / 1000#);
+    #end if
+    
+    #if $Extras.has_key("mqttmon_format_default") and $Extras.mqttmon_format_default != ""
+    const mqttmon_format_default = "$Extras.mqttmon_format_default";
+    #else
+    const mqttmon_format_default = "formatted";
+    #end if
+    #if $Extras.has_key("mqttmon_format_toggle") and $Extras.mqttmon_format_toggle == "1"
+    if ( sessionStorage.getItem("mqttmon_format_user") === null ) {
+        sessionStorage.setItem("mqttmon_format_user", mqttmon_format_default);
+    }
+    var mqttmon_format_user = sessionStorage.getItem("mqttmon_format_user");
+    if (mqttmon_format_user == mqttmon_format_default) {
+        var mqttmon_format_checked = true;
+    } else {
+        var mqttmon_format_checked = false;
+    }
+    #else
+    var mqttmon_format_user = mqttmon_format_default;
+    #end if
+
+    ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
+        update_with_weewx_data(weewx_data, false); // Initial call to update (date, daily high, low, etc)
+        weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
+
+        jQuery(document).ready(function() {
+            #if $Extras.has_key("mqttmon_format_toggle") and $Extras.mqttmon_format_toggle == "1"
+            jQuery("#" + "mqttmonFormatSwitch").prop("checked", mqttmon_format_checked);
+            jQuery("#" + "mqttmonFormatSwitch").change(function () {
+                mqttmon_switch_format();
+            });
+            #end if
+
+            // Update the Last Updated timestamp with moment.js,
+            updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
+            updated_text = "$obs.label.header_last_updated " + updated;
+            jQuery(".updated").html( updated_text );
+        });
+    }).catch(function(e) {
+        console.error(e);
+    });
+</script>
+<div class="row mqttmon-row">
+    <div class="col-xs-12 mqttmon-table-container">
+        <table class="table table-striped mqttmon-table">
+            <thead class="table-light mqttmon-table-head">
+                <tr>
+                    <th scope="col" class="mqttmon-table-head-headline" colspan=2>$gettext('broker') <b>$Extras.mqtt_websockets_host</b> $gettext('topics') <b>$Extras.mqtt_websockets_topic/#</b></th>
+                </tr>
+                <tr>
+                    <th scope="col" class="mqttmon-table-head-subheadline">
+                        <div class="mqttmon-legend">
+                            <span class="mqttmon-rcv-dot" style="margin-left: 10px;background-color: var(--mqttmon-rcv-dot-current);"></span>$gettext('current')
+                            <span class="mqttmon-rcv-dot" style="margin-left: 5px;background-color: var(--mqttmon-rcv-dot-outdated);"></span>$gettext('older') 60s
+                            <span class="mqttmon-rcv-dot" style="margin-left: 5px;background-color: var(--mqttmon-rcv-dot-none);"></span>$gettext('not yet received')
+                        </div>
+                    </th>
+                    #if $Extras.has_key("mqttmon_format_toggle") and $Extras.mqttmon_format_toggle == "1"
+                    <th scope="col" class="mqttmon-table-head-subheadline">
+                        <div class="form-check form-switch mqttmon-format-switch">
+                            <input class="form-check-input mqttmon-format-switch-input" type="checkbox" role="switch" id="mqttmonFormatSwitch"/>
+                            <label class="form-check-label mqttmon-format-switch-label" for="mqttmonFormatSwitch">$gettext('formatted')</label>
+                        </div>
+                    </th>
+                    #end if
+                </tr>
+            </thead>
+            <tbody class="table-group-divider mqttmon-table-body mqttmon-data">
+            #set $file = "stationmon/mqttmontopics.inc"
+            #if os.path.exists($file)
+            <!-- Begin $file -->
+            #include $file
+            <!-- End $file -->
+            #end if
+            </tbody>
+        </table>
+    </div>
+</div>
+#end if

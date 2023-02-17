@@ -1,39 +1,75 @@
 #encoding UTF-8
 {
+  "lang": "$system_locale_js",
+  "start_url": "$station.station_url",
+  "display": "standalone",
+  "orientation": "natural",
+  "scope": "/",
   "name": "$Extras.manifest_name",
   "short_name": "$Extras.manifest_short_name",
+  "dir": "ltr",
   "icons": [
     {
       "src": "images/station48.png",
       "type": "image/png",
       "sizes": "48x48"
-    },    
+    },
     {
       "src": "images/station72.png",
       "type": "image/png",
       "sizes": "72x72"
-    },    
+    },
     {
       "src": "images/station96.png",
       "type": "image/png",
       "sizes": "96x96"
-    },    
+    },
     {
       "src": "images/station144.png",
       "type": "image/png",
       "sizes": "144x144"
-    },    
+    },
     {
       "src": "images/station168.png",
       "type": "image/png",
       "sizes": "168x168"
-    },    
+    },
     {
       "src": "images/station192.png",
       "type": "image/png",
       "sizes": "192x192"
     }
   ],
-  "display": "standalone",
-  "start_url": "$station.station_url"
+  "shortcuts": [
+    {
+      "name": "$obs.label.nav_home",
+      "url": "/",
+      "description": "$obs.label.html_description"
+    },
+    {
+      "name": "$obs.label.nav_forecast",
+      "url": "/forecast/",
+      "description": "$obs.label.html_description_forecast"
+    },
+    {
+      "name": "$obs.label.nav_graphs",
+      "url": "/graphs/",
+      "description": "$obs.label.html_description_graphs"
+    },
+    {
+      "name": "$obs.label.nav_reports",
+      "url": "/reports/",
+      "description": "$obs.label.html_description_reports"
+    },
+    {
+      "name": "$obs.label.nav_extreme",
+      "url": "/extreme/",
+      "description": "$obs.label.html_description_extreme"
+    },
+    {
+      "name": "$obs.label.nav_about",
+      "url": "/about/",
+      "description": "$obs.label.html_description_about"
+    }
+  ]
 }

@@ -140,6 +140,15 @@ abbr[title] {
             margin: 0;
         }
 
+/* Station Monitor */
+.stationmon-buttons {
+    margin: 0 auto;
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    line-height: 40px;
+}
+
 /* MQTT Monitor */
 
 .mqttmon-rcv-dot {
@@ -208,7 +217,7 @@ abbr[title] {
 
 /* Sensor Monitor */
 
-.sensors-monitor-headline, .dark .sensors-monitor-headline {
+.sensormon-headline, .dark .sensormon-headline {
     font-size: calc(20px + 0.3vw);
     text-align: left;
     margin-top: 15px;
@@ -217,7 +226,7 @@ abbr[title] {
     padding-right: 0 !important;
 }
 
-.sensors-monitor-table-head-sig, .sensors-monitor-table-head-batt, .sensors-monitor-table-body-sig, .sensors-monitor-table-body-batt {
+.sensormon-table-head-sig, .sensormon-table-head-batt, .sensormon-table-body-sig, .sensormon-table-body-batt {
     text-align: center;
     vertical-align: middle;
 }

@@ -1,0 +1,106 @@
+#errorCatcher Echo
+#encoding UTF-8
+#import datetime
+#set global $page = "stationmon"
+#include "header.html.tmpl"
+            <script type="text/javascript">
+                var monitor = getURLvar("monitor");
+                var stationmon_pages = $Extras.stationmon_pages; // All monitoring pages
+                if (monitor === undefined) {
+                    // If no URL VAR, default to the Monitor in Extras
+                    monitor = "$Extras.stationmon_page_default";
+                }
+                if (!jQuery.isArray(stationmon_pages) && (jQuery.type(stationmon_pages) === "string")) {
+                    stationmon_pages = stationmon_pages.split();
+                }
+                if (!stationmon_pages.includes(monitor)) {
+                    monitor = "$Extras.stationmon_page_default";
+                }
+
+                //TODO Variablen hier weg
+                var finalRotation;
+                var homepage_graphgroup = "dummy";
+
+                var mqttMsg;
+                var mqttclient = "weiherhammer_" + "$page" + "_" + Math.floor(Math.random() * 999999999);
+                var moment_locale = "$system_locale_js";
+                moment.locale(moment_locale);
+
+                ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
+                    update_with_weewx_data(weewx_data, false); // Initial call to update (date, daily high, low, etc)
+                    weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
+
+                    jQuery(document).ready(function() {
+                        // Update the Last Updated timestamp with moment.js,
+                        updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
+                        updated_text = "$obs.label.header_last_updated " + updated;
+                        jQuery(".updated").html( updated_text );
+
+                        try {
+                            page_inc = "./" + monitor + ".inc";
+                            jQuery("#stationmon-page-inc").load(page_inc);
+                            showChart(monitor);
+                        } catch(err) {
+                            console.error("Cannot add monitor page from [" + page_inc + "]. Error: " + err.message);
+                        }
+
+                        if ( getURLvar("offline") && ( getURLvar("offline") == "true" || getURLvar("offline") == "1" ) ) {
+                            weiherhammer_debug("MQTT: offline url var detected. Skipping MQTT connect.");
+                        } else {
+                            connect(); // Begin mqtt after weewx initial load
+                            // If the Restart button is clicked, reconnect to mqtt and update weewx and forecast data
+                            jQuery(document).on('click', '.restart-interval', function() { 
+                                ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
+                                    update_with_weewx_data(weewx_data, false); // Initial call to update (date, daily high, low, etc)
+                                    weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
+                                    connect(); // Restart mqtt after weewx data's re-loaded
+                                }).catch(function(e){
+                                    console.log(e);
+                                });
+                            });
+                        }
+                    });
+                }).catch(function(e) {
+                    console.log(e);
+                });
+            </script>
+
+            <div class="site-inner">
+                <main class="content">
+                    <article class="weewx $page" itemscope itemtype="https://schema.org/CreativeWork">
+                        <!-- Top bar with city and share -->
+                        <div class="wx-stn-info-container">
+                            <div class="wx-stn-name">
+                                <h1>$obs.label.page_header_stationmon</h1>
+                            </div>
+                            <div class="wx-stn-info">
+                                $obs.label.powered_by
+                            </div>
+                            <div class="clear"></div>
+                            <!-- Updated time ago -->
+                            <div class="updated-wrapper">
+                                <div class="onlineMarkerOuter">
+                                    <span class="loadingMarker" style="display:none"></span>
+                                    <span class="onlineMarker" style="display:none"></span>
+                                    <span class="offlineMarker" style="display:none"></span>
+                                    <div class="updated"></div><!-- AJAX moment.js -->
+                                </div>
+                            </div>
+                            <div class="clear"></div>
+                            <div class="last-updated-alert" style="display:none;"></div><!-- AJAX moment.js -->
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12 stationmon-buttons">
+                            #set $stationmon_pages = $to_list($Extras.get('stationmon_pages', ['$Extras.stationmon_page_default']))
+                            #for $page in $stationmon_pages
+                            #set $txt = 'button ' + $page
+                            <a href="./?monitor=$page"><button type="button" class="btn btn-primary wx-btn-year">$gettext($txt)</button></a> 
+                            #end for
+                            </div>
+                        </div>
+                        <div class="stationmon-page" id="stationmon-page-inc"></div><!-- JS populated -->
+                        <div class="clear"></div>
+                    </article>
+                </main>
+            </div>
+#include "footer.html.tmpl"

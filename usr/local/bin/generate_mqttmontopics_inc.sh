@@ -8,7 +8,7 @@ USER=""
 PW=""
 PORT=1883
 QOS=1
-CLIENTID="${HOSTNAME}-mqttmon-inc-generator"
+CLIENTID="${HOSTNAME}-mqttmontopics-inc-generator"
 MAINTOPIC="weewx-mqtt"
 TOPICFILTER="-T weewx-mqtt/loop"
 SUBSCRIBETIMEOUT=2
@@ -16,9 +16,9 @@ SUBSCRIBETIMEOUT=2
 TMPDIR="/tmp"
 TMPFILE="${TMPDIR}/${MAINTOPIC}.tmp"
 
-PAGE="mqttmon"
+PAGE="stationmon"
 DESTDIR="/home/weewx/skins/Weiherhammer/${PAGE}"
-DESTFILE="${DESTDIR}/${PAGE}.inc"
+DESTFILE="${DESTDIR}/mqttmontopics.inc"
 
 ME="$(basename "${BASH_ARGV0}")"
 DATETIME=$(date '+%d.%m.%Y %H:%M:%S')
@@ -81,17 +81,17 @@ sort -o "${TMPFILE}" "${TMPFILE}"
 # write inc file
 # head
 printf "\n" >>"${TMPDESTFILE}"
-printf "    <!-- Generator: %s %s\n" "${ME}" "-->" >>"${TMPDESTFILE}"
-printf "    <!-- generated: %s %s\n" "${DATETIME}" "-->" >>"${TMPDESTFILE}"
+printf "            <!-- Generator: %s %s\n" "${ME}" "-->" >>"${TMPDESTFILE}"
+printf "            <!-- generated: %s %s\n" "${DATETIME}" "-->" >>"${TMPDESTFILE}"
 printf "\n\n" >>"${TMPDESTFILE}"
 
 # write <tr></tr>
 while IFS="=" read -r value
 do
-  printf "    <tr>\n" >>"${TMPDESTFILE}"
-  printf '        <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot %s-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.%s">%s</abbr></th>\n' "${value}" "${value}" "${value}" >>"${TMPDESTFILE}"
-  printf '        <td class="mqttmon-table-body-obs-val"><span class="%s" rel="tooltip" title="">---</span></td>\n' "${value}" >>"${TMPDESTFILE}"
-  printf "    </tr>\n" >>"${TMPDESTFILE}"
+  printf "                <tr>\n" >>"${TMPDESTFILE}"
+  printf '                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot %s-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.%s">%s</abbr></th>\n' "${value}" "${value}" "${value}" >>"${TMPDESTFILE}"
+  printf '                    <td class="mqttmon-table-body-obs-val"><span class="%s" rel="tooltip" title="">---</span></td>\n' "${value}" >>"${TMPDESTFILE}"
+  printf "                </tr>\n" >>"${TMPDESTFILE}"
 done < <(cat "${TMPFILE}")
 
 rm -f "${TMPFILE}"

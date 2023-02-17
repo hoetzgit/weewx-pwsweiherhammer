@@ -350,6 +350,7 @@
                 <li>Backend- und WebServer: Diverse virtuelle VMware ESXi basierende Rechner mit Ubuntu 22.04.1 LTS, Webseite self hosted</li>
                 <li>WeeWX Server uptime: $station.os_uptime.long_form</li>
                 <li>WeeWX Service uptime: $station.uptime.long_form</li>
+                <li><a href="https://www.weiherhammer-wetter.de/stationmon/?monitor=$Extras.stationmon_page_default" target="_blank" rel="noreferrer">Station Monitor</a> (work in progress)</li>
             </ul>
         </div>
     </div>
