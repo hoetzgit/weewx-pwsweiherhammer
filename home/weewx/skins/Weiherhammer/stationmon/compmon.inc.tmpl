@@ -1,0 +1,36 @@
+#errorCatcher Echo
+#encoding UTF-8
+
+<script type="text/javascript">
+    ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
+        update_with_weewx_data(weewx_data, false); // Initial call to update (date, daily high, low, etc)
+        weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
+
+        jQuery(document).ready(function() {
+            showChart('compmon');
+            // Update the Last Updated timestamp with moment.js,
+            updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
+            updated_text = "$obs.label.header_last_updated " + updated;
+            jQuery(".updated").html( updated_text );
+        });
+    }).catch(function(e) {
+        console.error(e);
+    });
+</script>
+
+<div class="row compmon-row">
+    <div class="col-md-12 compmon-headline">$gettext('computer metrics')</div>
+</div>
+
+<div class="row compmon-row" style="margin-top:15px;">
+    <div class="graph-outer">
+        <div class="col-sm-6 col-md-6" id="compmonCPU"></div>
+        <div class="col-sm-6 col-md-6" id="compmonNET"></div>
+    </div>
+</div>
+<div class="row compmon-row" style="margin-top:15px;">
+    <div class="graph-outer">
+        <div class="col-sm-6 col-md-6" id="compmonMEM"></div>
+        <div class="col-sm-6 col-md-6" id="compmonDISK"></div>
+    </div>
+</div>

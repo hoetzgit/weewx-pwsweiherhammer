@@ -76,6 +76,7 @@ import resource
 
 import weewx
 import weeutil.weeutil
+from weeutil.weeutil import to_bool
 from weewx.engine import StdService
 
 VERSION = "0.1"
@@ -108,7 +109,12 @@ class MemoryMonitor(StdService):
         super(MemoryMonitor, self).__init__(engine, config_dict)
 
         d = config_dict.get('MemoryMonitor', {})
-        self.process = d.get('process', 'weewxd')
+
+        enable = to_bool(d.get('enable', True))
+        if not enable:
+            loginf("mem is not enabled, exiting")
+            return
+
         self.max_age = weeutil.weeutil.to_int(d.get('max_age', 2592000))
         self.page_size = resource.getpagesize()
 
@@ -144,9 +150,8 @@ class MemoryMonitor(StdService):
         if self.last_ts is not None:
             self.save_data(self.get_data(now, self.last_ts))
         self.last_ts = now
-        #-- TBD: make this tunable on/off via variable
-        #-- if self.max_age is not None:
-        #--     self.prune_data(now - self.max_age)
+        if self.max_age is not None:
+            self.prune_data(now - self.max_age)
 
     def save_data(self, record):
         """save data to database"""
@@ -195,7 +200,7 @@ class MemoryMonitor(StdService):
                 # Unpack the tuple:
             (size, resident, share, text, lib, data, dt) = mem_tuple
             mb = 1024 * 1024
-            record['mem_size']  = float(size)     * self.page_size / mb 
+            record['mem_size']  = float(size)     * self.page_size / mb
             record['mem_rss']   = float(resident) * self.page_size / mb
             record['mem_share'] = float(share)    * self.page_size / mb
        	    #---- from Tom ---

@@ -60,6 +60,7 @@
         weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
 
         jQuery(document).ready(function() {
+            showChart('sensormon');
             // Update the Last Updated timestamp with moment.js,
             updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
             updated_text = "$obs.label.header_last_updated " + updated;

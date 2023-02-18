@@ -39,7 +39,7 @@
                         try {
                             page_inc = "./" + monitor + ".inc";
                             jQuery("#stationmon-page-inc").load(page_inc);
-                            showChart(monitor);
+                            jQuery.getScript('../js/tooltip.js');
                         } catch(err) {
                             console.error("Cannot add monitor page from [" + page_inc + "]. Error: " + err.message);
                         }

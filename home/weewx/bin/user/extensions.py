@@ -447,20 +447,51 @@ weewx.units.obs_group_dict['Moonrise']  = 'group_time'
 weewx.units.obs_group_dict['MoonTransit'] = 'group_time'
 weewx.units.obs_group_dict['Moonset']  = 'group_time'
 #
+# Set up weewx-cmon observation type.
+weewx.units.obs_group_dict['net_ens160_rbytes']  = 'group_data_network'
+weewx.units.obs_group_dict['net_ens160_tbytes']  = 'group_data_network'
+weewx.units.obs_group_dict['mem_total']  = 'group_data_memory'
+weewx.units.obs_group_dict['mem_used']  = 'group_data_memory'
+weewx.units.obs_group_dict['disk_root_total']  = 'group_data_disk'
+weewx.units.obs_group_dict['disk_root_used']  = 'group_data_disk'
+#
 # Tests
 #
 #weewx-mqttpublish [[[[[aggregates]]]]]
 weewx.units.obs_group_dict['day_sunshineDur_sum2'] = 'group_deltatime'
 #
-# END unit groups
+# END using WeeWX standard unit groups
 #
-# map unit groups to a standard unit type
+#===================================================================================
+# New unit groups
+#===================================================================================
+#
 weewx.units.USUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
 weewx.units.MetricUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
 weewx.units.MetricWXUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
+#
+# e.g. Wifi Signal
 weewx.units.USUnits['group_signal_strength'] = 'decibels_relative_to_one_milliwatt'
 weewx.units.MetricUnits['group_signal_strength'] = 'decibels_relative_to_one_milliwatt'
 weewx.units.MetricWXUnits['group_signal_strength'] = 'decibels_relative_to_one_milliwatt'
+#
+# Data memory / disk / network
+weewx.units.USUnits['group_data_memory'] = 'kilobyte'
+weewx.units.MetricUnits['group_data_memory'] = 'kilobyte'
+weewx.units.MetricWXUnits['group_data_memory'] = 'kilobyte'
+#
+weewx.units.USUnits['group_data_disk'] = 'kilobyte'
+weewx.units.MetricUnits['group_data_disk'] = 'kilobyte'
+weewx.units.MetricWXUnits['group_data_disk'] = 'kilobyte'
+#
+weewx.units.USUnits['group_data_network'] = 'kilobyte'
+weewx.units.MetricUnits['group_data_network'] = 'kilobyte'
+weewx.units.MetricWXUnits['group_data_network'] = 'kilobyte'
+#
+#
+#===================================================================================
+# Defaults
+#===================================================================================
 #
 # default values for formats and labels
 weewx.units.default_unit_format_dict['count'] = '%.0f'
@@ -472,9 +503,17 @@ weewx.units.default_unit_format_dict['uv_index'] = '%.0f'
 weewx.units.default_unit_format_dict['watt_hour_per_meter_squared'] = '%.0f'
 weewx.units.default_unit_format_dict['gram_per_meter_cubed'] = '%.1f'
 weewx.units.default_unit_format_dict['milligram_per_meter_cubed'] = '%.1f'
+# e.g. Wifi Signal
 weewx.units.default_unit_format_dict['decibels_relative_to_one_milliwatt'] = '%.0f'
 # Ecowitt uvradiation
 weewx.units.default_unit_format_dict['microwatt_per_meter_squared'] = '%.0f'
+# Data memory / disk / network
+weewx.units.default_unit_format_dict['bit'] = '%.2f'
+weewx.units.default_unit_format_dict['byte'] = '%.2f'
+weewx.units.default_unit_format_dict['kilobyte'] = '%.2f'
+weewx.units.default_unit_format_dict['megabyte'] = '%.2f'
+weewx.units.default_unit_format_dict['gigabyte'] = '%.2f'
+weewx.units.default_unit_format_dict['terabyte'] = '%.2f'
 #
 # unit label
 weewx.units.default_unit_label_dict['count'] = ''
@@ -485,23 +524,56 @@ weewx.units.default_unit_label_dict['N_per_meter_squared'] = ' N/m²'
 weewx.units.default_unit_label_dict['watt_hour_per_meter_squared'] = ' Wh/m²'
 weewx.units.default_unit_label_dict['gram_per_meter_cubed'] = ' g/m³'
 weewx.units.default_unit_label_dict['milligram_per_meter_cubed'] = ' mg/m³'
+# e.g. Wifi Signal
 weewx.units.default_unit_label_dict['decibels_relative_to_one_milliwatt'] = ' dBm'
 # Ecowitt uvradiation
 weewx.units.default_unit_label_dict['microwatt_per_meter_squared'] = ' μW/m²'
+# Data memory / disk / network
+weewx.units.default_unit_label_dict['bit'] = ' Bit'
+weewx.units.default_unit_label_dict['byte'] = ' B'
+weewx.units.default_unit_label_dict['kilobyte'] = ' kB'
+weewx.units.default_unit_label_dict['megabyte'] = ' MB'
+weewx.units.default_unit_label_dict['gigabyte'] = ' GB'
+weewx.units.default_unit_label_dict['terabyte'] = ' TB'
 #
+#
+#===================================================================================
 # Conversion functions to go from one unit type to another.
+#===================================================================================
+#
 weewx.units.conversionDict['kilowatt_hour_per_meter_squared'] = {'watt_hour_per_meter_squared': lambda x : x * 1000.0}
 weewx.units.conversionDict['watt_hour_per_meter_squared'] = {'kilowatt_hour_per_meter_squared': lambda x : x / 1000.0}
-weewx.units.conversionDict['gram_per_meter_cubed'] = {'microgram_per_meter_cubed': lambda x : x * 1000000}
-weewx.units.conversionDict['milligram_per_meter_cubed'] = {'microgram_per_meter_cubed': lambda x : x * 1000}
-weewx.units.conversionDict['microgram_per_meter_cubed'] = {'gram_per_meter_cubed': lambda x : x * 0.000001}
-weewx.units.conversionDict['microgram_per_meter_cubed'] = {'milligram_per_meter_cubed': lambda x : x * 0.001}
-weewx.units.conversionDict['milligram_per_meter_cubed'] = {'gram_per_meter_cubed': lambda x : x * 0.001}
-weewx.units.conversionDict['gram_per_meter_cubed'] = {'milligram_per_meter_cubed': lambda x : x * 1000}
+weewx.units.conversionDict['milligram_per_meter_cubed'] = {'microgram_per_meter_cubed': lambda x : x * 1000,
+                                                           'gram_per_meter_cubed': lambda x : x * 0.001}
+weewx.units.conversionDict['microgram_per_meter_cubed'] = {'gram_per_meter_cubed': lambda x : x * 0.000001,
+                                                           'milligram_per_meter_cubed': lambda x : x * 0.001}
+weewx.units.conversionDict['gram_per_meter_cubed'] = {'microgram_per_meter_cubed': lambda x : x * 1000000,
+                                                      'milligram_per_meter_cubed': lambda x : x * 1000}
 # Ecowitt uvradiation
-weewx.units.conversionDict['microwatt_per_meter_squared'] = {'milliwatt_per_meter_squared': lambda x : x * 0.001}
-weewx.units.conversionDict['milliwatt_per_meter_squared'] = {'microwatt_per_meter_squared': lambda x : x * 1000.0}
-weewx.units.conversionDict['microwatt_per_meter_squared'] = {'watt_per_meter_squared': lambda x : x * 0.000001}
-weewx.units.conversionDict['watt_per_meter_squared'] = {'microwatt_per_meter_squared': lambda x : x * 1000000.0}
-weewx.units.conversionDict['milliwatt_per_meter_squared'] = {'watt_per_meter_squared': lambda x : x * 0.001}
-weewx.units.conversionDict['watt_per_meter_squared'] = {'milliwatt_per_meter_squared': lambda x : x * 1000.0}
+weewx.units.conversionDict['microwatt_per_meter_squared'] = {'milliwatt_per_meter_squared': lambda x : x * 0.001,
+                                                             'watt_per_meter_squared': lambda x : x * 0.000001}
+weewx.units.conversionDict['milliwatt_per_meter_squared'] = {'microwatt_per_meter_squared': lambda x : x * 1000.0,
+                                                             'watt_per_meter_squared': lambda x : x * 0.001}
+weewx.units.conversionDict['watt_per_meter_squared'] = {'microwatt_per_meter_squared': lambda x : x * 1000000.0,
+                                                        'milliwatt_per_meter_squared': lambda x : x * 1000.0}
+# Data memory / disk / network
+weewx.units.conversionDict['byte'] = {'kilobyte': lambda x : x / 1024,
+                                      'megabyte': lambda x : x / (1024 * 1024),
+                                      'gigabyte': lambda x : x / (1024 * 1024 * 1024),
+                                      'terabyte': lambda x : x / (1024 * 1024 * 1024 * 1024)}
+weewx.units.conversionDict['kilobyte'] = {'byte': lambda x : x * 1024,
+                                          'megabyte': lambda x : x / 1024,
+                                          'gigabyte': lambda x : x / (1024 * 1024),
+                                          'terabyte': lambda x : x / (1024 * 1024 * 1024)}
+weewx.units.conversionDict['megabyte'] = {'byte': lambda x : x * 1024 * 1024,
+                                          'kilobyte': lambda x : x * 1024,
+                                          'gigabyte': lambda x : x / 1024,
+                                          'terabyte': lambda x : x / (1024 * 1024)}
+weewx.units.conversionDict['gigabyte'] = {'byte': lambda x : x * 1024 * 1024 *1024,
+                                          'kilobyte': lambda x : x * 1024 * 1024,
+                                          'megabyte': lambda x : x * 1024,
+                                          'terabyte': lambda x : x / 1024}
+weewx.units.conversionDict['terabyte'] = {'byte': lambda x : x * 1024 * 1024 * 1024 * 1024,
+                                          'kilobyte': lambda x : x * 1024 * 1024 * 1024,
+                                          'megabyte': lambda x : x * 1024 * 1024,
+                                          'gigabyte': lambda x : x * 1024}

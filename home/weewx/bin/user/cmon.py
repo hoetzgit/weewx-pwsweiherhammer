@@ -125,6 +125,7 @@ from builtins import input
 
 import weewx
 import weeutil.weeutil
+from weeutil.weeutil import to_bool
 from weewx.drivers import AbstractDevice
 from weewx.engine import StdService
 
@@ -325,7 +326,7 @@ class Collector(object):
         try:
             cmd = '/sbin/apcaccess'
             p = Popen(cmd, shell=True, stdout=PIPE)
-            o = p.communicate()[0]
+            o = p.communicate()[0].decode('utf8')
             for line in o.split('\n'):
                 if line.startswith('ITEMP'):
                     m = Collector._DIGITS.search(line)
@@ -362,18 +363,18 @@ class Collector(object):
         try:
             cmd = '%s measure_temp' % Collector._RPI_VCGENCMD
             p = Popen(cmd, shell=True, stdout=PIPE)
-            o = p.communicate()[0]
+            o = p.communicate()[0].decode('utf8')
             record['core_temp'] = float(o.replace("'C\n", '').partition('=')[2])
             cmd = '%s measure_volts' % Collector._RPI_VCGENCMD
             p = Popen(cmd, shell=True, stdout=PIPE)
-            o = p.communicate()[0]
+            o = p.communicate()[0].decode('utf8')
             for line in o.split('\n'):
                 m = Collector._RPI_VOLT.search(line)
                 if m:
                     record[m.group(1) + '_volt'] = float(m.group(2))
             cmd = '%s measure_volts' % Collector._RPI_VCGENCMD
             p = Popen(cmd, shell=True, stdout=PIPE)
-            o = p.communicate()[0]
+            o = p.communicate()[0].decode('utf8')
             for line in o.split('\n'):
                 m = Collector._RPI_MEM.search(line)
                 if m:
@@ -443,6 +444,7 @@ class LinuxCollector(Collector):
                 record['mem_total'] = int(meminfo['MemTotal'].split()[0]) # kB
                 record['mem_free'] = int(meminfo['MemFree'].split()[0]) # kB
                 record['mem_used'] = record['mem_total'] - record['mem_free']
+                record['mem_free'] = int(meminfo['MemAvailable'].split()[0]) # kB # hack to get MemAvailable
                 record['swap_total'] = int(meminfo['SwapTotal'].split()[0]) # kB
                 record['swap_free'] = int(meminfo['SwapFree'].split()[0]) # kB
                 record['swap_used'] = record['swap_total'] - record['swap_free']
@@ -503,7 +505,7 @@ class LinuxCollector(Collector):
             logdbg("read failed for %s: %s" % (fn, e))
 
         # read cpu temperature
-        tdir = '/sys/class/hwmon/hwmon0/device'
+        tdir = '/sys/class/hwmon/hwmon0/device' + 'rmb'
         # rpi keeps cpu temperature in a different location
         tfile = '/sys/class/thermal/thermal_zone0/temp'
         if os.path.exists(tdir):
@@ -683,6 +685,12 @@ class ComputerMonitor(StdService):
         loginf("service version is %s" % DRIVER_VERSION)
 
         d = config_dict.get('ComputerMonitor', {})
+
+        enable = to_bool(d.get('enable', True))
+        if not enable:
+            loginf("cmon is not enabled, exiting")
+            return
+
         self.max_age = weeutil.weeutil.to_int(d.get('max_age', 2592000))
         self.ignored_mounts = d.get('ignored_mounts', IGNORED_MOUNTS)
         self.hardware = d.get('hardware', [None])

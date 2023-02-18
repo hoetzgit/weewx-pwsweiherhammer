@@ -219,7 +219,7 @@ abbr[title] {
 
 .sensormon-headline, .dark .sensormon-headline {
     font-size: calc(20px + 0.3vw);
-    text-align: left;
+    text-align: center;
     margin-top: 15px;
     margin-bottom: 5px;
     padding-left: 0 !important;
@@ -230,6 +230,18 @@ abbr[title] {
     text-align: center;
     vertical-align: middle;
 }
+
+/* Computer Monitor */
+
+.compmon-headline, .dark .compmon-headline {
+    font-size: calc(20px + 0.3vw);
+    text-align: center;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
 
 /* Status */
 
