@@ -1,6 +1,6 @@
 
             <!-- Generator: generate_mqttmontopics_inc.sh -->
-            <!-- generated: 17.02.2023 13:44:43 -->
+            <!-- generated: 18.02.2023 13:26:53 -->
 
 
                 <tr>
@@ -1154,10 +1154,6 @@
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot weekRain-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.weekRain">weekRain</abbr></th>
                     <td class="mqttmon-table-body-obs-val"><span class="weekRain" rel="tooltip" title="">---</span></td>
-                </tr>
-                <tr>
-                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot weewx-mqtt-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.weewx-mqtt">weewx-mqtt</abbr></th>
-                    <td class="mqttmon-table-body-obs-val"><span class="weewx-mqtt" rel="tooltip" title="">---</span></td>
                 </tr>
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot wetBulb-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.wetBulb">wetBulb</abbr></th>

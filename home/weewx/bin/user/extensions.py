@@ -475,7 +475,7 @@ weewx.units.obs_group_dict['disk_root_used']  = 'group_data_disk'
 weewx.units.obs_group_dict['day_sunshineDur_sum2'] = 'group_deltatime'
 #
 #===================================================================================
-# New unit groups
+# New unit groups with default unit
 #===================================================================================
 #
 # weewx-GTS
@@ -513,59 +513,65 @@ weewx.units.MetricWXUnits['group_data_network'] = 'kilobyte'
 #===================================================================================
 #
 # default values for formats
-weewx.units.default_unit_format_dict['count'] = '%.0f'
-weewx.units.default_unit_format_dict['kg_per_meter_qubic'] = '%.3f'
-weewx.units.default_unit_format_dict['kilowatt_hour_per_meter_squared'] = '%.3f'
-weewx.units.default_unit_format_dict['microgram_per_meter_cubed'] = '%.0f'
-weewx.units.default_unit_format_dict['N_per_meter_squared'] = '%.3f'
-weewx.units.default_unit_format_dict['uv_index'] = '%.0f'
-weewx.units.default_unit_format_dict['watt_hour_per_meter_squared'] = '%.0f'
-weewx.units.default_unit_format_dict['gram_per_meter_cubed'] = '%.1f'
-weewx.units.default_unit_format_dict['milligram_per_meter_cubed'] = '%.1f'
+weewx.units.default_unit_format_dict.setdefault('count', '%.0f')
+weewx.units.default_unit_format_dict.setdefault('kg_per_meter_qubic', '%.3f')
+weewx.units.default_unit_format_dict.setdefault('kilowatt_hour_per_meter_squared', '%.3f')
+weewx.units.default_unit_format_dict.setdefault('microgram_per_meter_cubed', '%.0f')
+weewx.units.default_unit_format_dict.setdefault('N_per_meter_squared', '%.3f')
+weewx.units.default_unit_format_dict.setdefault('uv_index', '%.0f')
+weewx.units.default_unit_format_dict.setdefault('watt_hour_per_meter_squared', '%.0f')
+weewx.units.default_unit_format_dict.setdefault('gram_per_meter_cubed', '%.1f')
+weewx.units.default_unit_format_dict.setdefault('milligram_per_meter_cubed', '%.1f')
 #
 # Wifi Signal
-weewx.units.default_unit_format_dict['decibels_relative_to_one_milliwatt'] = '%.0f'
+weewx.units.default_unit_format_dict.setdefault('decibels_relative_to_one_milliwatt', '%.0f')
 #
 # Ecowitt uvradiation
-weewx.units.default_unit_format_dict['microwatt_per_meter_squared'] = '%.0f'
+weewx.units.default_unit_format_dict.setdefault('microwatt_per_meter_squared', '%.0f')
 #
 # Data memory / disk / network
-weewx.units.default_unit_format_dict['bit'] = '%.2f'
-weewx.units.default_unit_format_dict['byte'] = '%.2f'
-weewx.units.default_unit_format_dict['kilobyte'] = '%.2f'
-weewx.units.default_unit_format_dict['megabyte'] = '%.2f'
-weewx.units.default_unit_format_dict['gigabyte'] = '%.2f'
-weewx.units.default_unit_format_dict['terabyte'] = '%.2f'
+weewx.units.default_unit_format_dict.setdefault('bit', '%.2f')
+weewx.units.default_unit_format_dict.setdefault('byte', '%.2f')
+weewx.units.default_unit_format_dict.setdefault('kilobyte', '%.2f')
+weewx.units.default_unit_format_dict.setdefault('megabyte', '%.2f')
+weewx.units.default_unit_format_dict.setdefault('gigabyte', '%.2f')
+weewx.units.default_unit_format_dict.setdefault('terabyte', '%.2f')
 #
 # default unit label
-weewx.units.default_unit_label_dict['count'] = ''
-weewx.units.default_unit_label_dict['lux'] = ' Lux'
-weewx.units.default_unit_label_dict['kg_per_meter_qubic'] = ' kg/m³'
-weewx.units.default_unit_label_dict['kilowatt_hour_per_meter_squared'] = ' kWh/m²'
-weewx.units.default_unit_label_dict['N_per_meter_squared'] = ' N/m²'
-weewx.units.default_unit_label_dict['watt_hour_per_meter_squared'] = ' Wh/m²'
-weewx.units.default_unit_label_dict['gram_per_meter_cubed'] = ' g/m³'
-weewx.units.default_unit_label_dict['milligram_per_meter_cubed'] = ' mg/m³'
+weewx.units.default_unit_label_dict.setdefault('count', '')
+weewx.units.default_unit_label_dict.setdefault('lux', ' Lux')
+weewx.units.default_unit_label_dict.setdefault('kg_per_meter_qubic', u' kg/m³')
+weewx.units.default_unit_label_dict.setdefault('kilowatt_hour_per_meter_squared', u' kWh/m²')
+weewx.units.default_unit_label_dict.setdefault('N_per_meter_squared', u' N/m²')
+weewx.units.default_unit_label_dict.setdefault('watt_hour_per_meter_squared', u' Wh/m²')
+weewx.units.default_unit_label_dict.setdefault('gram_per_meter_cubed', u' g/m³')
+weewx.units.default_unit_label_dict.setdefault('milligram_per_meter_cubed', u' mg/m³')
 #
 # Wifi Signal
-weewx.units.default_unit_label_dict['decibels_relative_to_one_milliwatt'] = ' dBm'
+weewx.units.default_unit_label_dict.setdefault('decibels_relative_to_one_milliwatt', ' dBm')
 #
 # Ecowitt uvradiation
-weewx.units.default_unit_label_dict['microwatt_per_meter_squared'] = ' μW/m²'
+weewx.units.default_unit_label_dict.setdefault('microwatt_per_meter_squared', u' μW/m²')
 #
 # Data memory / disk / network
-weewx.units.default_unit_label_dict['bit'] = ' Bit'
-weewx.units.default_unit_label_dict['byte'] = ' B'
-weewx.units.default_unit_label_dict['kilobyte'] = ' kB'
-weewx.units.default_unit_label_dict['megabyte'] = ' MB'
-weewx.units.default_unit_label_dict['gigabyte'] = ' GB'
-weewx.units.default_unit_label_dict['terabyte'] = ' TB'
+weewx.units.default_unit_label_dict.setdefault('bit', ' Bit')
+weewx.units.default_unit_label_dict.setdefault('byte', ' B')
+weewx.units.default_unit_label_dict.setdefault('kilobyte', ' kB')
+weewx.units.default_unit_label_dict.setdefault('megabyte', ' MB')
+weewx.units.default_unit_label_dict.setdefault('gigabyte', ' GB')
+weewx.units.default_unit_label_dict.setdefault('terabyte', ' TB')
 #
 #===================================================================================
 # Conversion functions to go from one unit type to another.
 #===================================================================================
 #
 # weewx-GTS
+weewx.units.conversionDict.setdefault('kilowatt_hour_per_meter_squared',{})
+weewx.units.conversionDict.setdefault('watt_hour_per_meter_squared',{})
+weewx.units.conversionDict.setdefault('milligram_per_meter_cubed',{})
+weewx.units.conversionDict.setdefault('microgram_per_meter_cubed',{})
+weewx.units.conversionDict.setdefault('gram_per_meter_cubed',{})
+#
 weewx.units.conversionDict['kilowatt_hour_per_meter_squared']['watt_hour_per_meter_squared'] = lambda x : x * 1000.0
 weewx.units.conversionDict['watt_hour_per_meter_squared']['kilowatt_hour_per_meter_squared'] = lambda x : x / 1000.0
 weewx.units.conversionDict['milligram_per_meter_cubed']['microgram_per_meter_cubed']         = lambda x : x * 1000
@@ -576,6 +582,10 @@ weewx.units.conversionDict['gram_per_meter_cubed']['microgram_per_meter_cubed'] 
 weewx.units.conversionDict['gram_per_meter_cubed']['milligram_per_meter_cubed']              = lambda x : x * 1000
 #
 # Ecowitt uvradiation
+weewx.units.conversionDict.setdefault('microwatt_per_meter_squared',{})
+weewx.units.conversionDict.setdefault('milliwatt_per_meter_squared',{})
+weewx.units.conversionDict.setdefault('watt_per_meter_squared',{})
+#
 weewx.units.conversionDict['microwatt_per_meter_squared']['milliwatt_per_meter_squared'] = lambda x : x * 0.001
 weewx.units.conversionDict['microwatt_per_meter_squared']['watt_per_meter_squared']      = lambda x : x * 0.000001
 weewx.units.conversionDict['milliwatt_per_meter_squared']['microwatt_per_meter_squared'] = lambda x : x * 1000.0
@@ -584,6 +594,12 @@ weewx.units.conversionDict['watt_per_meter_squared']['microwatt_per_meter_square
 weewx.units.conversionDict['watt_per_meter_squared']['milliwatt_per_meter_squared']      = lambda x : x * 1000.0
 #
 # Data memory / disk / network
+weewx.units.conversionDict.setdefault('byte',{})
+weewx.units.conversionDict.setdefault('kilobyte',{})
+weewx.units.conversionDict.setdefault('megabyte',{})
+weewx.units.conversionDict.setdefault('gigabyte',{})
+weewx.units.conversionDict.setdefault('terabyte',{})
+#
 weewx.units.conversionDict['byte']['kilobyte']     = lambda x : x / 1024
 weewx.units.conversionDict['byte']['megabyte']     = lambda x : x / (1024 * 1024)
 weewx.units.conversionDict['byte']['gigabyte']     = lambda x : x / (1024 * 1024 * 1024)
