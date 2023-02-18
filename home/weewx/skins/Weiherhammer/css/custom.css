@@ -220,7 +220,7 @@ abbr[title] {
 .sensormon-headline, .dark .sensormon-headline {
     font-size: calc(20px + 0.3vw);
     text-align: center;
-    margin-top: 15px;
+    margin-top: 10px;
     margin-bottom: 5px;
     padding-left: 0 !important;
     padding-right: 0 !important;
@@ -236,7 +236,7 @@ abbr[title] {
 .compmon-headline, .dark .compmon-headline {
     font-size: calc(20px + 0.3vw);
     text-align: center;
-    margin-top: 15px;
+    margin-top: 10px;
     margin-bottom: 5px;
     padding-left: 0 !important;
     padding-right: 0 !important;

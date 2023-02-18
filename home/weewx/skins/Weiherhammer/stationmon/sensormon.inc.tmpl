@@ -3,17 +3,25 @@
 #def signal_symbol($obs)
     #set $sig = getattr($current, $obs).raw
     #set $class_span = '%s_symbol' % $obs
+    #if $sig >= 0 and $sig <= 4
     #set $class_icon = 'bi bi-reception-%.0f' % $sig
+    #else
+    #set $class_icon = 'bi bi bi-question' % $sig
+    #end if
     <span class="$class_span" rel="tooltip" title=""><i class="$class_icon"></i></span>
 #end def
 
 #def battery_level2_symbol($obs)
     #set $batt = getattr($current, $obs).raw
     #set $class_span = '%s_symbol' % $obs
+    #if $batt >= 0.0 and $batt <= 1.0
     #if $batt == 0.0
     #set $class_icon = 'bi bi-battery-full'
     #else
     #set $class_icon = 'bi bi-battery'
+    #end if
+    #else
+    #set $class_icon = 'bi bi-question'
     #end if
     <span class="$class_span" rel="tooltip" title=""><i class="$class_icon"></i></span>
 #end def
@@ -21,6 +29,7 @@
 #def battery_level6_symbol($obs)
     #set $batt = getattr($current, $obs).raw
     #set $class_span = '%s_symbol' % $obs
+    #if $batt >= 0.0 and $batt <= 6.0
     #if $batt <= 1.0
     #set $class_icon = 'bi bi-battery'
     #elif $batt == 2.0
@@ -33,6 +42,9 @@
     #set $class_icon = 'bi bi-battery-full'
     #elif $batt == 6.0
     #set $class_icon = 'bi bi-battery-charging'
+    #end if
+    #else
+    #set $class_icon = 'bi bi-question'
     #end if
     <span class="$class_span" rel="tooltip" title=""><i class="$class_icon"></i></span>
 #end def

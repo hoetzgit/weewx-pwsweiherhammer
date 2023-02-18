@@ -21,7 +21,7 @@ locale.setlocale(locale.LC_ALL, '')
 #
 import weewx.units
 #
-# Ecowitt GW1100 Sainlogic WS3500 WH65
+# Ecowitt GW1100 Sainlogic WS3500 WH65 and calculated values
 weewx.units.obs_group_dict['daymaxwind'] = 'group_speed'
 weewx.units.obs_group_dict['eventRain'] = 'group_rain'
 weewx.units.obs_group_dict['gainRain'] = 'group_rain'
@@ -42,7 +42,7 @@ weewx.units.obs_group_dict['wh65_batt_percent'] = 'group_percent'
 weewx.units.obs_group_dict['wh65_sig'] = 'group_count'
 weewx.units.obs_group_dict['wh65_sig_percent'] = 'group_percent'
 #
-# Ecowitt WH31
+# Ecowitt Temperaure & Humidity Sensoren WH31
 weewx.units.obs_group_dict['wh31_ch1_batt'] = 'group_count'
 weewx.units.obs_group_dict['wh31_ch2_batt'] = 'group_count'
 weewx.units.obs_group_dict['wh31_ch3_batt'] = 'group_count'
@@ -85,7 +85,7 @@ weewx.units.obs_group_dict['wh57_lightning_count'] = 'group_count'
 weewx.units.obs_group_dict['wh57_lightning_distance'] = 'group_distance'
 weewx.units.obs_group_dict['wh57_lightning_time'] = 'group_time'
 #
-# Ecowitt Bodenfeuchte Sensor WH51
+# Ecowitt Bodenfeuchte Sensoren WH51
 weewx.units.obs_group_dict['soilMoist1'] = 'group_percent'
 weewx.units.obs_group_dict['soilMoist2'] = 'group_percent'
 weewx.units.obs_group_dict['soilMoist3'] = 'group_percent'
@@ -137,7 +137,7 @@ weewx.units.obs_group_dict['signal6'] = 'group_percent'
 weewx.units.obs_group_dict['signal7'] = 'group_percent'
 weewx.units.obs_group_dict['signal8'] = 'group_percent'
 #
-# Solar Station (BME280)
+# Solar Station (BME280, Batt & Wifi) and calculated values
 weewx.units.obs_group_dict['solar_altimeter'] = 'group_pressure'
 weewx.units.obs_group_dict['solar_appTemp'] = 'group_temperature'
 weewx.units.obs_group_dict['solar_barometer'] = 'group_pressure'
@@ -157,7 +157,7 @@ weewx.units.obs_group_dict['solar_batt_percent'] = 'group_percent'
 weewx.units.obs_group_dict['solar_wetBulb'] = 'group_temperature'
 weewx.units.obs_group_dict['solar_windchill'] = 'group_temperature'
 #
-# Nova PM Sensor SDS011
+# Nova PM Sensor SDS011, DHT22 and Wifi
 weewx.units.obs_group_dict['airrohr_outHumidity'] = 'group_percent'
 weewx.units.obs_group_dict['airrohr_outTemp'] = 'group_temperature'
 weewx.units.obs_group_dict['airrohr_pm10_0'] = 'group_concentration'
@@ -166,7 +166,7 @@ weewx.units.obs_group_dict['airrohr_sig'] = 'group_count'
 weewx.units.obs_group_dict['airrohr_sig_percent'] = 'group_percent'
 weewx.units.obs_group_dict['airrohr_signal_level'] = 'group_signal_strength'
 #
-# Allsky 01 Kamera (BME280 und DS18B20)
+# Allsky 01 Kamera (BME280, DS18B20, Fan, CPU & Wifi)
 weewx.units.obs_group_dict['asky_box_altimeter'] = 'group_pressure'
 weewx.units.obs_group_dict['asky_box_barometer'] = 'group_pressure'
 weewx.units.obs_group_dict['asky_box_dewpoint'] = 'group_temperature'
@@ -198,7 +198,7 @@ weewx.units.obs_group_dict['foshk_winddir_avg10m'] = 'group_direction'
 weewx.units.obs_group_dict['foshk_windgust_max10m'] = 'group_speed'
 weewx.units.obs_group_dict['foshk_windspeed_avg10m'] = 'group_speed'
 #
-# PWS Weiherhammer AQI
+# PWS Weiherhammer AQI (UBA)
 weewx.units.obs_group_dict['pws_aqi'] = 'group_count'
 weewx.units.obs_group_dict['pws_aqi_category'] = 'group_count'
 weewx.units.obs_group_dict['pws_aqi_no2'] = 'group_count'
@@ -241,12 +241,12 @@ weewx.units.obs_group_dict['uba_o3_category'] = 'group_count'
 # open meteo API
 weewx.units.obs_group_dict['visibility'] = 'group_distance'
 #
-# weewx-DWD
 # dwd-mosmix
 weewx.units.obs_group_dict['pop'] = 'group_percent'
 weewx.units.obs_group_dict['cloudcover'] = 'group_percent'
 weewx.units.obs_group_dict['rainDur'] = 'group_deltatime'
-# dwd.py [CDC] (but are also defined in the extension)
+#
+# dwd.py [CDC] (also defined in the extension)
 weewx.units.obs_group_dict['unix_epoch'] = 'group_time'
 weewx.units.obs_group_dict['cdc_Altimeter'] = 'group_pressure'
 weewx.units.obs_group_dict['cdc_Altitude'] = 'group_altitude'
@@ -256,13 +256,13 @@ weewx.units.obs_group_dict['cdc_Dewpoint'] = 'group_temperature'
 weewx.units.obs_group_dict['cdc_ExtraTemp1'] = 'group_temperature'
 weewx.units.obs_group_dict['cdc_FMX_10'] = 'group_temperature' #TODO check this
 weewx.units.obs_group_dict['cdc_FNX_10'] = 'group_temperature' #TODO check this
-weewx.units.obs_group_dict['cdc_Latitude'] = 'group_count' #TODO check this
-weewx.units.obs_group_dict['cdc_Longitude'] = 'group_count' #TODO check this
-weewx.units.obs_group_dict['cdc_MESS_DATUM'] = 'group_count' #TODO check this
+weewx.units.obs_group_dict['cdc_Latitude'] = 'group_coordinate'
+weewx.units.obs_group_dict['cdc_Longitude'] = 'group_coordinate'
+weewx.units.obs_group_dict['cdc_MESS_DATUM'] = 'group_count'
 weewx.units.obs_group_dict['cdc_OutHumidity'] = 'group_percent'
 weewx.units.obs_group_dict['cdc_OutTemp'] = 'group_temperature'
 weewx.units.obs_group_dict['cdc_Pressure'] = 'group_pressure'
-weewx.units.obs_group_dict['cdc_Quality_level'] = 'group_count' #TODO check this
+weewx.units.obs_group_dict['cdc_Quality_level'] = 'group_count'
 weewx.units.obs_group_dict['cdc_Radiation'] = 'group_radiation'
 weewx.units.obs_group_dict['cdc_Rain'] = 'group_rain'
 weewx.units.obs_group_dict['cdc_RainDur'] = 'group_deltatime'
@@ -276,7 +276,8 @@ weewx.units.obs_group_dict['cdc_WindGust'] = 'group_speed'
 weewx.units.obs_group_dict['cdc_WindGustDir'] = 'group_direction'
 weewx.units.obs_group_dict['cdc_WindSpeed'] = 'group_speed'
 weewx.units.obs_group_dict['cdc_WindSpeed10'] = 'group_speed'
-# dwd.py [POI] (but are also defined in the extension)
+#
+# dwd.py [POI] (also defined in the extension)
 weewx.units.obs_group_dict['poi_Barometer'] = 'group_pressure'
 weewx.units.obs_group_dict['poi_Cloudbase'] = 'group_altitude'
 weewx.units.obs_group_dict['poi_Cloudcover'] = 'group_percent'
@@ -285,15 +286,16 @@ weewx.units.obs_group_dict['poi_Dewpoint'] = 'group_temperature'
 weewx.units.obs_group_dict['poi_ExtraTemp1'] = 'group_temperature'
 weewx.units.obs_group_dict['poi_OutHumidity'] = 'group_percent'
 weewx.units.obs_group_dict['poi_OutTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['poi_PresentWeather'] = 'group_count' #TODO check this
+weewx.units.obs_group_dict['poi_PresentWeather'] = 'group_count'
 weewx.units.obs_group_dict['poi_Radiation'] = 'group_radiation'
 weewx.units.obs_group_dict['poi_Rain'] = 'group_rain'
-weewx.units.obs_group_dict['poi_SnowDepth'] = 'group_rain' #TODO check this
+weewx.units.obs_group_dict['poi_SnowDepth'] = 'group_rain'
 weewx.units.obs_group_dict['poi_SolarRad'] = 'group_radiation'
 weewx.units.obs_group_dict['poi_Visibility'] = 'group_distance'
 weewx.units.obs_group_dict['poi_WindDir'] = 'group_direction'
 weewx.units.obs_group_dict['poi_WindSpeed'] = 'group_speed'
-#dwd.py [OPENMETEO] (but are also defined in the extension)
+#
+#dwd.py [OPENMETEO] (also defined in the extension)
 weewx.units.obs_group_dict['om_appTemp'] = 'group_temperature'
 weewx.units.obs_group_dict['om_Barometer'] = 'group_pressure'
 weewx.units.obs_group_dict['om_Cloudcover'] = 'group_percent'
@@ -314,7 +316,7 @@ weewx.units.obs_group_dict['om_WindDir'] = 'group_direction'
 weewx.units.obs_group_dict['om_WindGust'] = 'group_speed'
 weewx.units.obs_group_dict['om_WindSpeed'] = 'group_speed'
 #
-# weewx-GTS (but are also defined in the extension)
+# weewx-GTS (also defined in the extension)
 weewx.units.obs_group_dict['boilingTemp'] = 'group_temperature'
 weewx.units.obs_group_dict['dayET'] = 'group_rain'
 weewx.units.obs_group_dict['energy_integral'] = 'group_radiation_energy'
@@ -335,33 +337,43 @@ weewx.units.obs_group_dict['utcoffsetLMT'] = 'group_deltatime'
 weewx.units.obs_group_dict['yearGDD'] = 'group_degree_day'
 #
 # data from weewx-loopdata
-weewx.units.obs_group_dict['lightning_strike_count_sum10m'] = 'group_count' #TODO check this
-weewx.units.obs_group_dict['lightning_strike_count_sum2m'] = 'group_count' #TODO check this
-weewx.units.obs_group_dict['lightning_strike_count_sum30m'] = 'group_count' #TODO check this
-weewx.units.obs_group_dict['lightning_strike_count_sum5m'] = 'group_count' #TODO check this
-weewx.units.obs_group_dict['lightning_strike_count_sum60m'] = 'group_count' #TODO check this
-weewx.units.obs_group_dict['rain_sum10m'] = 'group_rain' #TODO check this
-weewx.units.obs_group_dict['rain_sum2m'] = 'group_rain' #TODO check this
-weewx.units.obs_group_dict['rain_sum30m'] = 'group_rain' #TODO check this
-weewx.units.obs_group_dict['rain_sum5m'] = 'group_rain' #TODO check this
-weewx.units.obs_group_dict['rain_sum60m'] = 'group_rain' #TODO check this
-weewx.units.obs_group_dict['sunshine_avg10m'] = 'group_count' #TODO check this
-weewx.units.obs_group_dict['sunshine_avg2m'] = 'group_count' #TODO check this
-weewx.units.obs_group_dict['sunshine_avg30m'] = 'group_count' #TODO check this
-weewx.units.obs_group_dict['sunshine_avg5m'] = 'group_count' #TODO check this
-weewx.units.obs_group_dict['sunshine_avg60m'] = 'group_count' #TODO check this
+weewx.units.obs_group_dict['lightning_strike_count_sum10m'] = 'group_count'
+weewx.units.obs_group_dict['lightning_strike_count_sum2m'] = 'group_count'
+weewx.units.obs_group_dict['lightning_strike_count_sum30m'] = 'group_count'
+weewx.units.obs_group_dict['lightning_strike_count_sum5m'] = 'group_count'
+weewx.units.obs_group_dict['lightning_strike_count_sum60m'] = 'group_count'
+weewx.units.obs_group_dict['rain_sum10m'] = 'group_rain'
+weewx.units.obs_group_dict['rain_sum2m'] = 'group_rain'
+weewx.units.obs_group_dict['rain_sum30m'] = 'group_rain'
+weewx.units.obs_group_dict['rain_sum5m'] = 'group_rain'
+weewx.units.obs_group_dict['rain_sum60m'] = 'group_rain'
+weewx.units.obs_group_dict['sunshine_avg10m'] = 'group_count'
+weewx.units.obs_group_dict['sunshine_avg2m'] = 'group_count'
+weewx.units.obs_group_dict['sunshine_avg30m'] = 'group_count'
+weewx.units.obs_group_dict['sunshine_avg5m'] = 'group_count'
+weewx.units.obs_group_dict['sunshine_avg60m'] = 'group_count'
 weewx.units.obs_group_dict['trend_asky_box_barometer'] = 'group_pressure'
 weewx.units.obs_group_dict['trend_barometer'] = 'group_pressure'
 weewx.units.obs_group_dict['trend_barometer_code'] = 'group_count'
 weewx.units.obs_group_dict['trend_solar_barometer'] = 'group_pressure'
 weewx.units.obs_group_dict['trend_outTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['usUnits'] = 'group_count' #TODO check this
-weewx.units.obs_group_dict['windrun_NW'] = 'group_distance' #TODO check this
-weewx.units.obs_group_dict['windrun_SSW'] = 'group_distance' #TODO check this
-weewx.units.obs_group_dict['windrun_SW'] = 'group_distance' #TODO check this
-weewx.units.obs_group_dict['windrun_W'] = 'group_distance' #TODO check this
-weewx.units.obs_group_dict['windrun_WNW'] = 'group_distance' #TODO check this
-weewx.units.obs_group_dict['windrun_WSW'] = 'group_distance' #TODO check this
+weewx.units.obs_group_dict['usUnits'] = 'group_count'
+weewx.units.obs_group_dict['windrun_E'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_ENE'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_ESE'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_N'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_NE'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_NNE'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_NNW'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_NW'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_S'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_SE'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_SSE'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_SSW'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_SW'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_W'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_WNW'] = 'group_distance'
+weewx.units.obs_group_dict['windrun_WSW'] = 'group_distance'
 #
 #weewx-mqtt [[[augmentations]]]
 weewx.units.obs_group_dict['day_sunshineDur_sum'] = 'group_deltatime'
@@ -407,7 +419,7 @@ weewx.units.obs_group_dict['month_windGust_maxtime'] = 'group_time'
 weewx.units.obs_group_dict['month_rainRate_max'] = 'group_rainrate'
 weewx.units.obs_group_dict['month_rainRate_maxtime'] = 'group_time'
 #
-# Set up weewx-celestial observation type.
+# weewx-celestial observation types
 weewx.units.obs_group_dict['EarthSunDistance'] = 'group_distance'
 weewx.units.obs_group_dict['EarthMoonDistance'] = 'group_distance'
 weewx.units.obs_group_dict['EarthMercuryDistance'] = 'group_distance'
@@ -447,7 +459,7 @@ weewx.units.obs_group_dict['Moonrise']  = 'group_time'
 weewx.units.obs_group_dict['MoonTransit'] = 'group_time'
 weewx.units.obs_group_dict['Moonset']  = 'group_time'
 #
-# Set up weewx-cmon observation type.
+# weewx-cmon observation types
 weewx.units.obs_group_dict['net_ens160_rbytes']  = 'group_data_network'
 weewx.units.obs_group_dict['net_ens160_tbytes']  = 'group_data_network'
 weewx.units.obs_group_dict['mem_total']  = 'group_data_memory'
@@ -455,45 +467,52 @@ weewx.units.obs_group_dict['mem_used']  = 'group_data_memory'
 weewx.units.obs_group_dict['disk_root_total']  = 'group_data_disk'
 weewx.units.obs_group_dict['disk_root_used']  = 'group_data_disk'
 #
+#===================================================================================
 # Tests
+#===================================================================================
 #
 #weewx-mqttpublish [[[[[aggregates]]]]]
 weewx.units.obs_group_dict['day_sunshineDur_sum2'] = 'group_deltatime'
-#
-# END using WeeWX standard unit groups
 #
 #===================================================================================
 # New unit groups
 #===================================================================================
 #
+# weewx-GTS
 weewx.units.USUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
 weewx.units.MetricUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
 weewx.units.MetricWXUnits['group_radiation_energy'] = 'watt_hour_per_meter_squared'
 #
-# e.g. Wifi Signal
+# weewx-DWD
+weewx.units.USUnits['group_coordinate'] = 'degree_compass'
+weewx.units.MetricUnits['group_coordinate'] = 'degree_compass'
+weewx.units.MetricWXUnits['group_coordinate'] = 'degree_compass'
+#
+# Wifi Signal
 weewx.units.USUnits['group_signal_strength'] = 'decibels_relative_to_one_milliwatt'
 weewx.units.MetricUnits['group_signal_strength'] = 'decibels_relative_to_one_milliwatt'
 weewx.units.MetricWXUnits['group_signal_strength'] = 'decibels_relative_to_one_milliwatt'
 #
-# Data memory / disk / network
+# Data memory
 weewx.units.USUnits['group_data_memory'] = 'kilobyte'
 weewx.units.MetricUnits['group_data_memory'] = 'kilobyte'
 weewx.units.MetricWXUnits['group_data_memory'] = 'kilobyte'
 #
+# Data disk
 weewx.units.USUnits['group_data_disk'] = 'kilobyte'
 weewx.units.MetricUnits['group_data_disk'] = 'kilobyte'
 weewx.units.MetricWXUnits['group_data_disk'] = 'kilobyte'
 #
+# Data network
 weewx.units.USUnits['group_data_network'] = 'kilobyte'
 weewx.units.MetricUnits['group_data_network'] = 'kilobyte'
 weewx.units.MetricWXUnits['group_data_network'] = 'kilobyte'
-#
 #
 #===================================================================================
 # Defaults
 #===================================================================================
 #
-# default values for formats and labels
+# default values for formats
 weewx.units.default_unit_format_dict['count'] = '%.0f'
 weewx.units.default_unit_format_dict['kg_per_meter_qubic'] = '%.3f'
 weewx.units.default_unit_format_dict['kilowatt_hour_per_meter_squared'] = '%.3f'
@@ -503,10 +522,13 @@ weewx.units.default_unit_format_dict['uv_index'] = '%.0f'
 weewx.units.default_unit_format_dict['watt_hour_per_meter_squared'] = '%.0f'
 weewx.units.default_unit_format_dict['gram_per_meter_cubed'] = '%.1f'
 weewx.units.default_unit_format_dict['milligram_per_meter_cubed'] = '%.1f'
-# e.g. Wifi Signal
+#
+# Wifi Signal
 weewx.units.default_unit_format_dict['decibels_relative_to_one_milliwatt'] = '%.0f'
+#
 # Ecowitt uvradiation
 weewx.units.default_unit_format_dict['microwatt_per_meter_squared'] = '%.0f'
+#
 # Data memory / disk / network
 weewx.units.default_unit_format_dict['bit'] = '%.2f'
 weewx.units.default_unit_format_dict['byte'] = '%.2f'
@@ -515,7 +537,7 @@ weewx.units.default_unit_format_dict['megabyte'] = '%.2f'
 weewx.units.default_unit_format_dict['gigabyte'] = '%.2f'
 weewx.units.default_unit_format_dict['terabyte'] = '%.2f'
 #
-# unit label
+# default unit label
 weewx.units.default_unit_label_dict['count'] = ''
 weewx.units.default_unit_label_dict['lux'] = ' Lux'
 weewx.units.default_unit_label_dict['kg_per_meter_qubic'] = ' kg/m³'
@@ -524,10 +546,13 @@ weewx.units.default_unit_label_dict['N_per_meter_squared'] = ' N/m²'
 weewx.units.default_unit_label_dict['watt_hour_per_meter_squared'] = ' Wh/m²'
 weewx.units.default_unit_label_dict['gram_per_meter_cubed'] = ' g/m³'
 weewx.units.default_unit_label_dict['milligram_per_meter_cubed'] = ' mg/m³'
-# e.g. Wifi Signal
+#
+# Wifi Signal
 weewx.units.default_unit_label_dict['decibels_relative_to_one_milliwatt'] = ' dBm'
+#
 # Ecowitt uvradiation
 weewx.units.default_unit_label_dict['microwatt_per_meter_squared'] = ' μW/m²'
+#
 # Data memory / disk / network
 weewx.units.default_unit_label_dict['bit'] = ' Bit'
 weewx.units.default_unit_label_dict['byte'] = ' B'
@@ -536,44 +561,46 @@ weewx.units.default_unit_label_dict['megabyte'] = ' MB'
 weewx.units.default_unit_label_dict['gigabyte'] = ' GB'
 weewx.units.default_unit_label_dict['terabyte'] = ' TB'
 #
-#
 #===================================================================================
 # Conversion functions to go from one unit type to another.
 #===================================================================================
 #
-weewx.units.conversionDict['kilowatt_hour_per_meter_squared'] = {'watt_hour_per_meter_squared': lambda x : x * 1000.0}
-weewx.units.conversionDict['watt_hour_per_meter_squared'] = {'kilowatt_hour_per_meter_squared': lambda x : x / 1000.0}
-weewx.units.conversionDict['milligram_per_meter_cubed'] = {'microgram_per_meter_cubed': lambda x : x * 1000,
-                                                           'gram_per_meter_cubed': lambda x : x * 0.001}
-weewx.units.conversionDict['microgram_per_meter_cubed'] = {'gram_per_meter_cubed': lambda x : x * 0.000001,
-                                                           'milligram_per_meter_cubed': lambda x : x * 0.001}
-weewx.units.conversionDict['gram_per_meter_cubed'] = {'microgram_per_meter_cubed': lambda x : x * 1000000,
-                                                      'milligram_per_meter_cubed': lambda x : x * 1000}
+# weewx-GTS
+weewx.units.conversionDict['kilowatt_hour_per_meter_squared']['watt_hour_per_meter_squared'] = lambda x : x * 1000.0
+weewx.units.conversionDict['watt_hour_per_meter_squared']['kilowatt_hour_per_meter_squared'] = lambda x : x / 1000.0
+weewx.units.conversionDict['milligram_per_meter_cubed']['microgram_per_meter_cubed']         = lambda x : x * 1000
+weewx.units.conversionDict['milligram_per_meter_cubed']['gram_per_meter_cubed']              = lambda x : x * 0.001
+weewx.units.conversionDict['microgram_per_meter_cubed']['gram_per_meter_cubed']              = lambda x : x * 0.000001
+weewx.units.conversionDict['microgram_per_meter_cubed']['milligram_per_meter_cubed']         = lambda x : x * 0.001
+weewx.units.conversionDict['gram_per_meter_cubed']['microgram_per_meter_cubed']              = lambda x : x * 1000000
+weewx.units.conversionDict['gram_per_meter_cubed']['milligram_per_meter_cubed']              = lambda x : x * 1000
+#
 # Ecowitt uvradiation
-weewx.units.conversionDict['microwatt_per_meter_squared'] = {'milliwatt_per_meter_squared': lambda x : x * 0.001,
-                                                             'watt_per_meter_squared': lambda x : x * 0.000001}
-weewx.units.conversionDict['milliwatt_per_meter_squared'] = {'microwatt_per_meter_squared': lambda x : x * 1000.0,
-                                                             'watt_per_meter_squared': lambda x : x * 0.001}
-weewx.units.conversionDict['watt_per_meter_squared'] = {'microwatt_per_meter_squared': lambda x : x * 1000000.0,
-                                                        'milliwatt_per_meter_squared': lambda x : x * 1000.0}
+weewx.units.conversionDict['microwatt_per_meter_squared']['milliwatt_per_meter_squared'] = lambda x : x * 0.001
+weewx.units.conversionDict['microwatt_per_meter_squared']['watt_per_meter_squared']      = lambda x : x * 0.000001
+weewx.units.conversionDict['milliwatt_per_meter_squared']['microwatt_per_meter_squared'] = lambda x : x * 1000.0
+weewx.units.conversionDict['milliwatt_per_meter_squared']['watt_per_meter_squared']      = lambda x : x * 0.001
+weewx.units.conversionDict['watt_per_meter_squared']['microwatt_per_meter_squared']      = lambda x : x * 1000000.0
+weewx.units.conversionDict['watt_per_meter_squared']['milliwatt_per_meter_squared']      = lambda x : x * 1000.0
+#
 # Data memory / disk / network
-weewx.units.conversionDict['byte'] = {'kilobyte': lambda x : x / 1024,
-                                      'megabyte': lambda x : x / (1024 * 1024),
-                                      'gigabyte': lambda x : x / (1024 * 1024 * 1024),
-                                      'terabyte': lambda x : x / (1024 * 1024 * 1024 * 1024)}
-weewx.units.conversionDict['kilobyte'] = {'byte': lambda x : x * 1024,
-                                          'megabyte': lambda x : x / 1024,
-                                          'gigabyte': lambda x : x / (1024 * 1024),
-                                          'terabyte': lambda x : x / (1024 * 1024 * 1024)}
-weewx.units.conversionDict['megabyte'] = {'byte': lambda x : x * 1024 * 1024,
-                                          'kilobyte': lambda x : x * 1024,
-                                          'gigabyte': lambda x : x / 1024,
-                                          'terabyte': lambda x : x / (1024 * 1024)}
-weewx.units.conversionDict['gigabyte'] = {'byte': lambda x : x * 1024 * 1024 *1024,
-                                          'kilobyte': lambda x : x * 1024 * 1024,
-                                          'megabyte': lambda x : x * 1024,
-                                          'terabyte': lambda x : x / 1024}
-weewx.units.conversionDict['terabyte'] = {'byte': lambda x : x * 1024 * 1024 * 1024 * 1024,
-                                          'kilobyte': lambda x : x * 1024 * 1024 * 1024,
-                                          'megabyte': lambda x : x * 1024 * 1024,
-                                          'gigabyte': lambda x : x * 1024}
+weewx.units.conversionDict['byte']['kilobyte']     = lambda x : x / 1024
+weewx.units.conversionDict['byte']['megabyte']     = lambda x : x / (1024 * 1024)
+weewx.units.conversionDict['byte']['gigabyte']     = lambda x : x / (1024 * 1024 * 1024)
+weewx.units.conversionDict['byte']['terabyte']     = lambda x : x / (1024 * 1024 * 1024 * 1024)
+weewx.units.conversionDict['kilobyte']['byte']     = lambda x : x * 1024,
+weewx.units.conversionDict['kilobyte']['megabyte'] = lambda x : x / 1024
+weewx.units.conversionDict['kilobyte']['gigabyte'] = lambda x : x / (1024 * 1024)
+weewx.units.conversionDict['kilobyte']['terabyte'] = lambda x : x / (1024 * 1024 * 1024)
+weewx.units.conversionDict['megabyte']['byte']     = lambda x : x * 1024 * 1024
+weewx.units.conversionDict['megabyte']['kilobyte'] = lambda x : x * 1024
+weewx.units.conversionDict['megabyte']['gigabyte'] = lambda x : x / 1024
+weewx.units.conversionDict['megabyte']['terabyte'] = lambda x : x / (1024 * 1024)
+weewx.units.conversionDict['gigabyte']['byte']     = lambda x : x * 1024 * 1024 *1024
+weewx.units.conversionDict['gigabyte']['kilobyte'] = lambda x : x * 1024 * 1024
+weewx.units.conversionDict['gigabyte']['megabyte'] = lambda x : x * 1024
+weewx.units.conversionDict['gigabyte']['terabyte'] = lambda x : x / 1024
+weewx.units.conversionDict['terabyte']['byte']     = lambda x : x * 1024 * 1024 * 1024 * 1024
+weewx.units.conversionDict['terabyte']['kilobyte'] = lambda x : x * 1024 * 1024 * 1024
+weewx.units.conversionDict['terabyte']['megabyte'] = lambda x : x * 1024 * 1024
+weewx.units.conversionDict['terabyte']['gigabyte'] = lambda x : x * 1024

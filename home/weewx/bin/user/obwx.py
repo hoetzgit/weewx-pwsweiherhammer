@@ -20,7 +20,7 @@ class GetAerisForecast(StdService):
         self.forecast_file = Path( config_dict['WEEWX_ROOT'] , config_dict['StdReport']['OBWX']['HTML_ROOT'] , 'forecast.json' )
         self.latitude = config_dict['Station']['latitude']
         self.longitude = config_dict['Station']['longitude']
-        self.api_call_frequency = self.obwx_dict.get('api_call_frequency', 3600)
+        self.api_call_frequency = self.obwx_dict.get('api_call_frequency')
         self.api_id = self.obwx_dict.get('api_id')
         self.api_secret = self.obwx_dict.get('api_secret')
         self.current_url = 'https://api.aerisapi.com/conditions/%s,%s?format=json&plimit=1&filter=1min&client_id=%s&client_secret=%s' % ( self.latitude, self.longitude, self.api_id, self.api_secret )
