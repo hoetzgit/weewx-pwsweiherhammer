@@ -1,9 +1,9 @@
 :root {
     --hival-color:#aa4444;
     --loval-color:#4444aa;
-    --ok-color:#84D862;
+    --ok-color:#44AA44;
     --ok-on-color:#FF0000;
-    --ok-off-color:#84D862;
+    --ok-off-color:#44AA44;
     --alarm-color:#FF0000;
     --low-color:#FF0000;
     --middle-color:#FF8800;
@@ -14,12 +14,12 @@
     --indoor-room-optimal:#84D862;
     --indoor-temp-very-cold:#0000FF;
     --indoor-temp-cold:#0088FF;
-    --indoor-temp-optimal:#84D862;
+    --indoor-temp-optimal:#44AA44;
     --indoor-temp-warm:#FF8800;
     --indoor-temp-very-warm:#FF0000;
     --indoor-humidity-very-dry:#FF8800;
     --indoor-humidity-dry:#B2DF8A;
-    --indoor-humidity-optimal:#84D862;
+    --indoor-humidity-optimal:#44AA44;
     --indoor-humidity-moist:#B2DF8A;
     --indoor-humidity-very-moist:#0077FF;
     --link-color:#337ab7;
@@ -35,17 +35,21 @@
     --aqi-moderate:#F0E641;
     --aqi-poor:#FF5050;
     --aqi-very-poor:#960032;
-    --battery-full:#84D862;
+    --battery-full:#44AA44;
     --battery-half:#FF8800;
     --battery-low:#FF0000;
     --battery-alarm:#FF0000;
     --battery-charging:#84D862;
-    --signal-very-good:#84D862;
-    --signal-good:#84D862;
+    --signal-very-good:#44AA44;
+    --signal-good:#44AA44;
     --signal-sufficient:#FF8800;
     --signal-poor:#FF8800;
     --signal-very-poor:#FF0000;
     --signal-alarm:#FF0000;
+    /* backups */
+    --default-ok-color:#84D862;
+    --seasons-ok-color:#44AA44;
+    --mqtt-ok-color:##00BB00;
 }
 
 /*

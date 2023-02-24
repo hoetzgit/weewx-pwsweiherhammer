@@ -173,6 +173,7 @@ schema = [
     ('interval', 'INTEGER NOT NULL'),
     ('mem_total', 'INTEGER'),
     ('mem_free', 'INTEGER'),
+    ('mem_available', 'INTEGER'),
     ('mem_used', 'INTEGER'),
     ('swap_total', 'INTEGER'),
     ('swap_free', 'INTEGER'),
@@ -225,6 +226,16 @@ schema = [
 #    ('net_eth1_terrs', 'INTEGER'),
 #    ('net_eth1_tdrop', 'INTEGER'),
 
+# the default interface on most ubuntu systems is ens160
+    ('net_ens160_rbytes', 'INTEGER'),
+    ('net_ens160_rpackets', 'INTEGER'),
+    ('net_ens160_rerrs', 'INTEGER'),
+    ('net_ens160_rdrop', 'INTEGER'),
+    ('net_ens160_tbytes', 'INTEGER'),
+    ('net_ens160_tpackets', 'INTEGER'),
+    ('net_ens160_terrs', 'INTEGER'),
+    ('net_ens160_tdrop', 'INTEGER'),
+
 # some systems have a wireless interface as wlan0
     ('net_wlan0_rbytes', 'INTEGER'),
     ('net_wlan0_rpackets', 'INTEGER'),
@@ -236,14 +247,24 @@ schema = [
     ('net_wlan0_tdrop', 'INTEGER'),
 
 # if the computer is an openvpn server, track the tunnel traffic
-#    ('net_tun0_rbytes', 'INTEGER'),
-#    ('net_tun0_rpackets', 'INTEGER'),
-#    ('net_tun0_rerrs', 'INTEGER'),
-#    ('net_tun0_rdrop', 'INTEGER'),
-#    ('net_tun0_tbytes', 'INTEGER'),
-#    ('net_tun0_tpackets', 'INTEGER'),
-#    ('net_tun0_terrs', 'INTEGER'),
-#    ('net_tun0_tdrop', 'INTEGER'),
+    ('net_tun0_rbytes', 'INTEGER'),
+    ('net_tun0_rpackets', 'INTEGER'),
+    ('net_tun0_rerrs', 'INTEGER'),
+    ('net_tun0_rdrop', 'INTEGER'),
+    ('net_tun0_tbytes', 'INTEGER'),
+    ('net_tun0_tpackets', 'INTEGER'),
+    ('net_tun0_terrs', 'INTEGER'),
+    ('net_tun0_tdrop', 'INTEGER'),
+
+# if the computer is an wireguard server, track the tunnel traffic
+    ('net_wg0_rbytes', 'INTEGER'),
+    ('net_wg0_rpackets', 'INTEGER'),
+    ('net_wg0_rerrs', 'INTEGER'),
+    ('net_wg0_rdrop', 'INTEGER'),
+    ('net_wg0_tbytes', 'INTEGER'),
+    ('net_wg0_tpackets', 'INTEGER'),
+    ('net_wg0_terrs', 'INTEGER'),
+    ('net_wg0_tdrop', 'INTEGER'),
 
 # disk volumes will vary, but root is always present
     ('disk_root_total', 'INTEGER'),
@@ -443,11 +464,11 @@ class LinuxCollector(Collector):
             if meminfo:
                 record['mem_total'] = int(meminfo['MemTotal'].split()[0]) # kB
                 record['mem_free'] = int(meminfo['MemFree'].split()[0]) # kB
-                record['mem_used'] = record['mem_total'] - record['mem_free']
-                record['mem_free'] = int(meminfo['MemAvailable'].split()[0]) # kB # hack to get MemAvailable
+                record['mem_used'] = record['mem_total'] - record['mem_free'] # kB
+                record['mem_available'] = int(meminfo['MemAvailable'].split()[0]) # kB
                 record['swap_total'] = int(meminfo['SwapTotal'].split()[0]) # kB
                 record['swap_free'] = int(meminfo['SwapFree'].split()[0]) # kB
-                record['swap_used'] = record['swap_total'] - record['swap_free']
+                record['swap_used'] = record['swap_total'] - record['swap_free'] # kB
         except Exception as e:
             logdbg("read failed for %s: %s" % (fn, e))
 
@@ -505,7 +526,7 @@ class LinuxCollector(Collector):
             logdbg("read failed for %s: %s" % (fn, e))
 
         # read cpu temperature
-        tdir = '/sys/class/hwmon/hwmon0/device' + 'rmb'
+        tdir = '/sys/class/hwmon/hwmon0/device'
         # rpi keeps cpu temperature in a different location
         tfile = '/sys/class/thermal/thermal_zone0/temp'
         if os.path.exists(tdir):

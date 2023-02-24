@@ -341,9 +341,7 @@
         <div class="col-sm-12">
             <h2>Weitere Informationen zur Wetterstation</h2>
             <ul>
-                <li>Standort: <a href="https://www.google.com/maps/@?api=1&map_action=map&center=$station.stn_info.latitude_f,$station.stn_info.longitude_f&zoom=17" target="_blank">Weiherhammer, Bayern, Deutschland</a>
-                <li>Latitude: $station.latitude[0]&deg; $station.latitude[1]' $station.latitude[2]</li>
-                <li>Longitude: $station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]</li>
+                <li>Standort: <a href="https://www.weiherhammer.de" target="_blank" rel="noreferrer">Weiherhammer, Bayern, Deutschland</a>
                 <li>H&ouml;he ca.: $station.altitude</li>
                 <li>Konsole Software EasyWeather Version: 1.6.5</li>
                 <li>Ecowitt GW1100 Gateway Software Version: 2.2.1</li>

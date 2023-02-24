@@ -4,8 +4,9 @@
     Status: WORK IN PROGRESS
 
     Adds new observation fields containing sunshine duration
-    Condition for calculation:
-      - 'sunshine' is present in loop packet and is not None
+    'sunshine' is the indicator whether a calculation is useful
+      - 'sunshine' is None: No Calculation
+      - 'sunshine' is 0/1 : Calculation 
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -63,7 +64,6 @@ DEFAULTS_INI = """
 [SunshineDuration]
     enable = true
     debug = 0
-    radiation_min = 0.0
 """
 defaults_dict = weeutil.config.config_from_str(DEFAULTS_INI)
 
@@ -84,13 +84,13 @@ class SunshineDuration(StdService):
         if enable:
             loginf("SunshineDuration is enabled...continuing.")
         else:
-            loginf("SunshineDuration is disabled. Enable it in the SunshineDuration section of weewx.conf.")
+            loginf("SunshineDuration is disabled. Enable it in the [SunshineDuration] section of weewx.conf.")
             return
         self.debug = to_int(option_dict.get('debug', 0))
         if self.debug > 0:
             logdbg("debug level is %d" % self.debug)
 
-        # dateTime from the last loop package with valid 'radiation'
+        # dateTime from the last loop package with valid 'sunshine'
         self.lastLoop = None
         # dateTime from the last archive record
         self.lastArchive = None
@@ -110,6 +110,9 @@ class SunshineDuration(StdService):
             if self.lastLoop is None:
                 # It's the first loop packet, more is not to be done
                 # To calculate the time we wait for the next loop packet
+                #  now
+                #   |
+                #   v
                 # ..L
                 self.sunshineDur = 0
                 if self.debug >= 3:
@@ -137,9 +140,14 @@ class SunshineDuration(StdService):
         archivedateTime = event.record.get('dateTime')
 
         if self.lastArchive is not None and self.lastLoop is not None and self.lastLoop < self.lastArchive:
-            # no loop packets with 'sunshine' during the last archive interval
+            # no loop packets with 'sunshine' during the last archive interval. Disacard loop indicator.
+
+            #                                                  now
+            #                                                   |
+            #                                                   v
             # ..L....L....L....L....A...........................A
-            #                  |????|
+            #                  |????????????????????????????????|
+
             if self.debug >= 3:
                 logdbg("No loop packets with valid 'sunshine' values during last archive interval, disacard loop indicator.")
             self.lastLoop = None
@@ -148,9 +156,14 @@ class SunshineDuration(StdService):
         if self.lastLoop is not None and self.sunshineDur is not None:
             # sum from loop packets
             # The period from the last loop packet before the archive time to the first loop packet after the archive time is calculated in the following run.
+
+            #                             now
+            #                              |
+            #                              v
             # L..A..L....L....L....L....L..A
             # |<=======================>|           = self.sunshineDur
-            #                           |<====      = calculate on next loop
+            #                           |<--        = start for calculation on next loop
+
             target_data['sunshineDur'] = self.sunshineDur
 
             # reset loop sum

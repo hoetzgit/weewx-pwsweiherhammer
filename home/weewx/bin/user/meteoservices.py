@@ -152,11 +152,16 @@ class MeteoservicesThread(weewx.restx.RESTThread):
                  'soilmoisture4': ('soilMoist4',      '%.1f', 1.0),   # %
                  'leafwetness':   ('leafWet1',        '%.1f', 1.0),   # %
                  'leafwetness2':  ('leafWet2',        '%.1f', 1.0),   # %
-                 't005m':         ('extraTemp1',      '%.1f', 1.0),   # C
-                 'temp3':         ('extraTemp2',      '%.1f', 1.0),   # C
-                 'temp4':         ('extraTemp3',      '%.1f', 1.0),   # C
-                 'humidity2':     ('extraHumid1',     '%.0f', 1.0),   # %
-                 'humidity3':     ('extraHumid2',     '%.0f', 1.0),   # %
+                 #'t005m':         ('extraTemp1',      '%.1f', 1.0),   # C # PWS Weiherhammer N/A, unused extraTemp6 as dummy
+                 't005m':         ('extraTemp6',      '%.1f', 1.0),   # C
+                 #'temp3':         ('extraTemp2',      '%.1f', 1.0),   # C # PWS Weiherhammer N/A, unused extraTemp7 as dummy
+                 'temp3':         ('extraTemp7',      '%.1f', 1.0),   # C
+                 #'temp4':         ('extraTemp3',      '%.1f', 1.0),   # C # PWS Weiherhammer N/A, unused extraTemp8 as dummy
+                 'temp4':         ('extraTemp8',      '%.1f', 1.0),   # C
+                 #'humidity2':     ('extraHumid1',     '%.0f', 1.0),   # % # PWS Weiherhammer N/A, unused extraHumid7 as dummy
+                 'humidity2':     ('extraHumid7',     '%.0f', 1.0),   # %
+                 #'humidity3':     ('extraHumid2',     '%.0f', 1.0),   # % # PWS Weiherhammer N/A, unused extraHumid8 as dummy
+                 'humidity3':     ('extraHumid8',     '%.0f', 1.0),   # %
                  'txbattery':     ('txBatteryStatus', '%.0f', 1.0),   # %
                  }
 

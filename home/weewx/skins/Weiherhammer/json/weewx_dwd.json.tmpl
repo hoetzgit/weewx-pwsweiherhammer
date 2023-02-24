@@ -3,15 +3,15 @@
 #import datetime
 {
     "timestamp": #echo int( time.time() )#,
-    "openmeteo_current": {
-        "timestamp": $current.om_DateTime.raw,
+    "openmeteo_best_match": {
+        "timestamp": $current.best_match_DateTime.raw,
         "current": [
             {
                 "success": true,
                 "error": null,
-                "source": "Open-Meteo (DWD ICON)",
+                "source": "Open-Meteo Best Match",
                 "response": [{
-                    "dataSource": "Open-Meteo DWD-ICON",
+                    "dataSource": "best_match",
                     "loc": {
                         "latitude": $station.stn_info.latitude_f,
                         "longitude": $station.stn_info.longitude_f,
@@ -28,14 +28,170 @@
                         "tzname": "CET",
                         "tzoffset": 3600
                     },
-                    "obTimestamp": $current.om_DateTime.raw,
+                    "obTimestamp": $current.best_match_DateTime.raw,
                     "ob": {
-                        "timestamp": $current.om_DateTime.raw,
-                        "icon": "$current.om_Icon.raw",
-                        "sky": $current.om_Cloudcover.raw,
-                        "weather": "$current.om_Icontitle.raw",
-                        "weathercode": $current.om_Weathercode.raw,
-                        "weatherPrimary": "$current.om_Icontitle.raw",
+                        "timestamp": $current.best_match_DateTime.raw,
+                        "icon": "$current.best_match_Icon.raw",
+                        "sky": $current.best_match_Cloudcover.raw,
+                        "weather": "$current.best_match_Icontitle.raw",
+                        "weathercode": $current.best_match_Weathercode.raw,
+                        "weatherPrimary": "$current.best_match_Icontitle.raw",
+                        "visibilityKM": "$current.best_match_Visibility.raw"
+                    }
+                }]
+            }
+        ]
+    },
+    "openmeteo_dwd_icon": {
+        "timestamp": $current.dwd_icon_DateTime.raw,
+        "current": [
+            {
+                "success": true,
+                "error": null,
+                "source": "Open-Meteo DWD ICON",
+                "response": [{
+                    "dataSource": "dwd-icon",
+                    "loc": {
+                        "latitude": $station.stn_info.latitude_f,
+                        "longitude": $station.stn_info.longitude_f,
+                        "altitude": "$station.altitude"
+                    },
+                    "place": {
+                        "name": "$station.location",
+                        "city": "Weiherhammer",
+                        "state": "by",
+                        "country": "de"
+                    },
+                    "profile": {
+                        "tz": "Europe/Berlin",
+                        "tzname": "CET",
+                        "tzoffset": 3600
+                    },
+                    "obTimestamp": $current.dwd_icon_DateTime.raw,
+                    "ob": {
+                        "timestamp": $current.dwd_icon_DateTime.raw,
+                        "icon": "$current.dwd_icon_Icon.raw",
+                        "sky": $current.dwd_icon_Cloudcover.raw,
+                        "weather": "$current.dwd_icon_Icontitle.raw",
+                        "weathercode": $current.dwd_icon_Weathercode.raw,
+                        "weatherPrimary": "$current.dwd_icon_Icontitle.raw",
+                        "visibilityKM": null
+                    }
+                }]
+            }
+        ]
+    },
+    "openmeteo_icon_seamless": {
+        "timestamp": $current.icon_seamless_DateTime.raw,
+        "current": [
+            {
+                "success": true,
+                "error": null,
+                "source": "Open-Meteo DWD ICON SEAMLESS",
+                "response": [{
+                    "dataSource": "icon_seamless",
+                    "loc": {
+                        "latitude": $station.stn_info.latitude_f,
+                        "longitude": $station.stn_info.longitude_f,
+                        "altitude": "$station.altitude"
+                    },
+                    "place": {
+                        "name": "$station.location",
+                        "city": "Weiherhammer",
+                        "state": "by",
+                        "country": "de"
+                    },
+                    "profile": {
+                        "tz": "Europe/Berlin",
+                        "tzname": "CET",
+                        "tzoffset": 3600
+                    },
+                    "obTimestamp": $current.icon_seamless_DateTime.raw,
+                    "ob": {
+                        "timestamp": $current.icon_seamless_DateTime.raw,
+                        "icon": "$current.icon_seamless_Icon.raw",
+                        "sky": $current.icon_seamless_Cloudcover.raw,
+                        "weather": "$current.icon_seamless_Icontitle.raw",
+                        "weathercode": $current.icon_seamless_Weathercode.raw,
+                        "weatherPrimary": "$current.icon_seamless_Icontitle.raw",
+                        "visibilityKM": null
+                    }
+                }]
+            }
+        ]
+    },
+    "openmeteo_icon_eu": {
+        "timestamp": $current.icon_eu_DateTime.raw,
+        "current": [
+            {
+                "success": true,
+                "error": null,
+                "source": "Open-Meteo ICON EU",
+                "response": [{
+                    "dataSource": "icon_eu",
+                    "loc": {
+                        "latitude": $station.stn_info.latitude_f,
+                        "longitude": $station.stn_info.longitude_f,
+                        "altitude": "$station.altitude"
+                    },
+                    "place": {
+                        "name": "$station.location",
+                        "city": "Weiherhammer",
+                        "state": "by",
+                        "country": "de"
+                    },
+                    "profile": {
+                        "tz": "Europe/Berlin",
+                        "tzname": "CET",
+                        "tzoffset": 3600
+                    },
+                    "obTimestamp": $current.icon_eu_DateTime.raw,
+                    "ob": {
+                        "timestamp": $current.icon_eu_DateTime.raw,
+                        "icon": "$current.icon_eu_Icon.raw",
+                        "sky": $current.icon_eu_Cloudcover.raw,
+                        "weather": "$current.icon_eu_Icontitle.raw",
+                        "weathercode": $current.icon_eu_Weathercode.raw,
+                        "weatherPrimary": "$current.icon_eu_Icontitle.raw",
+                        "visibilityKM": null
+                    }
+                }]
+            }
+        ]
+    },
+    "openmeteo_icon_d2": {
+        "timestamp": $current.icon_d2_DateTime.raw,
+        "current": [
+            {
+                "success": true,
+                "error": null,
+                "source": "Open-Meteo ICON D2",
+                "response": [{
+                    "dataSource": "icon_d2",
+                    "loc": {
+                        "latitude": $station.stn_info.latitude_f,
+                        "longitude": $station.stn_info.longitude_f,
+                        "altitude": "$station.altitude"
+                    },
+                    "place": {
+                        "name": "$station.location",
+                        "city": "Weiherhammer",
+                        "state": "by",
+                        "country": "de"
+                    },
+                    "profile": {
+                        "tz": "Europe/Berlin",
+                        "tzname": "CET",
+                        "tzoffset": 3600
+                    },
+                    "obTimestamp": $current.icon_d2_DateTime.raw,
+                    "ob": {
+                        "timestamp": $current.icon_d2_DateTime.raw,
+                        "icon": "$current.icon_d2_Icon.raw",
+                        "sky": $current.icon_d2_Cloudcover.raw,
+                        "weather": "$current.icon_d2_Icontitle.raw",
+                        "weathercode": $current.icon_d2_Weathercode.raw,
+                        "weatherPrimary": "$current.icon_d2_Icontitle.raw",
                         "visibilityKM": null
                     }
                 }]

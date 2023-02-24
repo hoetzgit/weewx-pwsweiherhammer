@@ -4,6 +4,7 @@ schema = [
     ('interval', 'INTEGER NOT NULL'),
     ('mem_total', 'INTEGER'),
     ('mem_free', 'INTEGER'),
+    ('mem_available', 'INTEGER'),
     ('mem_used', 'INTEGER'),
     ('swap_total', 'INTEGER'),
     ('swap_free', 'INTEGER'),

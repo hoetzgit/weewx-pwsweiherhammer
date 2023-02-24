@@ -100,11 +100,8 @@ defaults_dict = weeutil.config.config_from_str(DEFAULTS_INI)
 
 # unit system new observations
 weewx.units.obs_group_dict['thswIndex'] = "group_temperature"
-weewx.units.obs_group_dict['thswIndex2'] = "group_temperature"#test
 weewx.units.obs_group_dict['thwIndex'] = "group_temperature"
-weewx.units.obs_group_dict['thwIndex2'] = "group_temperature" #test
 weewx.units.obs_group_dict['wetBulb'] = "group_temperature"
-weewx.units.obs_group_dict['wetBulb2'] = "group_temperature" #test
 weewx.units.obs_group_dict['sunshine'] = "group_count"
 weewx.units.obs_group_dict['sunshineRadiationMin'] = "group_radiation"
 weewx.units.obs_group_dict['sunshineThreshold'] = "group_radiation"
@@ -126,11 +123,8 @@ weewx.units.obs_group_dict['solar_heatindex'] = "group_temperature"
 weewx.units.obs_group_dict['solar_humidex'] = "group_temperature"
 weewx.units.obs_group_dict['solar_pressure'] = "group_pressure"
 weewx.units.obs_group_dict['solar_thswIndex'] = "group_temperature"
-weewx.units.obs_group_dict['solar_thswIndex2'] = "group_temperature" #test
 weewx.units.obs_group_dict['solar_thwIndex'] = "group_temperature"
-weewx.units.obs_group_dict['solar_thwIndex2'] = "group_temperature" #test
 weewx.units.obs_group_dict['solar_wetBulb'] = "group_temperature"
-weewx.units.obs_group_dict['solar_wetBulb2'] = "group_temperature" #test
 weewx.units.obs_group_dict['solar_windchill'] = "group_temperature"
 # AllSky camera
 weewx.units.obs_group_dict['asky_box_altimeter'] = 'group_pressure'
@@ -138,6 +132,15 @@ weewx.units.obs_group_dict['asky_box_barometer'] = 'group_pressure'
 weewx.units.obs_group_dict['asky_box_dewpoint'] = "group_temperature"
 weewx.units.obs_group_dict['asky_box_pressure'] = 'group_pressure'
 weewx.units.obs_group_dict['asky_dome_dewpoint'] = 'group_temperature'
+#
+# Tests
+weewx.units.obs_group_dict['thswIndex2'] = "group_temperature"
+weewx.units.obs_group_dict['thwIndex2'] = "group_temperature"
+weewx.units.obs_group_dict['wetBulb2'] = "group_temperature"
+weewx.units.obs_group_dict['solar_thswIndex2'] = "group_temperature"
+weewx.units.obs_group_dict['solar_thwIndex2'] = "group_temperature"
+weewx.units.obs_group_dict['solar_wetBulb2'] = "group_temperature"
+
 
 VERSION = '0.4'
 
