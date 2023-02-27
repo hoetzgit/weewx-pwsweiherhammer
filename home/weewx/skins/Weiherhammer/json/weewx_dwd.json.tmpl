@@ -236,5 +236,44 @@
                 }]
             }
         ]
+    },
+    "brightsky": {
+        "timestamp": $current.brightsky_DateTime.raw,
+        "current": [
+            {
+                "success": true,
+                "error": null,
+                "source": "Brightsky DWD Synop",
+                "response": [{
+                    "dataSource": "synop",
+                    "loc": {
+                        "latitude": $current.brightsky_Latitude.raw,
+                        "longitude": $current.brightsky_Longitude.raw,
+                        "altitude": "$current.brightsky_Altitude"
+                    },
+                    "place": {
+                        "name": "DWD Station $current.brightsky_StationName.raw",
+                        "city": "$current.brightsky_StationName.raw",
+                        "id": $current.brightsky_APIstationId.raw,
+                        "wmo_id": $current.brightsky_WMOstationId.raw,
+                        "dwd_id": "$current.brightsky_DWDstationId.raw"
+                    },
+                    "profile": {
+                        "tz": "Europe/Berlin",
+                        "tzname": "CET",
+                        "tzoffset": 3600
+                    },
+                    "obTimestamp": $current.brightsky_DateTime.raw,
+                    "ob": {
+                        "timestamp": $current.brightsky_DateTime.raw,
+                        "icon": "$current.brightsky_Icon.raw",
+                        "sky": $current.brightsky_Cloudcover.raw,
+                        "weather": "$current.brightsky_Icontitle.raw",
+                        "weatherPrimary": "$current.brightsky_Icontitle.raw",
+                        "visibilityKM": $current.brightsky_Visibility.raw
+                    }
+                }]
+            }
+        ]
     }
 }

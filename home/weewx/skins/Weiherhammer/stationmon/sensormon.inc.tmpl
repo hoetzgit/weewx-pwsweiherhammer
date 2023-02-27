@@ -3,7 +3,7 @@
 #def signal_symbol($obs)
     #set $sig = getattr($current, $obs).raw
     #set $class_span = '%s_symbol' % $obs
-    #if $sig >= 0 and $sig <= 4
+    #if $sig is not None and $sig >= 0 and $sig <= 4
     #set $class_icon = 'bi bi-reception-%.0f' % $sig
     #else
     #set $class_icon = 'bi bi bi-question' % $sig
@@ -14,7 +14,7 @@
 #def battery_level2_symbol($obs)
     #set $batt = getattr($current, $obs).raw
     #set $class_span = '%s_symbol' % $obs
-    #if $batt >= 0.0 and $batt <= 1.0
+    #if $batt is not None and $batt >= 0.0 and $batt <= 1.0
     #if $batt == 0.0
     #set $class_icon = 'bi bi-battery-full'
     #else
@@ -29,7 +29,7 @@
 #def battery_level6_symbol($obs)
     #set $batt = getattr($current, $obs).raw
     #set $class_span = '%s_symbol' % $obs
-    #if $batt >= 0.0 and $batt <= 6.0
+    #if $batt is not None and $batt >= 0.0 and $batt <= 6.0
     #if $batt <= 1.0
     #set $class_icon = 'bi bi-battery'
     #elif $batt == 2.0

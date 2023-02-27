@@ -1,6 +1,6 @@
 
             <!-- Generator: generate_mqttmontopics_inc.sh -->
-            <!-- generated: 23.02.2023 12:31:43 -->
+            <!-- generated: 27.02.2023 16:21:02 -->
 
 
                 <tr>
@@ -262,6 +262,130 @@
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot boilingTemp-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.boilingTemp">boilingTemp</abbr></th>
                     <td class="mqttmon-table-body-obs-val"><span class="boilingTemp" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Altitude-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Altitude">brightsky_Altitude</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Altitude" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_APIstationId-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_APIstationId">brightsky_APIstationId</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_APIstationId" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Barometer-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Barometer">brightsky_Barometer</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Barometer" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Cloudcover-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Cloudcover">brightsky_Cloudcover</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Cloudcover" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_DateTime-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_DateTime">brightsky_DateTime</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_DateTime" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Dewpoint-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Dewpoint">brightsky_Dewpoint</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Dewpoint" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Distance-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Distance">brightsky_Distance</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Distance" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_DWDstationId-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_DWDstationId">brightsky_DWDstationId</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_DWDstationId" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Latitude-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Latitude">brightsky_Latitude</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Latitude" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Longitude-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Longitude">brightsky_Longitude</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Longitude" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_OutHumidity-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_OutHumidity">brightsky_OutHumidity</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_OutHumidity" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_OutTemp-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_OutTemp">brightsky_OutTemp</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_OutTemp" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Precipitation10-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Precipitation10">brightsky_Precipitation10</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Precipitation10" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Precipitation30-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Precipitation30">brightsky_Precipitation30</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Precipitation30" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Precipitation60-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Precipitation60">brightsky_Precipitation60</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Precipitation60" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_SunshineDur30-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_SunshineDur30">brightsky_SunshineDur30</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_SunshineDur30" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_SunshineDur60-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_SunshineDur60">brightsky_SunshineDur60</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_SunshineDur60" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Visibility-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Visibility">brightsky_Visibility</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Visibility" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_WindDir10-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_WindDir10">brightsky_WindDir10</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_WindDir10" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_WindDir30-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_WindDir30">brightsky_WindDir30</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_WindDir30" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_WindDir60-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_WindDir60">brightsky_WindDir60</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_WindDir60" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_WindGust10-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_WindGust10">brightsky_WindGust10</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_WindGust10" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_WindGust30-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_WindGust30">brightsky_WindGust30</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_WindGust30" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_WindGust60-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_WindGust60">brightsky_WindGust60</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_WindGust60" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_WindGustDir10-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_WindGustDir10">brightsky_WindGustDir10</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_WindGustDir10" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_WindGustDir30-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_WindGustDir30">brightsky_WindGustDir30</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_WindGustDir30" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_WindGustDir60-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_WindGustDir60">brightsky_WindGustDir60</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_WindGustDir60" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_WindSpeed10-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_WindSpeed10">brightsky_WindSpeed10</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_WindSpeed10" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_WindSpeed30-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_WindSpeed30">brightsky_WindSpeed30</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_WindSpeed30" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_WindSpeed60-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_WindSpeed60">brightsky_WindSpeed60</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_WindSpeed60" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_WMOstationId-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_WMOstationId">brightsky_WMOstationId</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_WMOstationId" rel="tooltip" title="">---</span></td>
                 </tr>
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot cdc_Altimeter-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.cdc_Altimeter">cdc_Altimeter</abbr></th>
@@ -992,6 +1116,10 @@
                     <td class="mqttmon-table-body-obs-val"><span class="interval" rel="tooltip" title="">---</span></td>
                 </tr>
                 <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot lightning_distance-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.lightning_distance">lightning_distance</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="lightning_distance" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot lightning_strike_count-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.lightning_strike_count">lightning_strike_count</abbr></th>
                     <td class="mqttmon-table-body-obs-val"><span class="lightning_strike_count" rel="tooltip" title="">---</span></td>
                 </tr>
@@ -1538,6 +1666,10 @@
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot trend_solar_barometer-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.trend_solar_barometer">trend_solar_barometer</abbr></th>
                     <td class="mqttmon-table-body-obs-val"><span class="trend_solar_barometer" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot txBatteryStatus-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.txBatteryStatus">txBatteryStatus</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="txBatteryStatus" rel="tooltip" title="">---</span></td>
                 </tr>
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot uba_aqi-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.uba_aqi">uba_aqi</abbr></th>

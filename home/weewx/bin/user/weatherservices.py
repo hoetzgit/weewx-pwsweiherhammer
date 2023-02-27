@@ -77,16 +77,15 @@
                 #log_success = replace_me
                 #log_failure = replace_me
 
-                # optional, POI Station latitude in decimal degrees.
-                # POI Station latitude see station list
+                # optional latitude and longitude of the POI station
+                # Is only used as return value
+                #   latitude in decimal degrees. Negative for southern hemisphere.
+                #   longitude in decimal degrees. Negative for western hemisphere.
                 #latitude = replace_me
-
-                # optional, POI Station longitude in decimal degrees.
-                # POI Station longitude see station list
                 #longitude = replace_me
 
-                # optional, POI Station altitude with the unit. Choose 'foot' or 'meter' for unit.
-                # POI Station altitude see station list
+                # optional altitude of the POI station with the unit. Choose 'foot' or 'meter' for unit.
+                # Is only used as return value
                 #altitude = replace_me
             ...
             [[[other_unique_identifier_for_a_dwd_poi_service]]]
@@ -306,18 +305,19 @@
                 # default: dwd-icon
                 #model = replace_me
 
-                # optional, latitude in decimal degrees. Negative for southern hemisphere.
-                # default: If station above in 'ThisStation': latitude value from weewx.conf [station]
-                #          otherwise: latitude from Open-Weather Geocoding API with station city or postal code
+                # optional
+                #   latitude in decimal degrees. Negative for southern hemisphere.
+                #   longitude in decimal degrees. Negative for western hemisphere.
+                # defaults:
+                #   If station is 'ThisStation': latitude and longitude from weewx.conf [station] will be use
+                #   If station is a city name or postal code: latitude and longitude from Open-Weather Geocoding APIwill be use
                 #latitude = replace_me
-
-                # optional, longitude in decimal degrees. Negative for western hemisphere.
-                # default: If station above in 'ThisStation': longitude value from weewx.conf [station]
-                #          otherwise: longitude from Open-Weather Geocoding API with station city or postal code
                 #longitude = replace_me
 
                 # optional, altitude of the station, with the unit. Choose 'foot' or 'meter' for unit.
-                # default: If station above in 'ThisStation': altitude value from weewx.conf [station]
+                # default: 
+                #   If station is 'ThisStation': altitude from weewx.conf [station] will be use
+                #   If station is a city name or postal code: altitude from Open-Weather Geocoding APIwill be use
                 #          otherwise: altitude from Open-Weather Geocoding API with station city or postal code
                 #altitude = replace_me
 
@@ -358,6 +358,105 @@
     
     Open-Meteo GitHub:
     https://github.com/open-meteo/open-meteo
+
+    
+    ----------------
+    
+    API Brightsky
+    ==============
+    
+    Bright Sky is an open-source project aiming to make some of the more popular data
+    — in particular weather observations from the DWD station network and weather forecasts from the MOSMIX model —
+    available in a free, simple JSON API.
+    https://brightsky.dev
+    https://brightsky.dev/docs/
+    
+    unsing here the "current_weather" endpoint to get current weather observations
+    https://brightsky.dev/docs/#get-/current_weather
+    
+    Brightsky Service configuration weewx.conf:
+    
+    [WeatherServices]
+        ...
+        # optional, logging for services.
+        # defaults: value from weewx.conf
+        #log_success = replace_me
+        #log_failure = replace_me
+        ...
+        [[forecast]]
+            ...
+            # optional, 'belchertown', 'dwd' or 'aeris'
+            # default: belchertown
+            #icon_set = replace_me
+
+            # optional, used for queries where a language is required, e.g. Open-Meteo geocoding API.
+            # default: de
+            #lang = replace_me
+            ...
+        [[current]]
+            ...
+            # Any unique identifier for this Brightsky service. Used to give the service a id for logging e.g.
+            [[[any_unique_identifier_for_this_brightsky_service]]]
+                # required, service provider: brightsky
+                provider = brightsky
+
+                # optional, enable or disable this service.
+                # default: True
+                #enable = replace_me
+
+                # required if no latitude and longitude selected, otherwise optional
+                # possible values:
+                #   - 'ThisStation' for the local station
+                #   - Valid city name or postal code e.g. 'Döbeln' or '04720'.
+                #   - DWD station ID: DWD prefix 'dwd_' and typically five alphanumeric characters. e.g 'dwd_P0036'
+                #   - WMO station ID: WMO prefix 'wmo_' and typically five digits. e.g 'wmo_10688'
+                #   - Brightsky source ID: Brightsky API prefix 'api_' and digits. e.g 'api_6007'
+                #     ==> 27.02.2023: https://github.com/jdemaeyer/brightsky/issues/126
+                # If station is selected, this is primarily used for the API query.
+                # default: ""
+                #station = replace_me
+
+                # required if no station is selected, otherwise optional
+                # latitude in decimal degrees. Negative for southern hemisphere.
+                # longitude in decimal degrees. Negative for western hemisphere.
+                # defaults, if latitude or longitude empty:
+                #   If station above in 'ThisStation': latitude and longitude values from weewx.conf [station] will be use
+                #   If station above a city name or postal code: latitude and longitude results from open-meteo Geocoding API will be use
+                # If no station is selected, latitude and longitude are primarily used for the API query.
+                #latitude = replace_me
+                #longitude = replace_me
+
+                # optional, a prefix for each observation, e.g. "brightsky" results "brightskyObersvationname"
+                # Useful if multiple services are used to be able to distinguish the data, see also weewx-DWD documentation.
+                # default: ""
+                #prefix = replace_me
+
+                # optional, used for queries where a language is required, e.g. Open-Meteo geocoding API.
+                # default: value from section [[forecast]]
+                #lang = replace_me
+
+                # optional, 'belchertown', 'dwd' or 'aeris'
+                # default: value from section [[forecast]]
+                #icon_set = replace_me
+
+                # optional, debug level, e.g. 0 = no debug infos, 1 = min debug infos, 2 = more debug infos, >=3 = max debug infos.
+                # default: 0
+                #debug = replace_me
+
+                # optional, logging for services.
+                # defaults: value from section [WeatherServices]
+                #log_success = replace_me
+                #log_failure = replace_me
+            ...
+            [[[other_unique_identifier_for_a_service]]]
+            ...
+        ...
+    
+    Brightsky API URL Builder
+    https://brightsky.dev/docs/#tag--weather
+    
+    Brightsky GitHub:
+    https://github.com/jdemaeyer/brightsky
 """
 
 VERSION = "0.x"
@@ -370,6 +469,7 @@ import io
 import zipfile
 import time
 import datetime
+import dateutil.parser
 import json
 import random
 import copy
@@ -470,10 +570,13 @@ def wget(url,log_success=False,log_failure=True):
             # Open-Meteo returned a JSON error object with a reason
             if 'reason' in reply.json():
                 reason = str(reply.json()['reason'])
+            # Brightsky returned a JSON error object with a error description
+            elif 'description' in reply.json():
+                reason = str(reply.json()['description'])
             # other services may return a JSON error object with an error message
             elif 'error' in reply.json():
                 reason = str(reply.json()['error'])
-            logerr('Error downloading %s: %s %s' % (reply.url, reply.status_code, reason))
+            logerr("Download Error %s - %s URL=%s" % (reply.status_code, reason, reply.url))
         return None
     else:
         if log_failure:
@@ -531,6 +634,11 @@ def is_night(record,log_success=False,log_failure=True):
     # if we are not between sunrise and sunset it must be night
     return not (sunrise_ts < record['dateTime'][0] < sunset_ts)
 
+# ============================================================================
+#
+# Class BaseThread
+#
+# ============================================================================
 
 class BaseThread(threading.Thread):
 
@@ -578,6 +686,12 @@ class BaseThread(threading.Thread):
         finally:
             loginf("thread '%s' stopped" % self.name)
 
+
+# ============================================================================
+#
+# Class DWDPOIthread
+#
+# ============================================================================
 
 class DWDPOIthread(BaseThread):
 
@@ -810,6 +924,12 @@ class DWDPOIthread(BaseThread):
         if self.debug > 0 and len(x) > 0:
             logdbg("thread '%s': result=%s" % (self.name, str(x[0])))
 
+
+# ============================================================================
+#
+# Class DWDCDCthread
+#
+# ============================================================================
 
 class DWDCDCthread(BaseThread):
 
@@ -1056,6 +1176,12 @@ class DWDCDCthread(BaseThread):
             logdbg("thread '%s': result=%s" % (self.name, str(self.data[self.maxtime])))
 
 
+# ============================================================================
+#
+# Class ZAMGthread
+#
+# ============================================================================
+
 class ZAMGthread(BaseThread):
 
     # https://dataset.api.hub.zamg.ac.at/v1/station/historical/klima-v1-10min/metadata
@@ -1290,8 +1416,11 @@ class ZAMGthread(BaseThread):
                 logerr("thread '%s': %s" % (self.name,e))
 
 
-
-
+# ============================================================================
+#
+# Class OPENMETEOthread
+#
+# ============================================================================
 
 class OPENMETEOthread(BaseThread):
 
@@ -1496,9 +1625,11 @@ class OPENMETEOthread(BaseThread):
             else:
                 if self.log_failure or self.debug > 0:
                     logerr("thread '%s': Geocoding returns None data." % self.name)
+                return None
         except (Exception, LookupError) as e:
             if self.log_failure or self.debug > 0:
                 logerr("thread '%s': Geocoding %s - %s" % (self.name, e.__class__.__name__, e))
+            return None
 
         # return results
         return geodata
@@ -1531,14 +1662,17 @@ class OPENMETEOthread(BaseThread):
             if station.lower() not in ('thisstation', 'here'):
                 # station is a city name or postal code
                 geo = self.get_geocoding(station)
-                if self.lat is None:
-                    self.lat = weeutil.weeutil.to_float(geo.get('latitude'))
-                if self.lon is None:
-                    self.lon = weeutil.weeutil.to_float(geo.get('longitude'))
-                if self.alt is None:
-                    self.alt = weeutil.weeutil.to_float(geo.get('elevation'))
+                if geo is not None:
+                    if self.lat is None:
+                        self.lat = weeutil.weeutil.to_float(geo.get('latitude'))
+                    if self.lon is None:
+                        self.lon = weeutil.weeutil.to_float(geo.get('longitude'))
+                    if self.alt is None:
+                        self.alt = weeutil.weeutil.to_float(geo.get('elevation'))
+                else:
+                    raise weewx.ViolatedPrecondition("thread '%s': Could not get geodata for station '%s'" % (self.name, station))
             else:
-                raise weewx.ViolatedPrecondition("thread '%s': Configured location is not valid." % self.name)
+                raise weewx.ViolatedPrecondition("thread '%s': Configured station is not valid." % self.name)
 
         for opsapi, obsweewx in self.current_obs.items():
             obsgroup = None
@@ -1883,10 +2017,396 @@ class OPENMETEOthread(BaseThread):
             self.lock.release()
 
 
-class DWDservice(StdService):
+# ============================================================================
+#
+# Class BRIGHTSKYthread
+#
+# ============================================================================
+
+class BRIGHTSKYthread(BaseThread):
+
+    # https://brightsky.dev/docs/#overview--on-stations-and-sources
+    # Icons nach https://github.com/jdemaeyer/brightsky/issues/111
+    # Icons nach https://github.com/jdemaeyer/brightsky/blob/master/brightsky/web.py#L146-L174
+    # condition - dry┃fog┃rain┃sleet┃snow┃hail┃thunderstorm┃
+    # icon - clear-day┃clear-night┃partly-cloudy-day┃partly-cloudy-night┃cloudy┃fog┃wind┃rain┃sleet┃snow┃hail┃thunderstorm┃
+
+    # Evapotranspiration/UV-Index:
+    # Attention, no capital letters for WeeWX fields. Otherwise the WeeWX field "ET"/"UV" will be formed if no prefix is used!
+    # Mapping API observation fields -> WeeWX field, unit, group
+    OBS = {
+        'timestamp': ('dateTime', 'unix_epoch', 'group_time')
+        ,'condition': ('APIcondition', None, None)
+        ,'icon': ('APIicon', None, None)
+        ,'temperature': ('outTemp', 'degree_C', 'group_temperature')
+        ,'dew_point': ('dewpoint', 'degree_C', 'group_temperature')
+        ,'pressure_msl': ('barometer', 'hPa', 'group_pressure')
+        ,'relative_humidity': ('outHumidity', 'percent', 'group_percent')
+        ,'wind_speed_10': ('windSpeed10', 'kmh', 'group_speed')
+        ,'wind_speed_30': ('windSpeed30', 'kmh', 'group_speed')
+        ,'wind_speed_60': ('windSpeed60', 'kmh', 'group_speed')
+        ,'wind_direction_10': ('windDir10', 'degree_compass', 'group_direction')
+        ,'wind_direction_30': ('windDir30', 'degree_compass', 'group_direction')
+        ,'wind_direction_60': ('windDir60', 'degree_compass', 'group_direction')
+        ,'wind_gust_speed_10': ('windGust10', 'kmh', 'group_speed')
+        ,'wind_gust_speed_30': ('windGust30', 'kmh', 'group_speed')
+        ,'wind_gust_speed_60': ('windGust60', 'kmh', 'group_speed')
+        ,'wind_gust_direction_10': ('windGustDir10', 'degree_compass', 'group_direction')
+        ,'wind_gust_direction_30': ('windGustDir30', 'degree_compass', 'group_direction')
+        ,'wind_gust_direction_60': ('windGustDir60', 'degree_compass', 'group_direction')
+        ,'cloud_cover': ('cloudcover', 'percent', 'group_percent')
+        ,'precipitation_10': ('precipitation10', 'mm', 'group_rain')
+        ,'precipitation_30': ('precipitation30', 'mm', 'group_rain')
+        ,'precipitation_60': ('precipitation60', 'mm', 'group_rain')
+        ,'sunshine_10': ('sunshineDur10', 'minute', 'group_deltatime')
+        ,'sunshine_30': ('sunshineDur30', 'minute', 'group_deltatime')
+        ,'sunshine_60': ('sunshineDur60', 'minute', 'group_deltatime')
+        ,'visibility': ('visibility', 'km', 'group_distance')
+    }
+
+    # Mapping API primary source fields -> WeeWX field, unit, group
+    SOURCES = {
+        'id': ('APIstationId', None, None)
+        ,'dwd_station_id': ('DWDstationId', None, None)
+        ,'wmo_station_id': ('WMOstationId', None, None)
+        ,'observation_type': ('observationType', None, None)
+        ,'lat': ('latitude', 'degree_compass', 'group_coordinate')
+        ,'lon': ('longitude', 'degree_compass', 'group_coordinate')
+        ,'height': ('altitude', 'meter', 'group_altitude')
+        ,'distance': ('distance', 'km', 'group_distance')
+        ,'station_name': ('stationName', None, None)
+    }
+
+    # Mapping API icon field to internal icon fields
+    CONDITIONS = {
+        #              0       1      2     3          4              5          6
+        # BRIGHTSKY Icon: [german, english, None, None, Belchertown Icon, DWD Icon, Aeris Icon]
+        'clear-day': ('wolkenlos', 'clear sky', '', '', 'clear-day.png', '0-8.png', 'clear')
+        ,'clear-night': ('wolkenlos', 'clear sky', '', '', 'clear-night.png', '0-8.png', 'clearn')
+        ,'partly-cloudy-day': ('bewölkt', 'partly cloudy', '', '', 'mostly-cloudy-day.png', '5-8.png', 'pcloudy')
+        ,'partly-cloudy-night': ('bewölkt', 'partly cloudy', '', '', 'mostly-cloudy-night.png', '5-8.png', 'pcloudyn')
+        ,'cloudy': ('bedeckt', 'overcast', '', '', 'cloudy.png', '8-8.png', 'cloudy')
+        ,'hail': ('Hagel', 'hail', '', '', 'hail.png', '13.png', 'freezingrain')
+        ,'snow': ('Schneefall', 'snow fall', '', '', 'snow.png', '15.png', 'snow')
+        ,'sleet': ('Schneeregen', 'snow showers', '', '', 'sleet.png', '13.png', 'rainandsnow')
+        ,'rain': ('Regen', 'rain', '', '', 'rain.png', '8.png', 'rain')
+        ,'wind': ('Wind', 'wind', '', '', 'wind.png', '18.png', 'wind')
+        ,'fog': ('Nebel', 'fog', '', '', 'fog.png', '40.png', 'fog')
+        ,'thunderstorm': ('Gewitter', 'thunderstorm', '', '', 'thunderstorm.png', '27.png', 'tstorm')
+    }
+
+    def get_current_obs(self):
+        return BRIGHTSKYthread.OBS
+
+    def get_sources_obs(self):
+        return BRIGHTSKYthread.SOURCES
+
+    def get_condition_obs(self):
+        return BRIGHTSKYthread.CONDITIONS
+
+    def get_geocoding(self, station):
+        """
+        Get geocoding data with Open-Meteo Geocoding API
+
+        Inputs:
+           station: String to search for. An empty string or only 1 character will return an empty result.
+                    2 characters will only match exact matching locations. 3 and more characters will perform
+                    fuzzy matching. The search string can be a location name or a postal code.
+        Outputs:
+           geocoding result as dict from the first API result or None if errors occurred
+        """
+        geodata = {}
+
+        baseurl = 'https://geocoding-api.open-meteo.com/v1/search'
+        # String to search for.
+        params = '?name=%s' % station
+        # The number of search results to return. Up to 100 results can be retrieved.
+        # here default 1
+        params += '&count=1'
+        # By default, results are returned as JSON.
+        params += '&format=json'
+        # Return translated results, if available, otherwise return english or the native location name. Lower-cased.
+        params += '&language=%s' % self.lang
+
+        url = baseurl + params
+
+        if self.debug >= 2:
+            logdbg("thread '%s': Geocoding URL=%s" % (self.name, url))
+
+        try:
+            reply = wget(url,
+                         log_success=(self.log_success or self.debug > 0),
+                         log_failure=(self.log_failure or self.debug > 0))
+            if reply is not None:
+                geodata = json.loads(reply.decode('utf-8'))
+
+                if self.debug >= 3:
+                    logdbg("thread '%s': Geocoding returns data=%s" % (self.name, str(geodata)))
+                geodata = geodata['results'][0]
+                if self.debug >= 3:
+                    logdbg("thread '%s': Geocoding station=%s result=%s" % (self.name, station, str(geodata)))
+            else:
+                if self.log_failure or self.debug > 0:
+                    logerr("thread '%s': Geocoding returns None data." % self.name)
+                return None
+        except (Exception, LookupError) as e:
+            if self.log_failure or self.debug > 0:
+                logerr("thread '%s': Geocoding %s - %s" % (self.name, e.__class__.__name__, e))
+            return None
+
+        # return results
+        return geodata
+
+    def __init__(self, name, brightsky_dict, log_success=False, log_failure=True):
+
+        super(BRIGHTSKYthread, self).__init__(name='BRIGHTSKY-' + name, log_success=log_success,
+                                              log_failure=log_failure)
+
+        self.lock = threading.Lock()
+        self.log_success = weeutil.weeutil.to_bool(brightsky_dict.get('log_success', log_success))
+        self.log_failure = weeutil.weeutil.to_bool(brightsky_dict.get('log_failure', log_failure))
+        self.debug = weeutil.weeutil.to_int(brightsky_dict.get('debug', 0))
+        self.lang = brightsky_dict.get('lang', 'de')
+
+        self.iconset = weeutil.weeutil.to_int(brightsky_dict.get('iconset', 4))
+        self.prefix = brightsky_dict.get('prefix', '')
+
+        self.current_obs = self.get_current_obs()
+        self.sources_obs = self.get_sources_obs()
+
+        self.primary_api_query = None
+
+        self.data = []
+        self.last_get_ts = 0
+
+        station = brightsky_dict.get('station')
+        if station.lower() not in ('thisstation', 'here'):
+            spl = station.lower().split('_')
+            if len(spl) >= 2:
+                # station id is selected?
+                if spl[0] == 'api':
+                    self.primary_api_query = '?source_id=%s' % spl[1]
+                elif spl[0] == 'dwd':
+                    self.primary_api_query = '?dwd_station_id=%s' % str(spl[1])
+                elif spl[0] == 'wmo':
+                    self.primary_api_query = '?wmo_station_id=%s' % str(spl[1])
+
+            if self.primary_api_query is None:
+                # station is a city name or postal code?
+                geo = self.get_geocoding(station)
+                if geo is not None:
+                    self.primary_api_query = '?lat=%s&lon=%s' % (geo.get('latitude'), geo.get('longitude'))
+        else:
+            self.primary_api_query = '?lat=%s&lon=%s' % (brightsky_dict.get('latitude'), brightsky_dict.get('longitude'))
+
+        if self.primary_api_query is None:
+            raise weewx.ViolatedPrecondition("thread '%s': Configured station or latitude/longitude not valid." % self.name)
+
+        for opsapi, obsweewx in self.current_obs.items():
+            obs = obsweewx[0]
+            group = obsweewx[2]
+            if group is not None:
+                weewx.units.obs_group_dict.setdefault(self.prefix + obs[0].upper() + obs[1:], group)
+
+        for opsapi, obsweewx in self.sources_obs.items():
+            obs = obsweewx[0]
+            group = obsweewx[2]
+            if group is not None:
+                weewx.units.obs_group_dict.setdefault(self.prefix + obs[0].upper() + obs[1:], group)
+
+    def get_data(self):
+        """ get buffered data """
+        try:
+            self.lock.acquire()
+            """
+            try:
+                last_ts = self.data[-1]['time']
+                interval = last_ts - self.last_get_ts
+                self.last_get_ts = last_ts
+            except (LookupError,TypeError,ValueError,ArithmeticError):
+                interval = None
+            """
+            interval = 1
+            data = self.data
+            # print('POI',data)
+        finally:
+            self.lock.release()
+        # loginf("get_data interval %s data %s" % (interval,data))
+        return data, interval
+
+    def get_conditions(self, icon):
+        """ convert API icon to internal icons with weather description
+            returns: (german_text,english_text,'','',belchertown_icon,dwd_icon,aeris_icon)
+        """
+        try:
+            x = BRIGHTSKYthread.CONDITIONS[icon]
+        except (LookupError, TypeError) as e:
+            x = ('unbekannte Wetterbedingungen', 'unknown conditions', '', '', 'unknown.png', 'unknown.png', 'unknown')
+            if self.log_failure or self.debug > 0:
+                logerr("thread '%s': icon=%s mapping %s - %s" % (self.name, icon, e.__class__.__name__, e))
+        return x
+
+    def getRecord(self):
+        """ download and process Brightsky API weather data """
+
+        baseurl = 'https://api.brightsky.dev//current_weather'
+
+        # primary api query
+        params = self.primary_api_query
+
+        # Timezone in which record timestamps will be presented, as tz database name, e.g. Europe/Berlin.
+        # Will also be used as timezone when parsing date and last_date, unless these have explicit UTC offsets.
+        # If omitted but date has an explicit UTC offset, that offset will be used as timezone.
+        # Otherwise will default to UTC.
+        params += '&timezone=Europe%2FBerlin'
+
+        # Physical units in which meteorological parameters will be returned. Set to si to use SI units.
+        # The default dwd option uses a set of units that is more common in meteorological applications and civil use:
+        # 	                    DWD	    SI
+        # Cloud cover	        %	    %
+        # Dew point	            °C	    K
+        # Precipitation	        mm	    kg/m²
+        # Pressure	            hPa	    Pa
+        # Relative humidity     %       %
+        # Sunshine	            min	    s
+        # Temperature	        °C	    K
+        # Visibility	        m	    m
+        # Wind direction	    °	    °
+        # Wind speed	        km/h    m/s
+        # Wind gust direction   °	    °
+        # Wind gust speed	    km/h	m/s
+        params += '&units=dwd'
+
+        url = baseurl + params
+
+        if self.debug >= 2:
+            logdbg("thread '%s': Brightsky URL=%s" % (self.name, url))
+
+        apidata = {}
+        try:
+            reply = wget(url,
+                         log_success=(self.log_success or self.debug > 0),
+                         log_failure=(self.log_failure or self.debug > 0))
+            if reply is not None:
+                apidata = json.loads(reply.decode('utf-8'))
+            else:
+                if self.log_failure or self.debug > 0:
+                    logerr("thread '%s': Brightsky returns None data." % self.name)
+                return
+        except Exception as e:
+            if self.log_failure or self.debug > 0:
+                logerr("thread '%s': Brightsky %s - %s" % (self.name, e.__class__.__name__, e))
+            return
+
+        # get and check results
+        weather = apidata.get('weather')
+        if weather is None:
+            if self.log_failure or self.debug > 0:
+                logerr("thread '%s': Brightsky returns no weather data." % self.name)
+            return
+
+        sources = apidata.get('sources')
+        if sources is None:
+            if self.log_failure or self.debug > 0:
+                logerr("thread '%s': Brightsky returns no sources data." % self.name)
+            return
+
+        # holds the return values
+        x = []
+        y = dict()
+
+        if self.debug >= 4:
+            logdbg("thread '%s': API result: %s" % (self.name, str(apidata)))
+
+        y['interval'] = (60,'minute','group_interval')
+
+        # get current weather data
+        for obsapi, obsweewx in self.current_obs.items():
+            obsname = self.prefix+obsweewx[0][0].upper()+obsweewx[0][1:]
+            obsval = weather.get(obsapi)
+            if obsval is None:
+                if self.debug >= 2:
+                    logdbg("thread '%s': No value for observation '%s' - '%s'" % (self.name, str(obsapi), str(obsweewx[0])))
+                continue
+
+            if self.debug >= 3:
+                logdbg("thread '%s': weewx=%s api=%s obs=%s val=%s" % (self.name, str(obsweewx[0]), str(obsapi), str(obsname), str(obsval)))
+
+            if obsapi == 'timestamp':
+                # get a datetime object from observation timestamp ISO 8601 Format
+                dt = dateutil.parser.isoparse(obsval)
+                # convert dt timestamp to unix timestamp
+                obsval = weeutil.weeutil.to_int(dt.timestamp())
+            # visibility from meter to km
+            elif obsapi == 'visibility':
+                obsval = (weeutil.weeutil.to_float(obsval) / 1000)
+            # WeeWX value with group?
+            elif obsweewx[2] is not None:
+                obsval = weeutil.weeutil.to_float(obsval)
+
+            y[obsweewx[0]] = (obsval, obsweewx[1], obsweewx[2])
+
+        # get primary source data
+        source_id = weather.get('source_id')
+        if source_id is not None:
+            for source in sources:
+                if source.get('id') == source_id:
+                    for obsapi, obsweewx in self.sources_obs.items():
+                        obsname = self.prefix+obsweewx[0][0].upper()+obsweewx[0][1:]
+                        obsval = source.get(obsapi)
+                        if obsval is None:
+                            if self.debug >= 2:
+                                logdbg("thread '%s': No value for source '%s' - '%s'" % (self.name, str(obsapi), str(obsweewx[0])))
+                            continue
+
+                        # distance from meter to km
+                        if obsapi == 'distance':
+                            obsval = (weeutil.weeutil.to_float(obsval) / 1000)
+
+                        if self.debug >= 3:
+                            logdbg("thread '%s': weewx=%s api=%s obs=%s val=%s" % (self.name, str(obsweewx[0]), str(obsapi), str(obsname), str(obsval)))
+
+                        # WeeWX value with group?
+                        if obsweewx[2] is not None:
+                            obsval = weeutil.weeutil.to_float(obsval)
+                        
+                        y[obsweewx[0]] = (obsval, obsweewx[1], obsweewx[2])
+                    break
+
+        # convert Brightsky condition to weather description and icon
+        apiicon = weather.get('icon')
+        if apiicon is None:
+            # dummy
+            apiicon = 'unknown'
+        condition = self.get_conditions(apiicon)
+
+        if condition is not None:
+            y['icon'] = (condition[self.iconset], None, None)
+            y['icontitle'] = (condition[0], None, None)
+
+        x.append(y)
+
+        if self.debug > 0:
+            logdbg("thread '%s': result=%s" % (self.name, str(x[0])))
+
+        try:
+            self.lock.acquire()
+            self.data = x
+        finally:
+            self.lock.release()
+
+
+
+# ============================================================================
+#
+# Class CurrentService
+#
+# ============================================================================
+
+class CurrentService(StdService):
 
     def __init__(self, engine, config_dict):
-        super(DWDservice,self).__init__(engine, config_dict)
+        super(CurrentService,self).__init__(engine, config_dict)
         
         site_dict = weeutil.config.accumulateLeaves(config_dict.get('WeatherServices',configobj.ConfigObj()))
         self.log_success = weeutil.weeutil.to_bool(site_dict.get('log_success', True))
@@ -1921,7 +2441,7 @@ class DWDservice(StdService):
             # Check required provider
             provider = station_dict.get('provider')
             if provider: provider = provider.lower()
-            if provider not in ('dwd', 'zamg', 'open-meteo'):
+            if provider not in ('dwd', 'zamg', 'open-meteo', 'brightsky'):
                 if self.log_failure or self.debug > 0:
                     logerr("Section '%s' - weather service provider is not valid. Skip section." % section)
                 continue
@@ -1955,30 +2475,34 @@ class DWDservice(StdService):
                 if iconset=='dwd': station_dict['iconset'] = 5
                 if iconset=='aeris': station_dict['iconset'] = 6
 
+            # set default station if not selected
+            if station is None:
+                station = 'thisStation'
+
             # possible station coordinates
-            if provider == 'open-meteo' or (provider == 'dwd' and model == 'poi'):
-                altitude = station_dict.get('altitude')
-                if altitude is not None:
-                    altitude_t = weeutil.weeutil.option_as_list(altitude)
-                    if len(altitude_t) >= 2:
-                        altitude_t[1] = altitude_t[1].lower()
-                        if altitude_t[1] in ('meter', 'foot'):
-                            altitude_vt = weewx.units.ValueTuple(weeutil.weeutil.to_float(altitude_t[0]), altitude_t[1], "group_altitude")
-                            station_dict['altitude'] = weewx.units.convert(altitude_vt, 'meter')[0]
-                        else:
-                            station_dict['altitude'] = None
-                            if self.log_failure or self.debug > 0:
-                                logerr("Configured unit '%s' for altitude in section '%s' is not valid, altitude will be ignored." % (altitude_t[1], section))
+            altitude = station_dict.get('altitude')
+            if altitude is not None:
+                altitude_t = weeutil.weeutil.option_as_list(altitude)
+                if len(altitude_t) >= 2:
+                    altitude_t[1] = altitude_t[1].lower()
+                    if altitude_t[1] in ('meter', 'foot'):
+                        altitude_vt = weewx.units.ValueTuple(weeutil.weeutil.to_float(altitude_t[0]), altitude_t[1], "group_altitude")
+                        station_dict['altitude'] = weewx.units.convert(altitude_vt, 'meter')[0]
                     else:
                         station_dict['altitude'] = None
                         if self.log_failure or self.debug > 0:
-                            logerr("Configured altitude '%s' in section '%s' is not valid, altitude will be ignored." % (altitude, section))
+                            logerr("Configured unit '%s' for altitude in section '%s' is not valid, altitude will be ignored." % (altitude_t[1], section))
+                else:
+                    station_dict['altitude'] = None
+                    if self.log_failure or self.debug > 0:
+                        logerr("Configured altitude '%s' in section '%s' is not valid, altitude will be ignored." % (altitude, section))
 
-                if station.lower() in ('here','thisstation'):
+            if station.lower() in ('thisstation', 'here'):
+                if station_dict.get('latitude') is None or station_dict.get('longitude') is None:
                     station_dict['latitude'] = station_dict.get('latitude', engine.stn_info.latitude_f)
                     station_dict['longitude'] = station_dict.get('longitude', engine.stn_info.longitude_f)
-                    if station_dict.get('altitude') is None:
-                        station_dict['altitude'] = weewx.units.convert(engine.stn_info.altitude_vt, 'meter')[0]
+                if station_dict.get('altitude') is None:
+                    station_dict['altitude'] = weewx.units.convert(engine.stn_info.altitude_vt, 'meter')[0]
 
             if provider == 'dwd':
                 if model == 'poi':
@@ -1998,6 +2522,8 @@ class DWDservice(StdService):
                         self._create_openmeteo_thread(modlocation, station_dict)
                 else:
                     self._create_openmeteo_thread(section, station_dict)
+            elif provider == 'brightsky':
+                self._create_brightsky_thread(section, station_dict)
             elif self.log_failure or self.debug > 0:
                 logerr("Unknown weather service provider '%s' in section '%s'" % (provider, section))
 
@@ -2053,7 +2579,17 @@ class DWDservice(StdService):
                     log_failure=weeutil.weeutil.to_bool(station_dict.get('log_failure',self.log_failure)) or self.verbose)
         self.threads[thread_name]['thread'].start()
     
-    
+    def _create_brightsky_thread(self, thread_name, station_dict):
+        prefix = station_dict.get('prefix','id'+thread_name)
+        self.threads[thread_name] = dict()
+        self.threads[thread_name]['datasource'] = 'BRIGHTSKY'
+        self.threads[thread_name]['prefix'] = prefix
+        self.threads[thread_name]['thread'] = BRIGHTSKYthread(thread_name,
+                    station_dict,
+                    log_success=weeutil.weeutil.to_bool(station_dict.get('log_success',self.log_success)) or self.verbose,
+                    log_failure=weeutil.weeutil.to_bool(station_dict.get('log_failure',self.log_failure)) or self.verbose)
+        self.threads[thread_name]['thread'].start()
+
     def shutDown(self):
         """ shutdown threads """
         for ii in self.threads:
@@ -2071,6 +2607,7 @@ class DWDservice(StdService):
     def new_archive_record(self, event):
         for thread_name in self.threads:
             # get collected data
+            data = None
             datasource = self.threads[thread_name]['datasource']
             if datasource=='POI':
                 data,interval = self.threads[thread_name]['thread'].get_data()
@@ -2081,6 +2618,9 @@ class DWDservice(StdService):
             elif datasource=='ZAMG':
                 data,interval = self.threads[thread_name]['thread'].get_data()
             elif datasource=='OPENMETEO':
+                data,interval = self.threads[thread_name]['thread'].get_data()
+                if data: data = data[0]
+            elif datasource=='BRIGHTSKY':
                 data,interval = self.threads[thread_name]['thread'].get_data()
                 if data: data = data[0]
             if data:
@@ -2109,6 +2649,12 @@ class DWDservice(StdService):
                 data[prefix+key[0].upper()+key[1:]] = val
         return data
 
+
+# ============================================================================
+#
+# __main__
+#
+# ============================================================================
 
 if __name__ == '__main__':
 
@@ -2141,7 +2687,7 @@ if __name__ == '__main__':
 
     else:
     
-        sv = DWDservice(engine,conf_dict)
+        sv = CurrentService(engine,conf_dict)
         
         try:
             while True:
