@@ -270,7 +270,7 @@
             <ul>
                 <li>Wettersoftware <a href="https://github.com/weewx/weewx" target="_blank" rel="noreferrer">WeeWX</a>, Version: $station.version</li>
                 <li>MQTT Broker <a href="https://obrienlabs.net/go/mqttbroker" target="_blank" rel="noreferrer">Mosquitto</a> zur Aufnahme von Nachrichten per MQTT</li>
-                <li>Visualisierung dieser Webseite mit einer angepassten Version der <a href="https://github.com/poblabs/weewx-belchertown" target="_blank" rel="noreferrer">Belchertown skin</a>. Basierend auf Belchertown skin Version: 1.3b2</li>
+                <li>Visualisierung dieser Webseite mit einer angepassten Version der <a href="https://github.com/poblabs/weewx-belchertown" target="_blank" rel="noreferrer">Belchertown skin</a>. Basierend auf Belchertown skin Version: 1.3</li>
                 <li>Erweiterung <a href="https://www.highcharts.com" target="_blank" rel="noreferrer">HighCharts</a> zur Erstellung von Charts auf dieser Webseite</li>
                 <li>Das <a href="https://wiki.loxberry.de/plugins/foshkplugin/start" target="_blank" rel="noreferrer">FOSHKplugin</a> (<a href="https://wiki.loxberry.de/plugins/foshkplugin/foshkplugin_generic_version" target="_blank" rel="noreferrer">generic Version</a>) zum Empfang der GW1100 Daten per HTTP, deren Aufbereitung und Weiterleitung zu WeeWX und weiteren Zielen, Version: 0.09</li>
                 <li>WeeWX Treiber <a href="https://github.com/matthewwall/weewx-interceptor" target="_blank" rel="noreferrer">weewx-interceptor</a> (ecowitt-client) zum Empfang der Daten per HTTP von FOSHKplugin. An eigene Sensoren angepasst, basierend auf Version: 0.60</li>

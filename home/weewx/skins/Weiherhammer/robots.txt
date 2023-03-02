@@ -1,2 +1,9 @@
 User-agent: * 
 Disallow: /NOAA/
+Disallow: /allsky/
+Disallow: /dwd/
+Disallow: /images/
+Disallow: /pi/
+Disallow: /stationmon/
+Disallow: /test/
+Disallow: /webcamrpi/

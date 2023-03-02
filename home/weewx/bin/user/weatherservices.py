@@ -530,6 +530,18 @@ import weewx.almanac
 for group in weewx.units.std_groups:
     weewx.units.std_groups[group].setdefault('group_coordinate','degree_compass')
 
+# DWD CDC 10 Minutes radiation unit
+# https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/10_minutes/solar/now/BESCHREIBUNG_obsgermany_climate_10min_solar_now_de.pdf
+# https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/10_minutes/solar/now/DESCRIPTION_obsgermany_climate_10min_solar_now_en.pdf
+# TODO evaluate formula for:
+# DS_10 - 10min-sum of diffuse solar radiation - unit J/cm^2
+# GS_10 - 10min-sum of solar incoming radiation - unit J/cm^2
+# LS_10 - 10min-sum of longwave downward radiation - unit J/cm^2
+if weewx.units.conversionDict.get('joule_per_cm_squared_10minutes') is None:
+    weewx.units.conversionDict.setdefault('joule_per_cm_squared_10minutes',{})
+if weewx.units.conversionDict['joule_per_cm_squared_10minutes'].get('watt_per_meter_squared') is None:
+    weewx.units.conversionDict['joule_per_cm_squared_10minutes']['watt_per_meter_squared'] = lambda x : (x * 10000) / 600
+
 # Cloud cover icons
 
 N_ICON_LIST = [
@@ -710,15 +722,24 @@ class DWDPOIthread(BaseThread):
         'pressure_reduced_to_mean_sea_level':'barometer',
         'relative_humidity':'outHumidity',
         'temperature_at_5_cm_above_ground':'extraTemp1',
-        'total_snow_depth':'snowDepth'}
+        'total_snow_depth':'snowDepth',
+        'maximum_wind_speed_last_hour':'windGust'}
     
     UNIT = {
-        'Grad C':'degree_C',
-        'W/m2':'watt_per_meter_squared',
-        'km/h':'kilometer_per_hour',
-        'h':'hour',
-        'min':'minute',
-        '%':'percent'}
+        'Grad C': 'degree_C'
+        ,'Grad': 'degree_compass'
+        ,'W/m2': 'watt_per_meter_squared'
+        ,'km/h': 'km_per_hour'
+        ,'h': 'hour'
+        ,'min': 'minute'
+        ,'%': 'percent'
+        ,'km': 'km'
+        ,'m': 'meter'
+        ,'cm': 'cm'
+        ,'mm': 'mm'
+        ,'hPa': 'hPa'
+        ,'CODE_TABLE': 'count'
+    }
     
     WEATHER = (
         ('unbekannt','unknown.png','unknown.png'), # 0
@@ -780,9 +801,14 @@ class DWDPOIthread(BaseThread):
             obstype = DWDPOIthread.OBS[key]
             if obstype=='visibility':
                 obsgroup = 'group_distance'
+            elif obstype=='solarRad':
+                obsgroup = 'group_radiation'
+            elif obstype=='presentWeather':
+                obsgroup = 'group_count'
             else:
                 obsgroup = weewx.units.obs_group_dict.get(obstype)
             if obsgroup:
+                weewx.units.obs_group_dict.setdefault(obstype, obsgroup)
                 weewx.units.obs_group_dict.setdefault(prefix+obstype[0].upper()+obstype[1:],obsgroup)
 
 
@@ -881,6 +907,8 @@ class DWDPOIthread(BaseThread):
                         y['time'] = (val,None,None)
                     else:
                         col = DWDPOIthread.OBS.get(names[idx])
+                        if col is None:
+                            continue
                         unit = DWDPOIthread.UNIT.get(units[idx],units[idx])
                         if unit=='degree_C':
                             grp = 'group_temperature'
@@ -903,9 +931,9 @@ class DWDPOIthread(BaseThread):
                 night = is_night(y, log_success=(self.log_success or self.debug > 0),
                                     log_failure=(self.log_failure or self.debug > 0))
                 if night != "N/A":
-                    y['day'] = (0 if night else 1,None,None)
+                    y['day'] = (0 if night else 1,'count','group_count')
                 else:
-                    y['day'] = (None,None,None)
+                    y['day'] = (None,'count','group_count')
                     night = False
                     if self.log_failure or self.debug > 0:
                         logerr("thread '%s': Determining day or night was not possible." % self.name)
@@ -954,12 +982,12 @@ class DWDCDCthread(BaseThread):
         # precipitation
         'RWS_DAU_10':('rainDur','minute','group_deltatime'),
         'RWS_10':('rain','mm','group_rain'),
-        'RWS_IND_10':('rainIndex','',''),
+        'RWS_IND_10':('rainIndex',None,None),
         # solar
-        'DS_10':('solarRad','J/cm^2','group_radiation'),
-        'GS_10':('radiation','J/cm^2','group_radiation'),
+        'DS_10':('solarRad','joule_per_cm_squared_10minutes','group_radiation'),
+        'GS_10':('radiation','joule_per_cm_squared_10minutes','group_radiation'),
         'SD_10':('sunshineDur','hour','group_deltatime'),
-        'LS_10':('LS_10','j/cm^2','group_radiation')}
+        'LS_10':('LS_10','joule_per_cm_squared_10minutes','group_radiation')}
         
     DIRS = {
         'air':('air_temperature','10minutenwerte_TU_','_now.zip','Meta_Daten_zehn_min_tu_'),
@@ -1011,6 +1039,7 @@ class DWDCDCthread(BaseThread):
             obstype = obs[0]
             obsgroup = obs[2]
             if obsgroup:
+                weewx.units.obs_group_dict.setdefault(obstype, obsgroup)
                 weewx.units.obs_group_dict.setdefault(prefix+obstype[0].upper()+obstype[1:],obsgroup)
         weewx.units.obs_group_dict.setdefault(prefix+'Barometer','group_pressure')
         weewx.units.obs_group_dict.setdefault(prefix+'Altimeter','group_pressure')
@@ -1217,8 +1246,8 @@ class ZAMGthread(BaseThread):
         'GLOW':('radiation','watt_per_meter_squared','group_radiation'),
         'P':('pressure','hPa','group_pressure'),
         'PRED':('pred','hPa','group_pressure'), # altimeter or barometer?
-        'RFAM':('humidity','percent','group_humidity'),
-        'SCHNEE':('snowDepth','cm','group_distance'),
+        'RFAM':('humidity','percent','group_percent'),
+        'SCHNEE':('snowDepth','cm','group_rain'),
         'S0':('sunshineDur','second','group_deltatime'),
         'TL':('outTemp','degree_C','group_temperature'),
         'TP':('dewpoint','degree_C','group_temperature'),
@@ -1294,6 +1323,7 @@ class ZAMGthread(BaseThread):
             obstype = obs[0]
             obsgroup = obs[2]
             if obsgroup:
+                weewx.units.obs_group_dict.setdefault(obstype, obsgroup)
                 weewx.units.obs_group_dict.setdefault(prefix+obstype[0].upper()+obstype[1:],obsgroup)
         weewx.units.obs_group_dict.setdefault(prefix+'Barometer','group_pressure')
         weewx.units.obs_group_dict.setdefault(prefix+'Altimeter','group_pressure')
@@ -1428,7 +1458,7 @@ class OPENMETEOthread(BaseThread):
         # option: (country, weather service, model, API endpoint, exclude list)
         'best_match':('', '', '', 'forecast',['snowfall_height'])
         ,'dwd-icon':('DE', 'DWD', 'ICON', 'dwd-icon',['visibility'])
-        ,'ecmwf':('EU', 'ECMWF', 'open IFS', 'ecmwf',['apparent_temperature', 'dewpoint_2m', 'direct_radiation_instant', 'evapotranspiration', 'freezinglevel_height', 'rain', 'relativehumidity_2m', 'showers', 'snow_depth', 'snowfall_height', 'visibility', 'windgusts_10m'])
+        ,'ecmwf':('EU', 'ECMWF', 'open IFS', 'ecmwf',['apparent_temperature', 'dewpoint_2m', 'diffuse_radiation_instant', 'evapotranspiration', 'freezinglevel_height', 'rain', 'relativehumidity_2m', 'shortwave_radiation_instant', 'showers', 'snow_depth', 'snowfall_height', 'visibility', 'windgusts_10m'])
         ,'ecmwf_ifs04':('EU', 'ECMWF', 'IFS', 'forecast',['snowfall_height'])
         ,'gem':('CA', 'MSC-CMC', 'GEM+HRDPS', 'gem',['evapotranspiration', 'freezinglevel_height', 'snow_depth', 'snowfall_height', 'visibility'])
         ,'gem_global':('CA', 'MSC-CMC', 'GEM', 'forecast',['snowfall_height'])
@@ -1475,7 +1505,8 @@ class OPENMETEOthread(BaseThread):
         ,'freezinglevel_height':'freezinglevelHeight'
         ,'weathercode':'weathercode'
         ,'snow_depth':'snowDepth'
-        ,'direct_radiation_instant':'radiation'
+        ,'shortwave_radiation_instant':'radiation'
+        ,'diffuse_radiation_instant':'solarRad'
         ,'visibility':'visibility' # only available by the American weather models.
         ,'snowfall_height':'snowfallHeight' # Europe only
     }
@@ -1508,7 +1539,7 @@ class OPENMETEOthread(BaseThread):
         ,'hPa': 'hPa'
         ,'kPa': 'kPa'
         ,u'W/m²': 'watt_per_meter_squared'
-        ,'km/h': 'kilometer_per_hour'
+        ,'km/h': 'km_per_hour'
         ,'%': 'percent'
         ,'wmo code': 'count'
         ,'unixtime': 'unix_epoch'
@@ -1681,6 +1712,7 @@ class OPENMETEOthread(BaseThread):
             else:
                 obsgroup = weewx.units.obs_group_dict.get(obsweewx)
             if obsgroup is not None:
+                weewx.units.obs_group_dict.setdefault(obsweewx, obsgroup)
                 weewx.units.obs_group_dict.setdefault(self.prefix+obsweewx[0].upper()+obsweewx[1:],obsgroup)
 
         for opsapi, obsweewx in self.hourly_obs.items():
@@ -1698,9 +1730,12 @@ class OPENMETEOthread(BaseThread):
                 obsgroup = 'group_altitude'
             elif obsweewx=='visibility':
                 obsgroup = 'group_distance'
+            elif obsweewx=='solarRad':
+                obsgroup = 'group_radiation'
             else:
                 obsgroup = weewx.units.obs_group_dict.get(obsweewx)
             if obsgroup is not None:
+                weewx.units.obs_group_dict.setdefault(obsweewx, obsgroup)
                 weewx.units.obs_group_dict.setdefault(self.prefix+obsweewx[0].upper()+obsweewx[1:],obsgroup)
 
     def get_data(self):
@@ -1965,13 +2000,10 @@ class OPENMETEOthread(BaseThread):
                 continue
             groupweewx = weewx.units.obs_group_dict.get(obsname)
             # snowDepth from meter to mm, weewx snowDepth is weewx group_rain
+            # group_rain has no conversation from meter to mm
             if obsweewx == 'snowDepth':
                 obsval = (weeutil.weeutil.to_float(obsval) * 1000)
                 unitweewx = 'mm'
-            # visibility from meter to km
-            if obsweewx == 'visibility':
-                obsval = (weeutil.weeutil.to_float(obsval) / 1000)
-                unitweewx = 'km'
             y[obsweewx] = (weeutil.weeutil.to_float(obsval), unitweewx, groupweewx)
             if self.debug >= 3:
                 logdbg("thread '%s': hourly: weewx=%s result=%s" % (self.name, str(obsweewx), str(y[obsweewx])))
@@ -1991,9 +2023,9 @@ class OPENMETEOthread(BaseThread):
         night = is_night(y, log_success=(self.log_success or self.debug > 0),
                          log_failure=(self.log_failure or self.debug > 0))
         if night != "N/A":
-            y['day'] = (0 if night else 1,None,None)
+            y['day'] = (0 if night else 1,'count','group_count')
         else:
-            y['day'] = (None,None,None)
+            y['day'] = (None,'count','group_count')
             night = False
             if self.log_failure or self.debug > 0:
                 logerr("thread '%s': Determining day or night was not possible." % self.name)
@@ -2008,7 +2040,7 @@ class OPENMETEOthread(BaseThread):
         x.append(y)
 
         if self.debug > 0:
-            logdbg("thread '%s': result=%s" % (self.name, str(x[0])))
+            logdbg("thread '%s': result=%s" % (self.name, str(x)))
 
         try:
             self.lock.acquire()
@@ -2042,15 +2074,15 @@ class BRIGHTSKYthread(BaseThread):
         ,'dew_point': ('dewpoint', 'degree_C', 'group_temperature')
         ,'pressure_msl': ('barometer', 'hPa', 'group_pressure')
         ,'relative_humidity': ('outHumidity', 'percent', 'group_percent')
-        ,'wind_speed_10': ('windSpeed10', 'kmh', 'group_speed')
-        ,'wind_speed_30': ('windSpeed30', 'kmh', 'group_speed')
-        ,'wind_speed_60': ('windSpeed60', 'kmh', 'group_speed')
+        ,'wind_speed_10': ('windSpeed10', 'km_per_hour', 'group_speed')
+        ,'wind_speed_30': ('windSpeed30', 'km_per_hour', 'group_speed')
+        ,'wind_speed_60': ('windSpeed60', 'km_per_hour', 'group_speed')
         ,'wind_direction_10': ('windDir10', 'degree_compass', 'group_direction')
         ,'wind_direction_30': ('windDir30', 'degree_compass', 'group_direction')
         ,'wind_direction_60': ('windDir60', 'degree_compass', 'group_direction')
-        ,'wind_gust_speed_10': ('windGust10', 'kmh', 'group_speed')
-        ,'wind_gust_speed_30': ('windGust30', 'kmh', 'group_speed')
-        ,'wind_gust_speed_60': ('windGust60', 'kmh', 'group_speed')
+        ,'wind_gust_speed_10': ('windGust10', 'km_per_hour', 'group_speed')
+        ,'wind_gust_speed_30': ('windGust30', 'km_per_hour', 'group_speed')
+        ,'wind_gust_speed_60': ('windGust60', 'km_per_hour', 'group_speed')
         ,'wind_gust_direction_10': ('windGustDir10', 'degree_compass', 'group_direction')
         ,'wind_gust_direction_30': ('windGustDir30', 'degree_compass', 'group_direction')
         ,'wind_gust_direction_60': ('windGustDir60', 'degree_compass', 'group_direction')
@@ -2061,7 +2093,7 @@ class BRIGHTSKYthread(BaseThread):
         ,'sunshine_10': ('sunshineDur10', 'minute', 'group_deltatime')
         ,'sunshine_30': ('sunshineDur30', 'minute', 'group_deltatime')
         ,'sunshine_60': ('sunshineDur60', 'minute', 'group_deltatime')
-        ,'visibility': ('visibility', 'km', 'group_distance')
+        ,'visibility': ('visibility', 'meter', 'group_distance')
     }
 
     # Mapping API primary source fields -> WeeWX field, unit, group
@@ -2073,13 +2105,13 @@ class BRIGHTSKYthread(BaseThread):
         ,'lat': ('latitude', 'degree_compass', 'group_coordinate')
         ,'lon': ('longitude', 'degree_compass', 'group_coordinate')
         ,'height': ('altitude', 'meter', 'group_altitude')
-        ,'distance': ('distance', 'km', 'group_distance')
+        ,'distance': ('distance', 'meter', 'group_distance')
         ,'station_name': ('stationName', None, None)
     }
 
     # Mapping API icon field to internal icon fields
     CONDITIONS = {
-        #              0       1      2     3          4              5          6
+        #                     0       1      2     3          4              5          6
         # BRIGHTSKY Icon: [german, english, None, None, Belchertown Icon, DWD Icon, Aeris Icon]
         'clear-day': ('wolkenlos', 'clear sky', '', '', 'clear-day.png', '0-8.png', 'clear')
         ,'clear-night': ('wolkenlos', 'clear sky', '', '', 'clear-night.png', '0-8.png', 'clearn')
@@ -2206,12 +2238,14 @@ class BRIGHTSKYthread(BaseThread):
             obs = obsweewx[0]
             group = obsweewx[2]
             if group is not None:
+                weewx.units.obs_group_dict.setdefault(obs, group)
                 weewx.units.obs_group_dict.setdefault(self.prefix + obs[0].upper() + obs[1:], group)
 
         for opsapi, obsweewx in self.sources_obs.items():
             obs = obsweewx[0]
             group = obsweewx[2]
             if group is not None:
+                weewx.units.obs_group_dict.setdefault(obs, group)
                 weewx.units.obs_group_dict.setdefault(self.prefix + obs[0].upper() + obs[1:], group)
 
     def get_data(self):
@@ -2262,19 +2296,19 @@ class BRIGHTSKYthread(BaseThread):
 
         # Physical units in which meteorological parameters will be returned. Set to si to use SI units.
         # The default dwd option uses a set of units that is more common in meteorological applications and civil use:
-        # 	                    DWD	    SI
-        # Cloud cover	        %	    %
-        # Dew point	            °C	    K
-        # Precipitation	        mm	    kg/m²
-        # Pressure	            hPa	    Pa
+        #                       DWD     SI
+        # Cloud cover           %       %
+        # Dew point             °C      K
+        # Precipitation         mm      kg/m²
+        # Pressure              hPa     Pa
         # Relative humidity     %       %
-        # Sunshine	            min	    s
-        # Temperature	        °C	    K
-        # Visibility	        m	    m
-        # Wind direction	    °	    °
-        # Wind speed	        km/h    m/s
-        # Wind gust direction   °	    °
-        # Wind gust speed	    km/h	m/s
+        # Sunshine              min     s
+        # Temperature           °C      K
+        # Visibility            m       m
+        # Wind direction        °       °
+        # Wind speed            km/h    m/s
+        # Wind gust direction   °       °
+        # Wind gust speed       km/h    m/s
         params += '&units=dwd'
 
         url = baseurl + params
@@ -2337,13 +2371,9 @@ class BRIGHTSKYthread(BaseThread):
                 dt = dateutil.parser.isoparse(obsval)
                 # convert dt timestamp to unix timestamp
                 obsval = weeutil.weeutil.to_int(dt.timestamp())
-            # visibility from meter to km
-            elif obsapi == 'visibility':
-                obsval = (weeutil.weeutil.to_float(obsval) / 1000)
             # WeeWX value with group?
             elif obsweewx[2] is not None:
                 obsval = weeutil.weeutil.to_float(obsval)
-
             y[obsweewx[0]] = (obsval, obsweewx[1], obsweewx[2])
 
         # get primary source data
@@ -2358,10 +2388,6 @@ class BRIGHTSKYthread(BaseThread):
                             if self.debug >= 2:
                                 logdbg("thread '%s': No value for source '%s' - '%s'" % (self.name, str(obsapi), str(obsweewx[0])))
                             continue
-
-                        # distance from meter to km
-                        if obsapi == 'distance':
-                            obsval = (weeutil.weeutil.to_float(obsval) / 1000)
 
                         if self.debug >= 3:
                             logdbg("thread '%s': weewx=%s api=%s obs=%s val=%s" % (self.name, str(obsweewx[0]), str(obsapi), str(obsname), str(obsval)))
@@ -2384,10 +2410,15 @@ class BRIGHTSKYthread(BaseThread):
             y['icon'] = (condition[self.iconset], None, None)
             y['icontitle'] = (condition[0], None, None)
 
+        night = is_night(y, log_success=(self.log_success or self.debug > 0),
+                         log_failure=(self.log_failure or self.debug > 0))
+        if night != "N/A":
+            y['day'] = (0 if night else 1,'count','group_count')
+
         x.append(y)
 
         if self.debug > 0:
-            logdbg("thread '%s': result=%s" % (self.name, str(x[0])))
+            logdbg("thread '%s': result=%s" % (self.name, str(x)))
 
         try:
             self.lock.acquire()
@@ -2516,9 +2547,9 @@ class CurrentService(StdService):
                 if model == 'test':
                     prefix = station_dict.get('prefix', '')
                     for ommodel in OPENMETEOthread.WEATHERMODELS:
-                        modlocation = section + "_" + ommodel.upper()
+                        modlocation = section + "-" + ommodel.upper()
                         station_dict['model'] = ommodel
-                        station_dict['prefix'] = prefix + '_' + ommodel + '_'
+                        station_dict['prefix'] = prefix + '-' + ommodel
                         self._create_openmeteo_thread(modlocation, station_dict)
                 else:
                     self._create_openmeteo_thread(section, station_dict)
@@ -2640,6 +2671,9 @@ class CurrentService(StdService):
             else:
                 try:
                     val = reply[key]
+                    # first convert val to standard unit in METRIC unit system
+                    val = weewx.units.convertStd(val, weewx.METRIC)
+                    # now convert val to archive record unit system
                     val = weewx.units.convertStd(val, usUnits)[0]
                 except (TypeError,ValueError,LookupError,ArithmeticError) as e:
                     try:

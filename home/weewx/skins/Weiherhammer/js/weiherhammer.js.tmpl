@@ -31,8 +31,14 @@ function get_pageName() {
         if (monitor !== "") {
             name = monitor;
         }
+    } else {
+        try {
+           name = name.split('.');
+           name = name[0];
+        } catch (err) {
+           console.error(err);
+        }
     }
-
     if (name == "" ) {
         name = "homepage";
     }
@@ -1452,7 +1458,7 @@ function update_with_weewx_data(data, data_update=false) {
     }
 
     // update only data values
-    if (pageName == "homepage" && data_update) {
+    if ((pageName == "homepage" || pageName == "console") && data_update) {
         // all obs with class = obs or class = obs_formatted
         try {
             jQuery.each(data["raw"], function(data_class, data_raw) {
@@ -1507,7 +1513,7 @@ function update_with_weewx_data(data, data_update=false) {
         }
     }
 
-    if (pageName == "homepage") {
+    if (pageName == "homepage" || pageName == "console") {
         try {
             // Update alerts and current data
             #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
@@ -1573,7 +1579,7 @@ function update_with_weewx_data(data, data_update=false) {
         #end if
     }
 
-    if (pageName == "homepage" || pageName == "sensormon") {
+    if (pageName == "homepage" || pageName == "sensormon" || pageName == "console") {
         // ========================================================
         // obs value dependent properties if enabled
         // ========================================================
@@ -1835,7 +1841,7 @@ function ajaxforecast(options=['']) {
         if (cnt == 0) {
             if (pageName == "homepage") {
                 options = ["alerts", "current"];
-            } else if (pageName == "forecast") {
+            } else if (pageName == "forecast" || pageName == "console") {
                 options = ["forecast"];
             } else {
                 options = ["all"];
@@ -3151,7 +3157,7 @@ function update_with_mqtt_data(data) {
             weiherhammer_debug("Skipping chart update for page " + pageName + ", no charts to be updated.");
         }
         else {
-            if (pageName == "homepage") {
+            if (pageName == "homepage" || pageName == "console") {
                 setTimeout(showChart, 20000, homepage_graphgroup); // Load updated charts.
             } else if (pageName == "sensormon") {
                 setTimeout(showChart, 20000, pageName); // Load updated charts.
@@ -3184,7 +3190,7 @@ function update_with_mqtt_data(data) {
     jQuery(".offlineMarker").hide();
     jQuery(".loadingMarker").hide();
 
-    if (pageName == "homepage" || pageName == "sensormon") {
+    if (pageName == "homepage" || pageName == "sensormon" || pageName == "console") {
         // all obs with class = obs or class = obs_formatted
         try {
             jQuery.each(data, function(data_class, data_raw) {
@@ -3569,7 +3575,7 @@ function update_with_mqtt_data(data) {
                         }
                    } else {
                         var localeStringUseGrouping = true;
-                        if (unit_group_array[data_class].includes("group_time") || unit_group_array[data_class].includes("group_pressure")) {
+                        if (unit_group_array[data_class].includes("group_time") || unit_group_array[data_class].includes("group_pressure") || unit_group_array[data_class].includes("group_count")) {
                             // Do not group number into thousands,hundreds format
                             localeStringUseGrouping = false;
                         }

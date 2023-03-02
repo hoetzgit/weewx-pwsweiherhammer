@@ -121,10 +121,15 @@
         #include "dwd/wbx_tab_BY.inc"
     #else
         <!-- DWD Waldbrandgefahrenindex -->
-        <div class="col-xs-12 wbx-headline">$obs.label.forecast_header_wbx <span class="issued-DWD">$obs.label.forecast_issuedWBX_dwd_paused</span></div>
-        <div class="col-md-12 forecast-content"><p>zur Zeit keine Warnungen (Daten werden vom DWD im Zeitraum <b>M&auml;rz</b> bis <b>Oktober</b> zur Verf&uuml;gung gestellt.)</p></div>
-    </div>
+        <div class="col-md-12 wbx-headline">
+            $obs.label.forecast_header_wbx
+            <span class="issued-DWD">$obs.label.forecast_issuedWBX_dwd_paused</span>
+        </div>
+        <div class="col-md-12 forecast-content">
+            <p>zur Zeit keine Warnungen (Daten werden vom DWD im Zeitraum <b>M&auml;rz</b> bis <b>Oktober</b> zur Verf&uuml;gung gestellt.)</p>
+        </div>
     #end if
+    </div>
     #end if
 
     ## Die Idee mit Schleife und Wochentagen: https://github.com/Daveiano/weewx-wdc/blob/2.x/skins/weewx-wdc/dwd.html.tmpl

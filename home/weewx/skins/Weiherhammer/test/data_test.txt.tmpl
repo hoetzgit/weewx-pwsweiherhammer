@@ -1,41 +1,6 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-DWD OM/POI Daten
-
-#if $current.om_DateTime.has_data
-"current.om_DateTime.raw"        = "$current.om_DateTime.raw"
-#end if
-#if $current.om_Weathercode.has_data
-"current.om_Weathercode.raw"     = "$current.om_Weathercode.raw"
-#end if
-#if $current.om_DateTime.has_data
-"current.om_Icon.raw"            = "$current.om_Icon.raw"
-#end if
-#if $current.om_Icontitle.has_data
-"current.om_Icontitle.raw"       = "$current.om_Icontitle.raw"
-#end if
-
-#if $current.poi_DateTime.has_data
-"current.poi_DateTime.raw"       = "$current.poi_DateTime.raw"
-#end if
-#if $current.poi_PresentWeather.has_data
-"current.poi_PresentWeather.raw" = "$current.poi_PresentWeather.raw"
-#end if
-#if $current.poi_Icon.has_data
-"current.poi_Icon.raw"           = "$current.poi_Icon.raw"
-#end if
-#if $current.poi_Icontitle.has_data
-"current.poi_Icontitle.raw"      = "$current.poi_Icontitle.raw"
-#end if
-
-Anderes
-
-"current.outHumAbs.gram_per_meter_cubed": "$current.outHumAbs.gram_per_meter_cubed"
-"current.best_match_Visibility.raw": "$current.best_match_Visibility.raw"
-"current.best_match_Visibility.km": "$current.best_match_Visibility.km"
-
-
 "day_sunshineDur_sum" = $day.sunshineDur.sum.long_form
 "day_sunshineDur_sum" = $day.sunshineDur.sum.long_form('%(minute)d%(minute_label)s, %(second)d%(second_label)s')
 "day_sunshineDur_sum" = $day.sunshineDur.sum.long_form('%(hour)d%(hour_label)s, %(minute)d%(minute_label)s')
