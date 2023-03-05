@@ -66,7 +66,7 @@ $gettext('no')
                             <tr>
                                 ##TODO AJAX, TODO Format Date
                                 <td class="station-observations-extras-label">$gettext("last rain")</td>
-                                <td class="station-observations-extras-data">$last_rain<br>$time_since_last_rain.long_form</td>
+                                <td class="station-observations-extras-data">$time_at('rain>0')<br>$time_since('rain>0').long_form</td>
                             </tr>
                             #else
                             <tr>

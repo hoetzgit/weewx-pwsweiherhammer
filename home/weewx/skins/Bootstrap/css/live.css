@@ -1,5 +1,9 @@
+.main {
+  hyphens: auto;
+}
+
 .currentConditions {
-  color: #777;
+  color: #555;
   font-family: sans-serif;
   padding: 3% 0;
 }
@@ -20,7 +24,7 @@
   float: left;
 }
 .stationInfo td {
-   color: #777;
+   color: #555;
    font-family: sans-serif;
    font-size: smaller;
 }
@@ -57,12 +61,21 @@
   bottom: 5px;
 }
 
+thead.table-light th {
+  color: #333;
+  background-color: #f3f3f3;
+}
+
+.table {
+  color: #555;
+}
+
 .chartTimestampOuter {
   position: relative;
   width:100%;
   display: flex;
   justify-content: center;
-  color: #777;
+  color: #555;
   font-family: sans-serif;
   font-size: 12px;
 }
@@ -75,6 +88,7 @@
 td.month, td.head, td.year, td.noaa, th.month, th.head, th.year, th.noaa {
   padding: 2px;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .month {
@@ -85,4 +99,10 @@ td.month, td.head, td.year, td.noaa, th.month, th.head, th.year, th.noaa {
 .year {
   border-left-style: double;
   border-left-width: 4px;
+}
+
+h3 small {
+  color: #555;
+  font-size: 0.6em;
+  margin-left: 0.5em;
 }

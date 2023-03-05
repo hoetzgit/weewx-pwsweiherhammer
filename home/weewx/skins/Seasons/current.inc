@@ -82,7 +82,7 @@
     #elif $x == 'lastRain'
       <tr>
         <td class="label">$gettext("Last rain")</td>
-        <td class="data">$last_rain<br>$time_since_last_rain.long_form</td>
+        <td class="data">$time_at('rain>0')<br>$time_since('rain>0').long_form</td>
       </tr>
     #else
       <tr>

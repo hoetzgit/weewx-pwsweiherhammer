@@ -23,6 +23,7 @@
 """
 import syslog
 import weewx
+import weewx.units
 from weewx.wxengine import StdService
 from weeutil.weeutil import to_bool, to_int, to_float
 
@@ -164,7 +165,11 @@ class SunshineDuration(StdService):
             # |<=======================>|           = self.sunshineDur
             #                           |<--        = start for calculation on next loop
 
-            target_data['sunshineDur'] = self.sunshineDur
+            vt = (weeutil.weeutil.to_float(self.sunshineDur), 'second', 'group_deltatime')
+            # first convert vt to standard unit in METRIC unit system
+            vt = weewx.units.convertStd(vt, weewx.METRIC)
+            # now convert vt to archive record unit system
+            target_data['sunshineDur'] = weewx.units.convertStd(vt, event.record['usUnits'])[0]
 
             # reset loop sum
             self.sunshineDur = 0
