@@ -299,7 +299,7 @@ def weather_decode(weathercode,cloudcover,night,weatherprovider='dwd'):
     WEATHERDATA_UNKNOWN = (9999,'unbekannt','unknown',0,'unknown.png',None,'na','::')
     if (weatherprovider=='dwd'):
         code_list = DWD_WEATHER_CODE_LIST
-    elif (weatherprovider=='brightsky'):
+    elif (weatherprovider=='_brightsky'):
         code_list = BRIGHTSKY_WEATHER_CODE_LIST
         weathercode = BRIGHSKY_WEATHER_CODE_MAPPING[weathercode]
         weathercode = [weathercode] #compatible to DWD ww code
@@ -1858,24 +1858,24 @@ class ForecastPWS(object):
         #TODO: alerts
         #TODO: aqi
         src = "Brightsky (DWD Daten)"
-        if ('brightsky' in self.current_provider_list):
+        if ('_brightsky' in self.current_provider_list):
             try:
                 data = self.download_brightsky('current_weather', src)
-                forecast_result['brightsky'] = {
+                forecast_result['_brightsky'] = {
                     'timestamp':int(now),
                     'current': data
                 }
             except Exception as e:
                 if self.log_failure or self.verbose:
                    logerr(e)
-                forecast_result['brightsky'] = {
+                forecast_result['_brightsky'] = {
                     'timestamp':int(now),
                     'current':[{'success':False,'error':{'code':e.__name__,'description':str(e)},'source':src,'response':[]}],
                 }
         else:
-            forecast_result['brightsky'] = {
+            forecast_result['_brightsky'] = {
                 'timestamp':int(now),
-                'current':[{'success':False,'error':{'code':'N/A','description':'brightsky is not enabled'},'source':src,'response':[]}]
+                'current':[{'success':False,'error':{'code':'N/A','description':'_brightsky is not enabled'},'source':src,'response':[]}]
             }
 
         # Weatherbit.io (API Limit)
@@ -2875,8 +2875,9 @@ class ForecastPWS(object):
         if self.verbose:
             loginf('forecast_wbx_html: started.')
         html  = '<!-- DWD Waldbrandgefahrenindex -->\n'
-        html += '<div class="col-xs-12 wbx-headline">$obs.label.forecast_header_wbx'
-        html += '<span class="issued-DWD"> $obs.label.forecast_issuedWBX_dwd ' + issued_time + '</span>\n'
+        html += '<div class="col-md-12 wbx-headline">\n'
+        html += '    $obs.label.forecast_header_wbx\n'
+        html += '    <span class="issued-DWD"> $obs.label.forecast_issuedWBX_dwd ' + issued_time + '</span>\n'
         html += '</div>\n'
         html += '<style>\n'
         html += '    .farbidx0 {background-color:#FFFFFF; color:#000000;}\n'
@@ -2912,7 +2913,7 @@ class ForecastPWS(object):
                     if keymapping_dict[cellcontent]['class'] is not None:
                         html += ' ' + keymapping_dict[cellcontent]['class']
                     html += '">'
-                    html += (cellcontent + ' - ')
+                    #html += (cellcontent + ' - ')
                     html += keymapping_dict[cellcontent]['description']
                     html += '</td>\n'
         html += '            </tr>\n'

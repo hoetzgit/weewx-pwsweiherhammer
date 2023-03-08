@@ -2,6 +2,7 @@
 #errorCatcher Echo
 #encoding UTF-8
 #attr $context = 'day'
+#attr $daily_archive = False
 #attr $use_parameter_month = False
 #attr $use_parameter_year = False
 
@@ -10,6 +11,9 @@
   <head>
     #include "includes/html-head.inc"
     <title>$station.location - $gettext("Current Weather Conditions")</title>
+    #if 'refresh_interval' in $Extras
+    <meta http-equiv="refresh" content="$Extras.refresh_interval" />
+    #end if
   </head>
 
   <body class="theme-$DisplayOptions.get('layout', 'alternative')">
@@ -37,6 +41,6 @@
 
     #include "includes/footer.inc"
 
-    <script src="dist/main.js" defer></script>
+    <script src="$get_base_path(path='dist/main.js')" defer></script>
   </body>
 </html>

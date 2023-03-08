@@ -1,4 +1,4 @@
-# Copyright 2022 David Bätge
+# Copyright 2023 David Bätge
 # Distributed under the terms of the GNU Public License (GPLv3)
 
 import datetime
@@ -18,11 +18,39 @@ from weewx.units import (
     ValueHelper
 )
 from weewx.wxformulas import beaufort
-from weewx.tags import TimespanBinder
-from weeutil.weeutil import TimeSpan, rounder, to_bool, to_int
+from weeutil.weeutil import TimeSpan, rounder, to_bool, to_int, startOfDay, startOfArchiveDay
+from weeutil.config import search_up, accumulateLeaves
 
-temp_obs = ["outTemp", "inTemp", "dewpoint",
-            "windchill", "heatindex", "appTemp"]
+
+try:
+    import weeutil.logger
+    import logging
+
+    log = logging.getLogger(__name__)
+
+    def logdbg(msg):
+        log.debug(msg)
+
+    def loginf(msg):
+        log.info(msg)
+
+    def logerr(msg):
+        log.error(msg)
+
+except ImportError:
+    import syslog
+
+    def logmsg(level, msg):
+        syslog.syslog(level, F'jas: {msg}')
+
+    def logdbg(msg):
+        logmsg(syslog.LOG_DEBUG, msg)
+
+    def loginf(msg):
+        logmsg(syslog.LOG_INFO, msg)
+
+    def logerr(msg):
+        logmsg(syslog.LOG_ERR, msg)
 
 
 class WdcGeneralUtil(SearchList):
@@ -39,6 +67,115 @@ class WdcGeneralUtil(SearchList):
 
         self.time_format = time_format_dict
         self.generator_to_date = to_date_dict
+        self.default_binding = search_up(
+            self.generator.config_dict["StdReport"]["WdcReport"],
+            "data_binding",
+            "wx_binding"
+        )
+
+    def get_custom_data_binding_obs_key(self, obs_key):
+        """
+        Get the observation key for a custom observation.
+
+        Args:
+            obs_key (string): The observation key
+
+        Returns:
+            string: The custom data binding observation key
+        """
+        try:
+            return self.skin_dict["ObservationBindings"][obs_key]["observation"]
+        except KeyError:
+            return obs_key
+
+    def get_data_binding(self, obs_key, context=None, combined_key=None):
+        """
+        Get the data binding for a given observation.
+
+        Args:
+            obs_key (string): The observation key
+            context (string): The context
+            combined_key (string): The combined diagram key, eg. tempdew.
+
+        Returns:
+            string: The data binding
+        """
+        if combined_key is not None and context is not None:
+            try:
+                return self.skin_dict["DisplayOptions"]["diagrams"][context]["observations"][combined_key]['data_binding']
+            except KeyError:
+                try:
+                    return self.skin_dict["DisplayOptions"]["diagrams"]["combined_observations"][combined_key]['data_binding']
+                except KeyError:
+                    pass
+
+        if context is not None:
+            try:
+                return self.skin_dict["DisplayOptions"]["diagrams"][context]["observations"][obs_key]['data_binding']
+            except KeyError:
+                try:
+                    return self.skin_dict["DisplayOptions"]["diagrams"][context]['data_binding']
+                except KeyError:
+                    pass
+
+        try:
+            return self.skin_dict["ObservationBindings"][obs_key]["data_binding"]
+        except KeyError:
+            return self.default_binding
+
+    def get_data_binding_combined_diagram(self, observation, combined_config, combined_key, context):
+        """
+        Get the data binding for a combined diagram.
+
+        Args:
+            observation (string): The observation
+            combined_config (dict): The combined config
+            combined_key (string): The combined diagram key
+            context (string): The context
+
+        Returns:
+            string: The data binding
+        """
+        try:
+            return self.skin_dict["DisplayOptions"]["diagrams"][context]["observations"][combined_key]['data_binding']
+        except KeyError:
+            try:
+                return self.skin_dict["DisplayOptions"]["diagrams"][context]['data_binding']
+            except KeyError:
+                pass
+
+        if 'data_binding' in combined_config['obs'][observation]:
+            return combined_config['obs'][observation]['data_binding']
+
+        if combined_config['obs'][observation]['observation'] in self.skin_dict["ObservationBindings"]:
+            try:
+                return self.skin_dict["ObservationBindings"][combined_config['obs'][observation]['observation']]['data_binding']
+            except KeyError:
+                logdbg("No data_binding defined for %s" % observation)
+
+        return search_up(
+            self.skin_dict['DisplayOptions']['diagrams']['combined_observations'][combined_key],
+            'data_binding',
+            self.default_binding
+        )
+
+    def get_base_path(self, *args, **kwargs):
+        """
+        Get the base path + a given path.
+
+        Args:
+            path (string): The path
+
+        Returns:
+            str: The base path
+        """
+        path = kwargs.get("path", None)
+        base_path = self.skin_dict["Extras"].get("base_path", "/")
+
+        if path is None:
+            return base_path
+
+        return base_path + path
 
     def show_yesterday(self):
         if "yesterday" in self.generator_to_date:
@@ -49,20 +186,181 @@ class WdcGeneralUtil(SearchList):
     def get_time_format_dict(self):
         return self.time_format
 
-    @staticmethod
-    def get_icon(observation):
+    def get_unit_label(self, unit):
+        """
+        Get the unit label for a given unit.
+
+        Args:
+            unit (string): The unit
+
+        Returns:
+            string: The unit label
+        """
+        try:
+            unit_label = self.generator.formatter.unit_label_dict[unit]
+            if type(unit_label) == list:
+                return unit_label[1]
+            else:
+                return unit_label
+        except KeyError:
+            return ' ' + unit
+
+    def get_unit_for_obs(self, observation, observation_key, context, combined=None, combined_key=None):
+        """
+        Get the unit for a given observation.
+
+        Args:
+            observation (string): The observation
+            observation_key (string): The observation key (e.g. outTemp), this
+              is only different from observation if it's a custom observation
+              from a custom data_biding.
+            context (string): The context
+            combined (dict): The combined config
+            combined_key (string): The combined diagram key
+
+        Returns:
+            string: The unit
+        """
+        # Combined diagram.
+        if combined is not None:
+            try:
+                unit = search_up(self.skin_dict["DisplayOptions"]["diagrams"][context]
+                                 ["observations"][combined_key]['obs'][observation], 'unit', None)
+            except KeyError:
+                unit = None
+
+            if unit is not None:
+                return unit
+
+            try:
+                unit = search_up(self.skin_dict["DisplayOptions"]["diagrams"]
+                                 ["combined_observations"][combined_key]['obs'][observation], 'unit', None)
+            except KeyError:
+                unit = None
+
+            if unit is not None:
+                return unit
+
+        # Context.
+        try:
+            unit = self.skin_dict["DisplayOptions"]["diagrams"][context]["observations"][observation]['unit']
+        except KeyError:
+            unit = None
+
+        if unit is not None:
+            return unit
+
+        try:
+            return self.skin_dict["DisplayOptions"]["diagrams"][observation]["unit"]
+        except KeyError:
+            unit = self.generator.converter.getTargetUnit(
+                obs_type=observation_key)
+            return unit[0]
+
+    def get_windrose_enabled(self):
+        """
+        Check if the windrose is enabled.
+
+        Returns:
+            bool: True if the windrose is enabled, False otherwise.
+        """
+        try:
+            windrose_day_enabled = False
+            if "windRose" in self.skin_dict["DisplayOptions"]["diagrams"]["day"]["observations"]:
+                windrose_day_enabled = True
+        except KeyError:
+            windrose_day_enabled = False
+
+        try:
+            windrose_week_enabled = False
+            if "windRose" in self.skin_dict["DisplayOptions"]["diagrams"]["week"]["observations"]:
+                windrose_week_enabled = True
+        except KeyError:
+            windrose_week_enabled = False
+
+        try:
+            windrose_month_enabled = False
+            if "windRose" in self.skin_dict["DisplayOptions"]["diagrams"]["month"]["observations"]:
+                windrose_month_enabled = True
+        except KeyError:
+            windrose_month_enabled = False
+
+        try:
+            windrose_year_enabled = False
+            if "windRose" in self.skin_dict["DisplayOptions"]["diagrams"]["year"]["observations"]:
+                windrose_year_enabled = True
+        except KeyError:
+            windrose_year_enabled = False
+
+        try:
+            windrose_alltime_enabled = False
+            if "windRose" in self.skin_dict["DisplayOptions"]["diagrams"]["alltime"]["observations"]:
+                windrose_alltime_enabled = True
+        except KeyError:
+            windrose_alltime_enabled = False
+
+        return windrose_day_enabled or windrose_week_enabled or windrose_month_enabled or windrose_year_enabled or windrose_alltime_enabled
+
+    def get_icon(self, observation, use_diagram_config=False, use_combined_diagram_config=False, context=None):
         """
         Returns an include path for an icon based on the observation
         @see http://weewx.com/docs/sle.html
 
         Args:
             observation (string): The observation
+            use_diagram_config (bool): Use the diagram config
+            use_combined_diagram_config (bool): Use the combined diagram config
+            context (string): The context
 
         Returns:
             str: An icon include path
         """
         icon_path = "includes/icons/"
 
+        if use_diagram_config and context is not None:
+            try:
+                icon = self.generator.skin_dict['DisplayOptions']['diagrams'][context]['observations'][observation]['icon']
+            except KeyError:
+                icon = False
+
+            if icon or icon == 'none':
+                return icon
+
+            try:
+                icon = self.generator.skin_dict['DisplayOptions']['diagrams'][observation]['icon']
+            except KeyError:
+                icon = False
+
+            if icon or icon == 'none':
+                return icon
+
+        if use_combined_diagram_config and context is not None:
+            try:
+                icon = self.generator.skin_dict['DisplayOptions']['diagrams'][context]['observations'][observation]['icon']
+            except KeyError:
+                icon = False
+
+            if icon or icon == 'none':
+                return icon
+
+            try:
+                icon = self.generator.skin_dict['DisplayOptions']['diagrams']['combined_observations'][observation]['icon']
+            except KeyError:
+                icon = False
+
+            if icon or icon == 'none':
+                return icon
+
+        try:
+            icon_config = self.generator.skin_dict['DisplayOptions']['Icons'].get(
+                observation, None)
+        except KeyError:
+            icon_config = None
+
+        if icon_config is not None:
+            return icon_config
+
+        # Default icon set
         if observation == "outTemp" or observation == "inTemp":
             return icon_path + "temp.svg"
 
@@ -91,29 +389,71 @@ class WdcGeneralUtil(SearchList):
         elif observation == "rainRate":
             return icon_path + "rain-rate.svg"
 
-        elif observation == "dewpoint":
+        elif observation == "dewpoint" or observation == "dewpoint1" or observation == 'inDewpoint':
             return icon_path + "dew-point.svg"
 
         elif observation == "windchill":
             return icon_path + "wind-chill.svg"
 
-        elif observation == "heatindex":
-            return icon_path + "heat.svg"
+        elif observation == "heatindex" or observation == "heatindex1" or observation == 'humidex' or observation == 'humidex1':
+            return icon_path + "heat-index.svg"
 
         elif observation == "UV":
             return icon_path + "uv.svg"
 
         elif observation == "ET":
-            return icon_path + "ev.svg"
+            return icon_path + "et.svg"
 
-        elif observation == "radiation":
-            return icon_path + "solar.svg"
+        elif observation == "noise":
+            return icon_path + "noise.svg"
 
-        elif observation == "appTemp":
-            return icon_path + "feel-temp.svg"
+        elif observation == "forecast":
+            return icon_path + "forecast.svg"
+
+        elif observation == "radiation" or observation == 'luminosity' or observation == 'maxSolarRad':
+            return icon_path + "radiation.svg"
+
+        elif observation == "appTemp" or observation == "appTemp1":
+            return icon_path + "app-temp.svg"
 
         elif observation == "cloudbase":
             return icon_path + "cloud-base.svg"
+
+        elif observation == "snowDepth":
+            return icon_path + "snow-depth.svg"
+
+        elif observation == "snowMoisture":
+            return icon_path + "snow-moist.svg"
+
+        elif observation == "windrun":
+            return icon_path + "wind-run.svg"
+
+        elif observation == "snow" or observation == "snowRate":
+            return icon_path + "snow.svg"
+
+        elif observation == "hail" or observation == "hailRate":
+            return icon_path + "hail.svg"
+
+        elif "leaf" in observation:
+            return icon_path + "leaf.svg"
+
+        elif "signal" in observation or observation == "rxCheckPercent":
+            return icon_path + "signal.svg"
+
+        elif "Voltage" in observation:
+            return icon_path + "voltage.svg"
+
+        elif "batterystatus" in observation.lower() or "batteryvoltage" in observation.lower():
+            return icon_path + "battery.svg"
+
+        elif 'lightning' in observation:
+            return icon_path + "lightning.svg"
+
+        elif "soilMoist" in observation:
+            return icon_path + "soil-moist.svg"
+
+        elif "soilTemp" in observation:
+            return icon_path + "soil-temp.svg"
 
         elif "Temp" in observation:
             return icon_path + "temp.svg"
@@ -121,17 +461,67 @@ class WdcGeneralUtil(SearchList):
         elif "Humid" in observation:
             return icon_path + "humidity.svg"
 
-    def get_color(self, observation):
+    def get_color(self, observation, context, *args, **kwargs):
         """
         Color settings for observations.
 
         Args:
             observation (string): The observation
+            context (string): The context
 
         Returns:
             str: A color string
         """
         diagrams_config = self.skin_dict["DisplayOptions"]["diagrams"]
+
+        combined = kwargs.get("combined", False)
+        combined_obs = kwargs.get("combined_obs", None)
+        combined_obs_key = kwargs.get("combined_obs_key", None)
+
+        try:
+            color = search_up(
+                diagrams_config[context]["observations"][observation], "color", None)
+            if color is not None:
+                return color
+        except KeyError:
+            try:
+                color = search_up(diagrams_config[context], "color", None)
+                if color is not None:
+                    return color
+            except KeyError:
+                color = None
+
+        # For combined diagrams, observation = temp_min_max_avg
+        # and combined_obs = outTemp, combined_obs_key = outTemp_max
+        if combined and combined_obs_key is not None and combined_obs is not None:
+            try:
+                color = search_up(
+                    diagrams_config[context]["observations"][combined_obs], "color", None)
+
+                if color is not None:
+                    return color
+            except KeyError:
+                color = None
+
+            try:
+                color = search_up(
+                    diagrams_config["combined_observations"][observation]["obs"][combined_obs_key], "color", None)
+
+                if color is not None:
+                    return color
+            except KeyError:
+                color = None
+
+            try:
+                color = diagrams_config[combined_obs]["color"]
+
+                if color is not None:
+                    return color
+            except KeyError:
+                color = None
+
+        if color is not None:
+            return color
 
         if observation in diagrams_config and "color" in diagrams_config[observation]:
             return diagrams_config[observation]["color"]
@@ -182,12 +572,12 @@ class WdcGeneralUtil(SearchList):
         if observation == "rainRate":
             return "#0a6794"
 
-        if observation in temp_obs or "temp" in observation.lower():
+        if "temp" in observation.lower():
             return "#8B0000"
 
         return "#161616"
 
-    @staticmethod
+    @ staticmethod
     def get_time_span_from_context(context, day, week, month, year, alltime, yesterday):
         """
         Get tag for use in templates.
@@ -329,34 +719,50 @@ class WdcGeneralUtil(SearchList):
         except KeyError:
             return {}
 
-    def get_dwd_forecast(self, obs):
-        """
-        Get dwd forecast series.
-
-        Args:
-            obs (string): The data_type.
-        """
-        binding = self.generator.skin_dict["Extras"]["weewx-DWD"]["forecast_diagram"].get(
-            "data_binding", "dwd_binding"
-        )
-        db_manager = self.generator.db_binder.get_manager(binding)
-
-        # Now
-        start_ts = time.time()
-        # Now + 11 days
-        end_dt = datetime.date.today() + datetime.timedelta(days=11)
-        end_ts = time.mktime(end_dt.timetuple())
-
-        dwd_start_vt, dwd_stop_vt, dwd_vt = weewx.xtypes.get_series(
-            obs,
-            TimeSpan(start_ts, end_ts),
-            db_manager
-        )
-
-        return (zip(dwd_start_vt[0], dwd_stop_vt[0], rounder(dwd_vt[0], WdcDiagramUtil.get_rounding(self, obs))))
-
 
 class WdcArchiveUtil(SearchList):
+    def get_day_archive_enabled(self):
+        """
+        Get day archive enabled.
+
+        Returns:
+            bool|string: Value of day template if day archive is enabled, False otherwise.
+        """
+        try:
+            return self.generator.skin_dict["CheetahGenerator"]["SummaryByDay"]["summary_day"]["template"]
+        except KeyError:
+            return False
+
+    @staticmethod
+    def get_archive_days_array(start_ts, end_ts, date_format):
+        """
+        Get an array of days between two timestamps.
+
+        Args:
+            start_ts (int): The start timestamp
+            end_ts (int): The end timestamp
+            date_format (string): The date format
+
+        Returns:
+            list: Array of days
+        """
+        days = []
+        start_date = datetime.datetime.fromtimestamp(start_ts)
+        end_date = datetime.datetime.fromtimestamp(end_ts)
+
+        for n in range(int((end_date - start_date).days) + 1):
+            days.append(
+                {
+                    "date": (start_date + datetime.timedelta(n)).strftime(date_format),
+                    "timestamp": int(
+                        time.mktime(
+                            (start_date + datetime.timedelta(n)).timetuple())
+                    ),
+                }
+            )
+
+        return days
+
     @staticmethod
     def filter_months(months, year):
         """
@@ -420,7 +826,7 @@ class WdcCelestialUtil(SearchList):
             if prop == "set":
                 return "includes/icons/sunset.svg"
             if prop == "transit":
-                return "includes/icons/solar.svg"
+                return "includes/icons/radiation.svg"
 
         if observation == "Moon":
             if prop is None:
@@ -442,38 +848,94 @@ class WdcDiagramUtil(SearchList):
         self.config_dict = generator.config_dict
         self.general_util = WdcGeneralUtil(generator)
 
-    @staticmethod
-    def get_diagram_type(observation):
+    def get_diagram_data(
+        self,
+        observation,
+        observation_key,
+        context_key,
+        start_ts,
+        end_ts,
+        data_binding,
+        alltime_start,
+        alltime_end,
+        combined=None,
+        combined_key=None,
+    ):
         """
-        Set e.g. "temp" for all diagrams which should be rendered as temp
-        diagram (includes also heat anmd windchill).
+        Get diagram data.
 
         Args:
             observation (string): The observation
+            observation_key (string): The observation key, this is only
+              different from observation if it's a custom observation from
+              a custom data_biding.
+            context_key (string): The context key
+            start_ts (int): The start timestamp
+            end_ts (int): The end timestamp
+            data_binding (string): The data binding
+            alltime_start (str): The alltime start (%d.%m.%Y)
+            alltime_end (str): The alltime end (%d.%m.%Y)
+            combined (dict|None): The combined obs dict
+            combined_key (string|None): The combined key
 
         Returns:
-            str: A diagram type string
+            list: A list of diagram data
         """
-        if observation in temp_obs or "temp" in observation.lower():
-            return "temp"
+        if combined is not None:
+            aggregate_type = self.get_aggregate_type(
+                observation, context_key, combined=combined['obs'][observation])
+        else:
+            aggregate_type = self.get_aggregate_type(
+                observation, context_key
+            )
 
-        if "humidity" in observation.lower():
-            return "humidity"
+        if (observation_key == 'windDir'):
+            wobs = "wind"
+        else:
+            wobs = observation_key
 
-        if observation == "windSpeed" or observation == "windGust":
-            return "wind"
+        obs_start_vt, obs_stop_vt, obs_vt = weewx.xtypes.get_series(
+            wobs,
+            TimeSpan(start_ts, end_ts),
+            self.generator.db_binder.get_manager(data_binding),
+            aggregate_type=aggregate_type,
+            aggregate_interval=self.get_aggregate_interval(
+                observation=observation, context=context_key,
+                alltime_start=alltime_start, alltime_end=alltime_end,
+                combined_key=combined_key
+            )
+        )
 
-        if (
-                observation == "barometer"
-                or observation == "pressure"
-                or observation == "altimeter"
-        ):
-            return "pressure"
+        unit_default = self.generator.converter.getTargetUnit(
+            obs_type=observation_key)
+        unit_configured = self.general_util.get_unit_for_obs(
+            observation, observation_key, context_key,
+            combined=combined, combined_key=combined_key)
 
-        return observation
+        # Target unit conversion.
+        if unit_default != unit_configured and unit_configured is not None:
+            obs_vt = weewx.units.Converter(
+                {obs_vt[2]: unit_configured}).convert(obs_vt)
+        else:
+            obs_vt = self.generator.converter.convert(obs_vt)
 
-    @staticmethod
-    def get_diagram(observation):
+        # Round values.
+        obs_vt = rounder(
+            obs_vt,
+            self.get_rounding(
+                observation,
+                observation_key,
+                type="diagram",
+                combined=combined,
+                combined_key=combined_key,
+                context=context_key)
+        )
+
+        return json.dumps(list(
+            zip(obs_start_vt[0], obs_stop_vt[0], obs_vt[0]))
+        )
+
+    def get_diagram(self, observation):
         """
         Choose between line and bar.
 
@@ -483,18 +945,27 @@ class WdcDiagramUtil(SearchList):
         Returns:
             str: A diagram string
         """
+        try:
+            type = self.skin_dict["DisplayOptions"]["diagrams"][observation]["type"]
+            return type
+        except KeyError:
+            pass
+
         if observation == "rain" or observation == "ET":
             return "bar"
 
         return "line"
 
-    def get_aggregate_type(self, observation, *args, **kwargs):
+    def get_aggregate_type(self, observation, context, *args, **kwargs):
         """
         aggregate_type for observations series.
         @see https://github.com/weewx/weewx/wiki/Tags-for-series#syntax
 
+        @todo Rework/Fix use_defaults (currently used for tables)
+
         Args:
             observation (string): The observation
+            context (string): The context
 
         Returns:
             string: aggregate_type
@@ -503,6 +974,15 @@ class WdcDiagramUtil(SearchList):
         combined = kwargs.get("combined", None)
         diagrams_config = self.skin_dict["DisplayOptions"]["diagrams"]
 
+        try:
+            aggregate_type = search_up(
+                diagrams_config[context]["observations"][observation], "aggregate_type", None)
+        except KeyError:
+            aggregate_type = None
+
+        if aggregate_type is not None:
+            return aggregate_type
+
         if combined is not None and "aggregate_type" in combined and not use_defaults:
             return combined["aggregate_type"]
 
@@ -510,7 +990,6 @@ class WdcDiagramUtil(SearchList):
                 not use_defaults
                 and observation in diagrams_config
                 and "aggregate_type" in diagrams_config[observation]
-                and combined is None
         ):
             return diagrams_config[observation]["aggregate_type"]
 
@@ -523,6 +1002,9 @@ class WdcDiagramUtil(SearchList):
                 or observation == "rainRate"
         ):
             return "max"
+
+        if observation == "windDir":
+            return "vecdir"
 
         return "avg"
 
@@ -540,30 +1022,58 @@ class WdcDiagramUtil(SearchList):
         """
         alltime_start = kwargs.get("alltime_start", None)
         alltime_end = kwargs.get("alltime_end", None)
+        combined_key = kwargs.get("combined_key", None)
 
         if context == "yesterday":
             context = "day"
 
-        # First, check if something is configured via skin.conf.
+        # First, check combined obs.
+        if combined_key is not None:
+            try:
+                aggregate_interval = self.generator.skin_dict["DisplayOptions"]["diagrams"][
+                    context]["observations"][combined_key]["obs"][observation]["aggregate_interval"]
+                return aggregate_interval
+            except KeyError:
+                aggregate_interval = False
+
+            try:
+                aggregate_interval = self.generator.skin_dict["DisplayOptions"]["diagrams"][
+                    context]["observations"][combined_key]["aggregate_interval"]
+                return aggregate_interval
+            except KeyError:
+                aggregate_interval = False
+
+            try:
+                aggregate_interval = self.generator.skin_dict["DisplayOptions"]["diagrams"][
+                    "combined_observations"][combined_key]["obs"][observation]["aggregate_interval"]
+                return aggregate_interval
+            except KeyError:
+                aggregate_interval = False
+
+            try:
+                aggregate_interval = self.generator.skin_dict["DisplayOptions"]["diagrams"][
+                    "combined_observations"][combined_key]["aggregate_interval"]
+                return aggregate_interval
+            except KeyError:
+                aggregate_interval = False
+
+        # Check if something is configured via skin.conf.
         context_dict = self.generator.skin_dict["DisplayOptions"]["diagrams"].get(
             context, {})
         try:
-            aggregate_interval_context = context_dict.get(
-                "aggregate_interval", False)
+            aggregate_interval = search_up(
+                context_dict['observations'][observation], 'aggregate_interval')
         except KeyError:
-            aggregate_interval_context = False
+            try:
+                aggregate_interval = search_up(
+                    context_dict, 'aggregate_interval', False)
+            except (KeyError, AttributeError):
+                aggregate_interval = False
+        except AttributeError:
+            aggregate_interval = False
 
-        try:
-            aggregate_interval_observation = context_dict[observation].get(
-                "aggregate_interval", False)
-        except KeyError:
-            aggregate_interval_observation = False
-
-        if aggregate_interval_observation:
-            return aggregate_interval_observation
-
-        if aggregate_interval_context:
-            return aggregate_interval_context
+        if aggregate_interval:
+            return aggregate_interval
 
         # Then, use defaults.
         if context == "day":
@@ -642,16 +1152,96 @@ class WdcDiagramUtil(SearchList):
             if context == "year" or context == "alltime":
                 return "midnight"
 
-    def get_rounding(self, observation):
+    def get_rounding(self, observation, observation_key, type=None, context=None, combined=None, combined_key=None):
         """
         Rounding settings for observations.
 
         Args:
             observation (string): The observation
+            observation_key (string): The observation key (e.g. outTemp), this
+              is only different from observation if it's a custom observation
+              from a custom data_biding.
+            type (string): The type (table or diagram)
+            context (string): The context
+            combined (dict): The combined dict
+            combined_key (string): The combined key
 
         Returns:
             int: A rounding
         """
+        # Context.
+        if context is not None:
+            try:
+                rounding = search_up(
+                    self.generator.skin_dict["DisplayOptions"]['diagrams'][context]['observations'][observation_key], 'rounding', None)
+            except KeyError:
+                rounding = None
+
+            if rounding is not None:
+                return int(rounding)
+
+        # Combined context.
+        if combined is not None and context is not None:
+            # Combined diagram.
+            try:
+                rounding = search_up(self.skin_dict["DisplayOptions"]["diagrams"][context]
+                                     ["observations"][combined_key]['obs'][observation], 'rounding', None)
+            except KeyError:
+                rounding = None
+
+            if rounding is not None:
+                return int(rounding)
+
+        # Combined obs.
+        if combined is not None and "rounding" in combined['obs'][observation]:
+            return int(combined['obs'][observation]["rounding"])
+
+        # Combined general.
+        if combined is not None and "rounding" in combined:
+            return int(combined["rounding"])
+
+        # Table specific.
+        if type == 'table':
+            # DisplayOptions > tables > Rounding.
+            try:
+                rounding = self.skin_dict["DisplayOptions"]['tables']["Rounding"][observation_key]
+            except KeyError:
+                rounding = None
+
+            if rounding is not None:
+                return int(rounding)
+
+        # Diagram specific.
+        if type == 'diagram':
+            # General Diagram options, e.g. DisplayOptions > diagrams > heatindex.
+            try:
+                rounding = self.skin_dict["DisplayOptions"]['diagrams'][observation_key]['rounding']
+            except KeyError:
+                rounding = None
+
+            if rounding is not None:
+                return int(rounding)
+
+            # DisplayOptions > diagrams > Rounding.
+            try:
+                rounding = self.skin_dict["DisplayOptions"]['diagrams']["Rounding"][observation_key]
+            except KeyError:
+                rounding = None
+
+            if rounding is not None:
+                return int(rounding)
+
+        # DisplayOptions > Rounding.
+        try:
+            rounding = self.skin_dict["DisplayOptions"]["Rounding"][
+                observation_key]
+        except KeyError:
+            rounding = None
+
+        if rounding is not None:
+            return int(rounding)
+
+        # Default roundings.
         if observation == "UV" or observation == "cloudbase":
             return 0
 
@@ -667,7 +1257,7 @@ class WdcDiagramUtil(SearchList):
 
         return 1
 
-    @staticmethod
+    @ staticmethod
     def get_hour_delta(context):
         """
         Get delta for $span($hour_delta=$delta) call.
@@ -694,25 +1284,40 @@ class WdcDiagramUtil(SearchList):
 
         return hour_delta
 
-    def get_nivo_props(self, obs):
+    def get_diagram_props(self, obs, context):
         """
         Get nivo props from skin.conf.
 
         Args:
             obs (string): Observation
+            context (string): Day, week, month, year, alltime
 
         Returns:
             dict: Nivo props.
         """
+        if context == "yesterday":
+            context = "day"
+
         diagrams_config = self.skin_dict["DisplayOptions"]["diagrams"]
         diagram_base_props = diagrams_config[self.get_diagram(obs)]
 
+        try:
+            diagram_context_props = accumulateLeaves(
+                diagrams_config[context]['observations'][obs], max_level=3)
+        except KeyError:
+            diagram_context_props = {}
+
         if obs in diagrams_config:
-            return {**diagram_base_props, **diagrams_config[obs]}
+            return {
+                **diagram_base_props,
+                **diagrams_config[obs],
+                **diagram_context_props
+            }
         elif obs in diagrams_config["combined_observations"]:
             return {
                 **diagram_base_props,
                 **diagrams_config["combined_observations"][obs],
+                **diagram_context_props
             }
         else:
             return diagram_base_props
@@ -734,9 +1339,9 @@ class WdcDiagramUtil(SearchList):
             show_beaufort = False
 
         db_manager = self.generator.db_binder.get_manager(
-            data_binding=self.generator.config_dict["StdReport"].get(
-                "data_binding", "wx_binding"
-            ))
+            data_binding=search_up(
+                self.generator.config_dict["StdReport"]["WdcReport"], "data_binding", "wx_binding"))
+
         ordinals = self.general_util.get_ordinates()
         windrose_data = []
 
@@ -815,10 +1420,10 @@ class WdcDiagramUtil(SearchList):
             )
 
         windDir_start_vt, windDir_stop_vt, windDir_vt = weewx.xtypes.get_series(
-            "windDir",
+            "wind",
             TimeSpan(start_ts, end_ts),
             db_manager,
-            aggregate_type="avg",
+            aggregate_type="vecdir",
             aggregate_interval=self.get_aggregate_interval(
                 observation="windDir", context=context
             )
@@ -885,13 +1490,12 @@ class WdcStatsUtil(SearchList):
         self.diagram_util = WdcDiagramUtil(generator)
 
         # Setup database manager
-        binding = self.generator.config_dict["StdReport"].get(
-            "data_binding", "wx_binding"
-        )
+        binding = search_up(
+            self.generator.config_dict["StdReport"]["WdcReport"], "data_binding", "wx_binding")
+
         self.db_manager = self.generator.db_binder.get_manager(binding)
 
-    @staticmethod
-    def get_show_min(observation):
+    def get_show_min(self, observation):
         """
         Returns if the min stats should be shown.
 
@@ -901,31 +1505,27 @@ class WdcStatsUtil(SearchList):
         Returns:
             bool: Show or hide min stat.
         """
-        show_min_stat = [
-            "outTemp",
-            "outHumidity",
-            "barometer",
-            "pressure",
-            "altimeter",
-            "snowDepth",
-            "heatindex",
-            "dewpoint",
-            "windchill",
-            "cloudbase",
-            "appTemp",
-        ]
+        show_min = self.generator.skin_dict['DisplayOptions'].get(
+            'stat_tiles_show_min',
+            [
+                "outTemp",
+                "outHumidity",
+                "barometer",
+                "pressure",
+                "altimeter",
+                "snowDepth",
+                "heatindex",
+                "dewpoint",
+                "windchill",
+                "cloudbase",
+                "appTemp",
+            ]
+        )
 
-        if "Temp" in observation:
+        if observation in show_min:
             return True
 
-        elif "Humid" in observation:
-            return True
-
-        if observation in show_min_stat:
-            return True
-
-    @staticmethod
-    def get_show_sum(observation):
+    def get_show_sum(self, observation):
         """
         Returns if the sum stats should be shown.
 
@@ -935,13 +1535,15 @@ class WdcStatsUtil(SearchList):
         Returns:
             bool: Show or hide sum stat.
         """
-        show_sum = ["rain", "ET", "lightning_strike_count"]
+        show_sum = self.generator.skin_dict['DisplayOptions'].get(
+            'stat_tiles_show_sum',
+            ["rain", "ET", "hail", "snow", "lightning_strike_count"]
+        )
 
         if observation in show_sum:
             return True
 
-    @staticmethod
-    def get_show_max(observation):
+    def get_show_max(self, observation):
         """
         Returns if the max stats should be shown.
 
@@ -951,12 +1553,15 @@ class WdcStatsUtil(SearchList):
         Returns:
             bool: Show or hide max stat.
         """
-        show_max = ["rainRate"]
+        show_max = self.generator.skin_dict['DisplayOptions'].get(
+            'stat_tiles_show_max',
+            ["rainRate", "hailRate", "snowRate", "UV"]
+        )
 
         if observation in show_max:
             return True
 
-    @staticmethod
+    @ staticmethod
     def get_labels(prop, context):
         """
         Returns a label like "Todays Max" or "Monthly average".
@@ -1178,7 +1783,7 @@ class WdcStatsUtil(SearchList):
                 + getattr(self.unit.label, "outTemp")
             )
 
-    @staticmethod
+    @ staticmethod
     def get_calendar_color(obs):
         """
         Returns a color for use in diagram.
@@ -1249,7 +1854,7 @@ class WdcStatsUtil(SearchList):
                 rain_target_unit_vt = self.generator.converter.convert(
                     (day[1], rain_vt[1], rain_vt[2]))
                 rain_days.append(
-                    {"value": rounder(rain_target_unit_vt[0], self.diagram_util.get_rounding("rain")), "day": day_dt.strftime("%Y-%m-%d")})
+                    {"value": rounder(rain_target_unit_vt[0], self.diagram_util.get_rounding("rain", "rain")), "day": day_dt.strftime("%Y-%m-%d")})
 
             return rain_days
 
@@ -1272,7 +1877,7 @@ class WdcStatsUtil(SearchList):
                         (day[1], outTemp_vt[1], outTemp_vt[2]))
                     temp_days.append(
                         {"value": rounder(outTemp_target_unit_vt[0], self.diagram_util.get_rounding(
-                            "outTemp")), "day": day_dt.strftime("%Y-%m-%d")}
+                            "outTemp", "outTemp")), "day": day_dt.strftime("%Y-%m-%d")}
                     )
 
             return temp_days
@@ -1284,11 +1889,13 @@ class WdcTableUtil(SearchList):
         self.unit = UnitInfoHelper(generator.formatter, generator.converter)
         self.obs = ObsInfoHelper(generator.skin_dict)
         self.diagram_util = WdcDiagramUtil(generator)
+        self.general_util = WdcGeneralUtil(generator)
 
         # Setup database manager
-        binding = self.generator.config_dict["StdReport"].get(
-            "data_binding", "wx_binding"
-        )
+        binding = search_up(
+            self.generator.config_dict["StdReport"]["WdcReport"], "data_binding", "wx_binding")
+
+        self.binding = binding
         self.db_manager = self.generator.db_binder.get_manager(binding)
 
         self.table_obs = self.generator.skin_dict["DisplayOptions"].get(
@@ -1372,10 +1979,21 @@ class WdcTableUtil(SearchList):
         }]
 
         for observation in self.table_obs:
-            if self.db_manager.has_data(observation, TimeSpan(start_ts, end_ts)):
+            observation_binding = self.general_util.get_data_binding(
+                observation)
+            observation_key = self.general_util.get_custom_data_binding_obs_key(
+                observation)
+
+            if observation_binding == self.binding:
+                db_manager = self.db_manager
+            else:
+                db_manager = self.generator.db_binder.get_manager(
+                    observation_binding)
+
+            if db_manager.has_data(observation_key, TimeSpan(start_ts, end_ts)):
                 carbon_header = {
                     "title": self.obs.label[observation],
-                    "small": "in " + getattr(self.unit.label, observation),
+                    "small": "in " + getattr(self.unit.label, observation_key),
                     "id": observation,
                     "sortCycle": "tri-states-from-ascending",
                 }
@@ -1397,14 +2015,38 @@ class WdcTableUtil(SearchList):
         """
         carbon_values = []
 
+        # The aggregate_interval should be the multiple of a day for these contexts, so
+        # we need to adjust the start and end timestamps to the start of the day.
+        # This would otherwise generate table rows with different start timestamps, actually
+        # it puts the windDir (wind) values sometimes in a new row.
+        if context == 'year' or context == 'alltime':
+            start_ts = startOfArchiveDay(start_ts)
+            end_ts = startOfArchiveDay(end_ts)
+
         for observation in self.table_obs:
-            if self.db_manager.has_data(observation, TimeSpan(start_ts, end_ts)):
+            observation_binding = self.general_util.get_data_binding(
+                observation)
+            observation_key = self.general_util.get_custom_data_binding_obs_key(
+                observation)
+
+            if observation_binding == self.binding:
+                db_manager = self.db_manager
+            else:
+                db_manager = self.generator.db_binder.get_manager(
+                    observation_binding)
+
+            if db_manager.has_data(observation_key, TimeSpan(start_ts, end_ts)):
+                if observation_key == 'windDir':
+                    wobs = 'wind'
+                else:
+                    wobs = observation_key
+
                 series_start_vt, series_stop_vt, observation_vt = weewx.xtypes.get_series(
-                    observation,
+                    wobs,
                     TimeSpan(start_ts, end_ts),
-                    self.db_manager,
+                    db_manager,
                     aggregate_type=self.diagram_util.get_aggregate_type(
-                        observation, use_defaults=True
+                        observation, context, use_defaults=True
                     ),
                     aggregate_interval=self.get_table_aggregate_interval(
                         context=context
@@ -1416,7 +2058,8 @@ class WdcTableUtil(SearchList):
                         series_stop_vt[0],
                         observation_vt[0]
                 ):
-                    if context == "alltime":
+                    if context == "alltime" or context == "year":
+                        # We show the date only here, so we need the start of the day.
                         cs_time_dt = datetime.datetime.fromtimestamp(
                             table_start_ts)
                     else:
@@ -1438,7 +2081,7 @@ class WdcTableUtil(SearchList):
                     )
 
                     table_data_rounded = rounder(table_date_target_unit[0],
-                                                 self.diagram_util.get_rounding(observation))
+                                                 self.diagram_util.get_rounding(observation, observation, type="table"))
 
                     if len(cs_item) == 0:
                         carbon_values.append(
@@ -1459,3 +2102,78 @@ class WdcTableUtil(SearchList):
             key=lambda item: datetime.datetime.fromisoformat(item["time"]))
 
         return carbon_values
+
+
+class WdcForecastUtil(SearchList):
+    def __init__(self, generator):
+        try:
+            from user.forecast import ForecastVariables
+
+            SearchList.__init__(self, generator)
+            self.forecast = ForecastVariables(generator)
+            try:
+                self.forecast_source = generator.skin_dict["Extras"][
+                    "forecast_table_settings"
+                ]["source"]
+            except KeyError:
+                logdbg("forecast_table_settings.source not found in skin.conf")
+
+        except ImportError:
+            logdbg(
+                "weewx-forecast extension is not installed. Not providing any forecast data.")
+
+    def get_day_icon(self, summary, hourly=False):
+        """
+        Returns the icon for the day (summary) or a single period.
+
+        Args:
+            summary (dict): The summary/period dict.
+            hourly (bool, optional): If the summary is for a single period.
+        """
+        day_icon = summary["clouds"]
+        thunderstorm = False
+
+        if hourly:
+            if summary["tstms"] is not None and (summary["tstms"] != "S"):
+                thunderstorm = True
+        else:
+            periods = self.forecast.weather_periods(
+                self.forecast_source,
+                startOfDay(summary["dateTime"].raw),
+                summary["dateTime"].raw + 86400,
+            )
+
+            for period in periods:
+                if period["tstms"] is not None and (period["tstms"] != "S"):
+                    thunderstorm = True
+
+        rain = summary['qpf'].raw is not None and summary['qpf'].raw > 0
+        snow = summary['qsf'].raw is not None and summary['qsf'].raw > 0
+
+        if (
+            summary["clouds"] == "BK"
+            or summary["clouds"] == "B1"
+            or summary["clouds"] == "SC"
+        ):
+            if rain:
+                day_icon = "rain--scattered"
+            if snow:
+                day_icon = "snow--scattered"
+
+        if summary["clouds"] == "B2" or summary["clouds"] == "OV":
+            if summary["obvis"] is not None and ('F' in summary["obvis"] or 'PF' in summary["obvis"] or 'F+' in summary["obvis"] or 'PF+' in summary["obvis"]):
+                day_icon = 'fog'
+            if summary['obvis'] is not None and 'H' in summary['obvis']:
+                day_icon = 'haze'
+            if rain:
+                day_icon = "rain"
+            if snow:
+                day_icon = "snow"
+
+        if rain and snow:
+            day_icon = "sleet"
+
+        if thunderstorm:
+            day_icon = "thunderstorm"
+
+        return day_icon + ".svg"

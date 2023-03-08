@@ -1,5 +1,6 @@
-<!--prettier-ignore-->
 #errorCatcher Echo
+
+<!--prettier-ignore-->
 #encoding UTF-8
 #attr $context = 'year'
 #attr $use_parameter_year = True
@@ -56,6 +57,6 @@
 
     #include "includes/footer.inc"
 
-    <script src="dist/main.js" defer></script>
+    <script src="$get_base_path(path='dist/main.js')" defer></script>
   </body>
 </html>

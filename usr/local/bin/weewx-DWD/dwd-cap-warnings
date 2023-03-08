@@ -411,7 +411,10 @@ class DwdWarnings(object):
     def __init__(self, config_dict, verbose=False):
 
         # target path
-        self.target_path = config_dict['DeutscherWetterdienst']['path']
+        try:
+            self.target_path = config_dict['WeatherServices']['path']
+        except LookupError:
+            self.target_path = config_dict['DeutscherWetterdienst']['path']
         # warning config data
         warn_dict = config_dict['DeutscherWetterdienst']['warning']
         # Bundeslaender und Landkreise, fuer die Warndaten
@@ -645,6 +648,11 @@ class DwdWarnings(object):
                 # Otherwise it is an empty array.
                 if areas and lvl1_dict.get('status','')!='Test':
                     areas.sort(key=lambda x:x[0])
+                    altitude = (areas[0][2],areas[0][3])
+                    for ii in areas:
+                        if (ii[2],ii[3])!=altitude:
+                            altitude = None
+                            break
                     alert = {
                         'identifier':lvl1_dict.get('identifier'),
                         'sender':lvl1_dict.get('sender'),
@@ -654,6 +662,7 @@ class DwdWarnings(object):
                         'source':lvl1_dict.get('source'),
                         'scope':lvl1_dict.get('scope'),
                         'regionName':[ii[0] for ii in areas],
+                        'altitudeRange':altitude,
                         'areas':areas,
                         'description':info_dict.get('description',''),
                         'event':info_dict.get('event',''),
@@ -760,15 +769,25 @@ class DwdWarnings(object):
                     s+='<td style="width:60px"><img src="%s" alt="%s"/></td>\n' % (val['icon'],val['event'])
                 __size=110 if int(val['level'])>2 else 100
                 s+='<td><p style="font-size:%i%%;margin-bottom:0">%s</p>\n' % (__size,val['headline'])
-                s='%s<p style="font-size:80%%">gültig vom %s bis %s</p></td>\n' % (s,time.strftime("%d.%m. %H:%M",time.localtime(val['start']/1000)),time.strftime("%d.%m. %H:%M",time.localtime(val['end']/1000)))
-                s+='</tr></table>\n'
+                s='%s<p style="font-size:80%%">gültig vom %s bis %s\n' % (s,time.strftime("%d.%m. %H:%M",time.localtime(val['start']/1000)),time.strftime("%d.%m. %H:%M",time.localtime(val['end']/1000)))
+                
+                if val.get('altitudeRange'):
+                    altitude = val['altitudeRange']
+                    if altitude[0]>0 and altitude[1]>=3000:
+                        s += '<br />für Höhen ab %s m\n' % altitude[0]
+                    elif altitude[0]<=0 and altitude[1]<3000:
+                        s += '<br />für Höhen bis %s m\n' % altitude[1]
+                    elif altitude[0]>0 and altitude[1]<3000:
+                        s += '<br />für Höhen von %s m bis %s m\n' % altitude
+
+                s+='</p></td>\n</tr></table>\n'
 
                 if val.get('description'):
                     s+="<p>%s</p>\n" % val['description']
                 if val.get('instruction'):
                     s+="<p>%s</p>\n" % val['instruction']
 
-                #s+='<p style="font-size:40%%">%s &ndash; %s &emsp;&ndash;&emsp; %s &ndash; %s &emsp;&ndash;&emsp; II=%s &ndash; %s</p>' % (val['type'],val['event'],val['level'],val['level_text'],val.get('eventCode-II',''),val.get('eventCode-GROUP',''))
+                s+='<p style="font-size:40%%">%s &ndash; %s &emsp;&ndash;&emsp; %s &ndash; %s &emsp;&ndash;&emsp; II=%s &ndash; %s</p>' % (val['type'],val['event'],val['level'],val['level_text'],val.get('eventCode-II',''),val.get('eventCode-GROUP',''))
 
             if s:
                 s+='<p style="font-size:80%%">Quelle: <a href="%s" target="_blank">DWD</a></p>\n' % dwd_copy.get(stateShort,"https://www.wettergefahren.de")

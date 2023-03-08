@@ -37,9 +37,11 @@
                         jQuery(".updated").html( updated_text );
 
                         try {
+                            // TODO
                             page_inc = "./" + monitor + ".inc";
-                            jQuery("#stationmon-page-inc").load(page_inc);
-                            jQuery.getScript('../js/tooltip.js');
+                            jQuery("#stationmon-page-inc").load(page_inc, function() {
+                                setupTooltips();
+                            });
                         } catch(err) {
                             console.error("Cannot add monitor page from [" + page_inc + "]. Error: " + err.message);
                         }

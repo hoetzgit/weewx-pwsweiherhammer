@@ -1,6 +1,6 @@
 // https://osvaldas.info/elegant-css-and-jquery-tooltip-responsive-mobile-friendly
-$( function()
-{
+
+function setupTooltips() {
     var targets = $( '[rel~=tooltip]' ),
         target  = false,
         tooltip = false,
@@ -74,4 +74,8 @@ $( function()
         target.bind( 'mouseleave', remove_tooltip );
         tooltip.bind( 'click', remove_tooltip );
     });
+}
+
+$( function() {
+    setupTooltips();
 });

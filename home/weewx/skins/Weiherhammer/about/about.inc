@@ -344,8 +344,8 @@
                 <li>Standort: <a href="https://www.weiherhammer.de" target="_blank" rel="noreferrer">Weiherhammer, Bayern, Deutschland</a>
                 <li>H&ouml;he ca.: $station.altitude</li>
                 <li>Konsole Software EasyWeather Version: 1.6.5</li>
-                <li>Ecowitt GW1100 Gateway Software Version: 2.2.1</li>
-                <li>Backend- und WebServer: Diverse virtuelle VMware ESXi basierende Rechner mit Ubuntu 22.04.1 LTS, Webseite self hosted</li>
+                <li>Ecowitt GW1100 Gateway Software Version: 2.2.3</li>
+                <li>Backend- und WebServer: Diverse virtuelle VMware ESXi basierende Rechner mit Ubuntu 22.04.2 LTS, Webseite self hosted</li>
                 <li>WeeWX Server uptime: $station.os_uptime.long_form</li>
                 <li>WeeWX Service uptime: $station.uptime.long_form</li>
                 <li><a href="https://www.weiherhammer-wetter.de/stationmon/?monitor=$Extras.stationmon_page_default" target="_blank" rel="noreferrer">Station Monitor</a> (work in progress)</li>

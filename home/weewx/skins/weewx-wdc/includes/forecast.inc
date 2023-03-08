@@ -1,14 +1,14 @@
 <!--prettier-ignore-->
 #errorCatcher Echo
 #encoding UTF-8
-#set $forecast_source = $Extras.forecast_table_settings.source
+#set $forecast_source = $Extras.forecast_table_settings.get('source', None)
 #set $forecast_zambretti_active = True if $varExists('forecast.zambretti') and $to_bool($Extras['forecast_zambretti']['enable']) else False
-#set $forecat_table_active = True if $varExists('forecast') and len($forecast.weather_periods($forecast_source)) > 0 else False
+#set $forecat_table_active = True if $forecast_source and $varExists('forecast') and len($forecast.weather_periods($forecast_source)) > 0 else False
 #set $dwd_forecast = True if 'weewx-DWD' in $Extras and $to_bool($Extras['weewx-DWD']['show_forecast']) and os.path.exists("dwd/forecast-" + $Extras['weewx-DWD']['mosmix_id'] + ".json") else False
 #set $warn_region_front = $Extras['weewx-DWD']['show_warnings_on_front'] if 'weewx-DWD' in $Extras and 'show_warnings_on_front' in $Extras['weewx-DWD'] else False
 #set $show_warn = True if $warn_region_front and $dwd_warning_has_warning($warn_region_front) else False
 
-#if ($varExists('forecast') and ($forecast_zambretti_active or $forecat_table_active)) or 'radar_img' in $Extras or $dwd_forecast
+#if ($varExists('forecast') and ($forecast_zambretti_active or $forecat_table_active)) or 'radar_html' in $Extras or $dwd_forecast
 <!--prettier-ignore-->
 
 <div class="bx--row">
@@ -18,10 +18,10 @@
       #if $varExists('forecast') or $dwd_forecast
         $gettext("Forecast")
       #end if
-      #if ($varExists('forecast') or $dwd_forecast) and 'radar_img' in $Extras
+      #if ($varExists('forecast') or $dwd_forecast) and 'radar_html' in $Extras
        &
       #end if
-      #if 'radar_img' in $Extras
+      #if 'radar_html' in $Extras
         $gettext($Extras.get("radar_heading", "Recent radar"))
       #end if
     </h2>
@@ -40,7 +40,7 @@
         <div class="bx--tile forecast-tile">
           <!--prettier-ignore-->
           #if $varExists('forecast.zambretti') and $to_bool($Extras['forecast_zambretti']['enable'])
-          <div class="forecast">
+          <div class="forecast" data-test="forecast-zambretti">
             <h3>Zambretti</h3>
             <p>
               <!--prettier-ignore-->
@@ -53,7 +53,7 @@
           #end if
           <!--prettier-ignore-->
           #if $varExists('forecast') and not $dwd_forecast
-          <div class="forecast">
+          <div class="forecast" data-test="forecast-table">
             <!--prettier-ignore-->
             #include "includes/forecast-table.inc"
           </div>
@@ -70,7 +70,7 @@
       </div>
       #end if
       <!--prettier-ignore-->
-      #if 'radar_img' in $Extras or $show_warn
+      #if 'radar_html' in $Extras or $show_warn
       #set radar_classes = "bx--col-sm-4 bx--col-md-8 bx--col-lg-12 bx--col-xlg-6 bx--col-max-4"
       #if $DisplayOptions.get('layout', 'alternative') == 'classic'
         #set radar_classes = "bx--col-sm-4 bx--col-md-12 bx--col-lg-12 bx--col-xlg-12 bx--col-max-12"
@@ -82,17 +82,10 @@
           #set global $region_key = $warn_region_front
           #include "includes/dwd-warning.inc"
         #end if
-        #if 'radar_img' in $Extras
+        #if 'radar_html' in $Extras
         <div class="bx--tile tile-radar-forecast">
           <!--prettier-ignore-->
-          #if 'radar_url' in $Extras
-          <a href="$Extras.radar_url">
-            #end if
-            <img src="$Extras.radar_img" alt="Radar" loading="lazy" />
-            #if 'radar_url' in $Extras
-          </a>
-          <!--prettier-ignore-->
-          #end if
+          $Extras.radar_html
         </div>
         #end if
       </div>

@@ -1,10 +1,24 @@
 <!--prettier-ignore-->
 #errorCatcher Echo
+#import datetime
+#import time
+
+<!--prettier-ignore-->
 #encoding UTF-8
-#set diagram_classes = "bx--col-sm-4 bx--col-md-8 bx--col-lg-12 bx--col-xlg-6 bx--col-max-4"
+## Input vars:
+##   $combined_diagram - The diagrams config
+##   $comb_obs - The skin observation (e.g. tempdew or temp_min_max_avg)
+##   $context - The current context
+
+#set $diagram_classes = "bx--col-sm-4 bx--col-md-8 bx--col-lg-12 bx--col-xlg-6 bx--col-max-4"
 #if $DisplayOptions.get('layout', 'alternative') == 'classic'
-  #set diagram_classes = "bx--col-sm-4 bx--col-md-8 bx--col-lg-12 bx--col-xlg-6 bx--col-max-6"
+  #set $diagram_classes = "bx--col-sm-4 bx--col-md-8 bx--col-lg-12 bx--col-xlg-6 bx--col-max-6"
 #end if
+
+#if $comb_obs == "climatogram_year" or $comb_obs == "climatogram_statistics"
+  #set $diagram_classes = "bx--col"
+#end if
+
 <!--prettier-ignore-->
 #set $combined_diagram_obs = {}
 #for $combined_obs in $combined_diagram.obs.keys()
@@ -13,19 +27,34 @@
 
 #set combined_obs_string = '-'.join($combined_diagram_obs.values())
 
+#set $obs_icons = []
+#for $combined_obs in $combined_diagram_obs.values()
+  #if $get_icon($combined_obs) is not None and $get_icon($combined_obs) not in $obs_icons
+    #silent $obs_icons.append($get_icon($combined_obs))
+  #end if
+#end for
+
 <div class="$diagram_classes">
   <div class="bx--tile diagram-tile combined" data-test="$combined_obs_string">
     <div class="bx--row">
       <div class="bx--col">
         <!--prettier-ignore-->
         <p class="label">
-          #for $combined_obs in $combined_diagram_obs.values()
-            <span>
-              #if $get_icon($combined_obs) is not None
-                #include $get_icon($combined_obs)
-              #end if
-            </span>
-          #end for
+          #set $icon = $get_icon($comb_obs, $use_combined_diagram_config=True, $context=$context)
+
+          #if $icon is not None
+            #if $icon != 'none' and "includes/icons/" in $icon and '.svg' in $icon
+              #include $icon
+            #elif $icon != 'none' and "includes/icons/" not in $icon
+              <img src="$icon" alt="$obs.label[$partial_obs]" />
+            #end if
+          #else
+            #for $icon in $obs_icons
+              <span>
+                #include $icon
+              </span>
+            #end for
+          #end if
           $combined_diagram.label
         </p>
         <div class="value">
@@ -33,7 +62,10 @@
           #set $series_names = []
           #set $series_colors = []
           #set $series_labels = []
-          #set series_aggregate_type = []
+          #set $series_units = []
+          #set $series_observations = []
+          #set $series_aggregate_type = []
+          #set $diagram_types = []
           #set $combined_index = 0
 
           <!--prettier-ignore-->
@@ -42,38 +74,57 @@
             #set $series_name = $series_observation + 'Series' + str($diagram_index) + str($combined_index)
             #silent $series_names.append($series_name)
             #silent $series_labels.append($obs.label[$series_observation])
-            #silent $series_aggregate_type.append($get_aggregate_type($series_observation, combined=$combined_diagram.obs[$combined_obs]))
-            #if 'color' in $combined_diagram.obs[$combined_obs] then $series_colors.append($combined_diagram.obs[$combined_obs].color) else $series_colors.append($get_color($series_observation))#
+            #silent $series_observations.append($series_observation)
+            #silent $series_aggregate_type.append($get_aggregate_type($series_observation, $context, combined=$combined_diagram.obs[$combined_obs]))
+            #silent $series_colors.append($get_color($comb_obs, $context, combined=True, combined_obs_key=$combined_obs, combined_obs=$series_observation))
+            #set $series_observation_key = $get_custom_data_binding_obs_key($series_observation)
+            #set $combined_obs_binding = $get_data_binding($combined_obs, $context, combined_key=$comb_obs)
+            #silent $series_units.append($get_unit_label($get_unit_for_obs($combined_obs, $series_observation_key, $context, combined=$combined_diagram, combined_key=$comb_obs)))
+            #silent $diagram_types.append($get_diagram($series_observation_key))
 
-          <!--prettier-ignore-->
-          #if $context == 'month' and $use_parameter_month
-          <script>
+            <!--prettier-ignore-->
+            #if $context == 'month' and $use_parameter_month
+              #set $obs_context = $month($data_binding=$combined_obs_binding)
+              #set $start_ts=$obs_context.start.raw
+              #set $end_ts=$obs_context.end.raw
+              #set $context_key = $context
+            <!--prettier-ignore-->
+            #else if $context == 'year' and $use_parameter_year
+              #set $obs_context = $year($data_binding=$combined_obs_binding)
+              #set $start_ts=$obs_context.start.raw
+              #set $end_ts=$obs_context.end.raw
+              #set $context_key = $context
+            #else if $context == 'alltime'
+              #set $obs_context = $alltime($data_binding=$combined_obs_binding)
+              #set $start_ts=$obs_context.start.raw
+              #set $end_ts=$obs_context.end.raw
+              #set $context_key = $context
+            #else if $context == 'yesterday'
+              #set $obs_context = $yesterday($data_binding=$combined_obs_binding)
+              #set $start_ts=$obs_context.start.raw
+              #set $end_ts=$obs_context.end.raw
+              #set $context_key = $context
+            ## @todo Experimetal - use parameter for time_span.
+            #else if $context == 'dwd-forecast'
+              ## Now
+              #set $start_ts = time.time()
+              ## Now + 11 days
+              #set $end_dt = $datetime.date.today() + $datetime.timedelta(days=11)
+              #set $end_ts = $time.mktime($end_dt.timetuple())
+              #set $context_key = 'week'
+            #else
+              #set $obs_context = $span($data_binding=$combined_obs_binding ,$hour_delta=$get_hour_delta($context), $boundary=$get_diagram_boundary($context))
+              #set $start_ts=$obs_context.start.raw
+              #set $end_ts=$obs_context.end.raw
+              #set $context_key = $context
+            #end if
+
+            <script>
             /* prettier-ignore */
-            var $series_name = $getattr($month, $series_observation).series(aggregate_type=$get_aggregate_type($series_observation, combined=$combined_diagram.obs[$combined_obs]), aggregate_interval=$get_aggregate_interval($series_observation, $context, alltime_start=$alltime.start.format('%d.%m.%Y'), alltime_end=$alltime.end.format('%d.%m.%Y')), time_series='both', time_unit='unix_epoch').round($get_rounding($series_observation)).json;
-          </script>
-          <!--prettier-ignore-->
-          #else if $context == 'year' and $use_parameter_year
-          <script>
-            /* prettier-ignore */
-            var $series_name = $getattr($year, $series_observation).series(aggregate_type=$get_aggregate_type($series_observation, combined=$combined_diagram.obs[$combined_obs]), aggregate_interval=$get_aggregate_interval($series_observation, $context, alltime_start=$alltime.start.format('%d.%m.%Y'), alltime_end=$alltime.end.format('%d.%m.%Y')), time_series='both', time_unit='unix_epoch').round($get_rounding($series_observation)).json;
-          </script>
-          #else if $context == 'alltime'
-          <script>
-            /* prettier-ignore */
-            var $series_name = $getattr($alltime, $series_observation).series(aggregate_type=$get_aggregate_type($series_observation, combined=$combined_diagram.obs[$combined_obs]), aggregate_interval=$get_aggregate_interval($series_observation, $context, alltime_start=$alltime.start.format('%d.%m.%Y'), alltime_end=$alltime.end.format('%d.%m.%Y')), time_series='both', time_unit='unix_epoch').round($get_rounding($series_observation)).json;
-          </script>
-          #else if $context == 'yesterday'
-          <script>
-            /* prettier-ignore */
-            var $series_name = $getattr($yesterday, $series_observation).series(aggregate_type=$get_aggregate_type($series_observation, combined=$combined_diagram.obs[$combined_obs]), aggregate_interval=$get_aggregate_interval($series_observation, $context, alltime_start=$alltime.start.format('%d.%m.%Y'), alltime_end=$alltime.end.format('%d.%m.%Y')), time_series='both', time_unit='unix_epoch').round($get_rounding($series_observation)).json;
-          </script>
-          #else
-          <script>
-            /* prettier-ignore */
-            var $series_name = $getattr($span($hour_delta=$get_hour_delta($context), $boundary=$get_diagram_boundary($context)), $series_observation).series(aggregate_type=$get_aggregate_type($series_observation, combined=$combined_diagram.obs[$combined_obs]), aggregate_interval=$get_aggregate_interval($series_observation, $context, alltime_start=$alltime.start.format('%d.%m.%Y'), alltime_end=$alltime.end.format('%d.%m.%Y')), time_series='both', time_unit='unix_epoch').round($get_rounding($series_observation)).json;
-          </script>
-          <!--prettier-ignore-->
-          #end if
+            var $series_name = $get_diagram_data($observation=$combined_obs, $observation_key=$series_observation_key, $context_key=$context_key, $start_ts=$start_ts, $end_ts=$end_ts, $data_binding=$combined_obs_binding, $alltime_start=$alltime.start.format('%d.%m.%Y'), alltime_end=$alltime.end.format('%d.%m.%Y'), combined=$combined_diagram, combined_key=$comb_obs);
+            </script>
+
+            <!--prettier-ignore-->
             #set $combined_index = $combined_index + 1
           #end for
 
@@ -82,12 +133,13 @@
             data-labels="$series_labels"
             data-value="$series_names"
             data-color="$series_colors"
-            data-unit="$getattr($unit.label, $combined_diagram.obs[list($combined_diagram.obs.keys())[0]].observation)"
-            data-obs="$get_diagram_type($combined_diagram.obs[list($combined_diagram.obs.keys())[0]].observation)"
-            data-diagram="$get_diagram($combined_diagram.obs[list($combined_diagram.obs.keys())[0]].observation)"
+            data-unit="$series_units"
+            data-obs="$combined_diagram.obs[list($combined_diagram.obs.keys())[0]].observation"
+            data-observations="$series_observations"
+            data-diagram="$diagram_types"
             data-context="$context"
             data-aggregate-type="$series_aggregate_type"
-            data-nivo-props="$get_nivo_props($comb_obs)"
+            data-nivo-props="$get_diagram_props($comb_obs, $context)"
           ></div>
         </div>
       </div>

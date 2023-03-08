@@ -1728,7 +1728,8 @@ class getData(SearchList):
             )
             forecast_aqi_source = "AerisWeather Airquality"
             forecast_aqi_url = (
-                "https://api.aerisapi.com/airquality/closest?p=%s,%s&format=json&radius=50mi&limit=1&client_id=%s&client_secret=%s"
+                # "https://api.aerisapi.com/airquality/closest?p=%s,%s&format=json&radius=50mi&limit=1&client_id=%s&client_secret=%s"
+                "https://api.aerisapi.com/airquality/?p=%s,%s&format=json&radius=50mi&limit=1&client_id=%s&client_secret=%s"
                 % (latitude, longitude, forecast_api_id, forecast_api_secret)
             )
             forecast_alerts_source = "AerisWeather Alerts"
@@ -1945,14 +1946,15 @@ class getData(SearchList):
                     with open(external_forecast_file_2, "r") as read_file:
                         forecast_data_2 = json.load(read_file)
                         forecast_data.update(forecast_data_2)
+                        external_forecast_available = "1"
                 except IOError as e:
+                    forecast_file_success = False
                     raise Warning(
                         "Error reading forecast info from %s. Reason: %s"
                         % (external_forecast_file_2, e)
                     )
                     pass
 
-                external_forecast_available = "1"
             except IOError as e:
                 forecast_file_success = False
                 raise Warning(

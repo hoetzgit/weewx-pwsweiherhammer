@@ -229,7 +229,11 @@
                         "icon": "$current.poi_Icon.raw",
                         "sky": $current.poi_Cloudcover.raw,
                         "weather": "$current.poi_Icontitle.raw",
+                        #if $current.poi_PresentWeather.has_data
                         "weathercode": $current.poi_PresentWeather.raw,
+                        #else
+                        "weathercode": null,
+                        #end if
                         "weatherPrimary": "$current.poi_Icontitle.raw",
                         "visibilityKM": $current.poi_Visibility.raw
                     }

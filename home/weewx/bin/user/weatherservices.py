@@ -2414,6 +2414,8 @@ class BRIGHTSKYthread(BaseThread):
                          log_failure=(self.log_failure or self.debug > 0))
         if night != "N/A":
             y['day'] = (0 if night else 1,'count','group_count')
+        else:
+            y['day'] = (None,'count','group_count')
 
         x.append(y)
 
