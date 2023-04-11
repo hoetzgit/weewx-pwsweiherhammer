@@ -125,7 +125,7 @@ function convert(itemConfig, value) {
         return convertFunction(value);
     }
 
-    let sourceUnit = weewxData.source_unit_system[itemConfig.obs_group];
+    let sourceUnit = itemConfig.source_unit;
     if(sourceUnit === undefined && sourceUnit !== null && sourceUnit !== "") {
         return value;
     }
@@ -142,12 +142,6 @@ function convert(itemConfig, value) {
     //console.log("Couldn't find conversion function: '" + functionName + "', returning value without conversion");
     return value;
 }
-
-function round(value, precision) {
-    var multiplier = Math.pow(10, precision || 0);
-    return Math.round(value * multiplier) / multiplier;
-}
-
 //group_altitude
 function meter_To_foot(value) {
     return value * 3.280839895013123;

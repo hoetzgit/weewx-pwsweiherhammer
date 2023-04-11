@@ -17,10 +17,14 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see https://www.gnu.org/licenses/.
 
-Version: 0.6.2                                          Date: 13 January 2023
+Version: 0.6.3                                          Date: 3 April 2023
 
   Revision History
-    13 January 2023     v0.6.2
+    3 April 2023        v0.6.3
+        - fix issue with missing or sporadic windGust/windSpeed loop data
+    16 March 2023       v0.6.2
+        - fix issue that resulted in incorrect formatting of some non-metric
+          observations
         - fix unhandled TypeError that occurs if the WeeWX engine restarts as a
           result of a recoverable error, issue #30 refers
     4 November 2022     v0.6.1
@@ -297,14 +301,14 @@ import weewx.units
 import weewx.wxformulas
 
 from weewx.engine import StdService
-from weewx.units import ValueTuple, convert, getStandardUnitType, ListOfDicts, as_value_tuple, _getUnitGroup
+from weewx.units import ValueTuple, convert, getStandardUnitType, ListOfDicts, as_value_tuple
 from weeutil.weeutil import to_bool, to_int
 
 # get a logger object
 log = logging.getLogger(__name__)
 
 # version number of this script
-RTGD_VERSION = '0.6.2b1'
+RTGD_VERSION = '0.6.3'
 # version number (format) of the generated gauge-data.txt
 GAUGE_DATA_VERSION = '14'
 
@@ -377,349 +381,398 @@ LOOP_STATIONS = ['FineOffsetUSB']
 DEFAULT_FIELD_MAP = {
     'temp': {
         'source': 'outTemp',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'tempTL': {
         'source': 'outTemp',
         'aggregate': 'min',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'tempTH': {
         'source': 'outTemp',
         'aggregate': 'max',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'TtempTL': {
         'source': 'outTemp',
         'aggregate': 'mintime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'TtempTH': {
         'source': 'outTemp',
         'aggregate': 'maxtime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'temptrend': {
         'source': 'outTemp',
         'aggregate': 'trend',
         'aggregate_period': '3600',
         'grace_period': '300',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'intemp': {
         'source': 'inTemp',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'intempTL': {
         'source': 'inTemp',
         'aggregate': 'min',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'intempTH': {
         'source': 'inTemp',
         'aggregate': 'max',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'TintempTL': {
         'source': 'inTemp',
         'aggregate': 'mintime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'TintempTH': {
         'source': 'inTemp',
         'aggregate': 'maxtime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'hum': {
         'source': 'outHumidity',
-        'format': '%.1f'
+        'group': 'group_percent'
     },
     'humTL': {
         'source': 'outHumidity',
         'aggregate': 'min',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_percent'
     },
     'humTH': {
         'source': 'outHumidity',
         'aggregate': 'max',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_percent'
     },
     'ThumTL': {
         'source': 'outHumidity',
         'aggregate': 'mintime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'ThumTH': {
         'source': 'outHumidity',
         'aggregate': 'maxtime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'inhum': {
         'source': 'inHumidity',
-        'format': '%.1f'
+        'group': 'group_percent'
     },
     'inhumTL': {
         'source': 'inHumidity',
         'aggregate': 'min',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_percent'
     },
     'inhumTH': {
         'source': 'inHumidity',
         'aggregate': 'max',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_percent'
     },
     'TinhumTL': {
         'source': 'inHumidity',
         'aggregate': 'mintime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'TinhumTH': {
         'source': 'inHumidity',
         'aggregate': 'maxtime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'dew': {
         'source': 'dewpoint',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'dewpointTL': {
         'source': 'dewpoint',
         'aggregate': 'min',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'dewpointTH': {
         'source': 'dewpoint',
         'aggregate': 'max',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'TdewpointTL': {
         'source': 'dewpoint',
         'aggregate': 'mintime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'TdewpointTH': {
         'source': 'dewpoint',
         'aggregate': 'maxtime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'wchill': {
         'source': 'windchill',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'wchillTL': {
         'source': 'windchill',
         'aggregate': 'min',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'TwchillTL': {
         'source': 'windchill',
         'aggregate': 'mintime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'heatindex': {
         'source': 'heatindex',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'heatindexTH': {
         'source': 'heatindex',
         'aggregate': 'max',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'TheatindexTH': {
         'source': 'heatindex',
         'aggregate': 'maxtime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'apptemp': {
         'source': 'appTemp',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'apptempTL': {
         'source': 'appTemp',
         'aggregate': 'min',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'apptempTH': {
         'source': 'appTemp',
         'aggregate': 'max',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'TapptempTL': {
         'source': 'appTemp',
         'aggregate': 'mintime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'TapptempTH': {
         'source': 'appTemp',
         'aggregate': 'maxtime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'humidex': {
         'source': 'humidex',
-        'format': '%.1f'
+        'group': 'group_temperature'
     },
     'press': {
         'source': 'barometer',
-        'format': '%.1f'
+        'group': 'group_pressure'
     },
     'pressTL': {
         'source': 'barometer',
         'aggregate': 'min',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_pressure'
     },
     'pressTH': {
         'source': 'barometer',
         'aggregate': 'max',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_pressure'
     },
     'TpressTL': {
         'source': 'barometer',
         'aggregate': 'mintime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'TpressTH': {
         'source': 'barometer',
         'aggregate': 'maxtime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'presstrendval': {
         'source': 'barometer',
         'aggregate': 'trend',
         'aggregate_period': '3600',
         'grace_period': '300',
-        'format': '%.1f'
+        'group': 'group_pressure'
     },
     'rfall': {
         'source': 'rain',
         'aggregate': 'sum',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_rain'
     },
     'rrate': {
         'source': 'rainRate',
-        'format': '%.1f'
+        'group': 'group_rainrate'
     },
     'rrateTM': {
         'source': 'rainRate',
         'aggregate': 'max',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_rainrate'
     },
     'TrrateTM': {
         'source': 'rainRate',
         'aggregate': 'maxtime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'wlatest': {
         'source': 'windSpeed',
-        'format': '%.1f'
+        'group': 'group_speed'
     },
     'windTM': {
         'source': 'windSpeed',
         'aggregate': 'max',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_speed'
     },
     'wgust': {
         'source': 'windGust',
-        'format': '%.1f'
+        'group': 'group_speed'
     },
     'wgustTM': {
         'source': 'windGust',
         'aggregate': 'max',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_speed'
     },
     'TwgustTM': {
         'source': 'windGust',
         'aggregate': 'maxtime',
         'aggregate_period': 'day',
-        'format': '%H:%M'
+        'group': 'group_time'
     },
     'bearing': {
         'source': 'windDir',
         'default': 0,
-        'format': '%.1f'
+        'group': 'group_direction'
     },
     'avgbearing': {
         'source': 'wind',
         'aggregate': 'vecdir',
         'aggregate_period': 600,
-        'format': '%.1f'
+        'group': 'group_direction'
     },
     'bearingTM': {
         'source': 'wind',
         'aggregate': 'maxdir',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_direction'
     },
     'windrun': {
         'source': 'windrun',
         'aggregate': 'sum',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_distance'
     },
     'UV': {
         'source': 'UV',
-        'format': '%.1f'
+        'group': 'group_uv'
     },
     'UVTH': {
         'source': 'UV',
         'aggregate': 'max',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_uv'
     },
     'SolarRad': {
         'source': 'radiation',
-        'format': '%.1f'
+        'group': 'group_radiation'
     },
     'SolarRadTM': {
         'source': 'radiation',
         'aggregate': 'max',
         'aggregate_period': 'day',
-        'format': '%.1f'
+        'group': 'group_radiation'
     },
     'CurrentSolarMax': {
         'source': 'maxSolarRad',
-        'format': '%.1f'
+        'group': 'group_radiation'
     },
     'cloudbasevalue': {
         'source': 'cloudbase',
-        'format': '%.1f'
+        'group': 'group_altitude'
     }
+}
+
+# default group map
+DEFAULT_GROUP_MAP = {
+    'group_temperature': 'degree_C',
+    'group_percent': 'percent',
+    'group_pressure': 'hPa',
+    'group_speed': 'km_per_hour',
+    'group_distance': 'km',
+    'group_direction': 'degree_compass',
+    'group_rain': 'mm',
+    'group_rainrate': 'mm_per_hour',
+    'group_radiation': 'watt_per_meter_squared',
+    'group_uv': 'uv_index',
+    'group_altitude': 'foot',
+    'group_time': 'unix_epoch'
+}
+
+# default format map
+DEFAULT_FORMAT_MAP = {
+    'degree_C': '%.1f',
+    'degree_compass': '%.0f',
+    'degree_F': '%.1f',
+    'foot': '%.0f',
+    'hPa': '%.1f',
+    'hPa_per_hour': '%.3f',
+    'inch': '%.2f',
+    'inch_per_hour': '%.2f',
+    'inHg': '%.3f',
+    'inHg_per_hour': '%.5f',
+    'km': '%.1f',
+    'km_per_hour': '%.0f',
+    'knot': '%.0f',
+    'kPa': '%.2f',
+    'kPa_per_hour': '%.4f',
+    'mbar': '%.1f',
+    'mbar_per_hour': '%.4f',
+    'meter': '%.0f',
+    'meter_per_second': '%.1f',
+    'mile': '%.1f',
+    'mile_per_hour': '%.0f',
+    'mm': '%.1f',
+    'mm_per_hour': '%.1f',
+    'mmHg': '%.1f',
+    'mmHg_per_hour': '%.4f',
+    'percent': '%.0f',
+    'unix_epoch': '%H:%M',
+    'uv_index': '%.1f',
+    'watt_per_meter_squared': '%.0f'
 }
 
 
@@ -1168,68 +1221,40 @@ class RealtimeGaugeDataThread(threading.Thread):
         except ValueError:
             self.wr_points = 16
 
+        # Construct the group map to be used. The group map maps the unit to be
+        # used for each unit group. It is based on the default group map with
+        # user overrides from the [RealtimeGaugeData] [[Groups]] stanza.
+        _group_map = copy.deepcopy(DEFAULT_GROUP_MAP)
+        _group_map.update(rtgd_config_dict.get('Groups', {}))
+        # The SteelSeries Gauges do not support rain in cm, but cm is a valid
+        # WeeWX rain unit. So if we have rain or rainRate in cm/cm_per_hour
+        # force change the unit to mm/mm_per_hour.
+        if _group_map['group_rain'] == 'cm':
+            _group_map['group_rain'] = 'mm'
+        if _group_map['group_rainrate'] == 'cm_per_hour':
+            _group_map['group_rainrate'] = 'mm_per_hour'
+        self.group_map = _group_map
+        # Construct the format map to be used. The format map maps string
+        # formats to be used for each unit. It is based on the default format
+        # map with user overrides from the [RealtimeGaugeData]
+        # [[StringFormats]] stanza.
+        _format_map = copy.deepcopy(DEFAULT_FORMAT_MAP)
+        _format_map.update(rtgd_config_dict.get('StringFormats', {}))
+        self.format_map = _format_map
+
         # get our groups and format strings
         self.date_format = rtgd_config_dict.get('date_format', '%Y/%m/%d')
         self.time_format = rtgd_config_dict.get('time_format', '%H:%M')
-        self.temp_group = rtgd_config_dict['Groups'].get('group_temperature',
-                                                         'degree_C')
-        self.pres_group = rtgd_config_dict['Groups'].get('group_pressure',
-                                                         'hPa')
-        self.pres_format = rtgd_config_dict['StringFormats'].get(self.pres_group,
-                                                                 '%.1f')
-        self.wind_group = rtgd_config_dict['Groups'].get('group_speed',
-                                                         'km_per_hour')
-        # Since the SteelSeries Weather Gauges derives distance units from wind
-        # speed units we cannot use knots because WeeWX does not know how to
-        # use distance in nautical miles. If we have been told to use knot then
-        # default to mile_per_hour.
-        if self.wind_group == 'knot':
-            self.wind_group = 'mile_per_hour'
-        self.wind_format = rtgd_config_dict['StringFormats'].get(self.wind_group,
-                                                                 '%.1f')
-        self.rain_group = rtgd_config_dict['Groups'].get('group_rain',
-                                                         'mm')
-        # SteelSeries Weather Gauges don't understand cm so default to mm if we
-        # have been told to use cm
-        if self.rain_group == 'cm':
-            self.rain_group = 'mm'
-        self.rain_format = rtgd_config_dict['StringFormats'].get(self.rain_group,
-                                                                 '%.1f')
-        self.dir_group = 'degree_compass'
-        self.dir_format = rtgd_config_dict['StringFormats'].get(self.dir_group,
-                                                                '%.1f')
-        self.rad_group = 'watt_per_meter_squared'
-        self.rad_format = rtgd_config_dict['StringFormats'].get(self.rad_group,
-                                                                '%.0f')
-        # SteelSeries Weather gauges derives windrun units from wind speed
-        # units, so must we
-        self.dist_group = GROUP_DIST[self.wind_group]
-        self.dist_format = rtgd_config_dict['StringFormats'].get(self.dist_group,
-                                                                 '%.1f')
-        self.alt_group = rtgd_config_dict['Groups'].get('group_altitude',
-                                                        'meter')
         self.flag_format = '%.0f'
-
-        # set up output units dict
-        # first get the Groups config from our config dict
-        _config_units_dict = rtgd_config_dict.get('Groups', {})
-        # group_rainrate needs special attention; it needs to match group_rain.
-        # If group_rain does not exist omit group_rainrate as it will be
-        # picked up from the defaults.
-        if 'group_rain' in _config_units_dict:
-            _config_units_dict['group_rainrate'] = "%s_per_hour" % (_config_units_dict['group_rain'],)
-        # add the Groups config to the chainmap and set the units_dict property
-        self.units_dict = ListOfDicts(_config_units_dict, DEFAULT_UNITS)
-
         # Get the field map from our config, if it does not exist use the
         # default. Use a deepcopy of the defaults as we will possibly be
         # modifying the field map.
-        _field_map = rtgd_config_dict['FieldMap'] if 'FieldMap' in rtgd_config_dict else copy.deepcopy(DEFAULT_FIELD_MAP)
+        _field_map = rtgd_config_dict.get('FieldMap', copy.deepcopy(DEFAULT_FIELD_MAP))
+
         # get any extensions
         _extensions = rtgd_config_dict.get('FieldMapExtensions', {})
         # and update the field map with the extensions
         _field_map.update(_extensions)
-
         # make a deepcopy of the extended field map as we will be iterating
         # over it and possibly making changes
         updated_field_map = copy.deepcopy(_field_map)
@@ -1237,7 +1262,8 @@ class RealtimeGaugeDataThread(threading.Thread):
         # values in the field map to ValueTuples
         for field, field_config in six.iteritems(_field_map):
             # obtain the unit group for this field
-            _group = _getUnitGroup(field_config['source'])
+            _group = self.get_unit_group(field_config['source'],
+                                         field_config.get('aggregate'))
             # Obtain the default; the default could be a scalar, a scalar and a
             # unit or a scalar with unit and unit group. If no default was
             # specified it will be None.
@@ -1245,21 +1271,25 @@ class RealtimeGaugeDataThread(threading.Thread):
             # create a ValueTuple based on the default
             if _default is None:
                 # no default specified so use 0 in output units
-                _vt = ValueTuple(0, self.units_dict[_group], _group)
+                _vt = ValueTuple(0, _group_map[_group], _group)
             elif len(_default) == 1:
                 # just a value so use it in output units
-                _vt = ValueTuple(float(_default[0]), self.units_dict[_group], _group)
+                _vt = ValueTuple(float(_default[0]), _group_map[_group], _group)
             elif len(_default) == 2:
                 # we have a value and units so use that value in those units
-                _vt = ValueTuple(float(_default[0]), self.units_dict[_group], _default[1])
+                _vt = ValueTuple(float(_default[0]), _group_map[_group], _default[1])
             elif len(_default) == 3:
                 # we already have all the elements of a ValueTuple so no
                 # calculations just creating of the ValueTuple object
-                _vt = ValueTuple(_default)
+                _vt = ValueTuple(float(_default[0]), _default[1], _default[2])
             # update the default in the config for this field in the field map,
             # but make sure we update our copy of the field map not the version
             # we aer iterating over
             updated_field_map[field]['default'] = _vt
+            # now add in the format to be used but only if it does not exist
+            if 'format' not in field_config:
+                # we don't have a format so get it from our unit dict
+                updated_field_map[field]['format'] = _format_map[_group_map[_group]]
         # finally set our field map property
         self.field_map = updated_field_map
 
@@ -1383,7 +1413,7 @@ class RealtimeGaugeDataThread(threading.Thread):
         something in the rtgd queue.
         """
 
-        # would normally do this in our objects __init__ but since we are are
+        # would normally do this in our objects __init__ but since we are
         # running in a thread we need to wait until the thread is actually
         # running before getting db managers
 
@@ -1511,7 +1541,7 @@ class RealtimeGaugeDataThread(threading.Thread):
                                 log.critical("Thread exiting. Reason: %s" % (e, ))
                                 return
                     # if packets have backed up in the control queue, trim it until
-                    # it's no bigger than the max allowed backlog
+                    # it's not bigger than the max allowed backlog
                     while self.control_queue.qsize() > 5:
                         self.control_queue.get()
         except Exception as e:
@@ -1691,9 +1721,10 @@ class RealtimeGaugeDataThread(threading.Thread):
             source = this_field_map['source']
             # get a few things about our result:
             # unit group
-            result_group = this_field_map['group'] if 'group' in this_field_map else _getUnitGroup(source)
+            result_group = this_field_map['group'] if 'group' in this_field_map \
+                else self.get_unit_group(source, this_field_map.get('aggregate'))
             # result units
-            result_units = self.units_dict[result_group]
+            result_units = self.group_map[result_group]
             # initialise agg to None
             agg = None
             # do we have an aggregate
@@ -1833,6 +1864,20 @@ class RealtimeGaugeDataThread(threading.Thread):
                     result = None
         return result
 
+    @staticmethod
+    def get_unit_group(obs_type, agg_type=None):
+        """Determine the unit group of an observation and aggregation type.
+
+        WeeWX provides a similar function, but it does not support all
+        aggregates used by RTGD. Check for and handle these aggregates
+        separately, otherwise call the WeeWX function for everything else.
+        """
+
+        if agg_type == 'maxdir':
+            return 'group_direction'
+        else:
+            return weewx.units.getUnitGroup(obs_type, agg_type)
+
     def get_packet_units(self, packet):
         """Given a packet obtain unit details for each field map source."""
 
@@ -1891,15 +1936,15 @@ class RealtimeGaugeDataThread(threading.Thread):
         # sensors "Fine Offset only" 0 if contact has been established
         data['SensorContactLost'] = self.flag_format % self.lost_contact_flag
         # tempunit - temperature units - C, F
-        data['tempunit'] = UNITS_TEMP[self.temp_group]
+        data['tempunit'] = UNITS_TEMP[self.group_map['group_temperature']]
         # windunit -wind units - m/s, mph, km/h, kts
-        data['windunit'] = UNITS_WIND[self.wind_group]
+        data['windunit'] = UNITS_WIND[self.group_map['group_speed']]
         # pressunit - pressure units - mb, hPa, in
-        data['pressunit'] = UNITS_PRES[self.pres_group]
+        data['pressunit'] = UNITS_PRES[self.group_map['group_pressure']]
         # rainunit - rain units - mm, in
-        data['rainunit'] = UNITS_RAIN[self.rain_group]
+        data['rainunit'] = UNITS_RAIN[self.group_map['group_rain']]
         # cloudbaseunit - cloud base units - m, ft
-        data['cloudbaseunit'] = UNITS_CLOUD[self.alt_group]
+        data['cloudbaseunit'] = UNITS_CLOUD[self.group_map['group_altitude']]
 
         # TODO. pressL and pressH need to be refactored to use a field map
         # pressL - all time low barometer
@@ -1909,8 +1954,8 @@ class RealtimeGaugeDataThread(threading.Thread):
                                     self.packet_unit_dict['barometer']['group'])
         else:
             press_l_vt = ValueTuple(850, 'hPa', self.packet_unit_dict['barometer']['group'])
-        press_l = convert(press_l_vt, self.pres_group).value
-        data['pressL'] = self.pres_format % press_l
+        press_l = convert(press_l_vt, self.group_map['group_pressure']).value
+        data['pressL'] = self.format_map[self.group_map['group_pressure']] % press_l
         # pressH - all-time high barometer
         if self.max_barometer is not None:
             press_h_vt = ValueTuple(self.max_barometer,
@@ -1918,8 +1963,8 @@ class RealtimeGaugeDataThread(threading.Thread):
                                     self.packet_unit_dict['barometer']['group'])
         else:
             press_h_vt = ValueTuple(1100, 'hPa', self.packet_unit_dict['barometer']['group'])
-        press_h = convert(press_h_vt, self.pres_group).value
-        data['pressH'] = self.pres_format % press_h
+        press_h = convert(press_h_vt, self.group_map['group_pressure']).value
+        data['pressH'] = self.format_map[self.group_map['group_pressure']] % press_h
 
         # domwinddir - Today's dominant wind direction as compass point
         dom_dir = self.buffer['wind'].day_vec_avg.dir
@@ -1946,33 +1991,35 @@ class RealtimeGaugeDataThread(threading.Thread):
 
         # wspeed - wind speed (average)
         # obtain the average wind speed from the buffer
-        _wspeed = self.buffer['windSpeed'].history_avg(ts=ts, age=600)
+        _speed = self.buffer['windSpeed'].history_avg(ts=ts, age=600)
+        _wspeed = _speed if _speed is not None else 0.0
         # put into a ValueTuple so we can convert
         wspeed_vt = ValueTuple(_wspeed,
                                self.packet_unit_dict['windSpeed']['units'],
                                self.packet_unit_dict['windSpeed']['group'])
         # convert to output units
-        wspeed = convert(wspeed_vt, self.wind_group).value
+        wspeed = convert(wspeed_vt, self.group_map['group_speed']).value
         # handle None values
         wspeed = wspeed if wspeed is not None else 0.0
-        data['wspeed'] = self.wind_format % wspeed
+        data['wspeed'] = self.format_map[self.group_map['group_speed']] % wspeed
 
         # wgust - 10 minute high gust
         # first look for max windGust value in the history, if windGust is not
         # in the buffer then use windSpeed, if no windSpeed then use 0.0
         if 'windGust' in self.buffer:
-            wgust = self.buffer['windGust'].history_max(ts, age=600).value
+            _gust = self.buffer['windGust'].history_max(ts, age=600)
         elif 'windSpeed' in self.buffer:
-            wgust = self.buffer['windSpeed'].history_max(ts, age=600).value
+            _gust = self.buffer['windSpeed'].history_max(ts, age=600)
         else:
-            wgust = 0.0
+            _gust = ObsTuple(None, None)
+        wgust = _gust.value if _gust.value is not None else 0.0
         # put into a ValueTuple so we can convert
         wgust_vt = ValueTuple(wgust,
                               self.packet_unit_dict['windSpeed']['units'],
                               self.packet_unit_dict['windSpeed']['group'])
         # convert to output units
-        wgust = convert(wgust_vt, self.wind_group).value
-        data['wgust'] = self.wind_format % wgust
+        wgust = convert(wgust_vt, self.group_map['group_speed']).value
+        data['wgust'] = self.format_map[self.group_map['group_speed']] % wgust
 
         # BearingRangeFrom10 - The 'lowest' bearing in the last 10 minutes
         # BearingRangeTo10 - The 'highest' bearing in the last 10 minutes
@@ -2004,8 +2051,8 @@ class RealtimeGaugeDataThread(threading.Thread):
             bearing_range_from_10 = 0
             bearing_range_to_10 = 0
         # store the formatted results
-        data['BearingRangeFrom10'] = self.dir_format % bearing_range_from_10
-        data['BearingRangeTo10'] = self.dir_format % bearing_range_to_10
+        data['BearingRangeFrom10'] = self.format_map[self.group_map['group_direction']] % bearing_range_from_10
+        data['BearingRangeTo10'] = self.format_map[self.group_map['group_direction']] % bearing_range_to_10
 
         # forecast - forecast text
         _text = self.scroller_text if self.scroller_text is not None else ''
@@ -2026,34 +2073,34 @@ class RealtimeGaugeDataThread(threading.Thread):
         # TODO. Check this, particularly usage of buffer['rain'].sum
         if self.mtd_rain:
             if self.month_rain is not None:
-                rain_m = convert(self.month_rain, self.rain_group).value
+                rain_m = convert(self.month_rain, self.group_map['group_rain']).value
                 rain_b_vt = ValueTuple(self.buffer['rain'].sum,
                                        self.packet_unit_dict['rain']['units'],
                                        self.packet_unit_dict['rain']['group'])
-                rain_b = convert(rain_b_vt, self.rain_group).value
+                rain_b = convert(rain_b_vt, self.group_map['group_rain']).value
                 if rain_m is not None and rain_b is not None:
                     rain_m = rain_m + rain_b
                 else:
                     rain_m = 0.0
             else:
                 rain_m = 0.0
-            data['mrfall'] = self.rain_format % rain_m
+            data['mrfall'] = self.format_map[self.group_map['group_rain']] % rain_m
         # year to date rain, only calculate if we have been asked
         # TODO. Check this, particularly usage of buffer['rain'].sum
         if self.ytd_rain:
             if self.year_rain is not None:
-                rain_y = convert(self.year_rain, self.rain_group).value
+                rain_y = convert(self.year_rain, self.group_map['group_rain']).value
                 rain_b_vt = ValueTuple(self.buffer['rain'].sum,
                                        self.packet_unit_dict['rain']['units'],
                                        self.packet_unit_dict['rain']['group'])
-                rain_b = convert(rain_b_vt, self.rain_group).value
+                rain_b = convert(rain_b_vt, self.group_map['group_rain']).value
                 if rain_y is not None and rain_b is not None:
                     rain_y = rain_y + rain_b
                 else:
                     rain_y = 0.0
             else:
                 rain_y = 0.0
-            data['yrfall'] = self.rain_format % rain_y
+            data['yrfall'] = self.format_map[self.group_map['group_rain']] % rain_y
 
         # now populate all fields in the field map
         for field in self.field_map:
@@ -2061,7 +2108,7 @@ class RealtimeGaugeDataThread(threading.Thread):
         return data
 
     def process_new_archive_record(self, record):
-        """Control processing when new a archive record is presented."""
+        """Control processing when a new archive record is presented."""
 
         # set our lost contact flag if applicable
         self.lost_contact_flag = self.get_lost_contact(record, 'archive')
@@ -2195,7 +2242,7 @@ class ObsBuffer(object):
             _max = max(snapshot, key=itemgetter(1))
             return ObsTuple(_max[0], _max[1])
         else:
-            return None
+            return ObsTuple(None, None)
 
     def history_avg(self, ts, age=MAX_AGE):
         """Return the average value in my history.
@@ -2529,7 +2576,7 @@ seed_functions = ListOfDicts({'wind': Buffer.seed_vector})
 #                              class ObsTuple
 # ============================================================================
 
-# A observation during some period can be represented by the value of the
+# An observation during some period can be represented by the value of the
 # observation and the time at which it was observed. This can be represented
 # in a 2 way tuple called an obs tuple. An obs tuple is useful because its
 # contents can be accessed using named attributes.
@@ -2542,7 +2589,7 @@ seed_functions = ListOfDicts({'wind': Buffer.seed_vector})
 # It is valid to have an observed value of None.
 #
 # It is also valid to have a ts of None (meaning there is no information about
-# the time the was was observed.
+# the time the observation was observed).
 
 class ObsTuple(tuple):
 
@@ -2563,7 +2610,7 @@ class ObsTuple(tuple):
 # ============================================================================
 
 # A vector value can be represented as a magnitude and direction. This can be
-# represented in a 2 way tuple called an vector tuple. A vector tuple is useful
+# represented in a 2 way tuple called a vector tuple. A vector tuple is useful
 # because its contents can be accessed using named attributes.
 #
 # Item   attribute   Meaning
@@ -3036,7 +3083,7 @@ class WUSource(ThreadedSource):
 
         # Get our API key from weewx.conf, first look in [RealtimeGaugeData]
         # [[WU]] and if no luck try [Forecast] if it exists. Wrap in a
-        # try..except loop to catch exceptions (ie one or both don't exist.
+        # try..except loop to catch exceptions (ie one or both don't exist).
         try:
             if wu_config_dict.get('api_key') is not None:
                 api_key = wu_config_dict.get('api_key')
@@ -3507,7 +3554,7 @@ class Zambretti(object):
         now = time.time()
         if weewx.debug == 2:
             log.debug("Last Zambretti forecast obtained at %s" % self.last_query_ts)
-        # If we haven't made a db query previously or if its been too long 
+        # If we haven't made a db query previously or if it's been too long
         # since the last query then make the query
         if (self.last_query_ts is None) or ((now + 1 - self.interval) >= self.last_query_ts):
             # if the forecast extension is not installed then return an 
@@ -3618,7 +3665,7 @@ class DarkskySource(ThreadedSource):
         self.last_call_ts = None
         # Get our API key from weewx.conf, first look in [RealtimeGaugeData]
         # [[WU]] and if no luck try [Forecast] if it exists. Wrap in a
-        # try..except loop to catch exceptions (ie one or both don't exist.
+        # try..except loop to catch exceptions (ie one or both don't exist).
         key = darksky_config_dict.get('api_key', None)
         if key is None:
             raise MissingApiKey("Cannot find valid Darksky key")
@@ -3660,7 +3707,7 @@ class DarkskySource(ThreadedSource):
             log.debug("Last Darksky API call at %s" % self.last_call_ts)
         # has the lockout period passed since the last call
         if self.last_call_ts is None or ((now + 1 - self.lockout_period) >= self.last_call_ts):
-            # If we haven't made an API call previously or if its been too long
+            # If we haven't made an API call previously or if it's been too long
             # since the last call then make the call
             if (self.last_call_ts is None) or ((now + 1 - self.interval) >= self.last_call_ts):
                 # Make the call, wrap in a try..except just in case

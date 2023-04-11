@@ -617,3 +617,4 @@ class DayboundaryStats(SearchList):
         return [stats]
 
 
+

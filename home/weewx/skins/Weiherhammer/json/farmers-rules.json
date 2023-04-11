@@ -2,11 +2,11 @@
     "title":"Liste von Bauernregeln",
     "description":"Die Liste von Bauernregeln ist nach dem Jahreslauf von Januar bis Dezember geordnet.",
     "datasource":"Wikipedia",
-    "datasource_version":"28.09.2022 16:01",
+    "datasource_version":"14.02.2023 02:11",
     "datasource_url":"https://de.wikipedia.org/wiki/Liste_von_Bauernregeln",
     "file_creator":"Henry Ott",
     "file_version":"1.0.3",
-    "file_modification":"26.12.2022 12:00",
+    "file_modification":"24.03.2023 16:19",
     "months":{
         "1":{
             "general":{
@@ -772,7 +772,7 @@
                     ]
                 },
                 "24":{
-                    "name":"Erzengel Gabriel (Die katholische Liturgiereform von 1969 verlegte den Gedenktag auf den 29. September.)",
+                    "name":"Erzengel Gabriel",
                     "rules":[
                         "Scheint auf Sankt Gabriel die Sonn’, hat der Bauer viel Freud’ und Wonn’."
                     ]

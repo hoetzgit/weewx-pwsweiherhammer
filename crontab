@@ -22,7 +22,7 @@
 #
 # m h dom mon dow command
 10      *   * * * /usr/sbin/ntpdate ptbtime1.ptb.de ptbtime2.ptb.de >/dev/null 2>&1
-0       */4 * * * /bin/bash /usr/local/bin/backup_host.sh >/var/log/weewx/backup_host.log 2>&1
+0       */6 * * * /bin/bash /usr/local/bin/backup_host.sh >/var/log/weewx/backup_host.log 2>&1
 0,20,40 *   * * * /bin/bash /usr/local/bin/backup_db_weewx.sh >/var/log/weewx/backup_db_weewx.log 2>&1
 #
 # PWS Dashboard
@@ -48,6 +48,7 @@
 #
 # original dwd-mosmix (weewx-wdc skin)
 14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx-dwd-wdc.conf --verbose --json 10688 >/var/log/weewx/dwd-mosmix-wdc-json-10688.log 2>&1
+#14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx-dwd-wdc.conf --verbose --json --open-meteo=dwd-icon 49.632270,12.056186,394 >/var/log/weewx/dwd-mosmix-wdc-json-open-meteo.log 2>&1
 #
 # forecast-pwsWeiherhammer (Weiherhammer skin)
 14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --database --belchertown  10688 >/var/log/weewx/forecast-pwsWeiherhammer-belchertown-10688.log 2>&1

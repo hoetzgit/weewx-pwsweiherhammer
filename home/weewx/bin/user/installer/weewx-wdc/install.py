@@ -1,6 +1,6 @@
 from weecfg.extension import ExtensionInstaller
 
-# Copyright 2023 David Bätge
+# Copyright 2023 David Baetge
 # Distributed under the terms of the GNU Public License (GPLv3)
 
 
@@ -11,7 +11,7 @@ def loader():
 class BasicInstaller(ExtensionInstaller):
     def __init__(self):
         super(BasicInstaller, self).__init__(
-            version="3.0.0",
+            version="3.1.1",
             name="weewx-wdc",
             description="Weather Data Center skin for WeeWX.",
             author="David Baetge",
@@ -50,6 +50,7 @@ class BasicInstaller(ExtensionInstaller):
                         "skins/weewx-wdc/statistics.html.tmpl",
                         "skins/weewx-wdc/celestial.html.tmpl",
                         "skins/weewx-wdc/about.html.tmpl",
+                        "skins/weewx-wdc/externals.html.tmpl",
                         "skins/weewx-wdc/offline.html.tmpl",
                         "skins/weewx-wdc/manifest.json",
                         "skins/weewx-wdc/icon-192x192.png",
@@ -63,6 +64,7 @@ class BasicInstaller(ExtensionInstaller):
                         "skins/weewx-wdc/service-worker.js",
                         "skins/weewx-wdc/dist/main.css",
                         "skins/weewx-wdc/dist/main.js",
+                        "skins/weewx-wdc/dist/live-updates.js",
                         "skins/weewx-wdc/dist/assets/IBMPlexMono-Regular.woff2",
                         "skins/weewx-wdc/dist/assets/IBMPlexMono-Regular.woff",
                         "skins/weewx-wdc/dist/assets/IBMPlexSans-Regular.woff2",
@@ -131,6 +133,7 @@ class BasicInstaller(ExtensionInstaller):
                         "skins/weewx-wdc/includes/icons/moonrise.svg",
                         "skins/weewx-wdc/includes/icons/moonset.svg",
                         "skins/weewx-wdc/includes/icons/github.svg",
+                        "skins/weewx-wdc/includes/icons/mask.svg",
                         "skins/weewx-wdc/includes/icons/wdc.svg",
                         "skins/weewx-wdc/includes/icons/forecast/B1.svg",
                         "skins/weewx-wdc/includes/icons/forecast/B2.svg",

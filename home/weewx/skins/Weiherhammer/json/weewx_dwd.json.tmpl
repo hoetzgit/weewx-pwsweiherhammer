@@ -227,7 +227,11 @@
                     "ob": {
                         "timestamp": $current.poi_DateTime.raw,
                         "icon": "$current.poi_Icon.raw",
+                        #if $current.poi_Cloudcover.has_data
                         "sky": $current.poi_Cloudcover.raw,
+                        #else
+                        "sky": null,
+                        #end if
                         "weather": "$current.poi_Icontitle.raw",
                         #if $current.poi_PresentWeather.has_data
                         "weathercode": $current.poi_PresentWeather.raw,

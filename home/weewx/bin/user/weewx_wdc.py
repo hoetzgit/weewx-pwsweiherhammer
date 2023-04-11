@@ -1,6 +1,11 @@
-# Copyright 2023 David Bätge
-# Distributed under the terms of the GNU Public License (GPLv3)
-
+# coding: utf-8
+#
+#    Copyright (c) 2023 David Baetge <david.baetge@gmail.com>
+#
+#    Distributed under the terms of the GNU Public License (GPLv3)
+#
+#    @see http://weewx.com/docs/sle.html
+#
 import datetime
 import calendar
 import time
@@ -41,7 +46,7 @@ except ImportError:
     import syslog
 
     def logmsg(level, msg):
-        syslog.syslog(level, F'jas: {msg}')
+        syslog.syslog(level, 'weewx-wdc: %s' % msg)
 
     def logdbg(msg):
         logmsg(syslog.LOG_DEBUG, msg)
@@ -189,6 +194,7 @@ class WdcGeneralUtil(SearchList):
     def get_unit_label(self, unit):
         """
         Get the unit label for a given unit.
+        @see https://www.weewx.com/docs/customizing.htm#units
 
         Args:
             unit (string): The unit
@@ -199,7 +205,11 @@ class WdcGeneralUtil(SearchList):
         try:
             unit_label = self.generator.formatter.unit_label_dict[unit]
             if type(unit_label) == list:
-                return unit_label[1]
+                # Singular vs Plural label.
+                if len(unit_label) == 2:
+                    return unit_label[1]
+                else:
+                    return unit_label[0]
             else:
                 return unit_label
         except KeyError:
@@ -304,7 +314,8 @@ class WdcGeneralUtil(SearchList):
     def get_icon(self, observation, use_diagram_config=False, use_combined_diagram_config=False, context=None):
         """
         Returns an include path for an icon based on the observation
-        @see http://weewx.com/docs/sle.html
+        # @see https://www.weewx.com/docs/customizing.htm#units
+        # @see https://carbondesignsystem.com/guidelines/icons/library/
 
         Args:
             observation (string): The observation
@@ -313,7 +324,7 @@ class WdcGeneralUtil(SearchList):
             context (string): The context
 
         Returns:
-            str: An icon include path
+            str: An icon include path | 'none' | 'unset'
         """
         icon_path = "includes/icons/"
 
@@ -340,16 +351,22 @@ class WdcGeneralUtil(SearchList):
             except KeyError:
                 icon = False
 
-            if icon or icon == 'none':
+            if icon and icon != 'none':
                 return icon
+
+            if icon and icon == 'none':
+                return 'unset'
 
             try:
                 icon = self.generator.skin_dict['DisplayOptions']['diagrams']['combined_observations'][observation]['icon']
             except KeyError:
                 icon = False
 
-            if icon or icon == 'none':
+            if icon and icon != 'none':
                 return icon
+
+            if icon and icon == 'none':
+                return 'unset'
 
         try:
             icon_config = self.generator.skin_dict['DisplayOptions']['Icons'].get(
@@ -373,6 +390,14 @@ class WdcGeneralUtil(SearchList):
                 or observation == "altimeter"
         ):
             return icon_path + "barometer.svg"
+
+        elif (
+                observation == "no2"
+                or observation == "pm1_0"
+                or observation == "pm2_5"
+                or observation == "pm10_0"
+        ):
+            return icon_path + "mask.svg"
 
         elif observation == "windSpeed":
             return icon_path + "wind-speed.svg"
@@ -460,6 +485,8 @@ class WdcGeneralUtil(SearchList):
 
         elif "Humid" in observation:
             return icon_path + "humidity.svg"
+
+        return 'none'
 
     def get_color(self, observation, context, *args, **kwargs):
         """
@@ -1242,6 +1269,12 @@ class WdcDiagramUtil(SearchList):
             return int(rounding)
 
         # Default roundings.
+        if context is None:
+            context = 'day'
+
+        unit = self.general_util.get_unit_for_obs(
+            observation, observation_key, context)
+
         if observation == "UV" or observation == "cloudbase":
             return 0
 
@@ -1254,6 +1287,9 @@ class WdcDiagramUtil(SearchList):
                 or observation == "altimeter"
         ) and self.unit.unit_type.pressure == "inHg":
             return 3
+
+        if unit == 'percent':
+            return 0
 
         return 1
 
@@ -1476,6 +1512,7 @@ class WdcDiagramUtil(SearchList):
         for index, data in enumerate(windrose_data):
             for p_index, percent in enumerate(data["r"]):
                 windrose_data[index]["r"][p_index] = round(
+                    # todo: division by zero
                     (percent / num_of_values) * 100
                 )
 

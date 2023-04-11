@@ -459,7 +459,7 @@
     https://github.com/jdemaeyer/brightsky
 """
 
-VERSION = "0.x"
+VERSION = "0.1"
 
 import threading
 import configobj
@@ -477,7 +477,7 @@ import copy
 if __name__ == '__main__':
 
     import sys
-    sys.path.append('/usr/share/weewx')
+    sys.path.append('/home/weewx')
 
     def logdbg(x):
         print('DEBUG',x)
@@ -537,9 +537,8 @@ for group in weewx.units.std_groups:
 # DS_10 - 10min-sum of diffuse solar radiation - unit J/cm^2
 # GS_10 - 10min-sum of solar incoming radiation - unit J/cm^2
 # LS_10 - 10min-sum of longwave downward radiation - unit J/cm^2
-if weewx.units.conversionDict.get('joule_per_cm_squared_10minutes') is None:
-    weewx.units.conversionDict.setdefault('joule_per_cm_squared_10minutes',{})
-if weewx.units.conversionDict['joule_per_cm_squared_10minutes'].get('watt_per_meter_squared') is None:
+weewx.units.conversionDict.setdefault('joule_per_cm_squared_10minutes',{})
+if 'watt_per_meter_squared' not in weewx.units.conversionDict['joule_per_cm_squared_10minutes']:
     weewx.units.conversionDict['joule_per_cm_squared_10minutes']['watt_per_meter_squared'] = lambda x : (x * 10000) / 600
 
 # Cloud cover icons
@@ -613,30 +612,32 @@ def is_night(record,log_success=False,log_failure=True):
         dateTime = record['dateTime'][0]
         latitude = record['latitude'][0]
         longitude = record['longitude'][0]
-        altitude = record['altitude'][0]
     except LookupError as e:
         if log_failure:
-            logerr("thread '%s': is_night %s - %s" % (self.name, e.__class__.__name__, e))
-        return "N/A"
+            logerr("Error is_night: %s - %s" % (e.__class__.__name__, e))
+        return None
 
     # Almanac object gives more accurate results if current temp and
     # pressure are provided. Initialise some defaults.
     temperature_c = 15.0
     pressure_mbar = 1010.0
+    altitude_m = 0.0 # Default is 0 (sea level)
     # Record:
     # 'dateTime': (1676905200, 'unix_epoch', 'group_time')
     # 'outTemp': (10.2, 'degree_C', 'group_temperature')
     # 'barometer': (1021.0, 'hPa', 'group_pressure')
     if 'outTemp' in record:
-        temperature_c = weewx.units.convert(record['outTemp'], "degree_C")[0]
+        temperature_c = weewx.units.convert(record['outTemp'], 'degree_C')[0]
     if 'barometer' in record:
-        pressure_mbar = weewx.units.convert(record['barometer'], "mbar")[0]
+        pressure_mbar = weewx.units.convert(record['barometer'], 'mbar')[0]
+    if 'altitude' in record:
+         altitude_m = weewx.units.convert(record['altitude'], 'meter')[0]
 
     # get our almanac object
     almanac = weewx.almanac.Almanac(dateTime,
                                     latitude,
                                     longitude,
-                                    altitude,
+                                    altitude_m,
                                     temperature_c,
                                     pressure_mbar)
     # work out sunrise and sunset timestamp so we can determine if it is
@@ -726,21 +727,21 @@ class DWDPOIthread(BaseThread):
         'maximum_wind_speed_last_hour':'windGust'}
     
     UNIT = {
-        'Grad C': 'degree_C'
-        ,'Grad': 'degree_compass'
-        ,'W/m2': 'watt_per_meter_squared'
-        ,'km/h': 'km_per_hour'
-        ,'h': 'hour'
-        ,'min': 'minute'
-        ,'%': 'percent'
-        ,'km': 'km'
-        ,'m': 'meter'
-        ,'cm': 'cm'
-        ,'mm': 'mm'
-        ,'hPa': 'hPa'
-        ,'CODE_TABLE': 'count'
+        'Grad C': 'degree_C',
+        'Grad': 'degree_compass',
+        'W/m2': 'watt_per_meter_squared',
+        'km/h': 'km_per_hour',
+        'h': 'hour',
+        'min': 'minute',
+        '%': 'percent',
+        'km': 'km',
+        'm': 'meter',
+        'cm': 'cm',
+        'mm': 'mm',
+        'hPa': 'hPa',
+        'CODE_TABLE': 'count'
     }
-    
+    # TODO: Aeris Icons
     WEATHER = (
         ('unbekannt','unknown.png','unknown.png'), # 0
         ('wolkenlos','clear-day.png','0-8.png'), # 1
@@ -808,7 +809,6 @@ class DWDPOIthread(BaseThread):
             else:
                 obsgroup = weewx.units.obs_group_dict.get(obstype)
             if obsgroup:
-                weewx.units.obs_group_dict.setdefault(obstype, obsgroup)
                 weewx.units.obs_group_dict.setdefault(prefix+obstype[0].upper()+obstype[1:],obsgroup)
 
 
@@ -859,7 +859,7 @@ class DWDPOIthread(BaseThread):
         try:
             x = DWDPOIthread.WEATHER[present_weather]
         except (LookupError,TypeError):
-            x = ('Wetterzustand nicht gemeldet','unknown.png','','')
+            x = ('Wetterzustand nicht gemeldet','unknown.png','','na')
         if present_weather and present_weather<5:
             # clouds only, nothing more
             night = 1 if night else 0
@@ -921,22 +921,19 @@ class DWDPOIthread(BaseThread):
                                       unit,
                                       grp)
 
-                if self.lat is not None:
-                    y['latitude'] = (self.lat,'degree_compass','group_coordinate')
-                if self.lon is not None:
-                    y['longitude'] = (self.lon,'degree_compass','group_coordinate')
                 if self.alt is not None:
                     y['altitude'] = (self.alt,'meter','group_altitude')
 
-                night = is_night(y, log_success=(self.log_success or self.debug > 0),
-                                    log_failure=(self.log_failure or self.debug > 0))
-                if night != "N/A":
-                    y['day'] = (0 if night else 1,'count','group_count')
+                if self.lat is not None and self.lon is not None:
+                    y['latitude'] = (self.lat,'degree_compass','group_coordinate')
+                    y['longitude'] = (self.lon,'degree_compass','group_coordinate')
+                    night = is_night(y, log_success=(self.log_success or self.debug > 0),
+                                     log_failure=(self.log_failure or self.debug > 0))
                 else:
-                    y['day'] = (None,'count','group_count')
-                    night = False
-                    if self.log_failure or self.debug > 0:
-                        logerr("thread '%s': Determining day or night was not possible." % self.name)
+                    night = None
+
+                if night is not None:
+                    y['day'] = (0 if night else 1,'count','group_count')
 
                 wwcode = DWDPOIthread.get_ww(y['presentWeather'][0], night)
                 if wwcode:
@@ -1018,7 +1015,7 @@ class DWDCDCthread(BaseThread):
         self.last_get_ts = 0
 
         observations = cdc_dict.get('observations')
-        if observations is not None:
+        if observations:
             observations = weeutil.weeutil.option_as_list(observations)
         else:
             observations = ('air','wind','gust','precipitation','solar')
@@ -1039,7 +1036,6 @@ class DWDCDCthread(BaseThread):
             obstype = obs[0]
             obsgroup = obs[2]
             if obsgroup:
-                weewx.units.obs_group_dict.setdefault(obstype, obsgroup)
                 weewx.units.obs_group_dict.setdefault(prefix+obstype[0].upper()+obstype[1:],obsgroup)
         weewx.units.obs_group_dict.setdefault(prefix+'Barometer','group_pressure')
         weewx.units.obs_group_dict.setdefault(prefix+'Altimeter','group_pressure')
@@ -1304,7 +1300,7 @@ class ZAMGthread(BaseThread):
         self.get_meta_data()
         
         observations = zamg_dict.get('observations')
-        if observations is not None:
+        if observations:
             observations = weeutil.weeutil.option_as_list(observations)
         else:
             observations = ('air','wind','gust','precipitation','solar')
@@ -1323,7 +1319,6 @@ class ZAMGthread(BaseThread):
             obstype = obs[0]
             obsgroup = obs[2]
             if obsgroup:
-                weewx.units.obs_group_dict.setdefault(obstype, obsgroup)
                 weewx.units.obs_group_dict.setdefault(prefix+obstype[0].upper()+obstype[1:],obsgroup)
         weewx.units.obs_group_dict.setdefault(prefix+'Barometer','group_pressure')
         weewx.units.obs_group_dict.setdefault(prefix+'Altimeter','group_pressure')
@@ -1456,29 +1451,29 @@ class OPENMETEOthread(BaseThread):
 
     WEATHERMODELS = {
         # option: (country, weather service, model, API endpoint, exclude list)
-        'best_match':('', '', '', 'forecast',['snowfall_height'])
-        ,'dwd-icon':('DE', 'DWD', 'ICON', 'dwd-icon',['visibility'])
-        ,'ecmwf':('EU', 'ECMWF', 'open IFS', 'ecmwf',['apparent_temperature', 'dewpoint_2m', 'diffuse_radiation_instant', 'evapotranspiration', 'freezinglevel_height', 'rain', 'relativehumidity_2m', 'shortwave_radiation_instant', 'showers', 'snow_depth', 'snowfall_height', 'visibility', 'windgusts_10m'])
-        ,'ecmwf_ifs04':('EU', 'ECMWF', 'IFS', 'forecast',['snowfall_height'])
-        ,'gem':('CA', 'MSC-CMC', 'GEM+HRDPS', 'gem',['evapotranspiration', 'freezinglevel_height', 'snow_depth', 'snowfall_height', 'visibility'])
-        ,'gem_global':('CA', 'MSC-CMC', 'GEM', 'forecast',['snowfall_height'])
-        ,'gem_hrdps_continental':('CA', 'MSC-CMC', 'GEM-HRDPS', 'forecast',['snowfall_height'])
-        ,'gem_regional':('CA', 'MSC-CMC', 'GEM', 'forecast',['snowfall_height'])
-        ,'gem_seamless':('CA', 'MSC-CMC', 'GEM', 'forecast',['snowfall_height'])
-        ,'gfs':('US', 'NOAA', 'GFS', 'gfs',['snowfall_height'])
-        ,'gfs_global':('US', 'NOAA', 'GFS Global', 'forecast',['snowfall_height'])
-        ,'gfs_hrrr':('US', 'NOAA', 'GFS HRRR', 'forecast',['snowfall_height'])
-        ,'gfs_seamless':('US', 'NOAA', 'GFS Seamless', 'forecast',['snowfall_height'])
-        ,'icon_d2':('DE', 'DWD', 'ICON D2', 'forecast',['snowfall_height'])
-        ,'icon_eu':('DE', 'DWD', 'ICON EU', 'forecast',['snowfall_height'])
-        ,'icon_global':('DE', 'DWD', 'ICON Global', 'forecast',['snowfall_height'])
-        ,'icon_seamless':('DE', 'DWD', 'ICON Seamless', 'forecast',['snowfall_height'])
-        ,'jma':('JP', 'JMA', 'GSM+MSM', 'jma',['evapotranspiration', 'freezinglevel_height', 'rain', 'showers', 'snow_depth', 'snowfall_height', 'visibility', 'windgusts_10m'])
-        ,'meteofrance':('FR', 'MeteoFrance', 'Arpege+Arome', 'meteofrance',['evapotranspiration', 'freezinglevel_height', 'rain', 'showers', 'snow_depth', 'snowfall_height', 'visibility'])
-        ,'metno':('NO', 'MET Norway', 'Nordic', 'metno',['evapotranspiration', 'freezinglevel_height', 'rain', 'showers', 'snow_depth', 'snowfall_height', 'visibility'])
-        ,'metno_nordic':('NO', 'MET Norway', 'Nordic', 'forecast',['snowfall_height'])
+        'best_match':('', '', '', 'forecast',['snowfall_height']),
+        'dwd-icon':('DE', 'DWD', 'ICON', 'dwd-icon',['precipitation_probability', 'visibility']),
+        'ecmwf':('EU', 'ECMWF', 'open IFS', 'ecmwf',['apparent_temperature', 'dewpoint_2m', 'diffuse_radiation_instant', 'evapotranspiration', 'freezinglevel_height', 'precipitation_probability', 'rain', 'relativehumidity_2m', 'shortwave_radiation_instant', 'showers', 'snow_depth', 'snowfall_height', 'surface_pressure', 'visibility', 'windgusts_10m']),
+        'ecmwf_ifs04':('EU', 'ECMWF', 'IFS', 'forecast',['snowfall_height']),
+        'gem':('CA', 'MSC-CMC', 'GEM+HRDPS', 'gem',['evapotranspiration', 'freezinglevel_height', 'precipitation_probability', 'snow_depth', 'snowfall_height', 'visibility']),
+        'gem_global':('CA', 'MSC-CMC', 'GEM', 'forecast',['snowfall_height']),
+        'gem_hrdps_continental':('CA', 'MSC-CMC', 'GEM-HRDPS', 'forecast',['precipitation_probability', 'snowfall_height', 'surface_pressure']),
+        'gem_regional':('CA', 'MSC-CMC', 'GEM', 'forecast',['snowfall_height', 'surface_pressure']),
+        'gem_seamless':('CA', 'MSC-CMC', 'GEM', 'forecast',['snowfall_height']),
+        'gfs':('US', 'NOAA', 'GFS', 'gfs',['snowfall_height']),
+        'gfs_global':('US', 'NOAA', 'GFS Global', 'forecast',['snowfall_height']),
+        'gfs_hrrr':('US', 'NOAA', 'GFS HRRR', 'forecast',['precipitation_probability', 'snowfall_height', 'surface_pressure']),
+        'gfs_seamless':('US', 'NOAA', 'GFS Seamless', 'forecast',['snowfall_height']),
+        'icon_d2':('DE', 'DWD', 'ICON D2', 'forecast',['snowfall_height']),
+        'icon_eu':('DE', 'DWD', 'ICON EU', 'forecast',['snowfall_height']),
+        'icon_global':('DE', 'DWD', 'ICON Global', 'forecast',['snowfall_height']),
+        'icon_seamless':('DE', 'DWD', 'ICON Seamless', 'forecast',['snowfall_height']),
+        'jma':('JP', 'JMA', 'GSM+MSM', 'jma',['evapotranspiration', 'freezinglevel_height', 'precipitation_probability', 'rain', 'showers', 'snow_depth', 'snowfall_height', 'visibility', 'windgusts_10m']),
+        'meteofrance':('FR', 'MeteoFrance', 'Arpege+Arome', 'meteofrance',['evapotranspiration', 'freezinglevel_height', 'precipitation_probability', 'rain', 'showers', 'snow_depth', 'snowfall_height', 'visibility']),
+        'metno':('NO', 'MET Norway', 'Nordic', 'metno',['evapotranspiration', 'freezinglevel_height', 'precipitation_probability', 'rain', 'showers', 'snow_depth', 'snowfall_height', 'visibility']),
+        'metno_nordic':('NO', 'MET Norway', 'Nordic', 'forecast',['precipitation_probability', 'snowfall_height', 'surface_pressure']),
         # TODO remove 'test' in stable release?
-        ,'test':('', '', '', '',[])
+        'test':('', '', '', '',[])
     }
     
     # https://open-meteo.com/en/docs
@@ -1487,62 +1482,76 @@ class OPENMETEOthread(BaseThread):
     # Attention, not all fields available in each model
     # Mapping API field forecast and dwd-icon endpoint -> WeeWX field
     HOURLYOBS = {
-        'temperature_2m': 'outTemp'
-        ,'apparent_temperature': 'appTemp'
-        ,'dewpoint_2m': 'dewpoint' # not available in forecast model ecmwf
-        ,'pressure_msl': 'barometer'
-        ,'surface_pressure': 'pressure'
-        ,'relativehumidity_2m': 'outHumidity' # not available in forecast model ecmwf
-        ,'winddirection_10m': 'windDir'
-        ,'windspeed_10m': 'windSpeed'
-        ,'windgusts_10m': 'windGust' # not available in forecast model ecmwf
-        ,'cloudcover': 'cloudcover'
-        ,'evapotranspiration': 'et'
-        ,'precipitation': 'precipitation'
-        ,'rain': 'rain'
-        ,'showers': 'shower'
-        ,'snowfall':'snow'
-        ,'freezinglevel_height':'freezinglevelHeight'
-        ,'weathercode':'weathercode'
-        ,'snow_depth':'snowDepth'
-        ,'shortwave_radiation_instant':'radiation'
-        ,'diffuse_radiation_instant':'solarRad'
-        ,'visibility':'visibility' # only available by the American weather models.
-        ,'snowfall_height':'snowfallHeight' # Europe only
+        'temperature_2m': 'outTemp',
+        'apparent_temperature': 'appTemp',
+        'dewpoint_2m': 'dewpoint', # not available in forecast model ecmwf
+        'pressure_msl': 'barometer',
+        'surface_pressure': 'pressure',
+        'relativehumidity_2m': 'outHumidity', # not available in forecast model ecmwf
+        'winddirection_10m': 'windDir',
+        'windspeed_10m': 'windSpeed',
+        'windgusts_10m': 'windGust', # not available in forecast model ecmwf
+        'cloudcover': 'cloudcover',
+        'evapotranspiration': 'et',
+        'precipitation': 'precipitation',
+        'precipitation_probability': 'precipitationProbability',
+        'rain': 'rain',
+        'showers': 'shower',
+        'snowfall':'snow',
+        'freezinglevel_height':'freezinglevelHeight',
+        'weathercode':'weathercode',
+        'snow_depth':'snowDepth',
+        'shortwave_radiation_instant':'radiation',
+        'diffuse_radiation_instant':'solarRad',
+        'visibility':'visibility', # only available by the American weather models.
+        'snowfall_height':'snowfallHeight' # Europe only
     }
 
     # Mapping API field -> WeeWX field
     CURRENTOBS = {
-        'temperature': 'outTemp'
-        ,'windspeed': 'windSpeed'
-        ,'winddirection': 'windDir'
-        ,'weathercode': 'weathercode'
+        'temperature': 'outTemp',
+        'windspeed': 'windSpeed',
+        'winddirection': 'windDir',
+        'weathercode': 'weathercode',
+        'is_day': 'isDay'
+    }
+
+    # Mapping 15 Minutes API field -> WeeWX field
+    MIN15OBS = {
+        'precipitation': 'precipitation',
+        'rain': 'rain',
+        'snowfall':'snow',
+        'freezinglevel_height':'freezinglevelHeight',
+        'shortwave_radiation_instant':'radiation',
+        'diffuse_radiation_instant':'solarRad'
     }
 
     # API result contain no units for current_weather
     # Mapping API current_weather unit -> WeeWX unit
     CURRENTUNIT = {
-        'temperature': u'°C'
-        ,'windspeed': 'km/h'
-        ,'winddirection': u'°'
-        ,'weathercode': 'wmo code'
-        ,'time': 'unixtime'
+        'temperature': u'°C',
+        'windspeed': 'km/h',
+        'winddirection': u'°',
+        'weathercode': 'wmo code',
+        'time': 'unixtime',
+        'is_day': ''
     }
 
     # Mapping API hourly unit -> WeeWX unit
     UNIT = {
-        u'°': 'degree_compass'
-        ,u'°C': 'degree_C'
-        ,'mm': 'mm'
-        ,'cm': 'cm'
-        ,'m': 'meter'
-        ,'hPa': 'hPa'
-        ,'kPa': 'kPa'
-        ,u'W/m²': 'watt_per_meter_squared'
-        ,'km/h': 'km_per_hour'
-        ,'%': 'percent'
-        ,'wmo code': 'count'
-        ,'unixtime': 'unix_epoch'
+        u'°': 'degree_compass',
+        u'°C': 'degree_C',
+        'mm': 'mm',
+        'cm': 'cm',
+        'm': 'meter',
+        'hPa': 'hPa',
+        'kPa': 'kPa',
+        u'W/m²': 'watt_per_meter_squared',
+        'km/h': 'km_per_hour',
+        '%': 'percent',
+        'wmo code': 'count',
+        '': 'count',
+        'unixtime': 'unix_epoch'
     }
 
     # https://open-meteo.com/en/docs/dwd-api
@@ -1567,37 +1576,37 @@ class OPENMETEOthread(BaseThread):
     #              0       1      2     3          4              5          6
     # WMO Key: [german, english, None, None, Belchertown Icon, DWD Icon, Aeris Icon]
     WEATHER = {
-        -1:['unbekannte Wetterbedingungen', 'unknown conditions', '', '', 'unknown.png', 'unknown.png', 'na']
+        -1:['unbekannte Wetterbedingungen', 'unknown conditions', '', '', 'unknown.png', 'unknown.png', 'na'],
         # 0-3 using N_ICON_LIST, here only Documentation
-        ,0:['wolkenlos', 'clear sky', '', '', 'clear-day.png', '0-8.png', 'clear']
-        ,1:['heiter', 'mainly clear', '', '','mostly-clear-day.png', '2-8.png', 'fair']
-        ,2:['bewölkt', 'partly cloudy', '', '','mostly-cloudy-day.png', '5-8.png', 'pcloudy']
-        ,3:['bedeckt', 'overcast', '', '','cloudy.png', '8-8.png', 'cloudy']
+        0:['wolkenlos', 'clear sky', '', '', 'clear-day.png', '0-8.png', 'clear'],
+        1:['heiter', 'mainly clear', '', '','mostly-clear-day.png', '2-8.png', 'fair'],
+        2:['bewölkt', 'partly cloudy', '', '','mostly-cloudy-day.png', '5-8.png', 'pcloudy'],
+        3:['bedeckt', 'overcast', '', '','cloudy.png', '8-8.png', 'cloudy'],
         # from here on we evaluate
-        ,45:['Nebel', 'fog', '', '','fog.png', '40.png', 'fog']
-        ,48:['gefrierender Nebel', 'depositing rime fog', '', '','fog.png', '48.png', '']
-        ,51:['leichter Nieselregen', 'light drizzle', '', '','rain.png', '7.png', 'drizzle']
-        ,53:['Nieselregen', 'moderate drizzle', '', '','rain.png', '8.png', 'drizzle']
-        ,55:['starker Nieselregen', 'dense drizzle', '', '','rain.png', '9.png', 'drizzle']
-        ,56:['gefrierender Nieselregen', 'light freezing drizzle', '', '','sleet.png', '66.png', 'freezingrain']
-        ,57:['kräftiger gefrierender Nieselregen', 'dense freezing drizzle', '', '','sleet.png', '67.png', 'freezingrain']
-        ,61:['leichter Regen', 'slight rain', '', '','rain.png', '7.png', 'rain']
-        ,63:['Regen', 'moderate rain', '', '','rain.png', '8.png', 'rain']
-        ,65:['starker Regen', 'heavy rain', '', '','rain.png', '9.png', 'rain']
-        ,66:['gefrierender Regen', 'light freezing rain', '', '','sleet.png', '66.png', 'freezingrain']
-        ,67:['starker gefrierender Regen', 'heavy freezing rain', '', '','sleet.png', '67.png', 'freezingrain']
-        ,71:['leichter Schneefall', 'slight snow fall', '', '','snow.png', '14.png', 'snow']
-        ,73:['Schneefall', 'moderate snow fall', '', '','snow.png', '15.png', 'snow']
-        ,75:['starker Schneefall', 'heavy snow fall', '', '','snow.png', '16.png', 'snow']
-        ,77:['Eiskörner', 'snow grains' , '', '','snow.png', '17.png', 'sleet']
-        ,80:['leichter Regenschauer', 'slight rain showers', '', '','rain.png', '80.png', 'showers']
-        ,81:['Regenschauer', 'moderate rain showers', '', '','rain.png', '80.png', 'showers']
-        ,82:['starker Regenschauer', 'heavy rain showers', '', '','rain.png', '82.png', 'showers']
-        ,85:['Schneeregen', 'slight snow showers', '', '','sleet.png', '12.png', 'rainandsnow']
-        ,86:['starker Schneeregen', 'heavy snow showers', '', '', 'sleet.png', '13.png', 'rainandsnow']
-        ,95:['Gewitter', 'thunderstorm', '', '', 'thunderstorm.png', '27.png', 'tstorm']
-        ,96:['Gewitter mit Hagel', 'thunderstorm with slight hail', '', '', 'thunderstorm.png', '29.png', 'tstorm']
-        ,99:['starkes Gewitter mit Hagel', 'thunderstorm with slight hail', '', '', 'thunderstrom.png', '30.png', 'tstorm']
+        45:['Nebel', 'fog', '', '','fog.png', '40.png', 'fog'],
+        48:['gefrierender Nebel', 'depositing rime fog', '', '','fog.png', '48.png', ''],
+        51:['leichter Nieselregen', 'light drizzle', '', '','rain.png', '7.png', 'drizzle'],
+        53:['Nieselregen', 'moderate drizzle', '', '','rain.png', '8.png', 'drizzle'],
+        55:['starker Nieselregen', 'dense drizzle', '', '','rain.png', '9.png', 'drizzle'],
+        56:['gefrierender Nieselregen', 'light freezing drizzle', '', '','sleet.png', '66.png', 'freezingrain'],
+        57:['kräftiger gefrierender Nieselregen', 'dense freezing drizzle', '', '','sleet.png', '67.png', 'freezingrain'],
+        61:['leichter Regen', 'slight rain', '', '','rain.png', '7.png', 'rain'],
+        63:['Regen', 'moderate rain', '', '','rain.png', '8.png', 'rain'],
+        65:['starker Regen', 'heavy rain', '', '','rain.png', '9.png', 'rain'],
+        66:['gefrierender Regen', 'light freezing rain', '', '','sleet.png', '66.png', 'freezingrain'],
+        67:['starker gefrierender Regen', 'heavy freezing rain', '', '','sleet.png', '67.png', 'freezingrain'],
+        71:['leichter Schneefall', 'slight snow fall', '', '','snow.png', '14.png', 'snow'],
+        73:['Schneefall', 'moderate snow fall', '', '','snow.png', '15.png', 'snow'],
+        75:['starker Schneefall', 'heavy snow fall', '', '','snow.png', '16.png', 'snow'],
+        77:['Eiskörner', 'snow grains' , '', '','snow.png', '17.png', 'sleet'],
+        80:['leichter Regenschauer', 'slight rain showers', '', '','rain.png', '80.png', 'showers'],
+        81:['Regenschauer', 'moderate rain showers', '', '','rain.png', '80.png', 'showers'],
+        82:['starker Regenschauer', 'heavy rain showers', '', '','rain.png', '82.png', 'showers'],
+        85:['Schneeregen', 'slight snow showers', '', '','sleet.png', '12.png', 'rainandsnow'],
+        86:['starker Schneeregen', 'heavy snow showers', '', '', 'sleet.png', '13.png', 'rainandsnow'],
+        95:['Gewitter', 'thunderstorm', '', '', 'thunderstorm.png', '27.png', 'tstorm'],
+        96:['Gewitter mit Hagel', 'thunderstorm with slight hail', '', '', 'thunderstorm.png', '29.png', 'tstorm'],
+        99:['starkes Gewitter mit Hagel', 'thunderstorm with slight hail', '', '', 'thunderstrom.png', '30.png', 'tstorm']
     }
     
     def get_current_obs(self):
@@ -1609,8 +1618,19 @@ class OPENMETEOthread(BaseThread):
         if modelparams is not None:
             # remove exclude list from obs
             for x in modelparams[4]:
-                hobs.pop(x)
+                if x in hobs:
+                    hobs.pop(x)
         return hobs
+
+    def get_min15_obs(self):
+        min15obs = copy.deepcopy(OPENMETEOthread.MIN15OBS)
+        modelparams = OPENMETEOthread.WEATHERMODELS.get(self.model)
+        if modelparams is not None:
+            # remove exclude list from obs
+            for x in modelparams[4]:
+                if x in min15obs:
+                    min15obs.pop(x)
+        return min15obs
 
     def get_geocoding(self, station):
         """ 
@@ -1681,6 +1701,7 @@ class OPENMETEOthread(BaseThread):
 
         self.current_obs = self.get_current_obs()
         self.hourly_obs = self.get_hourly_obs()
+        self.min15_obs = self.get_min15_obs()
 
         self.data = []
         self.last_get_ts = 0
@@ -1712,7 +1733,6 @@ class OPENMETEOthread(BaseThread):
             else:
                 obsgroup = weewx.units.obs_group_dict.get(obsweewx)
             if obsgroup is not None:
-                weewx.units.obs_group_dict.setdefault(obsweewx, obsgroup)
                 weewx.units.obs_group_dict.setdefault(self.prefix+obsweewx[0].upper()+obsweewx[1:],obsgroup)
 
         for opsapi, obsweewx in self.hourly_obs.items():
@@ -1722,6 +1742,8 @@ class OPENMETEOthread(BaseThread):
             obsgroup = None
             if obsweewx=='precipitation':
                 obsgroup = 'group_rain'
+            elif obsweewx=='precipitationProbability':
+                obsgroup = 'group_percent'
             elif obsweewx=='shower':
                 obsgroup = 'group_rain'
             elif obsweewx=='freezinglevelHeight':
@@ -1735,7 +1757,6 @@ class OPENMETEOthread(BaseThread):
             else:
                 obsgroup = weewx.units.obs_group_dict.get(obsweewx)
             if obsgroup is not None:
-                weewx.units.obs_group_dict.setdefault(obsweewx, obsgroup)
                 weewx.units.obs_group_dict.setdefault(self.prefix+obsweewx[0].upper()+obsweewx[1:],obsgroup)
 
     def get_data(self):
@@ -1841,6 +1862,13 @@ class OPENMETEOthread(BaseThread):
         # defined in HOURLYOBS
         params += '&hourly='+','.join([ii for ii in self.hourly_obs])
 
+        # 15-Minutely Parameter Definition
+        # The parameter &minutely_15= can be used to get 15-minutely data. This data is based on the ICON-D2 model 
+        # which is only available in Central Europe. If 15-minutely data is requested for locations outside Central Europe,
+        # data is interpolated from 1-hourly to 15-minutely.
+        if endpoint == 'dwd-icon':
+            params += '&minutely_15='+','.join([ii for ii in self.min15_obs])
+
         # Model
         params += modelparams
 
@@ -1866,6 +1894,18 @@ class OPENMETEOthread(BaseThread):
             return
 
         # check results
+        if endpoint == 'dwd-icon':
+            if apidata.get('minutely_15') is None:
+                if self.log_failure or self.debug > 0:
+                    logerr("thread '%s': Open-Meteo returns no 15-minutely data." % self.name)
+                return
+
+            min15_units = apidata.get('minutely_15_units')
+            if min15_units is None:
+                if self.log_failure or self.debug > 0:
+                    logerr("thread '%s': Open-Meteo returns no minutely_15_units data." % self.name)
+                return
+
         if apidata.get('hourly') is None:
             if self.log_failure or self.debug > 0:
                 logerr("thread '%s': Open-Meteo returns no hourly data." % self.name)
@@ -1883,37 +1923,71 @@ class OPENMETEOthread(BaseThread):
                 logerr("thread '%s': Open-Meteo returns no current_weather data." % self.name)
             return
 
-        timelist = apidata['hourly'].get('time')
-        if timelist is None:
+        # 15-minutely timestamps
+        if endpoint == 'dwd-icon':
+            min15timelist = apidata['minutely_15'].get('time')
+            if min15timelist is None:
+                if self.log_failure or self.debug > 0:
+                    logerr("thread '%s': Open-Meteo returns no 15-minutely time periods data." % self.name)
+                return
+
+            if not isinstance(min15timelist, list):
+                if self.log_failure or self.debug > 0:
+                    logerr("thread '%s': Open-Meteo returns 15-minutely time periods data not as list." % self.name)
+                return
+
+            if len(min15timelist) == 0:
+                if self.log_failure or self.debug > 0:
+                    logerr("thread '%s': Open-Meteo returns 15-minutely time periods without data." % self.name)
+                return
+
+        # hourly timestamps
+        htimelist = apidata['hourly'].get('time')
+        if htimelist is None:
             if self.log_failure or self.debug > 0:
-                logerr("thread '%s': Open-Meteo returns no time periods data." % self.name)
+                logerr("thread '%s': Open-Meteo returns no hourly time periods data." % self.name)
             return
 
-        if not isinstance(timelist, list):
+        if not isinstance(htimelist, list):
             if self.log_failure or self.debug > 0:
-                logerr("thread '%s': Open-Meteo returns time periods data not as list." % self.name)
+                logerr("thread '%s': Open-Meteo returns hourly time periods data not as list." % self.name)
             return
 
-        if len(timelist) == 0:
+        if len(htimelist) == 0:
             if self.log_failure or self.debug > 0:
-                logerr("thread '%s': Open-Meteo returns time periods without data." % self.name)
+                logerr("thread '%s': Open-Meteo returns hourly time periods without data." % self.name)
             return
-            
 
         # holds the return values
         x = []
         y = dict()
 
-        # get the last hourly observation timestamp before the current time
+        # current timestamp
         actts = weeutil.weeutil.to_int(time.time())
+
+        # get the last 15-minutely observation timestamp before the current time
+        if endpoint == 'dwd-icon':
+            obsmin15ts = None
+            for ts in min15timelist:
+                if ts > actts:
+                    break
+                obsmin15ts = weeutil.weeutil.to_int(ts)
+            if obsmin15ts is None:
+                if self.log_failure or self.debug > 0:
+                    logerr("thread '%s': Open-Meteo returns 15-minutely timestamps only in the future." % self.name)
+                return
+        else:
+            obsmin15ts = 0
+
+        # get the last hourly observation timestamp before the current time
         obshts = None
-        for ts in timelist:
+        for ts in htimelist:
             if ts > actts:
                 break
             obshts = weeutil.weeutil.to_int(ts)
         if obshts is None:
             if self.log_failure or self.debug > 0:
-                logerr("thread '%s': Open-Meteo returns timestamps only in the future." % self.name)
+                logerr("thread '%s': Open-Meteo returns hourly timestamps only in the future." % self.name)
             return
 
         latitude = apidata.get('latitude')
@@ -1923,6 +1997,9 @@ class OPENMETEOthread(BaseThread):
         if self.debug >= 3:
             logdbg("thread '%s':    ts now=%s" % (self.name, str(actts)))
             logdbg("thread '%s':    ts now=%s" % (self.name, str( datetime.datetime.fromtimestamp(actts).strftime('%Y-%m-%d %H:%M:%S'))))
+            if endpoint == 'dwd-icon':
+                logdbg("thread '%s':  ts 15min=%s" % (self.name, str(obsmin15ts)))
+                logdbg("thread '%s':  ts 15min=%s" % (self.name, str( datetime.datetime.fromtimestamp(obsmin15ts).strftime('%Y-%m-%d %H:%M:%S'))))
             logdbg("thread '%s': ts hourly=%s" % (self.name, str(obshts)))
             logdbg("thread '%s': ts hourly=%s" % (self.name, str( datetime.datetime.fromtimestamp(obshts).strftime('%Y-%m-%d %H:%M:%S'))))
             logdbg("thread '%s': lat %s lon %s alt %s" % (self.name,latitude,longitude,altitude))
@@ -1934,7 +2011,7 @@ class OPENMETEOthread(BaseThread):
         obscts = int(current_weather.get('time', 0))
 
         # final timestamp
-        obsts = weeutil.weeutil.to_int(max(obscts, obshts))
+        obsts = weeutil.weeutil.to_int(max(obscts, obsmin15ts, obshts))
 
         y['dateTime'] = (obsts, 'unix_epoch', 'group_time')
         y['interval'] = (60, 'minute', 'group_interval')
@@ -1968,11 +2045,52 @@ class OPENMETEOthread(BaseThread):
         if self.debug >= 3:
             logdbg("thread '%s': current: result=%s" % (self.name, str(y)))
 
+        # get 15-minutely weather data
+        if endpoint == 'dwd-icon':
+            for obsapi, obsweewx in self.min15_obs.items():
+                obsname = self.prefix+obsweewx[0].upper()+obsweewx[1:]
+                if y.get(obsweewx) is not None:
+                    # filled with current_weather data
+                    continue
+                if self.debug >= 3:
+                    logdbg("thread '%s': minutely_15: weewx=%s api=%s obs=%s" % (self.name, str(obsweewx), str(obsapi), str(obsname)))
+                obslist = apidata['minutely_15'].get(obsapi)
+                if obslist is None:
+                    if self.debug >= 2:
+                        logdbg("thread '%s': minutely_15: No value for observation '%s' - '%s'" % (self.name, str(obsapi), str(obsname)))
+                    continue
+                # Build a dictionary with timestamps as key and the corresponding values
+                obsvals = dict(zip(min15timelist, obslist))
+                obsval = obsvals.get(obsmin15ts)
+                if obsval is None:
+                    if self.debug >= 2:
+                        logdbg("thread '%s': minutely_15: Value 'None' for observation %s - %s on timestamp %s" % (self.name, str(obsapi), str(obsname), str(obshts)))
+                    continue
+                unitapi = min15_units.get(obsapi)
+                if unitapi is None:
+                    if self.log_failure or self.debug > 0:
+                        logerr("thread '%s': minutely_15: No unit for observation %s - %s" % (self.name, str(obsapi), str(obsname)))
+                    continue
+                unitweewx = OPENMETEOthread.UNIT.get(unitapi)
+                if unitweewx is None:
+                    if self.log_failure or self.debug > 0:
+                        logerr("thread '%s': minutely_15: Could not convert api unit '%s' to weewx unit" % (self.name, str(unitapi)))
+                    continue
+                groupweewx = weewx.units.obs_group_dict.get(obsname)
+                # snowDepth from meter to mm, weewx snowDepth is weewx group_rain
+                # group_rain has no conversation from meter to mm
+                if obsweewx == 'snowDepth':
+                    obsval = (weeutil.weeutil.to_float(obsval) * 1000)
+                    unitweewx = 'mm'
+                y[obsweewx] = (weeutil.weeutil.to_float(obsval), unitweewx, groupweewx)
+                if self.debug >= 3:
+                    logdbg("thread '%s': minutely_15: weewx=%s result=%s" % (self.name, str(obsweewx), str(y[obsweewx])))
+
         # get hourly weather data
         for obsapi, obsweewx in self.hourly_obs.items():
             obsname = self.prefix+obsweewx[0].upper()+obsweewx[1:]
             if y.get(obsweewx) is not None:
-                # filled with current_weather data
+                # filled with current_weather or minutely_15 data
                 continue
             if self.debug >= 3:
                 logdbg("thread '%s': hourly: weewx=%s api=%s obs=%s" % (self.name, str(obsweewx), str(obsapi), str(obsname)))
@@ -1982,7 +2100,7 @@ class OPENMETEOthread(BaseThread):
                     logdbg("thread '%s': hourly: No value for observation '%s' - '%s'" % (self.name, str(obsapi), str(obsname)))
                 continue
             # Build a dictionary with timestamps as key and the corresponding values
-            obsvals = dict(zip(timelist, obslist))
+            obsvals = dict(zip(htimelist, obslist))
             obsval = obsvals.get(obshts)
             if obsval is None:
                 if self.debug >= 2:
@@ -2008,27 +2126,28 @@ class OPENMETEOthread(BaseThread):
             if self.debug >= 3:
                 logdbg("thread '%s': hourly: weewx=%s result=%s" % (self.name, str(obsweewx), str(y[obsweewx])))
 
-        if latitude is not None and longitude is not None:
-            y['latitude'] = (latitude,'degree_compass','group_coordinate')
-            y['longitude'] = (longitude,'degree_compass','group_coordinate')
         if altitude is not None:
             y['altitude'] = (altitude,'meter','group_altitude')
 
+        is_day = y.get('is_day')
+        if is_day is not None:
+            night = 0 if weeutil.weeutil.to_int(is_day[0]) == 1 else 1
+        elif latitude is not None and longitude is not None:
+            y['latitude'] = (latitude,'degree_compass','group_coordinate')
+            y['longitude'] = (longitude,'degree_compass','group_coordinate')
+            night = is_night(y, log_success=(self.log_success or self.debug > 0),
+                             log_failure=(self.log_failure or self.debug > 0))
+        else:
+            night = None
+
+        if night is not None:
+            y['day'] = (0 if night else 1,'count','group_count')
+
         wwcode = y.get('weathercode')
         if wwcode is not None:
-            wwcode = int(wwcode[0])
+            wwcode = weeutil.weeutil.to_int(wwcode[0])
         else:
             wwcode = -1
-
-        night = is_night(y, log_success=(self.log_success or self.debug > 0),
-                         log_failure=(self.log_failure or self.debug > 0))
-        if night != "N/A":
-            y['day'] = (0 if night else 1,'count','group_count')
-        else:
-            y['day'] = (None,'count','group_count')
-            night = False
-            if self.log_failure or self.debug > 0:
-                logerr("thread '%s': Determining day or night was not possible." % self.name)
 
         wwcode = OPENMETEOthread.get_ww(wwcode, night)
         if wwcode:
@@ -2067,64 +2186,64 @@ class BRIGHTSKYthread(BaseThread):
     # Attention, no capital letters for WeeWX fields. Otherwise the WeeWX field "ET"/"UV" will be formed if no prefix is used!
     # Mapping API observation fields -> WeeWX field, unit, group
     OBS = {
-        'timestamp': ('dateTime', 'unix_epoch', 'group_time')
-        ,'condition': ('APIcondition', None, None)
-        ,'icon': ('APIicon', None, None)
-        ,'temperature': ('outTemp', 'degree_C', 'group_temperature')
-        ,'dew_point': ('dewpoint', 'degree_C', 'group_temperature')
-        ,'pressure_msl': ('barometer', 'hPa', 'group_pressure')
-        ,'relative_humidity': ('outHumidity', 'percent', 'group_percent')
-        ,'wind_speed_10': ('windSpeed10', 'km_per_hour', 'group_speed')
-        ,'wind_speed_30': ('windSpeed30', 'km_per_hour', 'group_speed')
-        ,'wind_speed_60': ('windSpeed60', 'km_per_hour', 'group_speed')
-        ,'wind_direction_10': ('windDir10', 'degree_compass', 'group_direction')
-        ,'wind_direction_30': ('windDir30', 'degree_compass', 'group_direction')
-        ,'wind_direction_60': ('windDir60', 'degree_compass', 'group_direction')
-        ,'wind_gust_speed_10': ('windGust10', 'km_per_hour', 'group_speed')
-        ,'wind_gust_speed_30': ('windGust30', 'km_per_hour', 'group_speed')
-        ,'wind_gust_speed_60': ('windGust60', 'km_per_hour', 'group_speed')
-        ,'wind_gust_direction_10': ('windGustDir10', 'degree_compass', 'group_direction')
-        ,'wind_gust_direction_30': ('windGustDir30', 'degree_compass', 'group_direction')
-        ,'wind_gust_direction_60': ('windGustDir60', 'degree_compass', 'group_direction')
-        ,'cloud_cover': ('cloudcover', 'percent', 'group_percent')
-        ,'precipitation_10': ('precipitation10', 'mm', 'group_rain')
-        ,'precipitation_30': ('precipitation30', 'mm', 'group_rain')
-        ,'precipitation_60': ('precipitation60', 'mm', 'group_rain')
-        ,'sunshine_10': ('sunshineDur10', 'minute', 'group_deltatime')
-        ,'sunshine_30': ('sunshineDur30', 'minute', 'group_deltatime')
-        ,'sunshine_60': ('sunshineDur60', 'minute', 'group_deltatime')
-        ,'visibility': ('visibility', 'meter', 'group_distance')
+        'timestamp': ('dateTime', 'unix_epoch', 'group_time'),
+        'condition': ('APIcondition', None, None),
+        'icon': ('APIicon', None, None),
+        'temperature': ('outTemp', 'degree_C', 'group_temperature'),
+        'dew_point': ('dewpoint', 'degree_C', 'group_temperature'),
+        'pressure_msl': ('barometer', 'hPa', 'group_pressure'),
+        'relative_humidity': ('outHumidity', 'percent', 'group_percent'),
+        'wind_speed_10': ('windSpeed10', 'km_per_hour', 'group_speed'),
+        'wind_speed_30': ('windSpeed30', 'km_per_hour', 'group_speed'),
+        'wind_speed_60': ('windSpeed60', 'km_per_hour', 'group_speed'),
+        'wind_direction_10': ('windDir10', 'degree_compass', 'group_direction'),
+        'wind_direction_30': ('windDir30', 'degree_compass', 'group_direction'),
+        'wind_direction_60': ('windDir60', 'degree_compass', 'group_direction'),
+        'wind_gust_speed_10': ('windGust10', 'km_per_hour', 'group_speed'),
+        'wind_gust_speed_30': ('windGust30', 'km_per_hour', 'group_speed'),
+        'wind_gust_speed_60': ('windGust60', 'km_per_hour', 'group_speed'),
+        'wind_gust_direction_10': ('windGustDir10', 'degree_compass', 'group_direction'),
+        'wind_gust_direction_30': ('windGustDir30', 'degree_compass', 'group_direction'),
+        'wind_gust_direction_60': ('windGustDir60', 'degree_compass', 'group_direction'),
+        'cloud_cover': ('cloudcover', 'percent', 'group_percent'),
+        'precipitation_10': ('precipitation10', 'mm', 'group_rain'),
+        'precipitation_30': ('precipitation30', 'mm', 'group_rain'),
+        'precipitation_60': ('precipitation60', 'mm', 'group_rain'),
+        'sunshine_10': ('sunshineDur10', 'minute', 'group_deltatime'),
+        'sunshine_30': ('sunshineDur30', 'minute', 'group_deltatime'),
+        'sunshine_60': ('sunshineDur60', 'minute', 'group_deltatime'),
+        'visibility': ('visibility', 'meter', 'group_distance')
     }
 
     # Mapping API primary source fields -> WeeWX field, unit, group
     SOURCES = {
-        'id': ('APIstationId', None, None)
-        ,'dwd_station_id': ('DWDstationId', None, None)
-        ,'wmo_station_id': ('WMOstationId', None, None)
-        ,'observation_type': ('observationType', None, None)
-        ,'lat': ('latitude', 'degree_compass', 'group_coordinate')
-        ,'lon': ('longitude', 'degree_compass', 'group_coordinate')
-        ,'height': ('altitude', 'meter', 'group_altitude')
-        ,'distance': ('distance', 'meter', 'group_distance')
-        ,'station_name': ('stationName', None, None)
+        'id': ('APIstationId', None, None),
+        'dwd_station_id': ('DWDstationId', None, None),
+        'wmo_station_id': ('WMOstationId', None, None),
+        'observation_type': ('observationType', None, None),
+        'lat': ('latitude', 'degree_compass', 'group_coordinate'),
+        'lon': ('longitude', 'degree_compass', 'group_coordinate'),
+        'height': ('altitude', 'meter', 'group_altitude'),
+        'distance': ('distance', 'meter', 'group_distance'),
+        'station_name': ('stationName', None, None)
     }
 
     # Mapping API icon field to internal icon fields
     CONDITIONS = {
         #                     0       1      2     3          4              5          6
         # BRIGHTSKY Icon: [german, english, None, None, Belchertown Icon, DWD Icon, Aeris Icon]
-        'clear-day': ('wolkenlos', 'clear sky', '', '', 'clear-day.png', '0-8.png', 'clear')
-        ,'clear-night': ('wolkenlos', 'clear sky', '', '', 'clear-night.png', '0-8.png', 'clearn')
-        ,'partly-cloudy-day': ('bewölkt', 'partly cloudy', '', '', 'mostly-cloudy-day.png', '5-8.png', 'pcloudy')
-        ,'partly-cloudy-night': ('bewölkt', 'partly cloudy', '', '', 'mostly-cloudy-night.png', '5-8.png', 'pcloudyn')
-        ,'cloudy': ('bedeckt', 'overcast', '', '', 'cloudy.png', '8-8.png', 'cloudy')
-        ,'hail': ('Hagel', 'hail', '', '', 'hail.png', '13.png', 'freezingrain')
-        ,'snow': ('Schneefall', 'snow fall', '', '', 'snow.png', '15.png', 'snow')
-        ,'sleet': ('Schneeregen', 'snow showers', '', '', 'sleet.png', '13.png', 'rainandsnow')
-        ,'rain': ('Regen', 'rain', '', '', 'rain.png', '8.png', 'rain')
-        ,'wind': ('Wind', 'wind', '', '', 'wind.png', '18.png', 'wind')
-        ,'fog': ('Nebel', 'fog', '', '', 'fog.png', '40.png', 'fog')
-        ,'thunderstorm': ('Gewitter', 'thunderstorm', '', '', 'thunderstorm.png', '27.png', 'tstorm')
+        'clear-day': ('wolkenlos', 'clear sky', '', '', 'clear-day.png', '0-8.png', 'clear'),
+        'clear-night': ('wolkenlos', 'clear sky', '', '', 'clear-night.png', '0-8.png', 'clearn'),
+        'partly-cloudy-day': ('bewölkt', 'partly cloudy', '', '', 'mostly-cloudy-day.png', '5-8.png', 'pcloudy'),
+        'partly-cloudy-night': ('bewölkt', 'partly cloudy', '', '', 'mostly-cloudy-night.png', '5-8.png', 'pcloudyn'),
+        'cloudy': ('bedeckt', 'overcast', '', '', 'cloudy.png', '8-8.png', 'cloudy'),
+        'hail': ('Hagel', 'hail', '', '', 'hail.png', '13.png', 'freezingrain'),
+        'snow': ('Schneefall', 'snow fall', '', '', 'snow.png', '15.png', 'snow'),
+        'sleet': ('Schneeregen', 'snow showers', '', '', 'sleet.png', '13.png', 'rainandsnow'),
+        'rain': ('Regen', 'rain', '', '', 'rain.png', '8.png', 'rain'),
+        'wind': ('Wind', 'wind', '', '', 'wind.png', '18.png', 'wind'),
+        'fog': ('Nebel', 'fog', '', '', 'fog.png', '40.png', 'fog'),
+        'thunderstorm': ('Gewitter', 'thunderstorm', '', '', 'thunderstorm.png', '27.png', 'tstorm')
     }
 
     def get_current_obs(self):
@@ -2238,14 +2357,12 @@ class BRIGHTSKYthread(BaseThread):
             obs = obsweewx[0]
             group = obsweewx[2]
             if group is not None:
-                weewx.units.obs_group_dict.setdefault(obs, group)
                 weewx.units.obs_group_dict.setdefault(self.prefix + obs[0].upper() + obs[1:], group)
 
         for opsapi, obsweewx in self.sources_obs.items():
             obs = obsweewx[0]
             group = obsweewx[2]
             if group is not None:
-                weewx.units.obs_group_dict.setdefault(obs, group)
                 weewx.units.obs_group_dict.setdefault(self.prefix + obs[0].upper() + obs[1:], group)
 
     def get_data(self):
@@ -2275,7 +2392,7 @@ class BRIGHTSKYthread(BaseThread):
         try:
             x = BRIGHTSKYthread.CONDITIONS[icon]
         except (LookupError, TypeError) as e:
-            x = ('unbekannte Wetterbedingungen', 'unknown conditions', '', '', 'unknown.png', 'unknown.png', 'unknown')
+            x = ('unbekannte Wetterbedingungen', 'unknown conditions', '', '', 'unknown.png', 'unknown.png', 'na')
             if self.log_failure or self.debug > 0:
                 logerr("thread '%s': icon=%s mapping %s - %s" % (self.name, icon, e.__class__.__name__, e))
         return x
@@ -2412,7 +2529,7 @@ class BRIGHTSKYthread(BaseThread):
 
         night = is_night(y, log_success=(self.log_success or self.debug > 0),
                          log_failure=(self.log_failure or self.debug > 0))
-        if night != "N/A":
+        if night is not None:
             y['day'] = (0 if night else 1,'count','group_count')
         else:
             y['day'] = (None,'count','group_count')
@@ -2432,14 +2549,14 @@ class BRIGHTSKYthread(BaseThread):
 
 # ============================================================================
 #
-# Class CurrentService
+# Class DWDservice
 #
 # ============================================================================
 
-class CurrentService(StdService):
+class DWDservice(StdService):
 
     def __init__(self, engine, config_dict):
-        super(CurrentService,self).__init__(engine, config_dict)
+        super(DWDservice,self).__init__(engine, config_dict)
         
         site_dict = weeutil.config.accumulateLeaves(config_dict.get('WeatherServices',configobj.ConfigObj()))
         self.log_success = weeutil.weeutil.to_bool(site_dict.get('log_success', True))
@@ -2450,17 +2567,13 @@ class CurrentService(StdService):
             self.log_failure = True
 
         self.threads = dict()
-        
-        try:
-            iconset = config_dict['WeatherServices']['forecast']['icon_set']
-            self.lang = config_dict['WeatherServices']['forecast']['lang']
-        except LookupError:
-            iconset = config_dict.get('WeatherServices',site_dict).get('forecast',site_dict).get('icon_set','belchertown').lower()
-            self.lang = 'de'
+
+        iconset = config_dict.get('WeatherServices',site_dict).get('forecast',site_dict).get('icon_set','belchertown').lower()
+        self.lang = config_dict.get('WeatherServices',site_dict).get('forecast',site_dict).get('lang','de').lower()
         self.iconset = 4
         if iconset=='dwd': self.iconset = 5
         if iconset=='aeris': self.iconset = 6
-        
+
         site_dict = config_dict.get('WeatherServices',configobj.ConfigObj()).get('current',configobj.ConfigObj())
         for section in site_dict.sections:
             station_dict = weeutil.config.accumulateLeaves(site_dict[section])
@@ -2495,7 +2608,7 @@ class CurrentService(StdService):
 
             # check required station 
             station = station_dict.get('station')
-            if (provider == 'dwd' or provider == 'ZAMG') and station is None:
+            if provider in ('dwd', 'zamg') and station is None:
                 if self.log_failure or self.debug > 0:
                     logerr("Section '%s' weather service provider '%s' - station is not valid. Skip section." % (section, provider))
                 continue
@@ -2508,11 +2621,7 @@ class CurrentService(StdService):
                 if iconset=='dwd': station_dict['iconset'] = 5
                 if iconset=='aeris': station_dict['iconset'] = 6
 
-            # set default station if not selected
-            if station is None:
-                station = 'thisStation'
-
-            # possible station coordinates
+            # possible station altitude
             altitude = station_dict.get('altitude')
             if altitude is not None:
                 altitude_t = weeutil.weeutil.option_as_list(altitude)
@@ -2530,6 +2639,11 @@ class CurrentService(StdService):
                     if self.log_failure or self.debug > 0:
                         logerr("Configured altitude '%s' in section '%s' is not valid, altitude will be ignored." % (altitude, section))
 
+            # set default station if not selected and lat or lon is None
+            if station is None and (station_dict.get('latitude') is None or station_dict.get('longitude') is None):
+                station = 'thisStation'
+
+            # using lat/lon/alt from weewx.conf
             if station.lower() in ('thisstation', 'here'):
                 if station_dict.get('latitude') is None or station_dict.get('longitude') is None:
                     station_dict['latitude'] = station_dict.get('latitude', engine.stn_info.latitude_f)
@@ -2723,7 +2837,7 @@ if __name__ == '__main__':
 
     else:
     
-        sv = CurrentService(engine,conf_dict)
+        sv = DWDservice(engine,conf_dict)
         
         try:
             while True:
