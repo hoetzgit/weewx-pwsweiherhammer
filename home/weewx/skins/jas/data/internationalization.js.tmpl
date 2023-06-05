@@ -1,29 +1,43 @@
+##    Copyright (c) 2021-2023 Rich Bell <bellrichm@gmail.com>
+##    See the file LICENSE.txt for your rights.
+
 #from weeutil.weeutil import to_list
+
+function getLabel(observation) {
+    if (observation in observationLabels[lang]) {
+        return observationLabels[lang][observation];
+    }
+    else {
+        return observation;
+    }        
+}
 
 function updateLabels() {
     document.querySelectorAll("[obs_label]").forEach(function(element) {
         observation = element.getAttribute("obs_label");
-        if (observation in observationLabels[lang]) {
-            element.innerText = observationLabels[lang][observation];
-        }
-        else {
-            element.innerText = observation;
-        }        
+        element.innerText = getLabel(observation)
     })
+}
+
+function getText(observation, n=0) {
+    if (observation in textLabels[lang]) {
+        if (n > 0) {
+            i = Math.min(n, textLabels[lang][observation].length) - 1;
+            return textLabels[lang][observation][i];
+        }
+        return textLabels[lang][observation];
+    }
+    else {
+        return observation;
+    }
 }
 
 function updateTexts() {
     document.querySelectorAll("[text_label]").forEach(function(element) {
         observation = element.getAttribute("text_label");
-        if (observation in textLabels[lang]) {
-            element.innerText = textLabels[lang][observation];
-        }
-        else {
-            element.innerText = observation;
-        }
+        element.innerText = getText(observation)
     });
 }
-
 
 ## ToDo: Init dictionary via cheetah and not javascript
 languages = {};
@@ -65,6 +79,8 @@ textLabels = {};
         #if isinstance($texts[$observation], str)
             ## Todo: fix keys to not have '-', '.' 
             #echo 'textLabels.' + $language + '["' + $observation + '"] = "' + $texts[$observation] + '";\n'
+        #else if isinstance($texts[$observation], list)
+            #echo 'textLabels.' + $language + '["' + $observation + '"] = Array("' + '", "'.join($texts[$observation]) + '");\n'
         #end if
     #end for
 

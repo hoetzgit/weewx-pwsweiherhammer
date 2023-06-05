@@ -11,7 +11,7 @@ def loader():
 class BasicInstaller(ExtensionInstaller):
     def __init__(self):
         super(BasicInstaller, self).__init__(
-            version="3.1.1",
+            version="3.2.0",
             name="weewx-wdc",
             description="Weather Data Center skin for WeeWX.",
             author="David Baetge",
@@ -21,8 +21,6 @@ class BasicInstaller(ExtensionInstaller):
                     "WdcReport": {
                         "skin": "weewx-wdc",
                         "enable": "true",
-                        "lang": "en",
-                        # 'unit_system': 'US'
                     }
                 }
             },
@@ -41,6 +39,7 @@ class BasicInstaller(ExtensionInstaller):
                         "skins/weewx-wdc/week.html.tmpl",
                         "skins/weewx-wdc/month.html.tmpl",
                         "skins/weewx-wdc/dwd.html.tmpl",
+                        "skins/weewx-wdc/sensor-status.html.tmpl",
                         "skins/weewx-wdc/day-archive/day-%Y-%m-%d.html.tmpl",
                         "skins/weewx-wdc/month-%Y-%m.html.tmpl",
                         "skins/weewx-wdc/NOAA/NOAA-%Y-%m.txt.tmpl",
@@ -76,6 +75,7 @@ class BasicInstaller(ExtensionInstaller):
                         "skins/weewx-wdc/favicon.ico",
                         "skins/weewx-wdc/plotly-custom-build.min.js",
                         "skins/weewx-wdc/includes/html-head.inc",
+                        "skins/weewx-wdc/includes/section-heading.inc",
                         "skins/weewx-wdc/includes/almanac-tile.inc",
                         "skins/weewx-wdc/includes/almanac-tile-simple.inc",
                         "skins/weewx-wdc/includes/almanac-moon-detail-tile.inc",

@@ -1,4 +1,4 @@
-#    Copyright (c) 2021-2022 Rich Bell <bellrichm@gmail.com>
+#    Copyright (c) 2021-2023 Rich Bell <bellrichm@gmail.com>
 #    See the file LICENSE.txt for your rights.
 
 """ Installer for the jas skin. """
@@ -12,7 +12,7 @@ except ImportError:
 import configobj
 from weecfg.extension import ExtensionInstaller
 
-VERSION = "0.3.1-rc05"
+VERSION = "0.3.2-rc01a"
 
 EXTENSION_CONFIG = """
 [StdReport]
@@ -242,6 +242,9 @@ EXTENSION_CONFIG = """
                     [[[[[[ET]]]]]]                                   
                     [[[[[[UVMax]]]]]]
                     [[[[[[radiationMax]]]]]]
+                [[[[[about]]]]]   
+                    [[[[[[about]]]]]]     
+                        filename = sections/basic_about.inc         
                 [[[[[debug]]]]]   
                     enable = false
                     [[[[[[outTemp]]]]]]   
@@ -273,9 +276,13 @@ class JASInstaller(ExtensionInstaller):
                                   'skins/jas/icon/apple-touch-icon.png',
                                   'skins/jas/icon/favicon.ico',
                                   'skins/jas/icon/favicon-16x16.png',
-                                  'skins/jas/icon/favicon-32x32.png'
+                                  'skins/jas/icon/favicon-32x32.png',
+                                  'skins/jas/jas.css.tmpl',
+                                  'skins/jas/user.css.tmpl'
                                 ]),
-                   ('skins/jas/pages', ['skins/jas/pages/debug.html.tmpl',
+                   ('skins/jas/pages', [
+                                        'skins/jas/pages/about.html.tmpl',
+                                        'skins/jas/pages/debug.html.tmpl',
                                         'skins/jas/pages/day.html.tmpl',
                                         'skins/jas/index.html.tmpl',
                                         'skins/jas/pages/last7days.html.tmpl',
@@ -324,15 +331,12 @@ class JASInstaller(ExtensionInstaller):
                                        'skins/jas/data/year%Y.js.tmpl',
                                        'skins/jas/data/month%Y%m.js.tmpl'
                                       ]),
-                   ('skins/jas/generators', ['skins/jas/generators/charts.gen',
-                                            'skins/jas/generators/data.gen',
-                                            'skins/jas/generators/jasoptions.gen',
-                                             'skins/jas/generators/js.gen',
-                                             'skins/jas/generators/pages.gen',
-                                             'skins/jas/generators/startEndHistorical.gen',
-                                             'skins/jas/generators/startEndActive.gen'
+                   ('skins/jas/generators', ['skins/jas/generators/pages.gen',
+                                             'skins/jas/generators/body.inc'
                                             ]),
-                   ('skins/jas/javascript', ['skins/jas/javascript/day.js.tmpl',
+                   ('skins/jas/javascript', [
+                                             'skins/jas/javascript/about.js.tmpl',
+                                             'skins/jas/javascript/day.js.tmpl',
                                              'skins/jas/javascript/debug.js.tmpl',
                                              'skins/jas/javascript/index.js.tmpl',
                                              'skins/jas/javascript/last7days.js.tmpl',
@@ -351,6 +355,8 @@ class JASInstaller(ExtensionInstaller):
                                              ]),
                    ('skins/jas/lang', ['skins/jas/lang/en.conf']),
                    ('skins/jas/sections', [
+                                           'skins/jas/sections/basic_about.inc',
+                                           'skins/jas/sections/chart.inc',
                                            'skins/jas/sections/current.inc',
                                            'skins/jas/sections/debug.inc',
                                            'skins/jas/sections/forecast.inc',
@@ -358,15 +364,6 @@ class JASInstaller(ExtensionInstaller):
                                            'skins/jas/sections/radar.inc',
                                            'skins/jas/sections/thisdate.inc',
                                            'skins/jas/sections/zoomControl.inc'
-                                           ]),
-                   ('skins/jas/weather-icons/css', ['skins/jas/weather-icons/css/weather-icons.min.css',
-                                                    'skins/jas/weather-icons/css/weather-icons-wind.min.css'
-                                                   ]),
-                   ('skins/jas/weather-icons/font', ['skins/jas/weather-icons/font/weathericons-regular-webfont.eot',
-                                                     'skins/jas/weather-icons/font/weathericons-regular-webfont.svg',
-                                                     'skins/jas/weather-icons/font/weathericons-regular-webfont.ttf',
-                                                     'skins/jas/weather-icons/font/weathericons-regular-webfont.woff',
-                                                     'skins/jas/weather-icons/font/weathericons-regular-webfont.woff2'
-                                                    ])
+                                           ])
                    ]
         )
