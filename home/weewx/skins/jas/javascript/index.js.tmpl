@@ -1,9 +1,11 @@
 ##    Copyright (c) 2021-2022 Rich Bell <bellrichm@gmail.com>
 ##    See the file LICENSE.txt for your rights.
   
-#from weeutil.weeutil import to_bool  
+#from weeutil.weeutil import to_bool, to_list
 #import time
 #set $start_time = time.time()
+
+fullNavBarWidth = 0;
 
 indexPageLogLevel = sessionStorage.getItem('indexPageLogLevel');
 if (!indexPageLogLevel) {
@@ -122,12 +124,47 @@ function getLogLevel() {
   return "Index page log level: " + sessionStorage.getItem("indexPageLogLevel")
 }
 
+function updateTheme(themeSelection) {
+  if (themeSelection.checked) {
+    setTheme("dark");
+  } else {
+    setTheme("light");
+  }
+}
+
+function setTheme(theme) {
+  sessionStorage.setItem('theme', theme);
+  document.documentElement.setAttribute('data-bs-theme', theme);
+  if (theme == 'dark') {
+    document.getElementById("themeSelection").checked = true;
+  }
+  else {
+    document.getElementById("themeSelection").checked = false;
+  }
+
+  message = {};
+  message.kind = 'setTheme';
+  message.message = theme;
+   
+  // When running without a webserver, there is a lot of 'strangeness'
+  if (window.location.protocol == "file:") {
+      targetOrigin = "*";
+  }
+  else {
+      targetOrigin = window.location.origin;
+  }      
+
+  if (document.getElementById('child-iframe')) {
+    document.getElementById('child-iframe').contentWindow.postMessage(message, targetOrigin);
+  }
+  else {
+    window.self.postMessage(message, targetOrigin);
+  }
+}
+
 function manageNavbar() {
-  // This hack attempts to collapse the navbar when it doesn't fit width-wise
-  navBarWidth = document.getElementById('navbar').offsetWidth;
-  parentScrollWidth = document.getElementById('navbar').parentElement.scrollWidth
-  
-  if (navBarWidth < parentScrollWidth || window.innerWidth < $Extras.navbar_collapse) {
+  parentWidth = document.getElementById('navbar').parentElement.offsetWidth
+  if (fullNavBarWidth >= parentWidth) {
     document.getElementById('navbar').classList.remove('navbar-expand')
   }
   else {
@@ -137,6 +174,7 @@ function manageNavbar() {
 
 ## ToDo: thiscould be cleaned up
 function setIframeSrc(id, url) {
+  document.querySelector("#child-iframe").style.visibility = 'hidden';
   // Set current page as the active page.
   currentPage = sessionStorage.getItem('currentPage');
   if (currentPage != url) {
@@ -259,7 +297,19 @@ function setYear(year) {
 }
 
 window.addEventListener("load", function (event) {
-  manageNavbar();
+  #set themes = to_list($getVar("$Extras.themes", "light"))
+  #echo "  var themes = ['" + "', '".join($themes) + "'];\n"
+  theme = sessionStorage.getItem('theme');
+  if (!theme) {
+    if (window.matchMedia('(prefers-color-scheme: dark)').media === 'not all') {
+      theme = themes[0];
+    }
+    else {
+      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    }
+  }
+  setTheme(theme);
+
 
   #if to_bool($getVar("$Extras.allow_user_language_selection", False))
     document.getElementById(lang).classList.add("active");
@@ -322,7 +372,7 @@ window.addEventListener("load", function (event) {
       #if not $landing_page in $getVar("$Extras.pages")
         #for $page_name in $getVar("$Extras.pages")
           #if to_bool($getVar("$Extras.pages." + $page_name + ".enable", True)) and \
-              to_bool($getVar("$Extras.pages." + $page_name + ".in_navbar", True))
+              $getVar("$Extras.pages." + $page_name + ".navbar", 'primary') =='primary'
             #set landing_page = $page_name
             #break
           #end if
@@ -341,6 +391,14 @@ window.addEventListener("load", function (event) {
   #if to_bool($Extras.mqtt.get('enable', False))
     MQTTConnect(); 
   #end if
+  
+  // Get the actual navbar width and then reset the auto sizing of its width
+  navContainer = document.getElementById('nav-container');
+  fullNavBarWidth = navContainer.offsetWidth;
+  navContainer.classList.remove('w-auto');
+
+  manageNavbar();
+  document.body.style.viewport = "visible";
 });
 
 addEventListener("resize", (event) => {
@@ -356,11 +414,21 @@ window.addEventListener("beforeunload", function (event) {
 window.addEventListener('message', 
                         function(e) {
                           // message that was passed from iframe page
-                          var message = e.data;
+                          var kind = e.data.kind;
+                          if (kind == undefined) {
+                            return;
+                          }
+                          var message = e.data.message;
 
-                          var iframe = document.querySelector("#child-iframe");
-                          iframe.style.height = message.height + 'px';
-                          //iframe.style.width = message.width + 'px';
+                          if (kind == 'resize') {
+                              var iframe = document.querySelector("#child-iframe");
+                              iframe.style.height = message.height + 'px';
+                              //iframe.style.width = message.width + 'px';
+                          }
+                          if (kind == 'loaded') {
+                            document.querySelector("#child-iframe").style.visibility = 'visible';
+                          }
+                          
                         }, 
                         false);       
 

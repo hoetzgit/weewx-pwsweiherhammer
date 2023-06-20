@@ -45,12 +45,21 @@ UML2DUMMY="/usr/local/bin/weewx-DWD/uml2dummy.ansi"
 DUMMY2UML="/usr/local/bin/weewx-DWD/dummy2uml.ansi"
 
 # Logdatei loeschen
-#/bin/rm "$LOG_FN" 2>/dev/null
+/bin/rm "$LOG_FN" 2>/dev/null
 
 # Herunterladen der Vorhersage-Dateien und Zeichensatz konvertieren
 for i in 50 51 52 53 54; do
     FN="VHDL${i}_${DWD_BUNDESLAND}_LATEST"
     ${WGET} -O "${TMP}" "${DWD_URL}/${FN}_html"
+
+    # Hinweis: => <\p><p><strong>Hinweis:<\strong>
+    sed -i 's/Hinweis:/<\/p><p><strong>Hinweis:<\/strong>/' "${TMP}"
+
+    if [[ i -ne 54 ]]; then
+        # In der Nacht zum => <\p><p>In der Nacht zum
+        sed -i 's/In der Nacht zum/<\/p><p>In der Nacht zum/' "${TMP}"
+    fi
+    
     #TODO: Im Moment gehe ich davon aus, dass die jeweiligen Dateien mit <p> </p> eingebunden sind.
     if [[ i -eq 50 ]]; then
         sed -i 's/<\/strong>/&<\/p><p>/g' "${TMP}"
@@ -135,8 +144,13 @@ for i in 50 51 52 53 54; do
         # GLATTEIS (UNWETTER): ===> <\p><p><strong>Glatteis (Unwetter):<\strong>
         sed -i 's/\([[:upper:]]\)\([[:upper:]]*\) (\([[:upper:]]\)\([[:upper:]]*\)):/<\/p><p><strong>\u\1\L\2 (\u\3\L\4):<\/strong>/g' "${TMP}"
 
+        # GLATTEIS(UNWETTER): ===> <\p><p><strong>Glatteis (Unwetter):<\strong>
+        sed -i 's/\([[:upper:]]\)\([[:upper:]]*\)(\([[:upper:]]\)\([[:upper:]]*\)):/<\/p><p><strong>\u\1\L\2 (\u\3\L\4):<\/strong>/g' "${TMP}"
+
         # (UNWETTER) ===> <\p><p><strong>(Unwetter)<\strong>
-        sed -i 's/(\([[:upper:]]\)\([[:upper:]]*\))/<\/p><p><strong>(\u\1\L\2)<\/strong>/g' "${TMP}"
+        #sed -i 's/(\([[:upper:]]\)\([[:upper:]]*\))/<\/p><p><strong>(\u\1\L\2)<\/strong>/g' "${TMP}"
+        # (UNWETTER) ===> <strong>(Unwetter)<\strong>
+        sed -i 's/(\([[:upper:]]\)\([[:upper:]]*\))/<strong>(\u\1\L\2)<\/strong>/g' "${TMP}"
 
         ${DUMMY2UML} <"${TMP}" >"${TMP2}"
         ${MV} ${TMP2} ${TMP}

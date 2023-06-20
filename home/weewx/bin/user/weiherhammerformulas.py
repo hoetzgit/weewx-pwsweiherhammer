@@ -242,3 +242,60 @@ def wh65_batt_to_percent(isBatt):
     else:
         percentBatt = 50.0
     return percentBatt
+
+# cloud cover helper function
+def getsign(d):
+    if d < 0:
+        return -1.0
+    if d == 0:
+        return 0.0
+    return 1.0
+
+# "calculate" cloud cover with skyTemp from a MLX90614 Sensor and outTemp from Weatherstation
+# see also: allsky_cloud.py
+# https://indiduino.wordpress.com/2013/02/02/meteostation/ and https://lunaticoastro.com/aagcw/TechInfo/SkyTemperatureModel.pdf
+def weewx_cloud_percent(skyambient, skyobject):
+    k1 = 33
+    k2 = 0
+    k3 = 4
+    k4 = 100
+    k5 = 100
+    k6 = 0
+    k7 = 0
+    clearbelow = -10
+    cloudyabove = 5
+    
+    if abs((k2 / 10.0 - skyambient)) < 1:
+        t67 = getsign(k6) * getsign(skyambient - k2 / 10.) * abs((k2 / 10. - skyambient))
+    else:
+        t67 = k6 / 10. * getsign(skyambient - k2 / 10.) * (math.log(abs((k2 / 10. - skyambient))) / math.log(10) + k7 / 100)
+
+    td = (k1 / 100.) * (skyambient - k2 / 10.) + (k3 / 100.) * pow((math.exp(k4 / 1000. * skyambient)), (k5 / 100.)) + t67
+
+    tsky = skyobject - td
+    if tsky < clearbelow:
+        tsky = clearbelow
+    elif tsky > cloudyabove:
+        tsky = cloudyabove
+    cloudcoverPercentage = ((tsky - clearbelow) * 100.) / (cloudyabove - clearbelow)
+    return cloudcoverPercentage
+
+# "calculate" cloud cover icon with weewx_cloud_percent
+def weewx_cloud_icon(cloud_percent):
+    if cloud_percent<12.5:
+        icon = 0
+    elif cloud_percent<=37.5:
+        icon = 1
+    elif cloud_percent<=75.0:
+        icon = 2
+    elif cloud_percent<=87.5:
+        icon = 3
+    else:
+        icon = 4
+    return icon
+
+
+
+
+
+

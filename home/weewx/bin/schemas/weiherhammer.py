@@ -225,6 +225,14 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('airrohr_sig', 'REAL'),
 ('airrohr_sig_percent', 'REAL'),
 #
+# Cloudcover Sensor MLX90614
+('cloudcover_outTemp', 'REAL'),
+('cloudcover_skyTemp', 'REAL'),
+('cloudcover_cloud_percent', 'REAL'),
+('cloudcover_cloud_icon', 'INTEGER'),
+('cloudcover_sig', 'REAL'),
+('cloudcover_sig_percent', 'REAL'),
+#
 # ****** API / Extensions ******
 #
 # PWS Weiherhammer AQI

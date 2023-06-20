@@ -204,7 +204,8 @@ $gettext('no')
                         #if $x == 'lightning_strike_count'
                         <tr>
                             <td class="station-observations-extras-label">$gettext("lightning strike sum")</td>
-                            <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('day.%s.%s' % ($x,'sum'))</span></td><!-- AJAX -->
+                            ##<td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('day.%s.%s' % ($x,'sum'))</span></td><!-- AJAX -->
+                            <td class="station-observations-extras-data"><span class="day_lightning_strike_count_sum" rel="tooltip" title="">$getVar('day.%s.%s' % ($x,'sum'))</span></td><!-- AJAX -->
                         </tr>
                         #elif $x == 'wh57_lightning_time'
                         <tr>

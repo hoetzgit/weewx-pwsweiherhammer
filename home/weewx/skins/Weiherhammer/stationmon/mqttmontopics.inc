@@ -1,6 +1,6 @@
 
             <!-- Generator: generate_mqttmontopics_inc.sh -->
-            <!-- generated: 11.04.2023 12:31:00 -->
+            <!-- generated: 14.06.2023 12:45:00 -->
 
 
                 <tr>
@@ -340,6 +340,18 @@
                     <td class="mqttmon-table-body-obs-val"><span class="brightsky_Precipitation60" rel="tooltip" title="">---</span></td>
                 </tr>
                 <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Solar10-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Solar10">brightsky_Solar10</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Solar10" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Solar30-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Solar30">brightsky_Solar30</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Solar30" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Solar60-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Solar60">brightsky_Solar60</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Solar60" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_SunshineDur10-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_SunshineDur10">brightsky_SunshineDur10</abbr></th>
                     <td class="mqttmon-table-body-obs-val"><span class="brightsky_SunshineDur10" rel="tooltip" title="">---</span></td>
                 </tr>
@@ -354,6 +366,10 @@
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Visibility-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Visibility">brightsky_Visibility</abbr></th>
                     <td class="mqttmon-table-body-obs-val"><span class="brightsky_Visibility" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_Weathercode-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_Weathercode">brightsky_Weathercode</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="brightsky_Weathercode" rel="tooltip" title="">---</span></td>
                 </tr>
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot brightsky_WindDir10-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.brightsky_WindDir10">brightsky_WindDir10</abbr></th>
@@ -414,6 +430,10 @@
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot cdc_Altitude-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.cdc_Altitude">cdc_Altitude</abbr></th>
                     <td class="mqttmon-table-body-obs-val"><span class="cdc_Altitude" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot cdc_AtmosRad-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.cdc_AtmosRad">cdc_AtmosRad</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="cdc_AtmosRad" rel="tooltip" title="">---</span></td>
                 </tr>
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot cdc_Barometer-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.cdc_Barometer">cdc_Barometer</abbr></th>
@@ -524,6 +544,46 @@
                     <td class="mqttmon-table-body-obs-val"><span class="cloudbase" rel="tooltip" title="">---</span></td>
                 </tr>
                 <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot cloudcover_cloud_percent-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.cloudcover_cloud_percent">cloudcover_cloud_percent</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="cloudcover_cloud_percent" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot weewx_cloud_percent-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.weewx_cloud_percent">weewx_cloud_percent</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="weewx_cloud_percent" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot cloudcover_cloud_cover-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.cloudcover_cloud_cover">cloudcover_cloud_cover</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="cloudcover_cloud_cover" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot cloudcover_cloud_icon-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.cloudcover_cloud_icon">cloudcover_cloud_icon</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="cloudcover_cloud_icon" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot weewx_cloud_icon-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.weewx_cloud_icon">weewx_cloud_icon</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="weewx_cloud_icon" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot cloudcover_outTemp-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.cloudcover_outTemp">cloudcover_outTemp</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="cloudcover_outTemp" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot cloudcover_skyTemp-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.cloudcover_skyTemp">cloudcover_skyTemp</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="cloudcover_skyTemp" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot cloudcover_sig-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.cloudcover_sig">cloudcover_sig</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="cloudcover_sig" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot cloudcover_signal_level-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.cloudcover_signal_level">cloudcover_signal_level</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="cloudcover_signal_level" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot cloudcover_sig_percent-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.cloudcover_sig_percent">cloudcover_sig_percent</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="cloudcover_sig_percent" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot dateTime-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.dateTime">dateTime</abbr></th>
                     <td class="mqttmon-table-body-obs-val"><span class="dateTime" rel="tooltip" title="">---</span></td>
                 </tr>
@@ -542,6 +602,10 @@
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot day_barometer_mintime-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.day_barometer_mintime">day_barometer_mintime</abbr></th>
                     <td class="mqttmon-table-body-obs-val"><span class="day_barometer_mintime" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot day_lightning_strike_count_sum-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.day_lightning_strike_count_sum">day_lightning_strike_count_sum</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="day_lightning_strike_count_sum" rel="tooltip" title="">---</span></td>
                 </tr>
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot dayET-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.dayET">dayET</abbr></th>
@@ -828,6 +892,10 @@
                     <td class="mqttmon-table-body-obs-val"><span class="GTS" rel="tooltip" title="">---</span></td>
                 </tr>
                 <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot GTSdate-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.GTSdate">GTSdate</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="GTSdate" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot heatindex-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.heatindex">heatindex</abbr></th>
                     <td class="mqttmon-table-body-obs-val"><span class="heatindex" rel="tooltip" title="">---</span></td>
                 </tr>
@@ -874,6 +942,10 @@
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot icon_d2_FreezinglevelHeight-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.icon_d2_FreezinglevelHeight">icon_d2_FreezinglevelHeight</abbr></th>
                     <td class="mqttmon-table-body-obs-val"><span class="icon_d2_FreezinglevelHeight" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot icon_d2_IsDay-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.icon_d2_IsDay">icon_d2_IsDay</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="icon_d2_IsDay" rel="tooltip" title="">---</span></td>
                 </tr>
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot icon_d2_Latitude-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.icon_d2_Latitude">icon_d2_Latitude</abbr></th>
@@ -1452,6 +1524,10 @@
                     <td class="mqttmon-table-body-obs-val"><span class="poi_Visibility" rel="tooltip" title="">---</span></td>
                 </tr>
                 <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot poi_Weathercode-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.poi_Weathercode">poi_Weathercode</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="poi_Weathercode" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot poi_WindDir-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.poi_WindDir">poi_WindDir</abbr></th>
                     <td class="mqttmon-table-body-obs-val"><span class="poi_WindDir" rel="tooltip" title="">---</span></td>
                 </tr>
@@ -1546,6 +1622,10 @@
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot rxCheckPercent-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.rxCheckPercent">rxCheckPercent</abbr></th>
                     <td class="mqttmon-table-body-obs-val"><span class="rxCheckPercent" rel="tooltip" title="">---</span></td>
+                </tr>
+                <tr>
+                    <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot seasonGDD-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.seasonGDD">seasonGDD</abbr></th>
+                    <td class="mqttmon-table-body-obs-val"><span class="seasonGDD" rel="tooltip" title="">---</span></td>
                 </tr>
                 <tr>
                     <th scope="row" class="mqttmon-table-body-obs"><div class="mqttmon-rcv-dot signal1-mqttmon-rcv-dot" style="background-color: var(--mqttmon-rcv-dot-none);"></div><abbr rel="tooltip" title="$obs.label.signal1">signal1</abbr></th>

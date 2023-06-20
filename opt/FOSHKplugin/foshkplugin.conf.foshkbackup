@@ -231,7 +231,7 @@ SUN_COEF = 0.79
 SUN_UNIT = second
 
 [Status]
-StopTime = 1672258493
-last_lightning_time = 1666600280
-last_lightning = 31
+StopTime = 1686484469
+last_lightning_time = 1686243361
+last_lightning = 17
 

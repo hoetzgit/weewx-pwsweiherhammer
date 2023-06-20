@@ -132,6 +132,9 @@ weewx.units.obs_group_dict['asky_box_barometer'] = 'group_pressure'
 weewx.units.obs_group_dict['asky_box_dewpoint'] = "group_temperature"
 weewx.units.obs_group_dict['asky_box_pressure'] = 'group_pressure'
 weewx.units.obs_group_dict['asky_dome_dewpoint'] = 'group_temperature'
+# MLX90614 Cloudcover Station
+weewx.units.obs_group_dict['weewx_cloud_percent'] = 'group_percent'
+weewx.units.obs_group_dict['weewx_cloud_icon'] = 'group_count'
 #
 # Tests
 weewx.units.obs_group_dict['thswIndex2'] = "group_temperature"
@@ -469,6 +472,33 @@ class WXXTypes(weewx.xtypes.XType):
         # 0 = high = 100%, 1 = low = 50%
         val = user.weiherhammerformulas.wh65_batt_to_percent(data['wh65_batt'])
         return ValueTuple(val, 'percent', 'group_percent')
+
+    @staticmethod
+    def calc_weewx_cloud_percent(key, data, db_manager=None):
+        #loginf("Calculation of weewx_cloud_percent.")
+        #loginf("Calculation of weewx_cloud_percent. data: %s" % str(data))
+        if 'cloudcover_skyTemp' not in data or data['cloudcover_skyTemp'] is None or 'outTemp' not in data or data['outTemp'] is None:
+            #logerr("ERROR Calculation of weewx_cloud_percent failed!")
+            raise weewx.CannotCalculate(key)
+        outTemp = data['outTemp']
+        skyTemp = data['cloudcover_skyTemp']
+        if data['usUnits'] == weewx.US:
+            outTemp = FtoC(outTemp)
+            skyTemp = FtoC(skyTemp)
+        #loginf("Calculation of weewx_cloud_percent. outTemp: %s" % str(outTemp))
+        #loginf("Calculation of weewx_cloud_percent. skyTemp: %s" % str(skyTemp))
+        val = user.weiherhammerformulas.weewx_cloud_percent(outTemp, skyTemp)
+        #loginf("Calculation of weewx_cloud_percent. percent: %s" % str(val))
+        return ValueTuple(val, 'percent', 'group_percent')
+
+    @staticmethod
+    def calc_weewx_cloud_icon(key, data, db_manager=None):
+        #loginf("Calculation of weewx_cloud_icon.")
+        if 'weewx_cloud_percent' not in data or data['weewx_cloud_percent'] is None:
+            #logerr("ERROR Calculation of weewx_cloud_icon failed")
+            raise weewx.CannotCalculate(key)
+        val = user.weiherhammerformulas.weewx_cloud_icon(data['weewx_cloud_percent'])
+        return ValueTuple(val, 'count', 'group_count')
 
 #
 # ######################## Class PressureCooker ##############################

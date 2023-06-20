@@ -145,9 +145,9 @@
         #end if
         <meta property="og:site_name" content="$head_title"/>
         
-        #if $page != "kiosk"
-        <link rel="dns-prefetch" href="//code.highcharts.com"/>
-        #end if
+        ##if $page != "kiosk"
+        ##<link rel="dns-prefetch" href="//code.highcharts.com"/>
+        ##end if
         
         <link rel="manifest" href="$relative_url/manifest.json" crossorigin="use-credentials">
         <link rel="apple-touch-icon" href="$relative_url/images/station.png">
@@ -192,12 +192,12 @@
         <script type="text/javascript" src="$relative_url/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"></script>
         #end if
         #if $page != "kiosk"
-        <script type="text/javascript" src="//code.highcharts.com/stock/10.3.3/highstock.js"></script>
-        <script type="text/javascript" src="//code.highcharts.com/10.3.3/highcharts-more.js"></script>
-        <script type="text/javascript" src="//code.highcharts.com/10.3.3/modules/exporting.js"></script>
-        <script type="text/javascript" src="//code.highcharts.com/10.3.3/modules/export-data.js"></script>
-        <script type="text/javascript" src="//code.highcharts.com/modules/solid-gauge.js"></script>
-        <script type="text/javascript" src="//code.highcharts.com/modules/accessibility.js"></script>
+        <script type="text/javascript" src="$relative_url/libs/highcharts/10.3.3/js/highstock.js"></script>
+        <script type="text/javascript" src="$relative_url/libs/highcharts/10.3.3/js/highcharts-more.js"></script>
+        <script type="text/javascript" src="$relative_url/libs/highcharts/10.3.3/js/exporting.js"></script>
+        <script type="text/javascript" src="$relative_url/libs/highcharts/10.3.3/js/export-data.js"></script>
+        <script type="text/javascript" src="$relative_url/libs/highcharts/10.3.3/js/solid-gauge.js"></script>
+        <script type="text/javascript" src="$relative_url/libs/highcharts/10.3.3/js/accessibility.js"></script>
         #end if
         <script type="text/javascript" src="$relative_url/js/weiherhammer.js?#echo int( time.time() )#"></script>
         

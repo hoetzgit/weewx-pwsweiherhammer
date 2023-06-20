@@ -33,9 +33,12 @@
 */1 * * * * /bin/bash /usr/local/bin/copy_allsky_image_to_pws.sh >/var/log/weewx/copy_allsky_image_to_pws.log 2>&1
 */1 * * * * /bin/bash /usr/local/bin/copy_webcam_image_to_pws.sh >/var/log/weewx/copy_webcam_image_to_pws.log 2>&1
 #
+# WeeWX to AllSky
+*/5 * * * * /bin/bash create_allsky_weewx_data_formated_required_fields_endless_lock.sh >/var/log/weewx/create_allsky_weewx_data_formated_required_fields_endless_lock.log 2>&1
+#
 # DWD Forecast Waldbrandgefahrenindex (Weiherhammer skin)
-20 5 * 3,4,5,6,7,8,9,10 * /bin/bash /usr/local/bin/weewx-DWD/wget-dwd-wbx >/var/log/weewx/wget-dwd-wbx.log 2>&1
-22 5 * 3,4,5,6,7,8,9,10 * /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --wbx-only >/var/log/weewx/forecast-pwsWeiherhammer-wbx.log
+20 6 * 3,4,5,6,7,8,9,10 * /bin/bash /usr/local/bin/weewx-DWD/wget-dwd-wbx >/var/log/weewx/wget-dwd-wbx.log 2>&1
+22 6 * 3,4,5,6,7,8,9,10 * /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --wbx-only >/var/log/weewx/forecast-pwsWeiherhammer-wbx.log
 #
 # DWD Forecast and Warnings (Weiherhammer and weewx-wdc skin)
 14,29,44,59 * * * * /bin/bash /usr/local/bin/weewx-DWD/wget-dwd-pwsWeiherhammer >/var/log/weewx/wget-dwd-pwsWeiherhammer.log 2>&1

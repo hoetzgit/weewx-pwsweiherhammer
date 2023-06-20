@@ -530,17 +530,6 @@ import weewx.almanac
 for group in weewx.units.std_groups:
     weewx.units.std_groups[group].setdefault('group_coordinate','degree_compass')
 
-# DWD CDC 10 Minutes radiation unit
-# https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/10_minutes/solar/now/BESCHREIBUNG_obsgermany_climate_10min_solar_now_de.pdf
-# https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/10_minutes/solar/now/DESCRIPTION_obsgermany_climate_10min_solar_now_en.pdf
-# TODO evaluate formula for:
-# DS_10 - 10min-sum of diffuse solar radiation - unit J/cm^2
-# GS_10 - 10min-sum of solar incoming radiation - unit J/cm^2
-# LS_10 - 10min-sum of longwave downward radiation - unit J/cm^2
-weewx.units.conversionDict.setdefault('joule_per_cm_squared_10minutes',{})
-if 'watt_per_meter_squared' not in weewx.units.conversionDict['joule_per_cm_squared_10minutes']:
-    weewx.units.conversionDict['joule_per_cm_squared_10minutes']['watt_per_meter_squared'] = lambda x : (x * 10000) / 600
-
 # Cloud cover icons
 
 N_ICON_LIST = [
@@ -939,6 +928,7 @@ class DWDPOIthread(BaseThread):
                 if wwcode:
                     y['icon'] = (wwcode[self.iconset],None,None)
                     y['icontitle'] = (wwcode[1],None,None)
+                    y['weathercode'] = y['presentWeather']
                 x.append(y)
             ii += 1
         try:
@@ -954,6 +944,13 @@ class DWDPOIthread(BaseThread):
 #
 # Class DWDCDCthread
 #
+# DWD CDC 10 Minutes radiation unit
+# https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/10_minutes/solar/now/BESCHREIBUNG_obsgermany_climate_10min_solar_now_de.pdf
+# https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/10_minutes/solar/now/DESCRIPTION_obsgermany_climate_10min_solar_now_en.pdf
+# TODO evaluate formula for:
+# DS_10 - 10min-sum of diffuse solar radiation - unit J/cm^2
+# GS_10 - 10min-sum of solar incoming radiation - unit J/cm^2
+# LS_10 - 10min-sum of longwave downward radiation - unit J/cm^2
 # ============================================================================
 
 class DWDCDCthread(BaseThread):
@@ -981,18 +978,17 @@ class DWDCDCthread(BaseThread):
         'RWS_10':('rain','mm','group_rain'),
         'RWS_IND_10':('rainIndex',None,None),
         # solar
-        'DS_10':('solarRad','joule_per_cm_squared_10minutes','group_radiation'),
-        'GS_10':('radiation','joule_per_cm_squared_10minutes','group_radiation'),
+        'DS_10':('solarRad','joule_per_cm_squared','group_radiation_energy'),
+        'GS_10':('radiation','joule_per_cm_squared','group_radiation_energy'),
         'SD_10':('sunshineDur','hour','group_deltatime'),
-        'LS_10':('LS_10','joule_per_cm_squared_10minutes','group_radiation')}
-        
+        'LS_10':('atmosRad','joule_per_cm_squared','group_radiation_energy')}
+
     DIRS = {
         'air':('air_temperature','10minutenwerte_TU_','_now.zip','Meta_Daten_zehn_min_tu_'),
         'wind':('wind','10minutenwerte_wind_','_now.zip','Meta_Daten_zehn_min_ff_'),
         'gust':('extreme_wind','10minutenwerte_extrema_wind_','_now.zip','Meta_Daten_zehn_min_fx_'),
         'precipitation':('precipitation','10minutenwerte_nieder_','_now.zip','Meta_Daten_zehn_min_rr_'),
         'solar':('solar','10minutenwerte_SOLAR_','_now.zip','Meta_Daten_zehn_min_sd_')}
-
 
     def __init__(self, name, cdc_dict, log_success=False, log_failure=True):
 
@@ -2212,6 +2208,9 @@ class BRIGHTSKYthread(BaseThread):
         'sunshine_10': ('sunshineDur10', 'minute', 'group_deltatime'),
         'sunshine_30': ('sunshineDur30', 'minute', 'group_deltatime'),
         'sunshine_60': ('sunshineDur60', 'minute', 'group_deltatime'),
+        'solar_10': ('solar10', 'kilowatt_hour_per_meter_squared', 'group_radiation_energy'),
+        'solar_30': ('solar30', 'kilowatt_hour_per_meter_squared', 'group_radiation_energy'),
+        'solar_60': ('solar60', 'kilowatt_hour_per_meter_squared', 'group_radiation_energy'),
         'visibility': ('visibility', 'meter', 'group_distance')
     }
 
@@ -2231,19 +2230,19 @@ class BRIGHTSKYthread(BaseThread):
     # Mapping API icon field to internal icon fields
     CONDITIONS = {
         #                     0       1      2     3          4              5          6
-        # BRIGHTSKY Icon: [german, english, None, None, Belchertown Icon, DWD Icon, Aeris Icon]
-        'clear-day': ('wolkenlos', 'clear sky', '', '', 'clear-day.png', '0-8.png', 'clear'),
-        'clear-night': ('wolkenlos', 'clear sky', '', '', 'clear-night.png', '0-8.png', 'clearn'),
-        'partly-cloudy-day': ('bewölkt', 'partly cloudy', '', '', 'mostly-cloudy-day.png', '5-8.png', 'pcloudy'),
-        'partly-cloudy-night': ('bewölkt', 'partly cloudy', '', '', 'mostly-cloudy-night.png', '5-8.png', 'pcloudyn'),
-        'cloudy': ('bedeckt', 'overcast', '', '', 'cloudy.png', '8-8.png', 'cloudy'),
-        'hail': ('Hagel', 'hail', '', '', 'hail.png', '13.png', 'freezingrain'),
-        'snow': ('Schneefall', 'snow fall', '', '', 'snow.png', '15.png', 'snow'),
-        'sleet': ('Schneeregen', 'snow showers', '', '', 'sleet.png', '13.png', 'rainandsnow'),
-        'rain': ('Regen', 'rain', '', '', 'rain.png', '8.png', 'rain'),
-        'wind': ('Wind', 'wind', '', '', 'wind.png', '18.png', 'wind'),
-        'fog': ('Nebel', 'fog', '', '', 'fog.png', '40.png', 'fog'),
-        'thunderstorm': ('Gewitter', 'thunderstorm', '', '', 'thunderstorm.png', '27.png', 'tstorm')
+        # BRIGHTSKY Icon: [german, english, None, None, Belchertown Icon, DWD Icon, Aeris Icon, WW Code]
+        'clear-day': ('wolkenlos', 'clear sky', '', '', 'clear-day.png', '0-8.png', 'clear', 0),
+        'clear-night': ('wolkenlos', 'clear sky', '', '', 'clear-night.png', '0-8.png', 'clearn', 0),
+        'partly-cloudy-day': ('bewölkt', 'partly cloudy', '', '', 'mostly-cloudy-day.png', '5-8.png', 'pcloudy', 2),
+        'partly-cloudy-night': ('bewölkt', 'partly cloudy', '', '', 'mostly-cloudy-night.png', '5-8.png', 'pcloudyn', 2),
+        'cloudy': ('bedeckt', 'overcast', '', '', 'cloudy.png', '8-8.png', 'cloudy', 3),
+        'hail': ('Hagel', 'hail', '', '', 'hail.png', '13.png', 'freezingrain', 77),
+        'snow': ('Schneefall', 'snow fall', '', '', 'snow.png', '15.png', 'snow', 71),
+        'sleet': ('Schneeregen', 'snow showers', '', '', 'sleet.png', '13.png', 'rainandsnow', 85),
+        'rain': ('Regen', 'rain', '', '', 'rain.png', '8.png', 'rain', 63),
+        'wind': ('Wind', 'wind', '', '', 'wind.png', '18.png', 'wind', 999),
+        'fog': ('Nebel', 'fog', '', '', 'fog.png', '40.png', 'fog', 45),
+        'thunderstorm': ('Gewitter', 'thunderstorm', '', '', 'thunderstorm.png', '27.png', 'tstorm', 95)
     }
 
     def get_current_obs(self):
@@ -2392,7 +2391,7 @@ class BRIGHTSKYthread(BaseThread):
         try:
             x = BRIGHTSKYthread.CONDITIONS[icon]
         except (LookupError, TypeError) as e:
-            x = ('unbekannte Wetterbedingungen', 'unknown conditions', '', '', 'unknown.png', 'unknown.png', 'na')
+            x = ('unbekannte Wetterbedingungen', 'unknown conditions', '', '', 'unknown.png', 'unknown.png', 'na', 999)
             if self.log_failure or self.debug > 0:
                 logerr("thread '%s': icon=%s mapping %s - %s" % (self.name, icon, e.__class__.__name__, e))
         return x
@@ -2426,6 +2425,7 @@ class BRIGHTSKYthread(BaseThread):
         # Wind speed            km/h    m/s
         # Wind gust direction   °       °
         # Wind gust speed       km/h    m/s
+        # solar                 kWh/m²  J/m²
         params += '&units=dwd'
 
         url = baseurl + params
@@ -2526,6 +2526,7 @@ class BRIGHTSKYthread(BaseThread):
         if condition is not None:
             y['icon'] = (condition[self.iconset], None, None)
             y['icontitle'] = (condition[0], None, None)
+            y['weathercode'] = (condition[7], 'count', 'group_count')
 
         night = is_night(y, log_success=(self.log_success or self.debug > 0),
                          log_failure=(self.log_failure or self.debug > 0))

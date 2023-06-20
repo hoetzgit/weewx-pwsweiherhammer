@@ -133,7 +133,7 @@ from weewx.cheetahgenerator import SearchList
 from weewx.reportengine import merge_lang
 from weewx.units import get_label_string
 from weewx.tags import TimespanBinder
-from weeutil.weeutil import to_bool, to_int, TimeSpan
+from weeutil.weeutil import to_bool, to_int, to_list, TimeSpan
 
 try:
     import weeutil.logger # pylint: disable=unused-import
@@ -294,8 +294,9 @@ class JAS(SearchList):
             logdbg(msg)
 
     def _get_skin_dict(self, language):
-        self.skin_dicts[language] = copy.deepcopy(self.skin_dict)
+        self.skin_dicts[language] = configobj.ConfigObj()
         merge_lang(language, self.generator.config_dict, self.skin_dict['REPORT_NAME'], self.skin_dicts[language])
+        self.skin_dicts[language].merge(self.skin_dict)
         self.skin_dicts[language]['Labels']['Generic'].merge((self.skin_dict['Extras'].get('lang', {}).get(language, {}).get('Labels', {}).get('Generic', {})))
         self.skin_dicts[language]['Texts'].merge((self.skin_dict['Extras'].get('lang', {}).get(language, {}).get('Texts', {})))
 
@@ -904,7 +905,8 @@ class JAS(SearchList):
         page_series_type = self.skin_dict['Extras']['page_definition'][page].get('series_type', 'single')
 
         #chart_final = 'var pageCharts = [];\n'
-        chart_final = 'utc_offset = ' + str(self.utc_offset) + ';\n'
+        chart_final = ''
+        chart_final += 'utc_offset = ' + str(self.utc_offset) + ';\n'
         chart_final += "ordinateNames = ['" + "', '".join(self.ordinate_names) + "'];\n"
         chart2 = ""
         charts = self.skin_dict['Extras']['chart_definitions']
@@ -1704,17 +1706,29 @@ class JAS(SearchList):
         data += '    });\n'
         data += '}\n'
         data += '\n'
+        default_theme = to_list(self.skin_dict['Extras'].get('themes', 'light'))[0]
         data += 'window.addEventListener("load", function (event) {\n'
+        data += '    theme = sessionStorage.getItem("theme");\n'
+        data += '    if (!theme) {\n'
+        data += '        theme = "' + default_theme + '";\n'
+        data += '    }\n'
+        data += '    setTheme(theme);\n'      
         data += '    // Todo: create functions for code in the if statements\n'
         data += '    // Tell the parent page the iframe size\n'
-        data += '    let message = { height: document.body.scrollHeight, width: document.body.scrollWidth };\n'
+        data += '    message = {};\n'
+        data += '    message.kind = "resize";\n'
+        data += '    message.message = {};\n'
+        data += '    message.message = { height: document.body.scrollHeight, width: document.body.scrollWidth };\n'
         data += '    // window.top refers to parent window\n'
         data += '    window.top.postMessage(message, "*");\n'
         data += '\n'
         data += '    // When the iframe size changes, let the parent page know\n'
         data += '    const myObserver = new ResizeObserver(entries => {\n'
         data +='        entries.forEach(entry => {\n'
-        data +='        let message = { height: document.body.scrollHeight, width: document.body.scrollWidth };\n'
+        data += '       message = {};\n'
+        data += '       message.kind = "resize";\n'
+        data += '       message.message = {};\n'        
+        data +='        message.message = { height: document.body.scrollHeight, width: document.body.scrollWidth };\n'
         data +='        // window.top refers to parent window\n'
         data +='        window.top.postMessage(message, "*");\n'
         data +='        });\n'
@@ -1749,6 +1763,11 @@ class JAS(SearchList):
         data += '    if (jasOptions.forecast) {\n'
         data +='        updateForecasts();\n'
         data += '    }\n'
+        data += '    message = {};\n'
+        data += '    message.kind = "loaded";\n'
+        data += '    message.message = {};\n'
+        data += '    // window.top refers to parent window\n'
+        data += '    window.top.postMessage(message, "*");\n'
         data += '});\n'
 
         javascript = '''
@@ -1824,6 +1843,58 @@ function setLogLevel(logLevel) {
     sessionStorage.setItem("logLevel", logLevel);
     updatelogLevel(logLevel.toString());
     return "Sub-page log level: " + sessionStorage.getItem("logLevel")
+}
+
+// Handle event messages of type "setTheme".
+function setTheme(theme) {
+    sessionStorage.setItem('theme', theme);
+    document.documentElement.setAttribute('data-bs-theme', theme);
+    const style = getComputedStyle(document.body);
+    bsBodyColor =  style.getPropertyValue("--bs-body-color");
+
+    textColor = {
+        textStyle: {
+            color: bsBodyColor
+        }
+    }
+    toolboxColor = {
+        toolbox: {
+            iconStyle: {
+                borderColor: bsBodyColor
+            }        
+        }
+    }
+    xAxisColor = {
+        xAxis: {
+            axisLine: {
+                lineStyle: {
+                    color: bsBodyColor
+                }
+            }
+        }
+    } 
+    angleAxisColor = {
+        angleAxis: {
+            axisLine: {
+                lineStyle: {
+                    color: bsBodyColor
+                }
+            }
+        }
+    }     
+
+    for (var index in pageCharts) {
+        options = pageCharts[index].chart.getOption();
+        pageCharts[index].chart.setOption(textColor);
+        pageCharts[index].chart.setOption(toolboxColor);
+        if ('xAxis' in options) {
+            pageCharts[index].chart.setOption(xAxisColor);
+        }
+        if ('angleAxis' in options) {
+            pageCharts[index].chart.setOption(angleAxisColor);
+        }            
+    }
+
 }
 
 // Handle event messages of type "lang".
@@ -1922,7 +1993,10 @@ function updateForecasts() {
     });
 }
 window.addEventListener("onresize", function() {
-    let message = { height: document.body.scrollHeight, width: document.body.scrollWidth };	
+    message = {};
+    message.kind = "resize";
+    message.message = {};
+    message.message = { height: document.body.scrollHeight, width: document.body.scrollWidth };	
 
     // window.top refers to parent window
     window.top.postMessage(message, "*");
@@ -1958,6 +2032,10 @@ window.addEventListener("message",
                         {
                             handleMQTT(message.message);
                         }
+                        if (message.kind == "setTheme")
+                        {
+                            setTheme(message.message);
+                        }                        
                         if (message.kind == "log")
                         {
                             handleLog(message.message);
