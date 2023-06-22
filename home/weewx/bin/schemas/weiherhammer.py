@@ -138,6 +138,7 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('asky_box_temperature', 'REAL'),
 ('asky_cpu_fan', 'INTEGER'),
 ('asky_cpu_temperature', 'REAL'),
+('asky_cam_temperature', 'REAL'),
 ('asky_dome_dewpoint', 'REAL'),
 ('asky_dome_heater', 'INTEGER'),
 ('asky_dome_temperature', 'REAL'),
@@ -225,13 +226,13 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('airrohr_sig', 'REAL'),
 ('airrohr_sig_percent', 'REAL'),
 #
-# Cloudcover Sensor MLX90614
-('cloudcover_outTemp', 'REAL'),
-('cloudcover_skyTemp', 'REAL'),
-('cloudcover_cloud_percent', 'REAL'),
-('cloudcover_cloud_icon', 'INTEGER'),
-('cloudcover_sig', 'REAL'),
-('cloudcover_sig_percent', 'REAL'),
+# Cloudwatcher Sensor MLX90614
+('cloudwatcher_ambTemp', 'REAL'),
+('cloudwatcher_skyTemp', 'REAL'),
+('cloudwatcher_cloudpercent', 'REAL'),
+('cloudwatcher_weathercode', 'INTEGER'),
+('cloudwatcher_sig', 'REAL'),
+('cloudwatcher_sig_percent', 'REAL'),
 #
 # ****** API / Extensions ******
 #

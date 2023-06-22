@@ -254,7 +254,7 @@ def getsign(d):
 # "calculate" cloud cover with skyTemp from a MLX90614 Sensor and outTemp from Weatherstation
 # see also: allsky_cloud.py
 # https://indiduino.wordpress.com/2013/02/02/meteostation/ and https://lunaticoastro.com/aagcw/TechInfo/SkyTemperatureModel.pdf
-def weewx_cloud_percent(skyambient, skyobject):
+def weewx_cloudwatcher_cloudpercent(skyambient, skyobject):
     k1 = 33
     k2 = 0
     k3 = 4
@@ -277,22 +277,31 @@ def weewx_cloud_percent(skyambient, skyobject):
         tsky = clearbelow
     elif tsky > cloudyabove:
         tsky = cloudyabove
+
     cloudcoverPercentage = ((tsky - clearbelow) * 100.) / (cloudyabove - clearbelow)
+    if cloudcoverPercentage > 100.0:
+        cloudcoverPercentage = 100.0
+
     return cloudcoverPercentage
 
-# "calculate" cloud cover icon with weewx_cloud_percent
-def weewx_cloud_icon(cloud_percent):
+# "calculate" WeeWX cloudwatcher_weathercode with WeeWX calculated cloudwatcher_cloudpercent
+def weewx_cloudwatcher_weathercode(cloud_percent):
+    weathercode = -1
+    if cloud_percent is None:
+        cloud_percent = 999
+
     if cloud_percent<12.5:
-        icon = 0
+        weathercode = 0
     elif cloud_percent<=37.5:
-        icon = 1
+        weathercode = 1
     elif cloud_percent<=75.0:
-        icon = 2
+        weathercode = 2
     elif cloud_percent<=87.5:
-        icon = 3
-    else:
-        icon = 4
-    return icon
+        weathercode = 3
+    elif cloud_percent<=100.0:
+        weathercode = 4
+
+    return weathercode
 
 
 

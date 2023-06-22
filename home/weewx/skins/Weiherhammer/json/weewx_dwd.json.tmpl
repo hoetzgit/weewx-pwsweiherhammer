@@ -284,5 +284,43 @@
                 }]
             }
         ]
+    },
+    "cloudwatcher": {
+        "timestamp": #echo int( time.time() )#,
+        "current": [
+            {
+                "success": true,
+                "error": null,
+                "source": "Cloudwatcher MLX90614 Sensor",
+                "response": [{
+                    "dataSource": "mlx90614",
+                    "loc": {
+                        "latitude": $current.cloudwatcher_Latitude.raw,
+                        "longitude": $current.cloudwatcher_Longitude.raw,
+                        "altitude": "$current.cloudwatcher_Altitude"
+                    },
+                    "place": {
+                        "name": "Cloudwatcher MLX90614 Sensor der PWS Weiherhammer",
+                        "city": "Weiherhammer",
+                        "id": 4
+                    },
+                    "profile": {
+                        "tz": "Europe/Berlin",
+                        "tzname": "CET",
+                        "tzoffset": 3600
+                    },
+                    "obTimestamp": $current.cloudwatcher_dateTime.raw,
+                    "ob": {
+                        "timestamp": $current.cloudwatcher_dateTime.raw,
+                        "icon": "$current.cloudwatcher_Icon.raw",
+                        "sky": $current.cloudwatcher_cloudpercent.raw,
+                        "weather": "$current.cloudwatcher_Icontitle.raw",
+                        "weathercode": $current.cloudwatcher_weathercode.raw,
+                        "weatherPrimary": "$current.cloudwatcher_Icontitle.raw",
+                        "visibilityKM": $current.best_match_Visibility.raw
+                    }
+                }]
+            }
+        ]
     }
 }

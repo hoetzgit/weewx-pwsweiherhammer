@@ -133,8 +133,8 @@ weewx.units.obs_group_dict['asky_box_dewpoint'] = "group_temperature"
 weewx.units.obs_group_dict['asky_box_pressure'] = 'group_pressure'
 weewx.units.obs_group_dict['asky_dome_dewpoint'] = 'group_temperature'
 # MLX90614 Cloudcover Station
-weewx.units.obs_group_dict['weewx_cloud_percent'] = 'group_percent'
-weewx.units.obs_group_dict['weewx_cloud_icon'] = 'group_count'
+weewx.units.obs_group_dict['cloudwatcher_cloudpercent'] = 'group_percent'
+weewx.units.obs_group_dict['cloudwatcher_weathercode'] = 'group_count'
 #
 # Tests
 weewx.units.obs_group_dict['thswIndex2'] = "group_temperature"
@@ -474,30 +474,32 @@ class WXXTypes(weewx.xtypes.XType):
         return ValueTuple(val, 'percent', 'group_percent')
 
     @staticmethod
-    def calc_weewx_cloud_percent(key, data, db_manager=None):
-        #loginf("Calculation of weewx_cloud_percent.")
-        #loginf("Calculation of weewx_cloud_percent. data: %s" % str(data))
-        if 'cloudcover_skyTemp' not in data or data['cloudcover_skyTemp'] is None or 'outTemp' not in data or data['outTemp'] is None:
-            #logerr("ERROR Calculation of weewx_cloud_percent failed!")
+    # new calc cloudpercent with WeeWX "outTemp", not with sensor "ambTemp"
+    def calc_cloudwatcher_cloudpercent(key, data, db_manager=None):
+        #loginf("Calculation of WeeWX cloudwatcher_cloudpercent.")
+        #loginf("Calculation of WeeWX cloudwatcher_cloudpercent data: %s" % str(data))
+        if 'cloudwatcher_skyTemp' not in data or data['cloudwatcher_skyTemp'] is None or 'outTemp' not in data or data['outTemp'] is None:
+            #logerr("ERROR Calculation of WeeWX cloudwatcher_cloudpercent failed!")
             raise weewx.CannotCalculate(key)
         outTemp = data['outTemp']
-        skyTemp = data['cloudcover_skyTemp']
+        skyTemp = data['cloudwatcher_skyTemp']
         if data['usUnits'] == weewx.US:
             outTemp = FtoC(outTemp)
             skyTemp = FtoC(skyTemp)
-        #loginf("Calculation of weewx_cloud_percent. outTemp: %s" % str(outTemp))
-        #loginf("Calculation of weewx_cloud_percent. skyTemp: %s" % str(skyTemp))
-        val = user.weiherhammerformulas.weewx_cloud_percent(outTemp, skyTemp)
-        #loginf("Calculation of weewx_cloud_percent. percent: %s" % str(val))
+        #loginf("Calculation of WeeWX cloudwatcher_cloudpercent outTemp: %s" % str(outTemp))
+        #loginf("Calculation of WeeWX cloudwatcher_cloudpercent skyTemp: %s" % str(skyTemp))
+        val = user.weiherhammerformulas.weewx_cloudwatcher_cloudpercent(outTemp, skyTemp)
+        #loginf("Calculation of WeeWX cloudwatcher_cloudpercent percent: %s" % str(val))
         return ValueTuple(val, 'percent', 'group_percent')
 
     @staticmethod
-    def calc_weewx_cloud_icon(key, data, db_manager=None):
-        #loginf("Calculation of weewx_cloud_icon.")
-        if 'weewx_cloud_percent' not in data or data['weewx_cloud_percent'] is None:
-            #logerr("ERROR Calculation of weewx_cloud_icon failed")
+    # calc with WeeWX cloudpercent
+    def calc_cloudwatcher_weathercode(key, data, db_manager=None):
+        #loginf("Calculation of WeeWX cloudwatcher_weathercode.")
+        if 'cloudwatcher_cloudpercent' not in data or data['cloudwatcher_cloudpercent'] is None:
+            #logerr("ERROR Calculation of WeeWX cloudwatcher_weathercode failed")
             raise weewx.CannotCalculate(key)
-        val = user.weiherhammerformulas.weewx_cloud_icon(data['weewx_cloud_percent'])
+        val = user.weiherhammerformulas.weewx_cloudwatcher_weathercode(data['cloudwatcher_cloudpercent'])
         return ValueTuple(val, 'count', 'group_count')
 
 #

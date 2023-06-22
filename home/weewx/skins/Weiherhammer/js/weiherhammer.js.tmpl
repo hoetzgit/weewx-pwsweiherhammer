@@ -4120,7 +4120,7 @@ function showChart(json_file, prepend_renderTo = false) {
                             },
                             width: 1,
                             dashStyle: 'Dash',
-                            zIndex : 3
+                            zIndex : 100
                         });
                     }
 
@@ -4170,7 +4170,7 @@ function showChart(json_file, prepend_renderTo = false) {
                             },
                             width: 1,
                             dashStyle: 'Dash',
-                            zIndex : 3
+                            zIndex : 100
                         });
                     }
 
@@ -4220,7 +4220,7 @@ function showChart(json_file, prepend_renderTo = false) {
                             },
                             width: 1,
                             dashStyle: 'Dash',
-                            zIndex : 3
+                            zIndex : 100
                         });
                     }
 
@@ -4270,7 +4270,7 @@ function showChart(json_file, prepend_renderTo = false) {
                             },
                             width: 1,
                             dashStyle: 'Dash',
-                            zIndex : 3
+                            zIndex : 100
                         });
                     }
 
@@ -4320,7 +4320,7 @@ function showChart(json_file, prepend_renderTo = false) {
                             },
                             width: 1,
                             dashStyle: 'Dash',
-                            zIndex : 3
+                            zIndex : 100
                         });
                     }
 
@@ -4355,7 +4355,7 @@ function showChart(json_file, prepend_renderTo = false) {
                             },
                             width: 1,
                             dashStyle: 'Dash',
-                            zIndex : 3
+                            zIndex : 100
                         });
                     }
 
@@ -4388,7 +4388,57 @@ function showChart(json_file, prepend_renderTo = false) {
                             },
                             width: 1,
                             dashStyle: 'Dash',
-                            zIndex : 3
+                            zIndex : 100
+                        });
+                    }
+
+                    // Add plotlines to yAxis options
+                    options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
+                }
+
+                // yAxis Cloudwatcher PlotLines
+                // Cloudpercent, labels and colors
+                // https://de.euronews.com/wetter/copernicus-air-quality-index
+                if (s.obsType == "cloudwatcher_cloudpercent") {
+                    var yAxis_plotlines = [];
+
+                    const plconf = [{
+                        color: "#4169E1", //RoyalBlue
+                        label: "$pgettext('chart_CloudwatcherCloud', 'clear border')",
+                        level: 12.5
+                    }, {
+                        color: "#87CEFA", //LightSkyBlue
+                        label: "$pgettext('chart_CloudwatcherCloud', 'mostly clear border')",
+                        level: 37.5
+                    }, {
+                        color: "#B9D3EE", //SlateGrey2
+                        label: "$pgettext('chart_CloudwatcherCloud', 'partly cloudy border')",
+                        level: 75.0
+                    }, {
+                        color: "#9FB6CD", //SlateGrey3
+                        label: "$pgettext('chart_CloudwatcherCloud', 'mostly cloudy border')",
+                        level: 87.5
+                    }, {
+                        color: "#708090", //SlateGrey
+                        label: "$pgettext('chart_CloudwatcherCloud', 'overcast border')",
+                        level: 100.0
+                    }];
+
+                    for (i = 0; i < plconf.length; i++) {
+                        yAxis_plotlines.push({
+                            color: plconf[i].color,
+                            value: plconf[i].level,
+                            label: {
+                                text: plconf[i].label,
+                                x: 0,
+                                y: 15,
+                                style: {
+                                    color: plconf[i].color
+                                }
+                            },
+                            width: 2,
+                            dashStyle: 'Dash',
+                            zIndex : 100
                         });
                     }
 

@@ -539,19 +539,35 @@ N_ICON_LIST = [
     ('partly-cloudy-day.png','partly-cloudy-night.png','5-8.png','SC','pcloudy'),
     ('mostly-cloudy-day.png','mostly-cloudy-night.png','5-8.png','BK','mcloudy'),
     ('cloudy.png','cloudy.png','8-8.png','OV','cloudy')]
-    
-def get_cloudcover(n):
+
+
+def get_cloudcover(n, weatherprovider='aeris'):
     """ get icon for cloud cover percentage """
-    if n<7:
-        icon = N_ICON_LIST[0]
-    elif n<32:
-        icon = N_ICON_LIST[1]
-    elif n<70:
-        icon = N_ICON_LIST[2]
-    elif n<95:
-        icon = N_ICON_LIST[3]
+    if weatherprovider == 'dwd':
+        # https://www.dwd.de/DE/service/lexikon/Functions/glossar.html?lv2=100932&lv3=101016
+        if n<12.5:
+            icon = N_ICON_LIST[0]
+        elif n<=37.5:
+            icon = N_ICON_LIST[1]
+        elif n<=75.0:
+            icon = N_ICON_LIST[2]
+        elif n<=87.5:
+            icon = N_ICON_LIST[3]
+        else:
+            icon = N_ICON_LIST[4]
     else:
-        icon = N_ICON_LIST[4]
+        # see aerisweather for percentage values
+        # https://www.aerisweather.com/support/docs/api/reference/weather-codes/
+        if n<=7:
+            icon = N_ICON_LIST[0]
+        elif n<=32:
+            icon = N_ICON_LIST[1]
+        elif n<=70:
+            icon = N_ICON_LIST[2]
+        elif n<=95:
+            icon = N_ICON_LIST[3]
+        else:
+            icon = N_ICON_LIST[4]
     return icon
 
 
@@ -675,11 +691,14 @@ class BaseThread(threading.Thread):
             while self.running:
                 # download and process data
                 self.getRecord()
-                # time to to the next interval
-                waiting = self.query_interval-time.time()%self.query_interval
-                if waiting<=60: waiting += self.query_interval
-                # do a little bit of load balancing
-                waiting -= random.random()*60
+                # time to the next interval
+                if self.name == 'MLX90614-CLOUDWATCHER':
+                    waiting = 10.0 #it's a local json file
+                else:
+                    waiting = self.query_interval-time.time()%self.query_interval
+                    if waiting<=60: waiting += self.query_interval
+                    # do a little bit of load balancing
+                    waiting -= random.random()*60
                 # wait
                 logdbg ("thread '%s': wait %s s" % (self.name,waiting))
                 self.evt.wait(waiting)
@@ -2547,6 +2566,221 @@ class BRIGHTSKYthread(BaseThread):
             self.lock.release()
 
 
+# ============================================================================
+#
+# Class MLX90614thread
+#
+# ============================================================================
+
+class MLX90614thread(BaseThread):
+
+    # Evapotranspiration/UV-Index:
+    # Attention, no capital letters for WeeWX fields. Otherwise the WeeWX field "ET"/"UV" will be formed if no prefix is used!
+    # Mapping API observation fields -> WeeWX field, unit, group
+    OBS = {
+        'cloudwatcher_dateTime': ('dateTime', 'unix_epoch', 'group_time'),
+        'cloudwatcher_weathercode': ('weathercode', 'count', 'group_count')
+    }
+
+    #
+    #                   0       1             2                3              4          5          6
+    # MLX90614 Key: [german, english, Belchertown day, Belchertown night, DWD Icon, Aeris code, Aeris Icon]
+    WEATHER = {
+        -1:['unbekannte Wetterbedingungen', 'unknown conditions', 'unknown.png', 'unknown.png', 'na', 'na', 'unknown'],
+        0:['wolkenlos', 'clear sky', 'clear-day.png', 'clear-night.png', '0-8.png', 'CL', 'clear'],
+        1:['heiter', 'mostly clear', 'mostly-clear-day.png', 'mostly-clear-night.png', '2-8.png', 'FW', 'fair'],
+        2:['teilweise bewölkt', 'partly cloudy', 'partly-cloudy-day.png', 'partly-cloudy-night.png', '5-8.png', 'SC', 'pcloudy'],
+        2:['starkt bewölkt', 'mostly cloudy', 'mostly-cloudy-day.png', 'mostly-cloudy-night.png', '5-8.png', 'BK', 'pcloudy'],
+        4:['bedeckt', 'overcast', 'cloudy.png', 'cloudy.png', '8-8.png', 'OV', 'cloudy']
+    }
+
+    def get_current_obs(self):
+        return MLX90614thread.OBS
+
+    def get_current_weather(self):
+        return MLX90614thread.WEATHER
+
+    def __init__(self, name, mlx90614_dict, log_success=False, log_failure=True):
+
+        super(MLX90614thread, self).__init__(name='MLX90614-' + name, log_success=log_success,
+                                              log_failure=log_failure)
+
+        self.lock = threading.Lock()
+        self.log_success = weeutil.weeutil.to_bool(mlx90614_dict.get('log_success', log_success))
+        self.log_failure = weeutil.weeutil.to_bool(mlx90614_dict.get('log_failure', log_failure))
+        self.debug = weeutil.weeutil.to_int(mlx90614_dict.get('debug', 0))
+        self.lang = mlx90614_dict.get('lang', 'de')
+
+        self.iconset = weeutil.weeutil.to_int(mlx90614_dict.get('iconset', 4))
+        self.prefix = mlx90614_dict.get('prefix', '')
+        station = mlx90614_dict.get('station', 'ThisStation')
+        self.lat = weeutil.weeutil.to_float(mlx90614_dict.get('latitude'))
+        self.lon = weeutil.weeutil.to_float(mlx90614_dict.get('longitude'))
+        self.alt = weeutil.weeutil.to_float(mlx90614_dict.get('altitude'))
+
+        self.current_obs = self.get_current_obs()
+        self.current_weather = self.get_current_weather()
+
+        self.data = []
+        self.last_get_ts = 0
+
+        for opsapi, obsweewx in self.current_obs.items():
+            obs = obsweewx[0]
+            group = obsweewx[2]
+            if group is not None:
+                weewx.units.obs_group_dict.setdefault(self.prefix + obs[0].upper() + obs[1:], group)
+
+    def get_data(self):
+        """ get buffered data """
+        try:
+            self.lock.acquire()
+            """
+            try:
+                last_ts = self.data[-1]['time']
+                interval = last_ts - self.last_get_ts
+                self.last_get_ts = last_ts
+            except (LookupError,TypeError,ValueError,ArithmeticError):
+                interval = None
+            """
+            interval = 1
+            data = self.data
+        finally:
+            self.lock.release()
+        return data, interval
+
+    @staticmethod
+    def get_ww(wwcode, night):
+        """ get weather description from value of 'wwcode' 
+            returns: (german_text,english_text,'','',belchertown day or night,dwd_icon,aeris day or night,aeris_code)
+        """
+        try:
+            #                   0       1             2                3              4          5          6
+            # MLX90614 Key: [german, english, Belchertown day, Belchertown night, DWD Icon, Aeris code, Aeris Icon]
+            x = MLX90614thread.WEATHER[wwcode]
+        except (LookupError,TypeError):
+            x = MLX90614thread.WEATHER[-1]
+        if wwcode > 4 or wwcode < -1:
+            x = MLX90614thread.WEATHER[-1]
+        night = 1 if night else 0
+        #     0       1      2   3           4            5         6          7
+        # (german, english, '', '', Belchertown Icon, DWD Icon, Aeris Icon, Aeris Code]
+        return (x[0],x[1],'','',x[3] if night==1 else x[2],x[4],x[6] + ('n' if night==1 else '') + '.png',x[5])
+
+    def getRecord(self):
+        """ download and process MLX90614 API weather data """
+
+        baseurl = 'https://data.weiherhammer-wetter.de/weewx_mlx90614.json'
+
+        # Params
+        params = ''
+
+        url = baseurl + params
+
+        if self.debug >= 2:
+            logdbg("thread '%s': MLX90614 data URL=%s" % (self.name, url))
+
+        apidata = {}
+        try:
+            reply = wget(url,
+                         log_success=(self.log_success or self.debug > 0),
+                         log_failure=(self.log_failure or self.debug > 0))
+            if reply is not None:
+                apidata = json.loads(reply.decode('utf-8'))
+            else:
+                if self.log_failure or self.debug > 0:
+                    logerr("thread '%s': MLX90614 returns None data." % self.name)
+                return
+        except Exception as e:
+            if self.log_failure or self.debug > 0:
+                logerr("thread '%s': MLX90614 %s - %s" % (self.name, e.__class__.__name__, e))
+            return
+
+        # check results
+        if 'cloudwatcher_dateTime' not in apidata or apidata.get('cloudwatcher_dateTime') is None:
+            if self.log_failure or self.debug > 0:
+                logerr("thread '%s': MLX90614 returns no cloudwatcher_dateTime data." % self.name)
+            return
+        # if 'outTemp' not in apidata or apidata.get('outTemp') is None:
+            # if self.log_failure or self.debug > 0:
+                # logerr("thread '%s': MLX90614 returns no outTemp data." % self.name)
+            # return
+        # if 'cloudwatcher_skyTemp' not in apidata or apidata.get('cloudwatcher_skyTemp') is None:
+            # if self.log_failure or self.debug > 0:
+                # logerr("thread '%s': MLX90614 returns no cloudwatcher_skyTemp data." % self.name)
+            # return
+        if 'cloudwatcher_weathercode' not in apidata or apidata.get('cloudwatcher_weathercode') is None:
+            if self.log_failure or self.debug > 0:
+                logerr("thread '%s': MLX90614 returns no cloudwatcher_weathercode data." % self.name)
+            return
+
+        # holds the return values
+        x = []
+        y = dict()
+
+        if self.debug >= 4:
+            logdbg("thread '%s': API result: %s" % (self.name, str(apidata)))
+
+        y['interval'] = (30, 'seconds', 'group_interval')
+
+        # get current data
+        for obsapi, obsweewx in self.current_obs.items():
+            obsname = self.prefix+obsweewx[0][0].upper()+obsweewx[0][1:]
+            obsval = apidata.get(obsapi)
+            if obsval is None:
+                if self.debug >= 2:
+                    logdbg("thread '%s': No value for observation '%s' - '%s'" % (self.name, str(obsapi), str(obsweewx[0])))
+                continue
+
+            if self.debug >= 3:
+                logdbg("thread '%s': weewx=%s api=%s obs=%s val=%s" % (self.name, str(obsweewx[0]), str(obsapi), str(obsname), str(obsval)))
+
+            obsval = weeutil.weeutil.to_float(obsval)
+            y[obsweewx[0]] = (obsval, obsweewx[1], obsweewx[2])
+
+        if self.alt is not None:
+            y['altitude'] = (self.alt,'meter','group_altitude')
+
+        if self.lat is not None and self.lon is not None:
+            y['latitude'] = (self.lat,'degree_compass','group_coordinate')
+            y['longitude'] = (self.lon,'degree_compass','group_coordinate')
+            night = is_night(y, log_success=(self.log_success or self.debug > 0),
+                             log_failure=(self.log_failure or self.debug > 0))
+        else:
+            night = None
+
+        wwcode = -1
+        if night is not None:
+            y['day'] = (0 if night else 1,'count','group_count')
+
+        if 'weathercode' in y:
+            wwcode = weeutil.weeutil.to_int(y.get('weathercode', (-1,None,None))[0])
+
+        #(german_text,english_text,'','',belchertown day or night,dwd_icon,aeris day or night,aeris_code)
+        wwcode = MLX90614thread.get_ww(wwcode, night)
+
+        if self.debug > 2:
+            logdbg("thread '%s': wwcode=%s" % (self.name, str(wwcode)))
+
+        if wwcode:
+            y['icon'] = (wwcode[self.iconset],None,None)
+            y['icontitle'] = (wwcode[0],None,None)
+            y['aeriscode'] = (wwcode[7],None,None)
+
+        y.pop('dateTime') #is no longer required
+        y.pop('weathercode') #is no longer required
+        
+        x.append(y)
+
+        if self.debug > 0:
+            logdbg("thread '%s': result=%s" % (self.name, str(x)))
+
+        try:
+            self.lock.acquire()
+            self.data = x
+        finally:
+            self.lock.release()
+
+
 
 # ============================================================================
 #
@@ -2588,7 +2822,7 @@ class DWDservice(StdService):
             # Check required provider
             provider = station_dict.get('provider')
             if provider: provider = provider.lower()
-            if provider not in ('dwd', 'zamg', 'open-meteo', 'brightsky'):
+            if provider not in ('dwd', 'zamg', 'open-meteo', 'brightsky', 'mlx90614'):
                 if self.log_failure or self.debug > 0:
                     logerr("Section '%s' - weather service provider is not valid. Skip section." % section)
                 continue
@@ -2672,6 +2906,8 @@ class DWDservice(StdService):
                     self._create_openmeteo_thread(section, station_dict)
             elif provider == 'brightsky':
                 self._create_brightsky_thread(section, station_dict)
+            elif provider == 'mlx90614':
+                self._create_mlx90614_thread(section, station_dict)
             elif self.log_failure or self.debug > 0:
                 logerr("Unknown weather service provider '%s' in section '%s'" % (provider, section))
 
@@ -2737,6 +2973,18 @@ class DWDservice(StdService):
                     log_success=weeutil.weeutil.to_bool(station_dict.get('log_success',self.log_success)) or self.verbose,
                     log_failure=weeutil.weeutil.to_bool(station_dict.get('log_failure',self.log_failure)) or self.verbose)
         self.threads[thread_name]['thread'].start()
+    
+    def _create_mlx90614_thread(self, thread_name, station_dict):
+        prefix = station_dict.get('prefix','id'+thread_name)
+        self.threads[thread_name] = dict()
+        self.threads[thread_name]['datasource'] = 'MLX90614'
+        self.threads[thread_name]['prefix'] = prefix
+        self.threads[thread_name]['thread'] = MLX90614thread(thread_name,
+                    station_dict,
+                    log_success=weeutil.weeutil.to_bool(station_dict.get('log_success',self.log_success)) or self.verbose,
+                    log_failure=weeutil.weeutil.to_bool(station_dict.get('log_failure',self.log_failure)) or self.verbose)
+        self.threads[thread_name]['thread'].start()
+
 
     def shutDown(self):
         """ shutdown threads """
@@ -2750,8 +2998,17 @@ class DWDservice(StdService):
     def new_loop_packet(self, event):
         for thread_name in self.threads:
             pass
-            
-    
+            # get collected data
+            #data = None
+            #datasource = self.threads[thread_name]['datasource']
+            #if datasource=='MLX90614':
+            #    data,interval = self.threads[thread_name]['thread'].get_data()
+            #    if data: data = data[0]
+            #if data:
+            #    x = self._to_weewx(thread_name,data,event.packet['usUnits'])
+            #    event.packet.update(x)
+
+
     def new_archive_record(self, event):
         for thread_name in self.threads:
             # get collected data
@@ -2769,6 +3026,9 @@ class DWDservice(StdService):
                 data,interval = self.threads[thread_name]['thread'].get_data()
                 if data: data = data[0]
             elif datasource=='BRIGHTSKY':
+                data,interval = self.threads[thread_name]['thread'].get_data()
+                if data: data = data[0]
+            elif datasource=='MLX90614':
                 data,interval = self.threads[thread_name]['thread'].get_data()
                 if data: data = data[0]
             if data:
