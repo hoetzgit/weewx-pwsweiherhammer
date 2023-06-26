@@ -494,12 +494,22 @@ class WXXTypes(weewx.xtypes.XType):
 
     @staticmethod
     # calc with WeeWX cloudpercent
+    # TODO rename calc_cloudwatcher_weathercode to calc_pws_weathercode
     def calc_cloudwatcher_weathercode(key, data, db_manager=None):
         #loginf("Calculation of WeeWX cloudwatcher_weathercode.")
         if 'cloudwatcher_cloudpercent' not in data or data['cloudwatcher_cloudpercent'] is None:
             #logerr("ERROR Calculation of WeeWX cloudwatcher_weathercode failed")
             raise weewx.CannotCalculate(key)
-        val = user.weiherhammerformulas.weewx_cloudwatcher_weathercode(data['cloudwatcher_cloudpercent'])
+        if 'rain_sum10m' in data:
+            rain10 = data['rain_sum10m']
+        else:
+            rain10 = None
+        if 'lightning_strike_count_sum10m' in data:
+            thunderstorm10 = data['lightning_strike_count_sum10m']
+        else:
+            thunderstorm10 = None
+
+        val = user.weiherhammerformulas.pws_weathercode(data['cloudwatcher_cloudpercent'], rain10, thunderstorm10)
         return ValueTuple(val, 'count', 'group_count')
 
 #

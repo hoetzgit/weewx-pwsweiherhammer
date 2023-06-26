@@ -67,6 +67,20 @@ except ImportError:
 
 VERSION = '0.1'
 
+# PWS Weiherhammer own weathercodes
+pws_weathercode_clear_sky = 0
+pws_weathercode_mostly_clear = 1
+pws_weathercode_partly_cloudy = 2
+pws_weathercode_mostly_cloudy = 3
+pws_weathercode_overcast = 4
+pws_weathercode_slight_rain = 61
+pws_weathercode_moderate_rain = 63
+pws_weathercode_heavy_rain = 65
+pws_weathercode_very_heavy_rain = 66
+pws_weathercode_thunderstorm_rain = 95
+pws_weathercode_thunderstorm = 96
+pws_weathercode_unknown = -1
+
 def wetbulbC(t_C, RH, PP):
     #  Wet bulb calculations == Kuehlgrenztemperatur, Feuchtekugeltemperatur
     #  t_C = outTemp
@@ -284,22 +298,72 @@ def weewx_cloudwatcher_cloudpercent(skyambient, skyobject):
 
     return cloudcoverPercentage
 
-# "calculate" WeeWX cloudwatcher_weathercode with WeeWX calculated cloudwatcher_cloudpercent
-def weewx_cloudwatcher_weathercode(cloud_percent):
-    weathercode = -1
-    if cloud_percent is None:
-        cloud_percent = 999
+# https://www.dwd.de/DE/service/lexikon/Functions/glossar.html?nn=103346&lv2=101812&lv3=101906
+def weathercode_rain(rain10):
+    code = pws_weathercode_unknown
+    if rain10 is None or to_float(rain10) <= 0.0:
+        return code
 
-    if cloud_percent<12.5:
-        weathercode = 0
-    elif cloud_percent<=37.5:
-        weathercode = 1
-    elif cloud_percent<=75.0:
-        weathercode = 2
-    elif cloud_percent<=87.5:
-        weathercode = 3
-    elif cloud_percent<=100.0:
-        weathercode = 4
+    rain10 = to_float(rain10)
+    if rain10 < 0.5:
+        code = pws_weathercode_slight_rain
+    elif rain10 < 1.7:
+        code = pws_weathercode_moderate_rain
+    elif rain10 < 8.3:
+        code = pws_weathercode_heavy_rain
+    elif rain10 >= 8.3:
+        code = pws_weathercode_very_heavy_rain
+
+    return code
+
+def weathercode_thunderstorm(thunderstorm10, rain10):
+    code = pws_weathercode_unknown
+    if thunderstorm10 is None or to_int(thunderstorm10) <= 0:
+        return code
+
+    if rain10 is not None and to_float(rain10) > 0.0:
+        code = pws_weathercode_thunderstorm_rain
+    else:
+        code = pws_weathercode_thunderstorm
+
+    return code
+
+def weathercode_clouds(cloud_percent):
+    code = pws_weathercode_unknown
+
+    if cloud_percent is None:
+        return code
+
+    cloud_percent = to_float(cloud_percent)
+    if cloud_percent < 12.5:
+        code = pws_weathercode_clear_sky
+    elif cloud_percent <= 37.5:
+        code = pws_weathercode_mostly_clear
+    elif cloud_percent <= 75.0:
+        code = pws_weathercode_partly_cloudy
+    elif cloud_percent <= 87.5:
+        code = pws_weathercode_mostly_cloudy
+    elif cloud_percent <= 100.0:
+        code = pws_weathercode_overcast
+
+    return code
+
+# "calculate" own weathercode
+def pws_weathercode(cloud_percent, rain10, thunderstorm10):
+    weathercode = pws_weathercode_unknown
+
+    # Thunderstorm?
+    weathercode = weathercode_thunderstorm(thunderstorm10, rain10)
+    if weathercode != pws_weathercode_unknown:
+        return weathercode
+
+    # Rain?
+    weathercode = weathercode_rain(rain10)
+    if weathercode != pws_weathercode_unknown:
+        return weathercode
+
+    # Clouds?
+    weathercode = weathercode_clouds(cloud_percent)
 
     return weathercode
 

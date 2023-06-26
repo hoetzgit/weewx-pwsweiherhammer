@@ -55,7 +55,7 @@ weewx.units.obs_group_dict['SunDeclination']            = 'group_direction'
 weewx.units.obs_group_dict['Sunrise']                   = 'group_time'
 weewx.units.obs_group_dict['SunTransit']                = 'group_time'
 weewx.units.obs_group_dict['Sunset']                    = 'group_time'
-weewx.units.obs_group_dict['yesterdaySunshineDur']      = 'group_deltatime'
+weewx.units.obs_group_dict['yesterdaySunshine']      = 'group_deltatime'
 weewx.units.obs_group_dict['AstronomicalTwilightStart'] = 'group_time'
 weewx.units.obs_group_dict['NauticalTwilightStart']     = 'group_time'
 weewx.units.obs_group_dict['CivilTwilightStart']        = 'group_time'
@@ -201,7 +201,7 @@ class Celestial(StdService):
             daylight = 86400
         except ephem.NeverUpError:
             daylight = 0
-        pkt['daySunshineDur'] = daylight
+        pkt['daySunshine'] = daylight
         try:
             pkt['Moonrise'] = obs.next_rising(moon).datetime().replace(tzinfo=timezone.utc).timestamp()
             pkt['MoonTransit'] = obs.next_transit(moon).datetime().replace(tzinfo=timezone.utc).timestamp()
@@ -230,7 +230,7 @@ class Celestial(StdService):
             yesterday_daylight = 86400
         except ephem.NeverUpError:
             yesterday_daylight = 0
-        pkt['yesterdaySunshineDur'] = yesterday_daylight
+        pkt['yesterdaySunshine'] = yesterday_daylight
         tomorrow_start  = datetime.fromtimestamp(local_day_start.timestamp() + 86400, timezone.utc)
         obs.date = tomorrow_start
         try:

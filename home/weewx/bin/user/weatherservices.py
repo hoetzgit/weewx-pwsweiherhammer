@@ -1594,7 +1594,7 @@ class OPENMETEOthread(BaseThread):
         -1:['unbekannte Wetterbedingungen', 'unknown conditions', '', '', 'unknown.png', 'unknown.png', 'na'],
         # 0-3 using N_ICON_LIST, here only Documentation
         0:['wolkenlos', 'clear sky', '', '', 'clear-day.png', '0-8.png', 'clear'],
-        1:['heiter', 'mainly clear', '', '','mostly-clear-day.png', '2-8.png', 'fair'],
+        1:['leicht bewolkt', 'mainly clear', '', '','mostly-clear-day.png', '2-8.png', 'fair'],
         2:['bewölkt', 'partly cloudy', '', '','mostly-cloudy-day.png', '5-8.png', 'pcloudy'],
         3:['bedeckt', 'overcast', '', '','cloudy.png', '8-8.png', 'cloudy'],
         # from here on we evaluate
@@ -2224,7 +2224,7 @@ class BRIGHTSKYthread(BaseThread):
         'precipitation_10': ('precipitation10', 'mm', 'group_rain'),
         'precipitation_30': ('precipitation30', 'mm', 'group_rain'),
         'precipitation_60': ('precipitation60', 'mm', 'group_rain'),
-        'sunshine_10': ('sunshineDur10', 'minute', 'group_deltatime'),
+        #'sunshine_10': ('sunshineDur10', 'minute', 'group_deltatime'),
         'sunshine_30': ('sunshineDur30', 'minute', 'group_deltatime'),
         'sunshine_60': ('sunshineDur60', 'minute', 'group_deltatime'),
         'solar_10': ('solar10', 'kilowatt_hour_per_meter_squared', 'group_radiation_energy'),
@@ -2258,10 +2258,10 @@ class BRIGHTSKYthread(BaseThread):
         'hail': ('Hagel', 'hail', '', '', 'hail.png', '13.png', 'freezingrain', 77),
         'snow': ('Schneefall', 'snow fall', '', '', 'snow.png', '15.png', 'snow', 71),
         'sleet': ('Schneeregen', 'snow showers', '', '', 'sleet.png', '13.png', 'rainandsnow', 85),
-        'rain': ('Regen', 'rain', '', '', 'rain.png', '8.png', 'rain', 63),
+        'rain': ('Regen', 'rain', '', '', 'rain.png', '9.png', 'rain', 63),
         'wind': ('Wind', 'wind', '', '', 'wind.png', '18.png', 'wind', 999),
         'fog': ('Nebel', 'fog', '', '', 'fog.png', '40.png', 'fog', 45),
-        'thunderstorm': ('Gewitter', 'thunderstorm', '', '', 'thunderstorm.png', '27.png', 'tstorm', 95)
+        'thunderstorm': ('Gewitter', 'thunderstorm', '', '', 'thunderstorm.png', '28.png', 'tstorm', 95)
     }
 
     def get_current_obs(self):
@@ -2588,10 +2588,16 @@ class MLX90614thread(BaseThread):
     WEATHER = {
         -1:['unbekannte Wetterbedingungen', 'unknown conditions', 'unknown.png', 'unknown.png', 'na', 'na', 'unknown'],
         0:['wolkenlos', 'clear sky', 'clear-day.png', 'clear-night.png', '0-8.png', 'CL', 'clear'],
-        1:['heiter', 'mostly clear', 'mostly-clear-day.png', 'mostly-clear-night.png', '2-8.png', 'FW', 'fair'],
-        2:['teilweise bewölkt', 'partly cloudy', 'partly-cloudy-day.png', 'partly-cloudy-night.png', '5-8.png', 'SC', 'pcloudy'],
-        2:['starkt bewölkt', 'mostly cloudy', 'mostly-cloudy-day.png', 'mostly-cloudy-night.png', '5-8.png', 'BK', 'pcloudy'],
-        4:['bedeckt', 'overcast', 'cloudy.png', 'cloudy.png', '8-8.png', 'OV', 'cloudy']
+        1:['leicht bewölkt', 'mostly clear', 'mostly-clear-day.png', 'mostly-clear-night.png', '2-8.png', 'FW', 'fair'],
+        2:['wolkig', 'partly cloudy', 'partly-cloudy-day.png', 'partly-cloudy-night.png', '5-8.png', 'SC', 'pcloudy'],
+        3:['stark bewölkt', 'mostly cloudy', 'mostly-cloudy-day.png', 'mostly-cloudy-night.png', '5-8.png', 'BK', 'pcloudy'],
+        4:['bedeckt', 'overcast', 'cloudy.png', 'cloudy.png', '8-8.png', 'OV', 'cloudy'],
+        61:['leichter Regen', 'slight Rain', 'rain.png', 'rain.png', '7.png', 'R', 'rain'],
+        63:['mäßiger Regen', 'moderate Rain', 'rain.png', 'rain.png', '8.png', 'R', 'rain'],
+        65:['starker Regen', 'heavy Rain', 'rain.png', 'rain.png', '9.png', 'R', 'rain'],
+        66:['sehr starker Regen', 'very heavy Rain', 'rain.png', 'rain.png', '9.png', 'R', 'rain'],
+        95:['Gewitter und Regen', 'Thunderstorm and Rain', 'thunderstorm.png', 'thunderstorm.png', '28.png', 'T', 'tstorm'],
+        96:['Gewitter', 'Thunderstorm', 'thunderstorm-without-rain.png', 'thunderstorm-without-rain.png', '26.png', 'T', 'tstorm']
     }
 
     def get_current_obs(self):
@@ -2659,8 +2665,8 @@ class MLX90614thread(BaseThread):
             x = MLX90614thread.WEATHER[wwcode]
         except (LookupError,TypeError):
             x = MLX90614thread.WEATHER[-1]
-        if wwcode > 4 or wwcode < -1:
-            x = MLX90614thread.WEATHER[-1]
+        # if wwcode > 4 or wwcode < -1:
+            # x = MLX90614thread.WEATHER[-1]
         night = 1 if night else 0
         #     0       1      2   3           4            5         6          7
         # (german, english, '', '', Belchertown Icon, DWD Icon, Aeris Icon, Aeris Code]
@@ -2700,14 +2706,6 @@ class MLX90614thread(BaseThread):
             if self.log_failure or self.debug > 0:
                 logerr("thread '%s': MLX90614 returns no cloudwatcher_dateTime data." % self.name)
             return
-        # if 'outTemp' not in apidata or apidata.get('outTemp') is None:
-            # if self.log_failure or self.debug > 0:
-                # logerr("thread '%s': MLX90614 returns no outTemp data." % self.name)
-            # return
-        # if 'cloudwatcher_skyTemp' not in apidata or apidata.get('cloudwatcher_skyTemp') is None:
-            # if self.log_failure or self.debug > 0:
-                # logerr("thread '%s': MLX90614 returns no cloudwatcher_skyTemp data." % self.name)
-            # return
         if 'cloudwatcher_weathercode' not in apidata or apidata.get('cloudwatcher_weathercode') is None:
             if self.log_failure or self.debug > 0:
                 logerr("thread '%s': MLX90614 returns no cloudwatcher_weathercode data." % self.name)

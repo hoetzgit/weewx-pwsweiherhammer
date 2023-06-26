@@ -23,6 +23,7 @@ import sys
 import tempfile
 import threading
 import time
+import paho.mqtt.publish as mqtt_publish
 
 from dataclasses import dataclass
 from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Union
@@ -121,6 +122,17 @@ class Configuration:
     rainyear_start           : int
     obstypes                 : ObsTypes
     baro_trend_descs         : Any # Dict[BarometerTrend, str]
+    mqtt_enable              : bool
+    mqtt_broker              : str
+    mqtt_port                : int
+    mqtt_user                : str
+    mqtt_pass                : str
+    mqtt_topic               : str
+    mqtt_qos                 : int
+    mqtt_keepalive           : int
+    mqtt_retain              : bool
+    mqtt_clientid            : str
+    mqtt_unit_system         : int
 
 # ===============================================================================
 #                             ContinuousScalarStats
@@ -820,6 +832,7 @@ class LoopData(StdService):
         formatting_spec_dict     = loop_config_dict.get('Formatting', {})
         loop_frequency_spec_dict = loop_config_dict.get('LoopFrequency', {})
         rsync_spec_dict          = loop_config_dict.get('RsyncSpec', {})
+        mqtt_spec_dict           = loop_config_dict.get('MQTTSpec', {})
         include_spec_dict        = loop_config_dict.get('Include', {})
         baro_trend_trans_dict    = loop_config_dict.get('BarometerTrendDescriptions', {})
 
@@ -909,7 +922,19 @@ class LoopData(StdService):
             week_start               = week_start,
             rainyear_start           = rainyear_start,
             obstypes                 = obstypes,
-            baro_trend_descs         = baro_trend_descs)
+            baro_trend_descs         = baro_trend_descs,
+            mqtt_enable              = to_bool(mqtt_spec_dict.get('mqtt_enable', False)),
+            mqtt_broker              = mqtt_spec_dict.get('mqtt_broker', 'localhost'),
+            mqtt_port                = to_int(mqtt_spec_dict.get('mqtt_port', 1883)),
+            mqtt_user                = mqtt_spec_dict.get('mqtt_user'),
+            mqtt_pass                = mqtt_spec_dict.get('mqtt_pass'),
+            mqtt_topic               = mqtt_spec_dict.get('mqtt_topic', 'weewx-loopdata/json'),
+            mqtt_qos                 = to_int(mqtt_spec_dict.get('mqtt_qos', 0)),
+            mqtt_keepalive           = to_int(mqtt_spec_dict.get('mqtt_keepalive', 60)),
+            mqtt_retain              = to_bool(mqtt_spec_dict.get('mqtt_retain', False)),
+            mqtt_clientid            = mqtt_spec_dict.get('mqtt_clientid'),
+            mqtt_unit_system         = to_int(weewx.units.unit_constants[target_report_dict.get('unit_system', 'US').upper()])
+            )
 
         if not os.path.exists(self.cfg.loop_data_dir):
             os.makedirs(self.cfg.loop_data_dir)
@@ -1587,6 +1612,11 @@ class LoopProcessor:
                         self.cfg.timeout, self.cfg.remote_user,
                         self.cfg.ssh_options, self.cfg.compress,
                         self.cfg.log_success)
+                # Publish the loop-data to MQTT broker.
+                if self.cfg.mqtt_enable:
+                    LoopProcessor.publish_packet_to_broker(loopdata_pkt, self.cfg.mqtt_broker, self.cfg.mqtt_port,
+                        self.cfg.mqtt_topic, self.cfg.mqtt_user, self.cfg.mqtt_pass,
+                        self.cfg.mqtt_qos, self.cfg.mqtt_retain, self.cfg.mqtt_keepalive, self.cfg.mqtt_clientid, self.cfg.mqtt_unit_system)
         except Exception:
             weeutil.logger.log_traceback(log.critical, "    ****  ")
             raise
@@ -1933,6 +1963,26 @@ class LoopProcessor:
         log.debug('Moved to %s' % os.path.join(loop_data_dir, filename))
 
     @staticmethod
+    def publish_packet_to_broker(selective_pkt: Dict[str, Any], mqtt_broker: str, mqtt_port: int, mqtt_topic: str,
+            mqtt_user: str, mqtt_pass: str, mqtt_qos: int, mqtt_retain: bool, mqtt_keepalive: int, mqtt_clientid: str, mqtt_unit_system: int) -> None:
+        log.debug('MQTT: Publish packet to MQTT Broker: %s:%s topic: %s' % (mqtt_broker, mqtt_port, mqtt_topic))
+        # insert current timestamp
+        selective_pkt['dateTime'] = int(time.time())
+        # insert unit system from target report
+        selective_pkt['usUnits'] = mqtt_unit_system
+        # Publish packet to MQTT broker
+        mqtt_payload = json.dumps(selective_pkt)
+        try:
+            mqtt_publish.single(mqtt_topic, mqtt_payload, hostname=mqtt_broker, port=mqtt_port,
+                auth={'username': mqtt_user, 'password': mqtt_pass}, keepalive=mqtt_keepalive,
+                qos=mqtt_qos, retain=mqtt_retain, client_id=mqtt_clientid)
+            log.debug('MQTT: Published packet.')
+        except Exception as e:
+            log.error('MQTT: An error occurred: %s' % str(e))
+            return False
+        return True
+
+    @staticmethod
     def log_configuration(cfg: Configuration) -> None:
         # queue
         # config_dict
@@ -1970,6 +2020,17 @@ class LoopProcessor:
         for per, obstypes in cfg.obstypes.continuous.items():
             log.info('obstypes.%s: %s' % (per, obstypes))
         log.info('baro_trend_descs        : %s' % cfg.baro_trend_descs)
+        log.info('mqtt_enable             : %d' % cfg.mqtt_enable)
+        log.info('mqtt_broker             : %s' % cfg.mqtt_broker)
+        log.info('mqtt_port               : %r' % cfg.mqtt_port)
+        log.info('mqtt_user               : %s' % cfg.mqtt_user)
+        log.info('mqtt_pass               : %s' % cfg.mqtt_pass)
+        log.info('mqtt_keepalive          : %r' % cfg.mqtt_keepalive)
+        log.info('mqtt_topic              : %s' % cfg.mqtt_topic)
+        log.info('mqtt_qos                : %r' % cfg.mqtt_qos)
+        log.info('mqtt_retain             : %s' % cfg.mqtt_retain)
+        log.info('mqtt_clientid           : %s' % cfg.mqtt_clientid)
+        log.info('mqtt_unit_system        : %s' % cfg.mqtt_unit_system)
 
     @staticmethod
     def rsync_data(pktTime: int, skip_if_older_than: int, loop_data_dir: str,

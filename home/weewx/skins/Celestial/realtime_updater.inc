@@ -128,7 +128,7 @@
         document.getElementById("current.Sunset.raw").innerHTML = pacificHMS(result["current.Sunset.raw"]);
         document.getElementById("current.tomorrowSunrise.raw").innerHTML = pacificHMS(result["current.tomorrowSunrise.raw"]);
         document.getElementById("current.tomorrowSunset.raw").innerHTML = pacificHMS(result["current.tomorrowSunset.raw"]);
-        document.getElementById("daylight").innerHTML = daylightString(result["current.yesterdaySunshineDur.raw"], result["current.daySunshineDur.raw"]);
+        document.getElementById("daylight").innerHTML = daylightString(result["current.yesterdaySunshine.raw"], result["current.daySunshine.raw"]);
         document.getElementById("current.AstronomicalTwilightStart.raw").innerHTML = pacificHMS(result["current.AstronomicalTwilightStart.raw"]);
         document.getElementById("current.NauticalTwilightStart.raw").innerHTML = pacificHMS(result["current.NauticalTwilightStart.raw"]);
         document.getElementById("current.CivilTwilightStart.raw").innerHTML = pacificHMS(result["current.CivilTwilightStart.raw"]);

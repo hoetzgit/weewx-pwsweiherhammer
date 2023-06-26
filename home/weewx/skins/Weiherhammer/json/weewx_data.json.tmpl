@@ -50,6 +50,7 @@
   #set $sun_altitude = locale.format_string( "%.1f&deg;", $almanac.sun.alt )  
 #end if
 {
+    "generated": "$current.dateTime",
     "site": "$station.location",
     "station_url": "$station.station_url",
     "version": "$station.version",

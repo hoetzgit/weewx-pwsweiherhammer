@@ -2,6 +2,7 @@
 #encoding UTF-8
 #import datetime
 {
+    "generated": "$current.dateTime",
     "timestamp": #echo int( time.time() )#,
     "openmeteo_best_match": {
         "timestamp": $current.best_match_DateTime.raw,
@@ -199,7 +200,11 @@
         ]
     },
     "dwd_poi": {
+        #if $current.poi_DateTime.has_data
         "timestamp": $current.poi_DateTime.raw,
+        #else
+        "timestamp": #echo int( time.time() )#,
+        #end if
         "current": [
             {
                 "success": true,
@@ -223,30 +228,55 @@
                         "tzname": "CET",
                         "tzoffset": 3600
                     },
+                    #if $current.poi_DateTime.has_data
                     "obTimestamp": $current.poi_DateTime.raw,
+                    #else
+                    "obTimestamp": #echo int( time.time() )#,
+                    #end if
                     "ob": {
+                        #if $current.poi_DateTime.has_data
                         "timestamp": $current.poi_DateTime.raw,
+                        #else
+                        "timestamp": #echo int( time.time() )#,
+                        #end if
+                        #if $current.poi_Icon.has_data
                         "icon": "$current.poi_Icon.raw",
+                        #else
+                        "icon": "unknown.png",
+                        #end if
                         #if $current.poi_Cloudcover.has_data
                         "sky": $current.poi_Cloudcover.raw,
                         #else
                         "sky": null,
                         #end if
+                        #if $current.poi_Icontitle.has_data
                         "weather": "$current.poi_Icontitle.raw",
+                        "weatherPrimary": "$current.poi_Icontitle.raw",
+                        #else
+                        "weather": "unbekannt",
+                        "weatherPrimary": "unbekannt",
+                        #end if
                         #if $current.poi_PresentWeather.has_data
                         "weathercode": $current.poi_PresentWeather.raw,
                         #else
-                        "weathercode": null,
+                        "weathercode": -1,
                         #end if
-                        "weatherPrimary": "$current.poi_Icontitle.raw",
+                        #if $current.poi_Visibility.has_data
                         "visibilityKM": $current.poi_Visibility.raw
+                        #else
+                        "visibilityKM": null
+                        #end if
                     }
                 }]
             }
         ]
     },
     "brightsky": {
+        #if $current.brightsky_DateTime.has_data
         "timestamp": $current.brightsky_DateTime.raw,
+        #else
+        "timestamp": #echo int( time.time() )#,
+        #end if
         "current": [
             {
                 "success": true,
@@ -264,22 +294,55 @@
                         "city": "$current.brightsky_StationName.raw",
                         "id": $current.brightsky_APIstationId.raw,
                         "wmo_id": $current.brightsky_WMOstationId.raw,
+                        #if $current.brightsky_DWDstationId.has_data
                         "dwd_id": "$current.brightsky_DWDstationId.raw"
+                        #else
+                        "dwd_id": "05397"
+                        #end if
                     },
                     "profile": {
                         "tz": "Europe/Berlin",
                         "tzname": "CET",
                         "tzoffset": 3600
                     },
+                    #if $current.brightsky_DateTime.has_data
                     "obTimestamp": $current.brightsky_DateTime.raw,
+                    #else
+                    "obTimestamp": #echo int( time.time() )#,
+                    #end if
                     "ob": {
+                        #if $current.brightsky_DateTime.has_data
                         "timestamp": $current.brightsky_DateTime.raw,
+                        #else
+                        "timestamp": #echo int( time.time() )#,
+                        #end if
+                        #if $current.brightsky_Icon.has_data
                         "icon": "$current.brightsky_Icon.raw",
-                        "sky": $current.brightsky_Cloudcover.raw,
+                        #else
+                        "icon": "unknown.png",
+                        #end if
+                        #if $current.brightsky_Cloudcover.has_data
+                        "sky": "$current.brightsky_Cloudcover.raw",
+                        #else
+                        "sky": null,
+                        #end if
+                        #if $current.brightsky_Icontitle.has_data
                         "weather": "$current.brightsky_Icontitle.raw",
-                        "weathercode": $current.brightsky_Weathercode.raw,
                         "weatherPrimary": "$current.brightsky_Icontitle.raw",
+                        #else
+                        "weather": "unbekannt",
+                        "weatherPrimary": "unbekannt",
+                        #end if
+                        #if $current.brightsky_Weathercode.has_data
+                        "weathercode": $current.brightsky_Weathercode.raw,
+                        #else
+                        "weathercode": -1,
+                        #end if
+                        #if $current.brightsky_Visibility.has_data
                         "visibilityKM": $current.brightsky_Visibility.raw
+                        #else
+                        "visibilityKM": null
+                        #end if
                     }
                 }]
             }
@@ -300,8 +363,10 @@
                         "altitude": "$current.cloudwatcher_Altitude"
                     },
                     "place": {
-                        "name": "Cloudwatcher MLX90614 Sensor der PWS Weiherhammer",
+                        "name": "$station.location Cloudwatcher MLX90614 Sensor",
                         "city": "Weiherhammer",
+                        "state": "by",
+                        "country": "de",
                         "id": 4
                     },
                     "profile": {
@@ -312,12 +377,33 @@
                     "obTimestamp": $current.cloudwatcher_dateTime.raw,
                     "ob": {
                         "timestamp": $current.cloudwatcher_dateTime.raw,
+                        #if $current.cloudwatcher_Icon.has_data
                         "icon": "$current.cloudwatcher_Icon.raw",
+                        #else
+                        "icon": "unknown.png",
+                        #end if
+                        #if $current.cloudwatcher_cloudpercent.has_data
                         "sky": $current.cloudwatcher_cloudpercent.raw,
+                        #else
+                        "sky": null,
+                        #end if
+                        #if $current.cloudwatcher_Icontitle.has_data
                         "weather": "$current.cloudwatcher_Icontitle.raw",
-                        "weathercode": $current.cloudwatcher_weathercode.raw,
                         "weatherPrimary": "$current.cloudwatcher_Icontitle.raw",
+                        #else
+                        "weather": "unbekannt",
+                        "weatherPrimary": "unbekannt",
+                        #end if
+                        #if $current.cloudwatcher_weathercode.has_data
+                        "weathercode": $current.cloudwatcher_weathercode.raw,
+                        #else
+                        "weathercode": -1,
+                        #end if
+                        #if $current.best_match_Visibility.has_data
                         "visibilityKM": $current.best_match_Visibility.raw
+                        #else
+                        "visibilityKM": null
+                        #end if
                     }
                 }]
             }
