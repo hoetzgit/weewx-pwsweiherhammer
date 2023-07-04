@@ -1,7 +1,6 @@
 #errorCatcher Echo
 #encoding UTF-8
 #set global $page = "forecast"
-#set $file = $page + "/" + $page + ".inc"
 
 #include "header.html.tmpl"
 
@@ -54,7 +53,18 @@
             <div class="site-inner">
                 <main class="content">
                     <article class="weewx $page" itemscope itemtype="https://schema.org/CreativeWork">
+                        #set $file = $page + "/" + $page + "_dwd.inc"
                         #include "page-header.inc"
+
+                        #if os.path.exists($file)
+                        <!-- Begin $file -->
+
+                        #include $file
+
+                        <!-- End $file -->
+                        #end if
+
+                        #set $file = $page + "/warnings_dwd.inc"
                         #if os.path.exists($file)
                         <!-- Begin $file -->
 

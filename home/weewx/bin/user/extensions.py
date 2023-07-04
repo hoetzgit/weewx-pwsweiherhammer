@@ -177,11 +177,11 @@ weewx.units.obs_group_dict['cloudwatcher_sig'] = 'group_count'
 weewx.units.obs_group_dict['cloudwatcher_sig_percent'] = 'group_percent'
 weewx.units.obs_group_dict['cloudwatcher_signal_level'] = 'group_signal_strength'
 #
-# Cloudwatcher Sensor MLX90614 Service
-weewx.units.obs_group_dict['cloudwatcher_Day'] = 'group_count'
-weewx.units.obs_group_dict['cloudwatcher_Altitude'] = 'group_altitude'
-weewx.units.obs_group_dict['cloudwatcher_Latitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['cloudwatcher_Longitude'] = 'group_coordinate'
+# PWS Current Weather Service
+weewx.units.obs_group_dict['pws_Day'] = 'group_count'
+weewx.units.obs_group_dict['pws_Altitude'] = 'group_altitude'
+weewx.units.obs_group_dict['pws_Latitude'] = 'group_coordinate'
+weewx.units.obs_group_dict['pws_Longitude'] = 'group_coordinate'
 #
 # Allsky 01 Kamera (BME280, DS18B20, Fan, CPU & Wifi)
 weewx.units.obs_group_dict['asky_box_altimeter'] = 'group_pressure'
