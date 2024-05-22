@@ -1,0 +1,86 @@
+  227  ll
+  228  python3 ./bbk-warnings
+  229  python3 ./bbk-warnings --help
+  230  python3 ./bbk-warnings katwarn
+  231  python3 ./bbk-warnings biwapp
+  232  ll
+  233  cat bbk-biwapp.json
+  234  python3 ./bbk-warnings mowas
+  235  ll
+  236  cat bbk-mowas.json
+  237  python3 ./bbk-warnings dwd
+  238  cd /home/weewx/bin/weiwx/scripts/
+  239  ll
+  240  chmod +x bbk-warnings.py dwd-cap-warnings.py dwd-mosmix.py wget-dwd-warnings.sh wget-dwd-wbx.sh
+  241  ll
+  242  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-mosmix.py --config=/home/weewx/bin/weiwx/scripts/dwd-mosmix.conf --verbose --belchertown --json 10688
+  243  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings.conf --resolution=county --verbose
+  244  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings.conf --resolution=cities --verbose
+  245  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings.conf --resolution=city --verbose
+  246  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings.conf --resolution=county,city --verbose
+  247  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-mosmix.py --config=/home/weewx/bin/weiwx/scripts/dwd-mosmix.conf --verbose --belchertown --json 10688
+  248  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings.conf --resolution=city --verbose
+  249  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/bbk-warnings.py --config=/home/weewx/bin/weiwx/scripts/bbk-warnings.conf --verbos
+  250  ll
+  251  chmod +x capwarnings.py
+  252  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --config=/home/weewx/bin/weiwx/scripts/capwarnings.conf --verbos
+  253  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --config=/home/weewx/bin/weiwx/scripts/capwarnings.conf --verbose --provider dwd
+  254  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --help
+  255  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --config=/home/weewx/bin/weiwx/scripts/capwarnings.conf --verbose --provider=DWD
+  256  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --config=/home/weewx/bin/weiwx/scripts/capwarnings.conf --verbose --provider=BBK
+  257  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --help
+  258  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --config=/home/weewx/bin/weiwx/scripts/capwarnings.conf --verbose --provider=BBK --include-dwd
+  259  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --config=/home/weewx/bin/weiwx/scripts/capwarnings.conf --verbose --provider=DWD
+  260  history
+  261  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-mosmix.py --config=/home/weewx/bin/weiwx/scripts/dwd-mosmix.conf --verbose --belchertown --json 10688
+  262  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-mosmix.py --config=/home/weewx/bin/weiwx/scripts/dwd-mosmix-wdx.conf --verbose --json 10688
+  263  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-mosmix.py --config=/home/weewx/bin/weiwx/scripts/dwd-mosmix.conf --verbose --json 10688
+  264  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-mosmix.py --config=/home/weewx/bin/weiwx/scripts/dwd-mosmix-wdc.conf --verbose --json 10688
+  265  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-mosmix.py --config=/home/weewx/bin/weiwx/scripts/dwd-mosmix.conf --verbose --database --belchertown  10688
+  266  cd
+  267  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/parse_dwd_mosmix.py --in-file=MOSMIX_S --out-file=/home/weewx/public_html/data/dwd/mosmix/weiden_mosmix_s.json --timezone --station=WEIDEN
+  268  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/parse_dwd_mosmix.py --in-file=MOSMIX_L --out-file=/home/weewx/public_html/data/dwd/mosmix/weiden_mosmix_l.json --timezone --station=WEIDEN
+  269  ll
+  270  ll /home/weewx/bin/weiwx/scripts/
+  271  /bin/bash /home/weewx/bin/weiwx/scripts/wget-dwd-wbx.sh
+  272  apt install -y curl
+  273  /bin/bash /home/weewx/bin/weiwx/scripts/wget-dwd-wbx.sh
+  274  /bin/bash /home/weewx/bin/weiwx/scripts/wget-dwd.sh
+  275  mkir -p /var/log/weewx
+  276  mkdir -p /var/log/weewx
+  277  chmod 777 /var/log/weewx
+  278  /bin/bash /home/weewx/bin/weiwx/scripts/wget-dwd.sh
+  279  /usr/bin/python3 /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-mosmix.py --config=/home/weewx/bin/weiwx/scripts/dwd-mosmix.conf --verbose --wbx-only
+  280  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-mosmix.py --config=/home/weewx/bin/weiwx/scripts/dwd-mosmix.conf --verbose --wbx-only
+  281  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/forecast-pwsWeiherhammer.py --config=/home/weewx/bin/weiwx/scripts/forecast-pwsWeiherhammer.conf --verbose --wbx-only
+  282  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings.conf
+  283  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings.conf --resolution=county --verbose
+  284  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings.conf --verbose --resolution=county
+  285  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings.conf --verbose --resolution=city
+  286  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings_wdc.conf --resolution=county --verbose
+  287  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings_wdc.conf --resolution=city --verbose
+  288  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-mosmix.py --conf=//home/weewx/bin/weiwx/scripts/dwd-mosmix-wdc.conf --verbose --json 10688
+  289  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-mosmix.py --conf=//home/weewx/bin/weiwx/scripts/dwd-mosmix.conf --verbose --belchertown --json 10688
+  290  /bin/bash /home/weewx/bin/weiwx/scripts/wget-dwd.sh
+  291  /bin/bash /home/weewx/bin/weiwx/scripts/wget-dwd-wbx.sh
+  292  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/forecast-pwsWeiherhammer.py --config=/home/weewx/bin/weiwx/scripts/forecast-pwsWeiherhammer.conf --verbose --wbx-only
+  293  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings.conf --verbose --resolution=county
+  294  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings.conf --verbose --resolution=city
+  295  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/forecast-pwsWeiherhammer.py --config=/home/weewx/bin/weiwx/scripts/forecast-pwsWeiherhammer_data.conf --verbose --wbx-only
+  296  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings.conf --verbose --resolution=county
+  297  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings.conf --verbose --resolution=city
+  298  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings_data.conf --verbose --resolution=county
+  299  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-cap-warnings.py --config=/home/weewx/bin/weiwx/scripts/dwd-cap-warnings_data.conf --verbose --resolution=city
+  300  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-mosmix.py --config=/home/weewx/bin/weiwx/scripts/dwd-mosmix.conf --verbose --belchertown --json 10688
+  301  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/forecast-pwsWeiherhammer.py --config=/home/weewx/weewx.conf --verbose --database --belchertown  10688
+  302  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/dwd-mosmix.py --config=/home/weewx/bin/weiwx/scripts/dwd-mosmix.conf --verbose --belchertown --json 10688
+  303  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/bbk-warnings.py --help
+  304  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/bbk-warnings.py --config=/home/weewx/bin/weiwx/scripts/bbk-warnings.conf --verbose
+  305  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/bbk-warnings.py --config=/home/weewx/bin/weiwx/scripts/bbk-warnings.conf --verbose --include-dwd
+  306  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --help
+  307  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --config=/home/weewx/bin/weiwx/scripts/capwarnings.conf --verbose
+  308  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --config=/home/weewx/bin/weiwx/scripts/capwarnings.conf --verbose --provider=DWD
+  309  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --config=/home/weewx/bin/weiwx/scripts/capwarnings.conf --verbose ----include-dwd --provider=BBK
+  310  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --config=/home/weewx/bin/weiwx/scripts/capwarnings.conf --verbose --include-dwd --provider=BBK
+  311  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --config=/home/weewx/bin/weiwx/scripts/capwarnings.conf --verbose --provider=BBK
+  312  /usr/bin/python3 /home/weewx/bin/weiwx/scripts/capwarnings.py --help

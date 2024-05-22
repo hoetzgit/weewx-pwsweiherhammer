@@ -2,6 +2,7 @@
 #errorCatcher Echo
 #encoding UTF-8
 #import html
+#import datetime
 #set $diagrams_config = $DisplayOptions.get("diagrams", {})
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -83,8 +84,19 @@
       "Format_is": "$gettext('Format is')",
     },
     locale: "$get_locale()",
+    time: $datetime.datetime.now().timestamp(),
+    defaultTheme: '$DisplayOptions.get("default_theme", "auto")',
+    color_temperature: $to_int($to_bool($DisplayOptions.get("outTemp_stat_tile_color", "False"))),
+    color_temperature_transparency: $DisplayOptions.get("outTemp_stat_tile_color_transparency", "0.5"),
+    color_temperature_min: $DisplayOptions.get("outTemp_stat_tile_color_min", "-20"),
+    color_temperature_max: $DisplayOptions.get("outTemp_stat_tile_color_max", "40"),
   };
 </script>
+
+<script
+  type="module"
+  src="https://1.www.s81c.com/common/carbon/web-components/version/v2.0.1/modal.min.js"
+></script>
 
 #if "heights" in $diagrams_config
 <!--prettier-ignore-->

@@ -17,6 +17,7 @@ DEF_SID =
 REBOOT_ENABLE = False
 RESTART_ENABLE = False
 SVC_NAME = foshkplugin
+HIDDEN_FEATURES = True
 
 [Weatherstation]
 WS_IP = 192.168.0.116
@@ -62,7 +63,7 @@ FWD_MQTTCYCLE = 0
 FWD_EXEC = 
 
 [Forward-2]
-FWD_ENABLE = True
+FWD_ENABLE = False
 FWD_CMT = PWS Weiherhammer Ecowitt Protokoll an WeeWX 02 Test
 FWD_URL = http://weewx02.fritz.box:8080/data/report/
 FWD_INTERVAL = 
@@ -90,7 +91,7 @@ FWD_MQTTCYCLE = 0
 FWD_EXEC = 
 
 [Forward-4]
-FWD_ENABLE = True
+FWD_ENABLE = False
 FWD_CMT = PWS Weiherhammer Ecowitt Protokoll an WeeWX 04 Raspberry
 FWD_URL = http://weewx04.fritz.box:8080/data/report/
 FWD_INTERVAL = 
@@ -118,9 +119,9 @@ FWD_MQTTCYCLE = 0
 FWD_EXEC = 
 
 [Forward-6]
-FWD_ENABLE = False
-FWD_CMT = PWS Weiherhammer Ecowitt Protokoll an WeeWX pwsDashboard
-FWD_URL = http://pwsd.fritz.box:80/ecowitt/
+FWD_ENABLE = True
+FWD_CMT = PWS Weiherhammer Ecowitt Protokoll an PWS Dashboard
+FWD_URL = https://pwsd.weiherhammer-wetter.de/ecowitt/
 FWD_INTERVAL = 
 FWD_IGNORE = 
 FWD_TYPE = EW
@@ -132,9 +133,9 @@ FWD_MQTTCYCLE = 0
 FWD_EXEC = 
 
 [Forward-10]
-FWD_ENABLE = False
+FWD_ENABLE = True
 FWD_CMT = Export realtime.txt to filesystem
-FWD_URL = /mnt/qnap01/Daten/weewx/
+FWD_URL = /home/weewx/public_html/data/
 FWD_INTERVAL = 
 FWD_IGNORE = 
 FWD_TYPE = REALTIMETXT
@@ -146,9 +147,9 @@ FWD_MQTTCYCLE = 0
 FWD_EXEC = 
 
 [Forward-11]
-FWD_ENABLE = False
+FWD_ENABLE = True
 FWD_CMT = Export clientraw.txt to filesystem
-FWD_URL = /mnt/qnap01/Daten/weewx/
+FWD_URL = /home/weewx/public_html/data/
 FWD_INTERVAL = 
 FWD_IGNORE = 
 FWD_TYPE = CLIENTRAWTXT
@@ -160,7 +161,7 @@ FWD_MQTTCYCLE = 0
 FWD_EXEC = 
 
 [Forward-20]
-FWD_ENABLE = False
+FWD_ENABLE = True
 FWD_CMT = export via MQTT (metric)
 FWD_URL = 192.168.0.182:1883@foshk
 FWD_INTERVAL = 
@@ -225,11 +226,12 @@ LON = 12.056186
 
 [Sunduration]
 SUN_CALC = True
-SUN_MIN = 0
-SUN_COEF = 0.8
+SUN_MIN = 50
+SUN_COEF = 0.79
+SUN_UNIT = second
 
 [Status]
-StopTime = 1649072844
-last_lightning_time = 1649015055
-last_lightning = 6
+StopTime = 1707586012
+last_lightning_time = 1696355369
+last_lightning = 34
 

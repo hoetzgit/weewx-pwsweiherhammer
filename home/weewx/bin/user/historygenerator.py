@@ -33,12 +33,15 @@ import time
 import logging
 import os.path
 
-from configobj import ConfigObj
+import weewx.units
+import weeutil.weeutil
 
+try:
+    from weeutil.weeutil import accumulateLeaves
+except:
+    from weeutil.config import accumulateLeaves
 from weewx.cheetahgenerator import SearchList
 from weewx.tags import TimespanBinder
-import weeutil.weeutil
-import weewx.units
 
 log = logging.getLogger(__name__)
 
@@ -56,26 +59,23 @@ class MyXSearch(SearchList):
         self.cache_time = 0
 
         self.search_list_extension = {}
+        self.search_list_extension['fuzzy_archer_version'] = generator.config_dict['fuzzy_archer_version']
 
         # Make some config available to templates
+        self.add_to_extension_list('Navigation', generator.skin_dict)
+        self.add_to_extension_list('StationInfo', generator.skin_dict)
+        self.add_to_extension_list('TranslationLinks', generator.skin_dict)
+        self.add_to_extension_list('HistoryReport', generator.skin_dict)
+        self.add_to_extension_list('ImageGenerator', generator.skin_dict)
         self.add_to_extension_list('BootstrapLabels', generator.skin_dict)
         self.add_to_extension_list('Labels', generator.skin_dict)
         self.add_to_extension_list('Units', generator.skin_dict)
+        self.add_to_extension_list('JSONGenerator', generator.skin_dict)
         self.add_to_extension_list('LiveGauges', generator.skin_dict)
         self.add_to_extension_list('Stats', generator.skin_dict)
+        self.add_to_extension_list('News', generator.skin_dict)
         self.add_to_extension_list('LiveCharts', generator.skin_dict)
         self.add_to_extension_list('locale', generator.skin_dict)
-
-        # Make ImageGenerator specific labels in config file available to templates
-        image_dict = {}
-        image_config_path = os.path.join(generator.config_dict['WEEWX_ROOT'], generator.config_dict['StdReport']['SKIN_ROOT'],
-                                         'Bootstrap', "skin.conf")
-        try:
-            image_dict = ConfigObj(image_config_path)
-        except:
-            log.info("%s: Could not import image dictionary %s" %
-                     os.path.basename(__file__), image_config_path)
-        self.add_to_extension_list('ImageGenerator', image_dict)
 
     def add_to_extension_list(self, key, source):
         if key in source:
@@ -105,12 +105,12 @@ class MyXSearch(SearchList):
 
             t1 = time.time()
             ngen = 0
-            self.search_list_extension["history_tables"] = []
+            self.search_list_extension["history_tables"] = {}
 
             for table in self.table_dict.sections:
                 noaa = True if table == 'NOAA' else False
 
-                table_options = weeutil.weeutil.accumulateLeaves(self.table_dict[table])
+                table_options = accumulateLeaves(self.table_dict[table])
 
 
                 # Get the binding where the data is allocated
@@ -147,7 +147,7 @@ class MyXSearch(SearchList):
 
                 new_table = self._statsDict(table_options, table_stats, table, binding, NOAA=noaa)
                 if new_table is not None:
-                    self.search_list_extension["history_tables"].append(new_table)
+                    self.search_list_extension["history_tables"][table] = new_table
                     ngen += 1
 
             t2 = time.time()
@@ -175,14 +175,14 @@ class MyXSearch(SearchList):
             table_colors = self.color_dict[colors_key][unit]
         else:
             log.info("No colors defined for %s" % table_name)
-            table_colors = {"minvalues": [0], "maxvalues": [0], "colors": ["#ffffff"]}
+            table_colors = {"minvalues": [0], "colors": ["#ffffff"]}
 
         # Check everything's the same length
         l = len(table_colors['minvalues'])
 
-        for i in [table_colors['maxvalues'], table_colors['colors']]:
+        for i in [table_colors['minvalues'], table_colors['colors']]:
             if len(i) != l:
-                log.info("%s: minvalues, maxvalues and colors must have the same number of elements in table: %s"
+                log.info("%s: minvalues and colors must have the same number of elements in table: %s"
                          % (os.path.basename(__file__), table_name))
                 return None, None
 
@@ -193,19 +193,19 @@ class MyXSearch(SearchList):
             # Check everything's the same length
             l = len(summary_colors['minvalues'])
 
-            for i in [summary_colors['maxvalues'], summary_colors['colors']]:
+            for i in [summary_colors['minvalues'], summary_colors['colors']]:
                 if len(i) != l:
-                    log.info("%s: minvalues, maxvalues and colors must have the same number of elements in table: %s[summary]"
+                    log.info("%s: minvalues and colors must have the same number of elements in table: %s[summary]"
                              % (os.path.basename(__file__), table_name))
                     return None, None
 
         font_color_list = table_colors['fontColors'] if 'fontColors' in table_colors else ['#000000'] * l
-        cell_colors = list(zip(table_colors['minvalues'], table_colors['maxvalues'], table_colors['colors'], font_color_list))
+        cell_colors = list(zip(table_colors['minvalues'], table_colors['colors'], font_color_list))
 
         summary_cell_colors = None
         if None is not summary_colors:
             font_color_list = summary_colors['fontColors'] if 'fontColors' in summary_colors else ['#000000'] * l
-            summary_cell_colors = list(zip(summary_colors['minvalues'], summary_colors['maxvalues'], summary_colors['colors'], font_color_list))
+            summary_cell_colors = list(zip(summary_colors['minvalues'], summary_colors['colors'], font_color_list))
 
         return cell_colors, summary_cell_colors
 
@@ -237,11 +237,12 @@ class MyXSearch(SearchList):
 
             # obs_type
             reading_binder = getattr(table_stats, obs_type)
-
+            aggregation = False
             # Some aggregate come with an argument
             if aggregate_type in ['max_ge', 'max_le', 'min_ge', 'min_le',
-                                  'sum_ge', 'sum_le', 'avg_ge', 'avg_le']:
-
+                                  'sum_ge', 'sum_le', 'avg_ge', 'avg_le',
+                                  'avg_gt', 'avg_lt']:
+                aggregation = True
                 try:
                     threshold_value = float(table_options['aggregate_threshold'][0])
                 except KeyError:
@@ -281,7 +282,7 @@ class MyXSearch(SearchList):
             # For aggregrate types which return number of occurrences (e.g. max_ge), set format to integer
 
             # Don't catch error here - we absolutely need the string format
-            if None is unit_type or unit_type == 'count':
+            if None is unit_type or aggregation:
                 format_string = '%d'
             else:
                 format_string = reading.formatter.unit_format_dict[unit_type]
@@ -320,50 +321,51 @@ class MyXSearch(SearchList):
                     # update the binding to access the right DB
                     obs_month = getattr(month, obs_type)
                     obs_month.data_binding = binding
-                    if unit_type == 'count':
-                        value = self.getCount(obs_month, aggregate_type,threshold_value, threshold_units, obs_type)
+                    if aggregation:
+                        value = self.getCount(obs_month, aggregate_type, threshold_value, threshold_units, obs_type)
                     elif unit_type is not None:
                         value = converter.convert(getattr(obs_month, aggregate_type).value_t)
                     else:
                         log.error("Error in [HistoryReport][[%s]]: check units" % table)
                         return None
 
-                    line["values"].append(self._colorCell(value[0], format_string, cell_colors))
+                    line["values"].append(self._colorCell(value, format_string, cell_colors))
 
             if summary_column:
                 obs_year = getattr(year, obs_type)
                 obs_year.data_binding = binding
 
-                if unit_type == 'count':
+                if aggregation:
                     value = self.getCount(obs_year, aggregate_type,threshold_value, threshold_units, obs_type)
                 else:
                     value = converter.convert(getattr(obs_year, aggregate_type).value_t)
 
-                line["summary"] = self._colorCell(value[0], format_string, summary_cell_colors)
+                line["summary"] = self._colorCell(value, format_string, summary_cell_colors)
 
             table_dict["lines"].append(line)
 
         return table_dict
-    
-    def getCount(self, obs_month, aggregate_type,threshold_value, threshold_units, obs_type):
+
+    def getCount(self, obs_period, aggregate_type, threshold_value, threshold_units, obs_type):
         try:
-           return getattr(obs_month, aggregate_type)((threshold_value, threshold_units, weewx.units.obs_group_dict[obs_type])).value_t
+            return getattr(obs_period, aggregate_type)((threshold_value, threshold_units, weewx.units.obs_group_dict[obs_type])).value_t
         except:
-           return [0, 'count']
+            return [0, 'count']
 
     def _colorCell(self, value, format_string, cell_colors):
         """Returns a '<div style= background-color: XX; color: YY"> z.zz </div>' html table entry string.
 
         value: Numeric value for the observation
         format_string: How the numberic value should be represented in the table cell.
-        cellColors: An array containing 4 lists. [minvalues], [maxvalues], [background color], [foreground color]
+        cellColors: An array containing 3 lists. [minvalues], [background color], [foreground color]
         """
         cell = {"value": "", "bgcolor": "", "fontcolor": ""}
-        if value is not None:
-            for c in cell_colors:
-                if (value >= float(c[0])) and (value < float(c[1])):
-                    cell["bgcolor"] = c[2]
-                    cell["fontcolor"] = c[3]
+        if value[0] is not None:
+            vh = weewx.units.ValueHelper(value)
+            for index, c in enumerate(cell_colors):
+                if (value[0] >= float(c[0])) and ((index + 1) >= len(cell_colors) or value[0] < float(cell_colors[index + 1][0])):
+                    cell["bgcolor"] = c[1]
+                    cell["fontcolor"] = c[2]
                     break
-            cell["value"] = format_string % value
+            cell["value"] = vh.format(format_string, None, False, True)
         return cell

@@ -2,6 +2,7 @@
 LOX_IP =                        # destination-IP or broadcast-address to send data to
 LOX_PORT = 12340                # destination-Port - UDP-port to send data to
 LB_IP =                         # local IP-address
+LINK_ADR =                      # use the specified IP address or a server name instead of the local IP address in links (when operating on a public server)
 LBU_PORT = 12341                # local Port - UDP-port to receive UDP-datagrams
 LBH_PORT =                      # local-Port - HTTP-port to receive HTML-in & out
 LOX_TIME = False                # adjust time base to 01.01.2009 (Loxone only)
@@ -16,6 +17,7 @@ AUTH_PWD =                      # if set, only incoming & outgoing http-requests
 DEF_SID =                       # override the default identifier for outgoing UDP datagrams (default: FOSHKweather)
 REBOOT_ENABLE = False           # enable remote reboot of weather station via UDP and http (default: False - danger!)
 RESTART_ENABLE = False          # enable restarting FOSHKplugin via UDP and http (default: False - danger!)
+DT_FORMAT = %d.%m.%Y %H:%M:%S   # global default for date/time format (default: %d.%m.%Y %H:%M:%S - dd.mm.yyyy hh:mm:ss)
 
 [Weatherstation]
 WS_IP =                         # IP-address of weather station
@@ -26,12 +28,16 @@ WS90_CONVERT = True             # automatically convert WS90 rain data keys to c
 [Export]
 EVAL_VALUES = True              # calculate some extra values on base of current data (dew point, windchill, heatIndex, feelsliketemp, AQI, ...)
 ADD_ITEMS =                     # additional fixed strings to append to every raw-data-line
+ADD_DEWPT = False               # enable/disable additional dew point calculation (indoor sensor, WH31, WH45) - default: False; set to True to enable
+ADD_SPREAD = False              # enable/disable additional spread calculation (indoor & outdoor sensor, WH31, WH45) - default: False; set to True to enable
+ADD_SIGNAL = False              # enable/disable signal quality acquisition on supported consoles - default: False; set to True to enable
 OUT_TEMP =                      # fake the temperature-value for outdoor-sensor with value of specific indoor-sensor e.g. temp1f
 OUT_HUM =                       # fake the humidity-value for outdoor-sensor with value of specific indoor-sensor e.g. humidity1
 OUT_TIME = False                # exchange incoming time string with time of receiving
 FIX_LIGHTNING = True            # use last known lightning data as raw data in case of empty values
 UDP_MINMAX = True               # send min/max values and their occurence via UDP
 URL_REPAIR = True               # automatically inserts a missing but required "http://" into the FWD_URL (default: True)
+LIMIT_WINDGUST =                # limit from which windgustmph and maxdailygust are blocked for any further processing to prevent unrealistic values (e.g. WS80/WS90).
 
 [Forward]
 FWD_ENABLE = True               # to deactivate this forward temporarily just set to False instead of deleting the URL (default: True)
@@ -39,7 +45,7 @@ FWD_CMT = This is a permanent comment field for notes on this forward
 FWD_URL =                       # URL of destination
 FWD_INTERVAL =                  # interval in seconds in which lines will be forwarded
 FWD_IGNORE =                    # comma-separated list of fields to not forward
-FWD_TYPE =                      # WU/UDP/LD/RAW/EW/RAWEW/RAWUDP/AMB/RAWAMB/WC/MT/AWEKAS/WETTERCOM/WEATHER365/REALTIMETXT/CLIENTRAWTXT/CSVFILE/TXTFILE/WETTERSEKTOR/MQTTMET/MQTTIMP/WSWIN/RAWTEXT/EWUDP/APRS
+FWD_TYPE =                      # WU/UDP/LD/RAW/EW/RAWEW/RAWUDP/AMB/RAWAMB/WC/MT/AWEKAS/WETTERCOM/WEATHER365/REALTIMETXT/CLIENTRAWTXT/CSVFILE/TXTFILE/WETTERSEKTOR/MQTTMET/MQTTIMP/WSWIN/RAWTEXT/EWUDP/APRS/INFLUXMET/INFLUXIMP/INFLUX2MET/INFLUX2IMP/MIYO/BANNER/TAGFILE
                                 # WU: WU-format
                                 # UDP: UDP-String will be forwarded (default)
                                 # LD: PM2.5 luftdaten.info
@@ -65,27 +71,42 @@ FWD_TYPE =                      # WU/UDP/LD/RAW/EW/RAWEW/RAWUDP/AMB/RAWAMB/WC/MT
                                 # RAWTEXT: export every single imperial record via http(s)/POST, ftp(s) or save as a file in the filesystem
                                 # EWUDP: forward (converted) incoming data to Ecowitt and forward via UDP
                                 # APRS: forward in APRS protocol
+                                # INFLUXMET: forward metric values to InfluxDB
+                                # INFLUXIMP: forward imperial values to InfluxDB
+                                # INFLUX2MET: forward metric values to InfluxDB2
+                                # INFLUX2IMP: forward imperial values to InfluxDB2
+                                # MIYO: forward temperature, wind and rain state to a MIYO cube (irrigation system)
+                                # BANNER: save banner/sticker image with embedded weather data in the filesystem (and upload via ftp(s) or http(s)/POST)
+                                # TAGFILE: user-defined output format based on tags and templates
+FWD_OPTION =                    # specific forward options - e.g. to define the file with the banner definition: bannerconfig=/path/to/configfile or blacklist=False to send the additional values for spread and signal quality also in Ecowitt format for this specific forward
 FWD_SID =                       # username for forward if necessary (SensorID for luftdaten.info)
 FWD_PWD =                       # password for this forward if necessary
 FWD_REMAP =                     # comma-separated list of fields to remap with values (from other keys): @targetkey=@sourcekey or targetkey=static value
 FWD_STATUS = False              # if set to True attach current status on each outgoing datagram if applicable (default: False)
 FWD_MQTTCYCLE = 0               # FWD_TYPE MQTTMET/MQTTIMP only: time in minutes to send the complete record while otherwise only the changes are sent (default: 0 - send everytime the complete record)
 FWD_EXEC =                      # external script to be started immediately before sending, last line of the script's output is used as the new outstr for sending
+FWD_WARNINT = 10                # threshold of unsuccessful forward attempts before warning
+FWD_QUEUE =                     # type of file to save to if forward target can not be connected: NONE, INFLUX, AWEKAS, CMX, EW
+FWD_QDIR =                      # directory to save the queued file(s)
 
-# you additionally can use Forward-1..50
+# you additionally can use Forward-1..99
 [Forward-1]
 FWD_ENABLE = True               # to deactivate this forward temporarily just set to False instead of deleting the URL (default: True)
 FWD_CMT = This is a permanent comment field for notes on this forward
 FWD_URL =                       # URL of destination
 FWD_INTERVAL =                  # interval in seconds in which lines will be forwarded
 FWD_IGNORE =                    # comma-separated list of fields to not forward
-FWD_TYPE =                      # WU/UDP/LD/RAW/EW/RAWEW/RAWUDP/AMB/RAWAMB/WC/MT/AWEKAS/WETTERCOM/WEATHER365/REALTIMETXT/CLIENTRAWTXT/CSVFILE/TXTFILE/WETTERSEKTOR/MQTTMET/MQTTIMP/WSWIN/RAWTEXT/EWUDP/APRS
+FWD_TYPE =                      # WU/UDP/LD/RAW/EW/RAWEW/RAWUDP/AMB/RAWAMB/WC/MT/AWEKAS/WETTERCOM/WEATHER365/REALTIMETXT/CLIENTRAWTXT/CSVFILE/TXTFILE/WETTERSEKTOR/MQTTMET/MQTTIMP/WSWIN/RAWTEXT/EWUDP/APRS/INFLUXMET/INFLUXIMP/INFLUX2MET/INFLUX2IMP/MIYO/BANNER/TAGFILE
+FWD_OPTION =                    # specific forward options - e.g. to define the file with the banner definition: bannerconfig=/path/to/configfile or blacklist=False to send the additional values for spread and signal quality also in Ecowitt format for this specific forward
 FWD_SID =                       # username for forward if necessary (SensorID for luftdaten.info)
 FWD_PWD =                       # password for this forward if necessary
 FWD_REMAP =                     # comma-separated list of fields to remap with values (from other keys): @targetkey=@sourcekey or targetkey=static value
 FWD_STATUS = False              # if set to True attach current status on each outgoing datagram if applicable (default: False)
 FWD_MQTTCYCLE = 0               # FWD_TYPE MQTTMET/MQTTIMP only: time in minutes to send the complete record while otherwise only the changes are sent (default: 0 - send everytime the complete record)
 FWD_EXEC =                      # external script to be started immediately before sending, last line of the script's output is used as the new outstr for sending
+FWD_WARNINT = 10                # threshold of unsuccessful forward attempts before warning
+FWD_QUEUE =                     # type of file to save to if forward target can not be connected: NONE, INFLUX, AWEKAS, CMX, EW
+FWD_QDIR =                      # directory to save the queued file(s)
 
 [CSV]
 CSV_NAME =                      # file name for csv-file (always metric!)
@@ -100,6 +121,7 @@ WSDOG_RESTART = 0               # automatically restart FOSHKplugin on n send-in
 SENSOR_WARNING = False          # warn on missing sensor data
 SENSOR_MANDATORY = wh65batt     # a comma-separated list of all mandatory sensors
 BATTERY_WARNING = True          # warn if battery level of known sensors is critical
+BATTERY_WARNEXCLUDE =           # comma-separated list of keys to exclude from battery warning e.g. wh90batt
 STORM_WARNING = True            # activate storm warning based on a change in air pressure
 STORM_WARNDIFF = 1.75           # change of air pressure in hPa within one hour to get warning state
 STORM_WARNDIFF3H = 3.75         # change of air pressure in hPa within three hours to get warning state
@@ -113,14 +135,19 @@ CO2_WARNING = False             # warn if co2 ppm exceeds CO2_WARNLEVEL
 CO2_WARNLEVEL = 1000            # ppm threshold to trigger the co2 warning
 INTVL_WARNING = False           # warn if receive interval not correspond to send interval
 INTVL_PCT = 10                  # percentage value of the max. permissible exceeding of the send interval (default: 10)
+REBOOT_WARNING = True           # check if current station runtime < last runtime and warn (log, pushover)
+FWD_WARNING = True              # warn after n (defined by FWD_WARNINT) consecutive failed forward attempts (default: true)
+FWD_WARNINT = 10                # Number of failed forward attempts until a warning occurs (default: 10)
 
 [Logging]
+LOG_ENABLE = True               # switch logging on and off globally (default: True)
+LOG_LEVEL = ALL                 # with each log level fewer messages will be logged: ALL, INFO, WARNING, ERROR - a lower level includes the higher ones
+IGNORE_LOG =                    # a comma-separated list of (sub)strings which will prevent logging a line containing these strings in standard-log
+BUT_PRINT = True                # respect IGNORE_LOG also for outputs on the console (default: True)
+COLOR_PRINT = True              # use colour highlighting of messages in the console window (ERROR = red, WARNING = yellow and after a warning has been cancelled = green; default: True - can be deactivated with COLOR_PRINT = False
 logfile = REPLACEFOSHKPLUGINLOGDIR/log-foshkplugin.log      # default log - all start/stop/warn/error messages
 rawfile = REPLACEFOSHKPLUGINLOGDIR/raw-foshkplugin.log      # logs raw messages coming from weather station only
 sndfile = REPLACEFOSHKPLUGINLOGDIR/snd-foshkplugin.log      # logs outgoing messages from plugin (CSV, UDP, FWD)
-IGNORE_LOG =                    # a comma-separated list of (sub)strings which will prevent logging a line containing these strings in standard-log
-BUT_PRINT = True                # respect IGNORE_LOG also for outputs on the console (default: True)
-LOG_LEVEL = ALL                 # with each log level fewer messages will be logged: ALL, INFO, WARNING, ERROR - a lower level includes the higher ones
 
 [Update]
 UPD_CHECK = True                # enable/disable firmware-update-check for weatherstation
@@ -131,6 +158,9 @@ PO_ENABLE = False               # enable/disable push notification via Pushover 
 PO_URL =                        # keep empty to use the standard API-URL
 PO_TOKEN =                      # generated API-Token from "Your Applications" at Pushover-Dashboard
 PO_USER =                       # the user key shown at "Your User Key" at Pushover-Dashboard
+PO_CUSTOMWARNING = True         # enable/disable user-defined push messages when values meet a definable condition (50 rules - default: True) - see https://foshkplugin.phantasoft.de/generic#pocustom
+PO_CUSTOM = @tempc <= 2.5,Current temperature (@value°C) is equal or below 2.5°C!,False,3600
+PO_CUSTOM1 = @tempf < 32,Current temperature (@value°F) is below 32°F!,False,3600
 
 [Coordinates]
 # coordinates are only needed for calculating cloudbase and sunhours or export to Awekas-API, clientraw.txt, Weather365.net
@@ -141,4 +171,6 @@ LON =                           # longitude in dec. grad e.g. 13.266274; for lon
 [Sunduration]
 SUN_CALC = False                # enable for better sunhours calculation (LAT, LON needed), disable to use static threshold of 120W/m²
 SUN_MIN = 0                     # from this value (W/m²) calculation starts
-SUN_COEF = 0.8                  # adjustment factor also depends on the location
+SUN_COEF = 0.92                 # adjustment factor also depends on the location
+SUNSHINE_HOLD = 0               # Hold time in seconds for value sunshine, this time continues to be output sunshine = True, even if there is no sunshine (default: 0)
+

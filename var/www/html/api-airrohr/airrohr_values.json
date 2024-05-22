@@ -1,0 +1,14 @@
+{
+    "SDS_P1": "7.30",
+    "SDS_P2": "3.40",
+    "temperature": "13.50",
+    "humidity": "99.90",
+    "BME280_temperature": "13.58",
+    "BME280_pressure": "964.60",
+    "BME280_humidity": "84.49",
+    "samples": "5187167",
+    "min_micro": "27",
+    "max_micro": "20353",
+    "interval": "145000",
+    "signal": "-48"
+}

@@ -34,8 +34,8 @@
             <p>Die benötigten Fonts sind lokal auf dem Webserver gespeichert. Daher muss der von Ihnen verwendete Browser keine Verbindung zu anderen Servern aufbauen.</p>
             <p>Wenn Ihr Browser Erik Flowers Weather Icons nicht unterst&uuml;tzt, wird eine Standardschrift von Ihrem Computer genutzt.</p>
             <p>Weitere Informationen zu Erik Flowers Weather Icons finden Sie unter: <a href="https://erikflowers.github.io/weather-icons/" target="_blank" rel="noopener noreferrer">https://erikflowers.github.io/weather-icons/</a>.</p>
-            <h3>AerisWeather API</h3>
-            <p>Diese Seite nutzt zur Anzeige einer Wettervorhersage Daten der AerisWeather API. Weitere Informationen finden Sie in der Datenschutzerkl&auml;rung von AerisWeather unter: <a href="https://www.aerisweather.com/privacy/" target="_blank" rel="noopener noreferrer">https://www.aerisweather.com/privacy/</a>.</p>
+            <h3>Vaisala Xweather API</h3>
+            <p>Diese Seite nutzt zur Anzeige einer Wettervorhersage Daten der Vaisala Xweather API. Weitere Informationen finden Sie in der Datenschutzerkl&auml;rung von Vaisala Xweather unter: <a href="https://www.xweather.com/privacy" target="_blank" rel="noopener noreferrer">https://www.xweather.com/privacy</a>.</p>
             <h3>Open-Weather API</h3>
             <p>Diese Seite nutzt zur Anzeige einer Wettervorhersage Daten der Open-Meteo API. Weitere Informationen finden Sie in der Datenschutzerkl&auml;rung unter: <a href="https://open-meteo.com/en/features#terms" target="_blank" rel="noopener noreferrer">https://open-meteo.com/en/features#terms</a>.</p>
             <h3>DWD Open Data</h3>

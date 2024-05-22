@@ -157,11 +157,18 @@ weewx.units.obs_group_dict['solar_batt_percent'] = 'group_percent'
 weewx.units.obs_group_dict['solar_wetBulb'] = 'group_temperature'
 weewx.units.obs_group_dict['solar_windchill'] = 'group_temperature'
 #
-# Nova PM Sensor SDS011, DHT22 and Wifi
-weewx.units.obs_group_dict['airrohr_outHumidity'] = 'group_percent'
-weewx.units.obs_group_dict['airrohr_outTemp'] = 'group_temperature'
+# Nova PM Sensor SDS011, DHT22(AM2302), BME280 and Wifi
+weewx.units.obs_group_dict['airrohr_altimeter'] = 'group_pressure'
+weewx.units.obs_group_dict['airrohr_barometer'] = 'group_pressure'
+weewx.units.obs_group_dict['airrohr_bme280_dewpoint'] = 'group_temperature'
+weewx.units.obs_group_dict['airrohr_bme280_outHumidity'] = 'group_percent'
+weewx.units.obs_group_dict['airrohr_bme280_outTemp'] = 'group_temperature'
+weewx.units.obs_group_dict['airrohr_dht22_dewpoint'] = 'group_temperature'
+weewx.units.obs_group_dict['airrohr_dht22_outHumidity'] = 'group_percent'
+weewx.units.obs_group_dict['airrohr_dht22_outTemp'] = 'group_temperature'
 weewx.units.obs_group_dict['airrohr_pm10_0'] = 'group_concentration'
 weewx.units.obs_group_dict['airrohr_pm2_5'] = 'group_concentration'
+weewx.units.obs_group_dict['airrohr_pressure'] = 'group_pressure'
 weewx.units.obs_group_dict['airrohr_sig'] = 'group_count'
 weewx.units.obs_group_dict['airrohr_sig_percent'] = 'group_percent'
 weewx.units.obs_group_dict['airrohr_signal_level'] = 'group_signal_strength'
@@ -169,6 +176,7 @@ weewx.units.obs_group_dict['airrohr_signal_level'] = 'group_signal_strength'
 # Cloudwatcher Sensor MLX90614 and Wifi
 weewx.units.obs_group_dict['cloudwatcher_ambTemp'] = 'group_temperature'
 weewx.units.obs_group_dict['cloudwatcher_skyTemp'] = 'group_temperature'
+weewx.units.obs_group_dict['cloudwatcher_corrSkyTemp'] = 'group_temperature'
 weewx.units.obs_group_dict['cloudwatcher_origCloudpercent'] = 'group_percent'
 weewx.units.obs_group_dict['cloudwatcher_origWeathercode'] = 'group_count'
 weewx.units.obs_group_dict['cloudwatcher_cloudpercent'] = 'group_percent'
@@ -176,6 +184,9 @@ weewx.units.obs_group_dict['cloudwatcher_weathercode'] = 'group_count'
 weewx.units.obs_group_dict['cloudwatcher_sig'] = 'group_count'
 weewx.units.obs_group_dict['cloudwatcher_sig_percent'] = 'group_percent'
 weewx.units.obs_group_dict['cloudwatcher_signal_level'] = 'group_signal_strength'
+#
+# possibly snow
+weewx.units.obs_group_dict['possibly_snow'] = 'group_count'
 #
 # PWS Current Weather Service
 weewx.units.obs_group_dict['pws_Day'] = 'group_count'
@@ -216,7 +227,7 @@ weewx.units.obs_group_dict['foshk_winddir_avg10m'] = 'group_direction'
 weewx.units.obs_group_dict['foshk_windgust_max10m'] = 'group_speed'
 weewx.units.obs_group_dict['foshk_windspeed_avg10m'] = 'group_speed'
 #
-# PWS Weiherhammer AQI (UBA)
+# PWS Weiherhammer und UBA Mix Air Quality
 weewx.units.obs_group_dict['pws_aqi'] = 'group_count'
 weewx.units.obs_group_dict['pws_aqi_category'] = 'group_count'
 weewx.units.obs_group_dict['pws_aqi_no2'] = 'group_count'
@@ -228,7 +239,26 @@ weewx.units.obs_group_dict['pws_aqi_pm10_0_category'] = 'group_count'
 weewx.units.obs_group_dict['pws_aqi_pm2_5'] = 'group_count'
 weewx.units.obs_group_dict['pws_aqi_pm2_5_category'] = 'group_count'
 #
-# OpenWeatherMap Air Pollution API
+# AerisWeather Air Quality API
+weewx.units.obs_group_dict['aeris_aqi'] = 'group_count'
+weewx.units.obs_group_dict['aeris_co'] = 'group_concentration'
+weewx.units.obs_group_dict['aeris_no2']  = 'group_concentration'
+weewx.units.obs_group_dict['aeris_o3'] = 'group_concentration'
+weewx.units.obs_group_dict['aeris_pm10_0'] = 'group_concentration'
+weewx.units.obs_group_dict['aeris_pm2_5'] = 'group_concentration'
+weewx.units.obs_group_dict['aeris_so2'] = 'group_concentration'
+#
+# Open-Meteo Air Quality API
+weewx.units.obs_group_dict['om_aqi'] = 'group_count'
+weewx.units.obs_group_dict['om_co'] = 'group_concentration'
+weewx.units.obs_group_dict['om_nh3'] = 'group_concentration'
+weewx.units.obs_group_dict['om_no2'] = 'group_concentration'
+weewx.units.obs_group_dict['om_o3'] = 'group_concentration'
+weewx.units.obs_group_dict['om_pm10_0'] = 'group_concentration'
+weewx.units.obs_group_dict['om_pm2_5'] = 'group_concentration'
+weewx.units.obs_group_dict['om_so2'] = 'group_concentration'
+#
+# OpenWeatherMap Air Quality API
 weewx.units.obs_group_dict['owm_aqi'] = 'group_count'
 weewx.units.obs_group_dict['owm_co'] = 'group_concentration'
 weewx.units.obs_group_dict['owm_nh3'] = 'group_concentration'
@@ -239,274 +269,20 @@ weewx.units.obs_group_dict['owm_pm10_0'] = 'group_concentration'
 weewx.units.obs_group_dict['owm_pm2_5'] = 'group_concentration'
 weewx.units.obs_group_dict['owm_so2'] = 'group_concentration'
 #
-# AerisWeather Airquality API
-weewx.units.obs_group_dict['aeris_aqi'] = 'group_count'
-weewx.units.obs_group_dict['aeris_co'] = 'group_concentration'
-weewx.units.obs_group_dict['aeris_no2']  = 'group_concentration'
-weewx.units.obs_group_dict['aeris_o3'] = 'group_concentration'
-weewx.units.obs_group_dict['aeris_pm10_0'] = 'group_concentration'
-weewx.units.obs_group_dict['aeris_pm2_5'] = 'group_concentration'
-weewx.units.obs_group_dict['aeris_so2'] = 'group_concentration'
-#
-# Umweltbundesamt API
+# Umweltbundesamt Air Quality API
 weewx.units.obs_group_dict['uba_aqi'] = 'group_count'
-weewx.units.obs_group_dict['uba_aqi_category'] = 'group_count'
 weewx.units.obs_group_dict['uba_no2'] = 'group_concentration'
-weewx.units.obs_group_dict['uba_no2_category'] = 'group_count'
 weewx.units.obs_group_dict['uba_o3'] = 'group_concentration'
-weewx.units.obs_group_dict['uba_o3_category'] = 'group_count'
+weewx.units.obs_group_dict['uba_pm10_0'] = 'group_concentration'
+weewx.units.obs_group_dict['uba_pm2_5'] = 'group_concentration'
 #
-# open meteo API
+# open meteo Weather API
 weewx.units.obs_group_dict['visibility'] = 'group_distance'
 #
 # dwd-mosmix
 weewx.units.obs_group_dict['pop'] = 'group_percent'
 weewx.units.obs_group_dict['cloudcover'] = 'group_percent'
 weewx.units.obs_group_dict['rainDur'] = 'group_deltatime'
-#
-# dwd.py [CDC] (also defined in the extension)
-weewx.units.obs_group_dict['cdc_Altimeter'] = 'group_pressure'
-weewx.units.obs_group_dict['cdc_Altitude'] = 'group_altitude'
-weewx.units.obs_group_dict['cdc_AtmosRad'] = 'group_radiation_energy'
-weewx.units.obs_group_dict['cdc_Barometer'] = 'group_pressure'
-weewx.units.obs_group_dict['cdc_DateTime'] = 'group_time'
-weewx.units.obs_group_dict['cdc_Dewpoint'] = 'group_temperature'
-weewx.units.obs_group_dict['cdc_ExtraTemp1'] = 'group_temperature'
-weewx.units.obs_group_dict['cdc_FMX_10'] = 'group_temperature' #TODO check this
-weewx.units.obs_group_dict['cdc_FNX_10'] = 'group_temperature' #TODO check this
-weewx.units.obs_group_dict['cdc_Latitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['cdc_Longitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['cdc_MESS_DATUM'] = 'group_count'
-weewx.units.obs_group_dict['cdc_OutHumidity'] = 'group_percent'
-weewx.units.obs_group_dict['cdc_OutTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['cdc_Pressure'] = 'group_pressure'
-weewx.units.obs_group_dict['cdc_Quality_level'] = 'group_count'
-weewx.units.obs_group_dict['cdc_Radiation'] = 'group_radiation_energy'
-weewx.units.obs_group_dict['cdc_Rain'] = 'group_rain'
-weewx.units.obs_group_dict['cdc_RainDur'] = 'group_deltatime'
-weewx.units.obs_group_dict['cdc_RainIndex'] = 'group_count' #TODO check this
-weewx.units.obs_group_dict['cdc_SolarRad'] = 'group_radiation_energy'
-weewx.units.obs_group_dict['cdc_Station_id'] = 'group_count'
-weewx.units.obs_group_dict['cdc_SunshineDur'] = 'group_deltatime'
-weewx.units.obs_group_dict['cdc_Weathercode'] = 'group_count'
-weewx.units.obs_group_dict['cdc_WindDir'] = 'group_direction'
-weewx.units.obs_group_dict['cdc_WindGust'] = 'group_speed'
-weewx.units.obs_group_dict['cdc_WindGustDir'] = 'group_direction'
-weewx.units.obs_group_dict['cdc_WindSpeed'] = 'group_speed'
-weewx.units.obs_group_dict['cdc_WindSpeed10'] = 'group_speed'
-#
-# dwd.py [POI] (also defined in the extension)
-weewx.units.obs_group_dict['poi_Altitude'] = 'group_altitude'
-weewx.units.obs_group_dict['poi_Barometer'] = 'group_pressure'
-weewx.units.obs_group_dict['poi_Cloudbase'] = 'group_altitude'
-weewx.units.obs_group_dict['poi_Cloudcover'] = 'group_percent'
-weewx.units.obs_group_dict['poi_DateTime'] = 'group_time'
-weewx.units.obs_group_dict['poi_Day'] = 'group_count'
-weewx.units.obs_group_dict['poi_Dewpoint'] = 'group_temperature'
-weewx.units.obs_group_dict['poi_ExtraTemp1'] = 'group_temperature'
-weewx.units.obs_group_dict['poi_Latitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['poi_Longitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['poi_OutHumidity'] = 'group_percent'
-weewx.units.obs_group_dict['poi_OutTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['poi_PresentWeather'] = 'group_count'
-weewx.units.obs_group_dict['poi_Radiation'] = 'group_radiation'
-weewx.units.obs_group_dict['poi_Rain'] = 'group_rain'
-weewx.units.obs_group_dict['poi_SnowDepth'] = 'group_rain'
-weewx.units.obs_group_dict['poi_SolarRad'] = 'group_radiation'
-weewx.units.obs_group_dict['poi_Visibility'] = 'group_distance'
-weewx.units.obs_group_dict['poi_Weathercode'] = 'group_count'
-weewx.units.obs_group_dict['poi_WindDir'] = 'group_direction'
-weewx.units.obs_group_dict['poi_WindGust'] = 'group_speed'
-weewx.units.obs_group_dict['poi_WindSpeed'] = 'group_speed'
-#
-#weatherservices.py Open-Meteo Model Best match
-weewx.units.obs_group_dict['best_match_Altitude'] = 'group_altitude'
-weewx.units.obs_group_dict['best_match_appTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['best_match_Barometer'] = 'group_pressure'
-weewx.units.obs_group_dict['best_match_Cloudcover'] = 'group_percent'
-weewx.units.obs_group_dict['best_match_DateTime'] = 'group_time'
-weewx.units.obs_group_dict['best_match_Day'] = 'group_count'
-weewx.units.obs_group_dict['best_match_Dewpoint'] = 'group_temperature'
-weewx.units.obs_group_dict['best_match_Et'] = 'group_rain'
-weewx.units.obs_group_dict['best_match_FreezinglevelHeight'] = 'group_altitude'
-weewx.units.obs_group_dict['best_match_IsDay'] = 'group_count'
-weewx.units.obs_group_dict['best_match_Interval'] = 'group_interval'
-weewx.units.obs_group_dict['best_match_Latitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['best_match_Longitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['best_match_OutHumidity'] = 'group_percent'
-weewx.units.obs_group_dict['best_match_OutTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['best_match_Precipitation'] = 'group_rain'
-weewx.units.obs_group_dict['best_match_PrecipitationProbability'] = 'group_percent'
-weewx.units.obs_group_dict['best_match_Pressure'] = 'group_pressure'
-weewx.units.obs_group_dict['best_match_Rain'] = 'group_rain'
-weewx.units.obs_group_dict['best_match_Shower'] = 'group_rain'
-weewx.units.obs_group_dict['best_match_Snow'] = 'group_rain'
-weewx.units.obs_group_dict['best_match_SnowDepth'] = 'group_rain'
-weewx.units.obs_group_dict['best_match_SnowfallHeight'] = 'group_altitude'
-weewx.units.obs_group_dict['best_match_SolarRad'] = 'group_radiation'
-weewx.units.obs_group_dict['best_match_Visibility'] = 'group_distance'
-weewx.units.obs_group_dict['best_match_Weathercode'] = 'group_count'
-weewx.units.obs_group_dict['best_match_WindDir'] = 'group_direction'
-weewx.units.obs_group_dict['best_match_WindGust'] = 'group_speed'
-weewx.units.obs_group_dict['best_match_WindSpeed'] = 'group_speed'
-#
-#weatherservices.py Open-Meteo Model DWD-ICON
-weewx.units.obs_group_dict['dwd_icon_Altitude'] = 'group_altitude'
-weewx.units.obs_group_dict['dwd_icon_AppTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['dwd_icon_Barometer'] = 'group_pressure'
-weewx.units.obs_group_dict['dwd_icon_Cloudcover'] = 'group_percent'
-weewx.units.obs_group_dict['dwd_icon_DateTime'] = 'group_time'
-weewx.units.obs_group_dict['dwd_icon_Day'] = 'group_count'
-weewx.units.obs_group_dict['dwd_icon_Dewpoint'] = 'group_temperature'
-weewx.units.obs_group_dict['dwd_icon_Et'] = 'group_rain'
-weewx.units.obs_group_dict['dwd_icon_FreezinglevelHeight'] = 'group_altitude'
-weewx.units.obs_group_dict['dwd_icon_IsDay'] = 'group_count'
-weewx.units.obs_group_dict['dwd_icon_Latitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['dwd_icon_Longitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['dwd_icon_OutHumidity'] = 'group_percent'
-weewx.units.obs_group_dict['dwd_icon_OutTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['dwd_icon_Precipitation'] = 'group_rain'
-weewx.units.obs_group_dict['dwd_icon_Pressure'] = 'group_pressure'
-weewx.units.obs_group_dict['dwd_icon_Rain'] = 'group_rain'
-weewx.units.obs_group_dict['dwd_icon_Shower'] = 'group_rain'
-weewx.units.obs_group_dict['dwd_icon_Snow'] = 'group_rain'
-weewx.units.obs_group_dict['dwd_icon_SnowDepth'] = 'group_rain'
-weewx.units.obs_group_dict['dwd_icon_SnowfallHeight'] = 'group_altitude'
-weewx.units.obs_group_dict['dwd_icon_SolarRad'] = 'group_radiation'
-weewx.units.obs_group_dict['dwd_icon_Visibility'] = 'group_distance'
-weewx.units.obs_group_dict['dwd_icon_Weathercode'] = 'group_count'
-weewx.units.obs_group_dict['dwd_icon_WindDir'] = 'group_direction'
-weewx.units.obs_group_dict['dwd_icon_WindGust'] = 'group_speed'
-weewx.units.obs_group_dict['dwd_icon_WindSpeed'] = 'group_speed'
-#
-#weatherservices.py Open-Meteo Model DWD ICON EU
-weewx.units.obs_group_dict['icon_eu_Altitude'] = 'group_altitude'
-weewx.units.obs_group_dict['icon_eu_AppTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['icon_eu_Barometer'] = 'group_pressure'
-weewx.units.obs_group_dict['icon_eu_Cloudcover'] = 'group_percent'
-weewx.units.obs_group_dict['icon_eu_DateTime'] = 'group_time'
-weewx.units.obs_group_dict['icon_eu_Day'] = 'group_count'
-weewx.units.obs_group_dict['icon_eu_Dewpoint'] = 'group_temperature'
-weewx.units.obs_group_dict['icon_eu_Et'] = 'group_rain'
-weewx.units.obs_group_dict['icon_eu_FreezinglevelHeight'] = 'group_altitude'
-weewx.units.obs_group_dict['icon_eu_IsDay'] = 'group_count'
-weewx.units.obs_group_dict['icon_eu_Latitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['icon_eu_Longitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['icon_eu_OutHumidity'] = 'group_percent'
-weewx.units.obs_group_dict['icon_eu_OutTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['icon_eu_Precipitation'] = 'group_rain'
-weewx.units.obs_group_dict['icon_eu_Pressure'] = 'group_pressure'
-weewx.units.obs_group_dict['icon_eu_Radiation'] = 'group_radiation'
-weewx.units.obs_group_dict['icon_eu_Rain'] = 'group_rain'
-weewx.units.obs_group_dict['icon_eu_Shower'] = 'group_rain'
-weewx.units.obs_group_dict['icon_eu_Snow'] = 'group_rain'
-weewx.units.obs_group_dict['icon_eu_SnowDepth'] = 'group_rain'
-weewx.units.obs_group_dict['icon_eu_SnowfallHeight'] = 'group_altitude'
-weewx.units.obs_group_dict['icon_eu_SolarRad'] = 'group_radiation'
-weewx.units.obs_group_dict['icon_eu_Visibility'] = 'group_distance'
-weewx.units.obs_group_dict['icon_eu_Weathercode'] = 'group_count'
-weewx.units.obs_group_dict['icon_eu_WindDir'] = 'group_direction'
-weewx.units.obs_group_dict['icon_eu_WindGust'] = 'group_speed'
-weewx.units.obs_group_dict['icon_eu_WindSpeed'] = 'group_speed'
-#
-#weatherservices.py Open-Meteo Model DWD ICON D2
-weewx.units.obs_group_dict['icon_d2_Altitude'] = 'group_altitude'
-weewx.units.obs_group_dict['icon_d2_AppTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['icon_d2_Barometer'] = 'group_pressure'
-weewx.units.obs_group_dict['icon_d2_Cloudcover'] = 'group_percent'
-weewx.units.obs_group_dict['icon_d2_DateTime'] = 'group_time'
-weewx.units.obs_group_dict['icon_d2_Day'] = 'group_count'
-weewx.units.obs_group_dict['icon_d2_Dewpoint'] = 'group_temperature'
-weewx.units.obs_group_dict['icon_d2_Et'] = 'group_rain'
-weewx.units.obs_group_dict['icon_d2_FreezinglevelHeight'] = 'group_altitude'
-weewx.units.obs_group_dict['icon_d2_IsDay'] = 'group_count'
-weewx.units.obs_group_dict['icon_d2_Latitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['icon_d2_Longitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['icon_d2_OutHumidity'] = 'group_percent'
-weewx.units.obs_group_dict['icon_d2_OutTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['icon_d2_Precipitation'] = 'group_rain'
-weewx.units.obs_group_dict['icon_d2_Pressure'] = 'group_pressure'
-weewx.units.obs_group_dict['icon_d2_Radiation'] = 'group_radiation'
-weewx.units.obs_group_dict['icon_d2_Rain'] = 'group_rain'
-weewx.units.obs_group_dict['icon_d2_Shower'] = 'group_rain'
-weewx.units.obs_group_dict['icon_d2_Snow'] = 'group_rain'
-weewx.units.obs_group_dict['icon_d2_SnowDepth'] = 'group_rain'
-weewx.units.obs_group_dict['icon_d2_SnowfallHeight'] = 'group_altitude'
-weewx.units.obs_group_dict['icon_d2_SolarRad'] = 'group_radiation'
-weewx.units.obs_group_dict['icon_d2_Visibility'] = 'group_distance'
-weewx.units.obs_group_dict['icon_d2_Weathercode'] = 'group_count'
-weewx.units.obs_group_dict['icon_d2_WindDir'] = 'group_direction'
-weewx.units.obs_group_dict['icon_d2_WindGust'] = 'group_speed'
-weewx.units.obs_group_dict['icon_d2_WindSpeed'] = 'group_speed'
-#
-#weatherservices.py Open-Meteo Model DWD ICON SEAMLESS
-weewx.units.obs_group_dict['icon_seamless_Altitude'] = 'group_altitude'
-weewx.units.obs_group_dict['icon_seamless_AppTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['icon_seamless_Barometer'] = 'group_pressure'
-weewx.units.obs_group_dict['icon_seamless_Cloudcover'] = 'group_percent'
-weewx.units.obs_group_dict['icon_seamless_DateTime'] = 'group_time'
-weewx.units.obs_group_dict['icon_seamless_Day'] = 'group_count'
-weewx.units.obs_group_dict['icon_seamless_Dewpoint'] = 'group_temperature'
-weewx.units.obs_group_dict['icon_seamless_Et'] = 'group_rain'
-weewx.units.obs_group_dict['icon_seamless_FreezinglevelHeight'] = 'group_altitude'
-weewx.units.obs_group_dict['icon_seamless_IsDay'] = 'group_count'
-weewx.units.obs_group_dict['icon_seamless_Latitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['icon_seamless_Longitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['icon_seamless_OutHumidity'] = 'group_percent'
-weewx.units.obs_group_dict['icon_seamless_OutTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['icon_seamless_Precipitation'] = 'group_rain'
-weewx.units.obs_group_dict['icon_seamless_Pressure'] = 'group_pressure'
-weewx.units.obs_group_dict['icon_seamless_Radiation'] = 'group_radiation'
-weewx.units.obs_group_dict['icon_seamless_Rain'] = 'group_rain'
-weewx.units.obs_group_dict['icon_seamless_Shower'] = 'group_rain'
-weewx.units.obs_group_dict['icon_seamless_Snow'] = 'group_rain'
-weewx.units.obs_group_dict['icon_seamless_SnowDepth'] = 'group_rain'
-weewx.units.obs_group_dict['icon_seamless_SnowfallHeight'] = 'group_altitude'
-weewx.units.obs_group_dict['icon_seamless_SolarRad'] = 'group_radiation'
-weewx.units.obs_group_dict['icon_seamless_Visibility'] = 'group_distance'
-weewx.units.obs_group_dict['icon_seamless_Weathercode'] = 'group_count'
-weewx.units.obs_group_dict['icon_seamless_WindDir'] = 'group_direction'
-weewx.units.obs_group_dict['icon_seamless_WindGust'] = 'group_speed'
-weewx.units.obs_group_dict['icon_seamless_WindSpeed'] = 'group_speed'
-#
-#weatherservices.py Brightsky API
-weewx.units.obs_group_dict['brightsky_Altitude'] = 'group_altitude'
-weewx.units.obs_group_dict['brightsky_APIstationId'] = 'group_count'
-weewx.units.obs_group_dict['brightsky_Barometer'] = 'group_pressure'
-weewx.units.obs_group_dict['brightsky_Cloudcover'] = 'group_percent'
-weewx.units.obs_group_dict['brightsky_DateTime'] = 'group_time'
-weewx.units.obs_group_dict['brightsky_Day'] = 'group_count'
-weewx.units.obs_group_dict['brightsky_Dewpoint'] = 'group_temperature'
-weewx.units.obs_group_dict['brightsky_Distance'] = 'group_distance'
-weewx.units.obs_group_dict['brightsky_DWDstationId'] = 'group_count'
-weewx.units.obs_group_dict['brightsky_Latitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['brightsky_Longitude'] = 'group_coordinate'
-weewx.units.obs_group_dict['brightsky_OutHumidity'] = 'group_percent'
-weewx.units.obs_group_dict['brightsky_OutTemp'] = 'group_temperature'
-weewx.units.obs_group_dict['brightsky_Precipitation10'] = 'group_rain'
-weewx.units.obs_group_dict['brightsky_Precipitation30'] = 'group_rain'
-weewx.units.obs_group_dict['brightsky_Precipitation60'] = 'group_rain'
-weewx.units.obs_group_dict['brightsky_Solar10'] = 'group_radiation_energy'
-weewx.units.obs_group_dict['brightsky_Solar30'] = 'group_radiation_energy'
-weewx.units.obs_group_dict['brightsky_Solar60'] = 'group_radiation_energy'
-weewx.units.obs_group_dict['brightsky_SunshineDur10'] = 'group_deltatime'
-weewx.units.obs_group_dict['brightsky_SunshineDur30'] = 'group_deltatime'
-weewx.units.obs_group_dict['brightsky_SunshineDur60'] = 'group_deltatime'
-weewx.units.obs_group_dict['brightsky_Visibility'] = 'group_distance'
-weewx.units.obs_group_dict['brightsky_Weathercode'] = 'group_count'
-weewx.units.obs_group_dict['brightsky_WindDir10'] = 'group_direction'
-weewx.units.obs_group_dict['brightsky_WindDir30'] = 'group_direction'
-weewx.units.obs_group_dict['brightsky_WindDir60'] = 'group_direction'
-weewx.units.obs_group_dict['brightsky_WindGust10'] = 'group_speed'
-weewx.units.obs_group_dict['brightsky_WindGust30'] = 'group_speed'
-weewx.units.obs_group_dict['brightsky_WindGust60'] = 'group_speed'
-weewx.units.obs_group_dict['brightsky_WindGustDir10'] = 'group_direction'
-weewx.units.obs_group_dict['brightsky_WindGustDir30'] = 'group_direction'
-weewx.units.obs_group_dict['brightsky_WindGustDir60'] = 'group_direction'
-weewx.units.obs_group_dict['brightsky_WindSpeed10'] = 'group_speed'
-weewx.units.obs_group_dict['brightsky_WindSpeed30'] = 'group_speed'
-weewx.units.obs_group_dict['brightsky_WindSpeed60'] = 'group_speed'
-weewx.units.obs_group_dict['brightsky_WMOstationId'] = 'group_count'
 #
 # weewx-GTS (also defined in the extension)
 weewx.units.obs_group_dict['boilingTemp'] = 'group_temperature'
@@ -529,32 +305,33 @@ weewx.units.obs_group_dict['utcoffsetLMT'] = 'group_deltatime'
 weewx.units.obs_group_dict['yearGDD'] = 'group_degree_day'
 #
 # data from weewx-loopdata
-weewx.units.obs_group_dict['cloudwatcher_cloudpercent_avg2m'] = 'group_percent'
-weewx.units.obs_group_dict['cloudwatcher_cloudpercent_avg5m'] = 'group_percent'
 weewx.units.obs_group_dict['cloudwatcher_cloudpercent_avg10m'] = 'group_percent'
 weewx.units.obs_group_dict['cloudwatcher_cloudpercent_avg20m'] = 'group_percent'
+weewx.units.obs_group_dict['cloudwatcher_cloudpercent_avg2m'] = 'group_percent'
 weewx.units.obs_group_dict['cloudwatcher_cloudpercent_avg30m'] = 'group_percent'
+weewx.units.obs_group_dict['cloudwatcher_cloudpercent_avg5m'] = 'group_percent'
 weewx.units.obs_group_dict['cloudwatcher_cloudpercent_avg60m'] = 'group_percent'
-weewx.units.obs_group_dict['lightning_strike_count_sum2m'] = 'group_count'
-weewx.units.obs_group_dict['lightning_strike_count_sum5m'] = 'group_count'
 weewx.units.obs_group_dict['lightning_strike_count_sum10m'] = 'group_count'
 weewx.units.obs_group_dict['lightning_strike_count_sum20m'] = 'group_count'
+weewx.units.obs_group_dict['lightning_strike_count_sum2m'] = 'group_count'
 weewx.units.obs_group_dict['lightning_strike_count_sum30m'] = 'group_count'
+weewx.units.obs_group_dict['lightning_strike_count_sum5m'] = 'group_count'
 weewx.units.obs_group_dict['lightning_strike_count_sum60m'] = 'group_count'
-weewx.units.obs_group_dict['rain_sum2m'] = 'group_rain'
-weewx.units.obs_group_dict['rain_sum5m'] = 'group_rain'
 weewx.units.obs_group_dict['rain_sum10m'] = 'group_rain'
 weewx.units.obs_group_dict['rain_sum20m'] = 'group_rain'
+weewx.units.obs_group_dict['rain_sum2m'] = 'group_rain'
 weewx.units.obs_group_dict['rain_sum30m'] = 'group_rain'
+weewx.units.obs_group_dict['rain_sum5m'] = 'group_rain'
 weewx.units.obs_group_dict['rain_sum60m'] = 'group_rain'
 weewx.units.obs_group_dict['rain_trend'] = 'group_rain'
-weewx.units.obs_group_dict['sunshine_avg2m'] = 'group_count'
-weewx.units.obs_group_dict['sunshine_avg5m'] = 'group_count'
 weewx.units.obs_group_dict['sunshine_avg10m'] = 'group_count'
 weewx.units.obs_group_dict['sunshine_avg20m'] = 'group_count'
+weewx.units.obs_group_dict['sunshine_avg2m'] = 'group_count'
 weewx.units.obs_group_dict['sunshine_avg30m'] = 'group_count'
+weewx.units.obs_group_dict['sunshine_avg5m'] = 'group_count'
 weewx.units.obs_group_dict['sunshine_avg60m'] = 'group_count'
 weewx.units.obs_group_dict['sunshine_trend'] = 'group_count'
+weewx.units.obs_group_dict['trend_airrohr_barometer'] = 'group_pressure'
 weewx.units.obs_group_dict['trend_asky_box_barometer'] = 'group_pressure'
 weewx.units.obs_group_dict['trend_barometer'] = 'group_pressure'
 weewx.units.obs_group_dict['trend_barometer_code'] = 'group_count'
@@ -687,6 +464,10 @@ weewx.units.obs_group_dict['net_wg0_tbytes']  = 'group_data_network'
 weewx.units.obs_group_dict['net_wlan0_rbytes']  = 'group_data_network'
 weewx.units.obs_group_dict['net_wlan0_tbytes']  = 'group_data_network'
 #
+# Open-Meteo API -dwd-icon
+weewx.units.obs_group_dict['freezinglevelHeight'] = 'group_altitude'
+weewx.units.obs_group_dict['snowfallHeight'] = 'group_altitude'
+#
 #===================================================================================
 # Tests
 #===================================================================================
@@ -728,6 +509,16 @@ weewx.units.USUnits['group_data_network'] = 'kilobyte'
 weewx.units.MetricUnits['group_data_network'] = 'kilobyte'
 weewx.units.MetricWXUnits['group_data_network'] = 'kilobyte'
 #
+# other groups
+weewx.units.MetricUnits['group_altitude'] = 'meter'
+weewx.units.MetricUnits['group_degree_day'] = 'degree_C_day'
+weewx.units.MetricUnits['group_pressure'] = 'hPa'
+weewx.units.MetricUnits['group_rain'] = 'mm'
+weewx.units.MetricUnits['group_rainrate'] = 'mm_per_hour'
+weewx.units.MetricUnits['group_speed'] = 'km_per_hour'
+weewx.units.MetricUnits['group_speed2'] = 'km_per_hour2'
+weewx.units.MetricUnits['group_temperature'] = 'degree_C'
+#
 #===================================================================================
 # Defaults
 #===================================================================================
@@ -743,15 +534,13 @@ weewx.units.default_unit_format_dict.setdefault('watt_hour_per_meter_squared', '
 weewx.units.default_unit_format_dict.setdefault('joule_per_meter_squared', '%.0f')
 weewx.units.default_unit_format_dict.setdefault('gram_per_meter_cubed', '%.1f')
 weewx.units.default_unit_format_dict.setdefault('milligram_per_meter_cubed', '%.1f')
+weewx.units.default_unit_format_dict.setdefault('grains_per_meter_cubed', '%.1f')
 #
 # Wifi Signal
 weewx.units.default_unit_format_dict.setdefault('decibels_relative_to_one_milliwatt', '%.0f')
 #
 # Ecowitt uvradiation
 weewx.units.default_unit_format_dict.setdefault('microwatt_per_meter_squared', '%.0f')
-#
-# DWD CDC 10 Minutes radiation values
-weewx.units.default_unit_format_dict.setdefault('joule_per_cm_squared_10minutes', "%.0f")
 #
 # Data memory / disk / network
 weewx.units.default_unit_format_dict.setdefault('bit', '%.2f')
@@ -761,7 +550,7 @@ weewx.units.default_unit_format_dict.setdefault('megabyte', '%.2f')
 weewx.units.default_unit_format_dict.setdefault('gigabyte', '%.2f')
 weewx.units.default_unit_format_dict.setdefault('terabyte', '%.2f')
 #
-# default unit label
+# default unit labels
 weewx.units.default_unit_label_dict.setdefault('count', '')
 weewx.units.default_unit_label_dict.setdefault('lux', ' Lux')
 weewx.units.default_unit_label_dict.setdefault('kg_per_meter_qubic', u' kg/m³')
@@ -771,8 +560,10 @@ weewx.units.default_unit_label_dict.setdefault('watt_hour_per_meter_squared', u'
 weewx.units.default_unit_label_dict.setdefault('joule_per_meter_squared', u' J/m²')
 weewx.units.default_unit_label_dict.setdefault('joule_per_cm_squared', u' J/cm²')
 weewx.units.default_unit_label_dict.setdefault('kilojoule_per_meter_squared', u' kJ/m²')
+weewx.units.default_unit_label_dict.setdefault('megajoule_per_meter_squared', u' MJ/m²')
 weewx.units.default_unit_label_dict.setdefault('gram_per_meter_cubed', u' g/m³')
 weewx.units.default_unit_label_dict.setdefault('milligram_per_meter_cubed', u' mg/m³')
+weewx.units.default_unit_label_dict.setdefault('grains_per_meter_cubed', u' grains/m³')
 #
 # Wifi Signal
 weewx.units.default_unit_label_dict.setdefault('decibels_relative_to_one_milliwatt', ' dBm')
@@ -788,8 +579,150 @@ weewx.units.default_unit_label_dict.setdefault('megabyte', ' MB')
 weewx.units.default_unit_label_dict.setdefault('gigabyte', ' GB')
 weewx.units.default_unit_label_dict.setdefault('terabyte', ' TB')
 #
-# DWD CDC 10 Minutes radiation values
-weewx.units.default_unit_label_dict.setdefault('joule_per_cm_squared_10minutes', u' J/cm²')
+# power plugs
+weewx.units.default_unit_format_dict.setdefault('watt_hour', '%.3f')
+weewx.units.default_unit_format_dict.setdefault('kilowatt_hour', '%.3f')
+weewx.units.default_unit_format_dict.setdefault('watt', '%.2f')
+#
+#===================================================================================
+# PWS Weiherhammer Luftqualität
+#===================================================================================
+#
+weewx.units.obs_group_dict['co'] = 'group_concentration'
+weewx.units.obs_group_dict['nh3'] = 'group_concentration'
+weewx.units.obs_group_dict['no'] = 'group_concentration'
+weewx.units.obs_group_dict['no2'] = 'group_concentration'
+weewx.units.obs_group_dict['o3'] = 'group_concentration'
+weewx.units.obs_group_dict['pm10_0'] = 'group_concentration'
+weewx.units.obs_group_dict['pm2_5'] = 'group_concentration'
+weewx.units.obs_group_dict['so2'] = 'group_concentration'
+weewx.units.obs_group_dict['pb'] = 'group_concentration'
+#
+# AQI
+weewx.units.obs_group_dict['eu_aqi_standard'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_composite'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_composite_category'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_co'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_co_category'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_nh3'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_nh3_category'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_no'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_no_category'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_no2'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_no2_category'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_o3'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_o3_category'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_pb'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_pb_category'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_pm10_0'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_pm10_0_category'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_pm2_5'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_pm2_5_category'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_so2'] = 'group_count'
+weewx.units.obs_group_dict['eu_aqi_so2_category'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_co'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_co_category'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_nh3'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_nh3_category'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_no'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_no_category'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_no2'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_no2_category'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_o3'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_o3_category'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_pb'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_pb_category'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_pm10_0'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_pm10_0_category'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_pm2_5'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_pm2_5_category'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_so2'] = 'group_count'
+weewx.units.obs_group_dict['us_aqi_so2_category'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_co'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_co_category'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_nh3'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_nh3_category'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_no'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_no_category'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_no2'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_no2_category'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_o3'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_o3_category'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_pb'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_pb_category'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_pm10_0'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_pm10_0_category'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_pm2_5'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_pm2_5_category'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_so2'] = 'group_count'
+weewx.units.obs_group_dict['uba_aqi_so2_category'] = 'group_count'
+
+weewx.units.default_unit_format_dict.setdefault('ppm', '%.0f')
+weewx.units.default_unit_format_dict.setdefault('ppb', '%.0f')
+
+weewx.units.default_unit_label_dict.setdefault('ppm', ' ppm')
+weewx.units.default_unit_label_dict.setdefault('ppb', ' ppb')
+
+#
+#===================================================================================
+# Power plugs
+#===================================================================================
+#
+weewx.units.obs_group_dict['deviceTemp1'] = 'group_temperature'
+weewx.units.obs_group_dict['deviceTemp2'] = 'group_temperature'
+weewx.units.obs_group_dict['deviceTemp3'] = 'group_temperature'
+weewx.units.obs_group_dict['deviceTemp4'] = 'group_temperature'
+weewx.units.obs_group_dict['deviceTemp5'] = 'group_temperature'
+weewx.units.obs_group_dict['deviceTemp6'] = 'group_temperature'
+weewx.units.obs_group_dict['deviceTemp7'] = 'group_temperature'
+weewx.units.obs_group_dict['deviceTemp8'] = 'group_temperature'
+weewx.units.obs_group_dict['deviceTemp9'] = 'group_temperature'
+weewx.units.obs_group_dict['currentAmp1'] = 'group_amp'
+weewx.units.obs_group_dict['currentAmp2'] = 'group_amp'
+weewx.units.obs_group_dict['currentAmp3'] = 'group_amp'
+weewx.units.obs_group_dict['currentAmp4'] = 'group_amp'
+weewx.units.obs_group_dict['currentAmp5'] = 'group_amp'
+weewx.units.obs_group_dict['currentAmp6'] = 'group_amp'
+weewx.units.obs_group_dict['currentAmp7'] = 'group_amp'
+weewx.units.obs_group_dict['currentAmp8'] = 'group_amp'
+weewx.units.obs_group_dict['currentAmp9'] = 'group_amp'
+weewx.units.obs_group_dict['currentPwr1'] = 'group_power'
+weewx.units.obs_group_dict['currentPwr2'] = 'group_power'
+weewx.units.obs_group_dict['currentPwr3'] = 'group_power'
+weewx.units.obs_group_dict['currentPwr4'] = 'group_power'
+weewx.units.obs_group_dict['currentPwr5'] = 'group_power'
+weewx.units.obs_group_dict['currentPwr6'] = 'group_power'
+weewx.units.obs_group_dict['currentPwr7'] = 'group_power'
+weewx.units.obs_group_dict['currentPwr8'] = 'group_power'
+weewx.units.obs_group_dict['currentPwr9'] = 'group_power'
+weewx.units.obs_group_dict['dayEnergy1'] = 'group_energy'
+weewx.units.obs_group_dict['dayEnergy2'] = 'group_energy'
+weewx.units.obs_group_dict['dayEnergy3'] = 'group_energy'
+weewx.units.obs_group_dict['dayEnergy4'] = 'group_energy'
+weewx.units.obs_group_dict['dayEnergy5'] = 'group_energy'
+weewx.units.obs_group_dict['dayEnergy6'] = 'group_energy'
+weewx.units.obs_group_dict['dayEnergy7'] = 'group_energy'
+weewx.units.obs_group_dict['dayEnergy8'] = 'group_energy'
+weewx.units.obs_group_dict['dayEnergy9'] = 'group_energy'
+weewx.units.obs_group_dict['totalEnergy1'] = 'group_energy'
+weewx.units.obs_group_dict['totalEnergy2'] = 'group_energy'
+weewx.units.obs_group_dict['totalEnergy3'] = 'group_energy'
+weewx.units.obs_group_dict['totalEnergy4'] = 'group_energy'
+weewx.units.obs_group_dict['totalEnergy5'] = 'group_energy'
+weewx.units.obs_group_dict['totalEnergy6'] = 'group_energy'
+weewx.units.obs_group_dict['totalEnergy7'] = 'group_energy'
+weewx.units.obs_group_dict['totalEnergy8'] = 'group_energy'
+weewx.units.obs_group_dict['totalEnergy9'] = 'group_energy'
+weewx.units.obs_group_dict['currentEnergy1'] = 'group_energy'
+weewx.units.obs_group_dict['currentEnergy2'] = 'group_energy'
+weewx.units.obs_group_dict['currentEnergy3'] = 'group_energy'
+weewx.units.obs_group_dict['currentEnergy4'] = 'group_energy'
+weewx.units.obs_group_dict['currentEnergy5'] = 'group_energy'
+weewx.units.obs_group_dict['currentEnergy6'] = 'group_energy'
+weewx.units.obs_group_dict['currentEnergy7'] = 'group_energy'
+weewx.units.obs_group_dict['currentEnergy8'] = 'group_energy'
+weewx.units.obs_group_dict['currentEnergy9'] = 'group_energy'
+
 #
 #===================================================================================
 # Conversion functions to go from one unit type to another.
@@ -805,6 +738,7 @@ weewx.units.conversionDict.setdefault('microgram_per_meter_cubed',{})
 weewx.units.conversionDict.setdefault('milligram_per_meter_cubed',{})
 weewx.units.conversionDict.setdefault('watt_hour_per_meter_squared',{})
 weewx.units.conversionDict.setdefault('watt_per_meter_squared',{})
+weewx.units.conversionDict.setdefault('grains_per_meter_cubed',{})
 #
 weewx.units.conversionDict['gram_per_meter_cubed']['microgram_per_meter_cubed']              = lambda x : x * 1000000
 weewx.units.conversionDict['gram_per_meter_cubed']['milligram_per_meter_cubed']              = lambda x : x * 1000
@@ -812,7 +746,6 @@ weewx.units.conversionDict['joule_per_cm_squared']['kilowatt_hour_per_meter_squa
 weewx.units.conversionDict['joule_per_cm_squared']['watt_hour_per_meter_squared']            = lambda x : (x * 0.01) / 3.6
 weewx.units.conversionDict['joule_per_meter_squared']['kilowatt_hour_per_meter_squared']     = lambda x : x * 0.00000027778
 weewx.units.conversionDict['joule_per_meter_squared']['watt_hour_per_meter_squared']         = lambda x : x / 3600
-
 weewx.units.conversionDict['kilowatt_hour_per_meter_squared']['watt_hour_per_meter_squared'] = lambda x : x * 1000.0
 weewx.units.conversionDict['microgram_per_meter_cubed']['gram_per_meter_cubed']              = lambda x : x * 0.000001
 weewx.units.conversionDict['microgram_per_meter_cubed']['milligram_per_meter_cubed']         = lambda x : x * 0.001
@@ -832,6 +765,12 @@ weewx.units.conversionDict['milliwatt_per_meter_squared']['microwatt_per_meter_s
 weewx.units.conversionDict['milliwatt_per_meter_squared']['watt_per_meter_squared']      = lambda x : x * 0.001
 weewx.units.conversionDict['watt_per_meter_squared']['microwatt_per_meter_squared']      = lambda x : x * 1000000.0
 weewx.units.conversionDict['watt_per_meter_squared']['milliwatt_per_meter_squared']      = lambda x : x * 1000.0
+#
+# OPEN-METEO forecast endpoint, shortwave_radiation_sum (MJ/m²) The sum of solar radiation on a given day in Megajoules
+weewx.units.conversionDict.setdefault('megajoule_per_meter_squared',{})
+#
+# TODO check this. source bard.google.com
+weewx.units.conversionDict['megajoule_per_meter_squared']['watt_per_meter_squared'] = lambda x : x * 1000 / 3600
 #
 # Data memory / disk / network
 weewx.units.conversionDict.setdefault('byte',{})
@@ -860,3 +799,25 @@ weewx.units.conversionDict['terabyte']['byte']     = lambda x : x * 1024 * 1024 
 weewx.units.conversionDict['terabyte']['kilobyte'] = lambda x : x * 1024 * 1024 * 1024
 weewx.units.conversionDict['terabyte']['megabyte'] = lambda x : x * 1024 * 1024
 weewx.units.conversionDict['terabyte']['gigabyte'] = lambda x : x * 1024
+#
+# aqi
+weewx.units.conversionDict.setdefault('ppm',{})
+weewx.units.conversionDict.setdefault('ppb',{})
+weewx.units.conversionDict.setdefault('liter',{})
+weewx.units.conversionDict.setdefault('meter_cubed',{})
+#
+weewx.units.conversionDict['liter']['meter_cubed'] = lambda x : x / 1000.0
+weewx.units.conversionDict['meter_cubed']['liter'] = lambda x : x * 1000.0
+weewx.units.conversionDict['ppb']['ppm']           = lambda x : x * 1000.0
+weewx.units.conversionDict['ppm']['ppb']           = lambda x : x / 1000.0
+#
+# rain
+weewx.units.conversionDict.setdefault('meter',{})
+weewx.units.conversionDict.setdefault('cm',{})
+weewx.units.conversionDict.setdefault('mm',{})
+#
+weewx.units.conversionDict['meter']['cm']   = lambda x : x * 100
+weewx.units.conversionDict['meter']['mm']   = lambda x : x * 1000
+weewx.units.conversionDict['cm']['mm']      = lambda x : x * 10
+weewx.units.conversionDict['cm']['meter']   = lambda x : x * 0.01
+weewx.units.conversionDict['mm']['meter']   = lambda x : x * 0.001

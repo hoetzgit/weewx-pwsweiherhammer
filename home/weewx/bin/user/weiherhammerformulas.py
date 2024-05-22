@@ -257,6 +257,19 @@ def wh65_batt_to_percent(isBatt):
         percentBatt = 50.0
     return percentBatt
 
+# Cloudy sky is warmer that clear sky. Thus sky temperature meassure by IR sensor
+# is a good indicator to estimate cloud cover. However IR really meassure the
+# temperatura of all the air column above increassing with ambient temperature.
+# So it is important include some correction factor:
+# From AAG Cloudwatcher formula. Need to improve futher.
+# http://www.aagware.eu/aag/cloudwatcher700/WebHelp/index.htm#page=Operational%20Aspects/23-TemperatureFactor-.htm
+# Sky temp correction factor. Tsky=Tsky_meassure – Tcorrection
+# Formula Tcorrection = (K1 / 100) * (Thr – K2 / 10) + (K3 / 100) * pow((exp (K4 / 1000* Thr)) , (K5 / 100));
+# "calculate" cloud cover with skyTemp from a MLX90614 Sensor and outTemp from Weatherstation
+# see also: allsky_cloud.py
+# https://indiduino.wordpress.com/2013/02/02/meteostation/
+# https://lunaticoastro.com/aagcw/TechInfo/SkyTemperatureModel.pdf
+
 # cloud cover helper function
 def getsign(d):
     if d < 0:
@@ -265,38 +278,46 @@ def getsign(d):
         return 0.0
     return 1.0
 
-# "calculate" cloud cover with skyTemp from a MLX90614 Sensor and outTemp from Weatherstation
-# see also: allsky_cloud.py
-# https://indiduino.wordpress.com/2013/02/02/meteostation/ and https://lunaticoastro.com/aagcw/TechInfo/SkyTemperatureModel.pdf
-def weewx_cloudwatcher_cloudpercent(skyambient, skyobject):
-    k1 = 33
-    k2 = 0
-    k3 = 4
-    k4 = 100
-    k5 = 100
-    k6 = 0
-    k7 = 0
-    clearbelow = -10
-    cloudyabove = 5
-    
-    if abs((k2 / 10.0 - skyambient)) < 1:
-        t67 = getsign(k6) * getsign(skyambient - k2 / 10.) * abs((k2 / 10. - skyambient))
+# https://sourceforge.net/projects/mysqmproesp32/
+# https://github.com/AllskyTeam/allsky-modules/blob/master/allsky_cloud/allsky_cloud.py
+# Readings are only valid at night when dark and sensor is pointed to sky
+# During the day readings are meaningless
+# clear   : skyTemp <= -8°C
+# cloudy  : skyTemp -5°C to 0°C
+# overcast: skyTemp > 0°C
+def skyTempCorr(outTemp, skyTemp, cloudwatcher_dict):
+    K1 = to_int(cloudwatcher_dict.get('k1', 33))
+    K2 = to_int(cloudwatcher_dict.get('k2', 0))
+    K3 = to_int(cloudwatcher_dict.get('k3', 4))
+    K4 = to_int(cloudwatcher_dict.get('k4', 100))
+    K5 = to_int(cloudwatcher_dict.get('k5', 100))
+    K6 = to_int(cloudwatcher_dict.get('k6', 0))
+    K7 = to_int(cloudwatcher_dict.get('k7', 0))
+
+    if abs((K2 / 10 - outTemp)) < 1:
+        T67 = getsign(K6) * getsign(outTemp - K2 / 10) * abs((K2 / 10 - outTemp))
     else:
-        t67 = k6 / 10. * getsign(skyambient - k2 / 10.) * (math.log(abs((k2 / 10. - skyambient))) / math.log(10) + k7 / 100)
+        T67 = K6 / 10 * getsign(outTemp - K2 / 10) * (math.log(abs((K2 / 10 - outTemp))) / math.log(10) + K7 / 100)
+    Td = (K1 / 100) * (outTemp - K2 / 10) + (K3 / 100) * pow((math.exp(K4 / 1000 * outTemp)), (K5 / 100)) + T67
+    Tsky = skyTemp - Td
 
-    td = (k1 / 100.) * (skyambient - k2 / 10.) + (k3 / 100.) * pow((math.exp(k4 / 1000. * skyambient)), (k5 / 100.)) + t67
+    return Tsky
 
-    tsky = skyobject - td
-    if tsky < clearbelow:
-        tsky = clearbelow
-    elif tsky > cloudyabove:
-        tsky = cloudyabove
+def pws_cloudpercent(outTemp, skyTemp, cloudwatcher_dict):
+    CLOUD_TEMP_CLEAR = to_int(cloudwatcher_dict.get('temp_clear', -8))
+    CLOUD_TEMP_OVERCAST = to_int(cloudwatcher_dict.get('temp_overcast', 0))
 
-    cloudcoverPercentage = ((tsky - clearbelow) * 100.) / (cloudyabove - clearbelow)
+    Tsky = skyTempCorr(outTemp, skyTemp, cloudwatcher_dict)
+
+    if Tsky < CLOUD_TEMP_CLEAR:
+        Tsky = CLOUD_TEMP_CLEAR
+    elif Tsky > CLOUD_TEMP_OVERCAST:
+        Tsky = CLOUD_TEMP_OVERCAST
+    cloudcoverPercentage = ((Tsky - CLOUD_TEMP_CLEAR) * 100.0) / (CLOUD_TEMP_OVERCAST - CLOUD_TEMP_CLEAR)
     if cloudcoverPercentage > 100.0:
         cloudcoverPercentage = 100.0
 
-    return cloudcoverPercentage
+    return to_int(cloudcoverPercentage)
 
 # https://www.dwd.de/DE/service/lexikon/Functions/glossar.html?nn=103346&lv2=101812&lv3=101906
 def weathercode_rain(rain10):
@@ -367,8 +388,14 @@ def pws_weathercode(cloud_percent, rain10, thunderstorm10):
 
     return weathercode
 
-
-
-
-
-
+# Attempt to calculate whether the precipitation could be snow
+def possibly_snow(outTemp, outHumidity, windSpeed, barometer, cloudpercent=None):
+    if cloudpercent is not None and cloudpercent < 80.0:
+        return 0
+    if outTemp is not None and outHumidity is not None and windSpeed is not None and barometer is not None:
+        if (outTemp < 0.0 and outHumidity > 70.0) or (outTemp > 0.0 and outHumidity > 70.0 and windSpeed < 10.0 and barometer < 1000.0):
+            return 1
+        else:
+            return 0
+    else:
+        return 0

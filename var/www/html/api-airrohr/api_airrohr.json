@@ -1,0 +1,14 @@
+{
+    "dateTime": 1716362352,
+    "dateTimeISO": "22.05.2024 09:19:12",
+    "airrohr_pm2_5": 3.4,
+    "airrohr_pm10_0": 7.3,
+    "airrohr_dht22_outTemp": 13.5,
+    "airrohr_dht22_outHumidity": 99.9,
+    "airrohr_bme280_outTemp": 13.58,
+    "airrohr_bme280_outHumidity": 84.49,
+    "airrohr_pressure": 964.6,
+    "airrohr_signal_level": -48,
+    "airrohr_signal_percent": 100,
+    "airrohr_signal_ecowitt": 4
+}

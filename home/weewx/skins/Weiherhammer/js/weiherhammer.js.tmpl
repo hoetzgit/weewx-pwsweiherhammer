@@ -8,7 +8,7 @@
 #set global $hemisphere = "northern-hemisphere"
 #end if
 
-var pages = ["graphs", "records", "reports", "about", "pi", "webcam", "imprint", "privacy", "forecast", "extreme", "stationmon", "mqttmon", "sensormon", "compmon", "test"];
+var pages = ["graphs", "records", "reports", "about", "pi", "webcam", "imprint", "privacy", "forecast", 'dwd_forecast', 'dwd_warnings', "extreme", "stationmon", "mqttmon", "sensormon", "compmon", "test"];
 var pageName = "";
 function get_pageName() {
     var sPath = window.location.pathname.replace(/\/$/, "");
@@ -30,6 +30,22 @@ function get_pageName() {
         }
         if (monitor !== "") {
             name = monitor;
+        }
+    } else if (name === "forecast") {
+        var forecast = getURLvar("forecast");
+        var forecast_pages = $Extras.dwd_forecast_pages; // All dwd forecast pages
+        if (forecast === undefined) {
+            // If no URL VAR, default to the Forecast in Extras
+            forecast = "$Extras.dwd_forecast_page_default";
+        }
+        if (!jQuery.isArray(forecast_pages) && (jQuery.type(forecast_pages) === "string")) {
+            forecast_pages = forecast_pages.split();
+        }
+        if (!forecast_pages.includes(forecast)) {
+             forecast = "$Extras.dwd_forecast_page_default";
+        }
+        if (forecast !== "") {
+            name = forecast;
         }
     } else {
         try {
@@ -153,16 +169,15 @@ jQuery(document).ready(function() {
     }
     #end if
 
-    #if $Extras.has_key('current_provider_toggle') and $Extras.current_provider_toggle == '1'
-    // If the visitor has overridden the current source,provider keep that current source provider going throughout the full site and their visit.
-    if (sessionStorage.getItem('current_provider_override') == "toggleOverride") {
-        weiherhammer_debug("current_provider_override: sessionStorage override in place.");
-        changeCurrentProviderRadio(sessionStorage.getItem('current_provider'));
+    #if $currentwx_provider_toggle == "1"
+    if (sessionStorage.getItem('currentwx_provider_override') == "toggleOverride") {
+        weiherhammer_debug("currentwx_provider_override: sessionStorage override in place.");
+        currentwx_change_provider_radio(sessionStorage.getItem('currentwx_provider'));
     }
-    // current provider switcher
+    // currentwx provider switcher
     try {
-        jQuery('input[type=radio][name=current_provider_radio]').click(function() {
-            changeCurrentProviderRadio(this.value, true);
+        jQuery('input[type=radio][name=currentwx_radio]').click(function() {
+            currentwx_change_provider_radio(this.value, true);
         });
     } catch (err) {
          // Silently exit
@@ -1375,20 +1390,17 @@ function changeTheme(themeName, toggleOverride = false) {
     }
 }
 
-#if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
-#if $Extras.has_key('current_provider_toggle') and $Extras.current_provider_toggle == '1'
-function changeCurrentProviderRadio(current_provider, toggleOverride = false) {
-    weiherhammer_debug("changeCurrentProviderRadio: Changing to: " + current_provider);
-    sessionStorage.setItem('current_provider', current_provider);
+#if $currentwx_provider_toggle == "1"
+function currentwx_change_provider_radio(currentwx_provider, toggleOverride = false) {
+    weiherhammer_debug("currentwx_change_provider_radio: Changing to: " + currentwx_provider);
+    sessionStorage.setItem('currentwx_provider', currentwx_provider);
     if (toggleOverride) {
-        sessionStorage.setItem('current_provider_override', 'toggleOverride');
+        sessionStorage.setItem('currentwx_provider_override', 'toggleOverride');
     }
-    jQuery("#provider_radio_" + current_provider).prop("checked", true);
-    ajaxforecast(["current"]); // update current provider data
+    jQuery("#currentwx_radio_" + currentwx_provider).prop("checked", true);
+    currentwx_ajax(); // update currentwx provider data
 }
 #end if
-#end if
-
 
 async function ajaxweewx() {
     resp = await fetch(get_relative_url() + "/json/weewx_data.json");
@@ -1799,6 +1811,20 @@ function moon_icon(moonphase){
     }
 }
 
+function currentwx_ajax() {
+#if $currentwx_enabled == "1"
+    var currentwx_data = {};
+    jQuery.when(
+        // Get the currentwx datas from external calls
+        jQuery.getJSON(get_relative_url() + "/$Extras.currentwx_file", function(currentwx) {
+            currentwx_data = currentwx;
+        })
+    ).then(function() {
+        currentwx_update_data(currentwx_data);
+    });
+#end if
+}
+
 #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
 function ajaxforecast(options=['']) {
     //console.log("ajaxforecast", options);
@@ -1849,11 +1875,6 @@ function ajaxforecast(options=['']) {
         }
         for (var i = 0; i < options.length; i++) {
             //console.log("ajaxforecast options=" + options[i]);
-            if (options[i] == "all" || options[i] == "current") {
-                // update current weather data
-                //console.log("update_current_data");
-                update_current_data(forecast_data);
-            }
             if (options[i] == "all" || options[i] == "alerts") {
                 // update alerts data
                 //console.log("update_alerts_data");
@@ -1868,10 +1889,6 @@ function ajaxforecast(options=['']) {
                 // update forecast once both promises are fulfilled
                 //console.log("update_forecast_data");
                 update_forecast_data(forecast_data);
-                if (options[i] == "forecast") {
-                    //console.log("update_current_data");
-                    update_current_data(forecast_data, ["wxicon"]);
-                }
             }
         }
     });
@@ -2342,84 +2359,60 @@ function update_alerts_data(data) {
     }
 }
 
-function update_current_data(data, options="all") {
-    var current_provider = sessionStorage.getItem('current_provider');
-    weiherhammer_debug("Current: Provider is " + current_provider);
-    weiherhammer_debug("Current: Updating data");
+function currentwx_update_data(data, options="all") {
+    var currentwx_provider = sessionStorage.getItem('currentwx_provider');
+    weiherhammer_debug("CurrentWX: Provider is " + currentwx_provider);
+    weiherhammer_debug("CurrentWX: Updating data");
     weiherhammer_debug(data);
 
     try {
-        if (!data.hasOwnProperty(current_provider)) {
-            throw new Error("Forecast JSON file does not contain current data for provider=" + current_provider);
-        } else if (!data[current_provider].hasOwnProperty("current")) {
-            throw new Error("Forecast JSON file does not contain current data. Provider=" + current_provider);
-        } else if (!Array.isArray(data[current_provider]["current"])) {
-            throw new Error("Forecast JSON file does not contain current/0 data. Provider=" + current_provider);
-        } else if (!data[current_provider]["current"][0].hasOwnProperty("success") || !data[current_provider]["current"][0]["success"]) {
-            throw new Error("Provider " + current_provider + " does not contain valid data.");
-        } else if (!data[current_provider]["current"][0].hasOwnProperty("response")) {
-            throw new Error("Forecast JSON file does not contain current/0/response data. Provider=" + current_provider);
-        } else if (!Array.isArray(data[current_provider]["current"][0]["response"])) {
-            throw new Error("Forecast JSON file does not contain current/0/response/0 data. Provider=" + current_provider);
-        } else if (!data[current_provider]["current"][0]["response"][0].hasOwnProperty("ob")) {
-            throw new Error("Forecast JSON file does not contain current/0/response/0/ob data. Provider=" + current_provider);
+        if (!data.hasOwnProperty(currentwx_provider)) {
+            throw new Error("Forecast JSON file does not contain current data for provider=" + currentwx_provider);
         }
 
         // using data from current provider
-        data = data[current_provider];
-        obs_data = data["current"][0]["response"][0]["ob"];
-
+        data = data[currentwx_provider];
         if (options == "all" || options == "wxicon") {
-            var wxicon = get_relative_url() + "/images/" + aeris_icon(obs_data["icon"]) + ".png";
-            jQuery("#wxicon").attr("src", wxicon);
+            var weathericon = "images/unknown.png"
+            if (data.hasOwnProperty("weathericon") && data["weathericon"] !== null) {
+                weathericon = get_relative_url() + "/" + data["weathericon"]
+            }
+            jQuery("#wxicon").attr("src", weathericon);
         }
-        if (options == "all") {
-            var current_update = tzAdjustedMoment(obs_data["timestamp"]).format('$obs.label.time_forecast_last_updated');
 
-            var visibility = "N/A"
-            if (obs_data.hasOwnProperty("visibilityKM")) {
-                visibility = obs_data["visibilityKM"];
-                if (visibility !== null) {
-                    visibility = parseFloat(parseFloat(visibility)).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["visibility"], maximumFractionDigits: unit_rounding_array["visibility"]}) + " " + unit_label_array["visibility"];
-                } else {
-                    visibility = "N/A"
-                }
+        if (options == "all") {
+            var weathertext = "$gettext('unknown')"
+            if (data.hasOwnProperty("weathertext") && data["weathertext"] !== null) {
+                weathertext = data["weathertext"]
+            }
+            jQuery(".currentwx_weathertext").html(weathertext);
+
+            var weathersource = "$gettext('unknown')"
+            if (data.hasOwnProperty("sourceProviderHTML") && data["sourceProviderHTML"] !== null) {
+                weathersource = data["sourceProviderHTML"]
+            }
+            jQuery(".currentwx_source").html(weathersource);
+
+            var visibility = "$gettext('not available')"
+            if (data.hasOwnProperty("visibility") && data["visibility"] !== null && data["visibility"] != "$gettext('not available')") {
+                visibility = parseFloat(parseFloat(data["visibility"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["visibility"], maximumFractionDigits: unit_rounding_array["visibility"]}) + " " + unit_label_array["visibility"];
             }
             jQuery(".visibility").html(visibility);
 
-            var cloudcover = "N/A";
-            if (obs_data.hasOwnProperty("sky")) {
-                cloudcover = obs_data["sky"]
-                if (cloudcover !== null) {
-                    cloudcover = parseFloat(parseFloat(obs_data["sky"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["cloudcover"], maximumFractionDigits: unit_rounding_array["cloudcover"]}) + unit_label_array["cloudcover"];
-                } else {
-                    cloudcover = "N/A"
-                }
+            var cloudcover = "$gettext('not available')";
+            if (data.hasOwnProperty("cloudcover") && data["cloudcover"] !== null && data["cloudcover"] != "$gettext('not available')") {
+                cloudcover = parseFloat(parseFloat(data["cloudcover"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["cloudcover"], maximumFractionDigits: unit_rounding_array["cloudcover"]}) + unit_label_array["cloudcover"];
             }
             jQuery(".cloudcover").html(cloudcover);
-
-            if (obs_data.hasOwnProperty("weatherPrimaryCoded")) {
-                jQuery(".current-obs-text").html(aeris_coded_weather(obs_data["weatherPrimaryCoded"], true));
-            } else if (obs_data.hasOwnProperty("weatherPrimary")) {
-                jQuery(".current-obs-text").html(obs_data["weatherPrimary"]);
-            } else {
-                jQuery(".current-obs-text").html("$gettext('unknown')");
-            }
-
-            if (data["current"][0].hasOwnProperty("source")) {
-                jQuery(".current_provider_source_api").html(data["current"][0]["source"]);
-            } else {
-                jQuery(".current_provider_source_api").html(current_provider);
-            }
         }
     } catch (err) {
         jQuery("#wxicon").attr("src", get_relative_url() + "/images/unknown.png");
-        jQuery(".current-obs-text").html("$gettext('unknown')");
-        jQuery(".visibility").html("N/A");
-        jQuery(".cloudcover").html("N/A");
-        jQuery(".current_provider_source_api").html(current_provider);
-        console.error("Error update_current_data", err);
-        console.log(current_provider);
+        jQuery(".currentwx_weathertext").html("$gettext('unknown')");
+        jQuery(".currentwx_source").html(currentwx_provider);
+        jQuery(".visibility").html("$gettext('not available')");
+        jQuery(".cloudcover").html("$gettext('not available')");
+        console.error("Error currentwx_update_data", err);
+        console.log(currentwx_provider);
         console.log(data);
     }
 }
@@ -2805,6 +2798,12 @@ function forecast_time(i, interval, daytime) {
 }
 
 #if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
+#set $mqtt_topics = $to_list($Extras.get('mqtt_topics', []))
+
+#if $Extras.has_key("mqttmon_topics_toggle") and $Extras.mqttmon_topics_toggle == "1"
+#set $mqttmon_topics_default = $Extras.get('mqttmon_topics_default', '')
+#set $mqttmon_topics = $to_list($Extras.get('mqttmon_topics', []))
+#end if
 
 // ============================================
 // Live website using MQTT Websockets enabled
@@ -2968,7 +2967,18 @@ function onConnect() {
     jQuery(".onlineMarker").hide();
     jQuery(".offlineMarker").hide();
     jQuery(".loadingMarker").show();
-    client.subscribe("$Extras.mqtt_websockets_topic");
+#for $topic in $mqtt_topics
+    // Format mqtt_topc: "id:topic"
+    try {
+        if ("$topic".includes(":")) {
+            var topic = "$topic".split(":")[1]
+        }
+        client.subscribe(topic);
+        //console.log('MQTT topic: ', topic);
+    } catch (err) {
+            console.error("Error onConnect", err);
+    }
+#end for
     #if $Extras.has_key("disconnect_live_website_visitor") and $Extras.disconnect_live_website_visitor != '0'
     if (getURLvar("stayconnected") && (getURLvar("stayconnected") == "true" || getURLvar("stayconnected") == "1")) {
         weiherhammer_debug("MQTT: stayconnected URL var found: ignoring disconnect_live_website_visitor value");
@@ -2999,7 +3009,9 @@ function onFailure() {
     jQuery(".updated").html("$obs.label.mqtt_websockets_failed $obs.label.header_last_updated " + updated);
     console.log("MQTT: " + tzAdjustedMoment(epoch).format() + ": Cannot connect to MQTT broker");
     if (pageName == "mqttmon") {
-        setTimeout(mqttmon_mark_outdated, (mqttmon_outdated_treshold * 1000) + 10000);
+#for $topic in $mqttmon_topics
+        setTimeout(mqttmon_mark_outdated("$topic"), (mqttmon_outdated_$topic * 1000) + 10000);
+#end for
     }
 }
 
@@ -3021,7 +3033,9 @@ function onConnectionLost(responseObject) {
         console.log("MQTT: " + tzAdjustedMoment(epoch).format() + ": mqtt Connection Lost: " + responseObject.errorMessage);
     }
     if (pageName == "mqttmon") {
-        setTimeout(mqttmon_mark_outdated, (mqttmon_outdated_treshold * 1000) + 10000);
+#for $topic in $mqttmon_topics
+        setTimeout(mqttmon_mark_outdated("$topic"), (mqttmon_outdated_$topic * 1000) + 10000);
+#end for
     }
 }
 
@@ -3038,16 +3052,34 @@ function inactive() {
     reconnect_using_inactive_timestamp = true; // Set a flag to use the inactive timestamp in case we reconnect we have the latest last updated time
     inactive_timestamp = epoch; // Store this timestamp in case we reconnect
     if (pageName == "mqttmon") {
-        setTimeout(mqttmon_mark_outdated, (mqttmon_outdated_treshold * 1000) + 10000);
+#for $topic in $mqttmon_topics
+        setTimeout(mqttmon_mark_outdated("$topic"), (mqttmon_outdated_$topic * 1000) + 10000);
+#end for
     }
 }
 
 var mqtt_payload = "";
 // New message from mqtt, process it
 function onMessageArrived(message) {
+    weiherhammer_debug("MQTT: " + message.destinationName);
     weiherhammer_debug("MQTT: " + message.payloadString);
-    update_with_mqtt_data(message.payloadString);
-    mqtt_payload = jQuery.parseJSON(message.payloadString);
+#for $topic in $mqtt_topics
+    // Format mqtt_topc: "id:topic"
+    try {
+        if ("$topic".includes(":")) {
+            mqtt_topicId = "$topic".split(":")[0];
+            mqtt_topic = "$topic".split(":")[1];
+            if (message.destinationName == mqtt_topic) {
+                update_with_mqtt_data(message.payloadString, mqtt_topicId);
+                mqtt_payload = jQuery.parseJSON(message.payloadString);
+                return true;
+            }
+        }
+    } catch (err) {
+        console.error("Error onConnect", err);
+        return false;
+    }
+#end for
 }
 
 function refreshHooks() {
@@ -3056,18 +3088,18 @@ function refreshHooks() {
 }
 
 #if $Extras.has_key("mqttmon_format_toggle") and $Extras.mqttmon_format_toggle == "1"
-function mqttmon_switch_format() {
-    var checked = jQuery("#" + "mqttmonFormatSwitch").prop("checked");
+function mqttmon_switch_format(topic) {
+    var checked = jQuery("#mqttmon_format_" + topic).prop("checked");
     if (checked) {
         mqttmon_format_user = mqttmon_format_default;
     } else {
         mqttmon_format_user = "raw";
     }
-    sessionStorage.setItem("mqttmon_format_user", mqttmon_format_user);
-    //console.log(sessionStorage.getItem("mqttmon_format_user"));
+    sessionStorage.setItem("mqttmon_format_"+topic+"_user", mqttmon_format_user);
+    //console.log(sessionStorage.getItem("mqttmon_format_"+topic+"_user"));
 
     try {
-        jQuery('.mqttmon-data').find("span").each(function() {
+        jQuery('.mqttmon-data-' + topic).find("span").each(function() {
             var elementClass = jQuery(this).attr("class");
             if (elementClass == null) {
                 return true;
@@ -3101,11 +3133,30 @@ function mqttmon_switch_format() {
 }
 #end if
 
-function mqttmon_mark_outdated() {
+#if $Extras.has_key("mqttmon_format_toggle") and $Extras.mqttmon_format_toggle == "1"
+function mqttmon_switch_topics(topic) {
+    //console.log(topic);
+#for $topic in $mqttmon_topics
+    if (topic != "$topic") {
+        jQuery("#mqttmon_radio_$topic").removeClass("active");
+        jQuery("#mqttmon_radio_$topic").removeClass("focus");
+        jQuery("#mqttmon_table_$topic").css('display', 'none');
+    }
+#end for
+    jQuery("#mqttmon_radio_" + topic).addClass("active");
+    jQuery("#mqttmon_radio_" + topic).addClass("focus");
+    jQuery("#mqttmon_table_" + topic).css('display', 'table');
+    sessionStorage.setItem("mqttmon_topics_user", topic);
+}
+#end if
+
+
+
+function mqttmon_mark_outdated(topic) {
     var now_ts =  moment().unix();
 
     try {
-        jQuery('.mqttmon-data').find("span").each(function() {
+        jQuery('.mqttmon-data' + topic).find("span").each(function() {
             var elementClass = jQuery(this).attr("class");
             if (elementClass == null) {
                 return true;
@@ -3122,19 +3173,19 @@ function mqttmon_mark_outdated() {
             var last_ts = parseInt(jQuery('.' + elementClass).data('received_ts'));
 
             if (last_ts > 0) {
-                if (now_ts - last_ts > mqttmon_outdated_treshold) {
+                if (now_ts - last_ts > mqttmon_outdated_weewx) {
                    // update element as received
                    jQuery('.' + elementClass + '-mqttmon-rcv-dot').css('background-color', 'var(--mqttmon-rcv-dot-outdated)');
                 }
             }
         });
     } catch (err) {
-        console.error("Error mqttmon_mark_outdated", err);
+        console.error("Error mqttmon_mark_outdated topic "+topic, err);
     }
 }
 
 // Handle MQTT message
-function update_with_mqtt_data(data) {
+function update_with_mqtt_data(data, topicId) {
     weiherhammer_debug("Updating with MQTT data");
     var data = jQuery.parseJSON(data);
 
@@ -3150,32 +3201,45 @@ function update_with_mqtt_data(data) {
     #end if
 
     // This message is a weewx archive update. Update weewx data, forecast data and highcharts graphs
-    if (data.hasOwnProperty("interval")) {
-        // Delays are recommended to allow the other skins to complete processing
-        weiherhammer_debug("MQTT: MQTT message indicates this is an archive interval.");
-        if (pageName == "pi" || pageName == "kiosk.html" || pageName == "console.html") {
-            weiherhammer_debug("Skipping chart update for page " + pageName + ", no charts to be updated.");
-        }
-        else {
-            if (pageName == "homepage" || pageName == "console") {
-                setTimeout(showChart, 20000, homepage_graphgroup); // Load updated charts.
-            } else if (pageName == "sensormon") {
-                setTimeout(showChart, 20000, pageName); // Load updated charts.
+    if (topicId == "weewx") {
+        if (data.hasOwnProperty("interval")) {
+            // Delays are recommended to allow the other skins to complete processing
+            weiherhammer_debug("MQTT: MQTT message indicates this is an archive interval.");
+            if (pageName == "pi" || pageName == "kiosk.html" || pageName == "console.html") {
+                weiherhammer_debug("Skipping chart update for page " + pageName + ", no charts to be updated.");
             }
+            else {
+                if (pageName == "homepage" || pageName == "console") {
+                    setTimeout(showChart, 20000, homepage_graphgroup); // Load updated charts.
+                } else if (pageName == "sensormon") {
+                    setTimeout(showChart, 20000, pageName); // Load updated charts.
+                }
+            }
+            ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
+                //TODO brauch ich das wirklich?
+                //setTimeout(update_with_weewx_data.bind(null, weewx_data, true), 20000); // Initial call to update (date, daily high, low, etc)
+                //setTimeout(weiherhammer_debug.bind(null, weewx_data), 20000); // Make weewx_data.json available in debugging console
+            #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
+                setTimeout(ajaxforecast, 10000); // Update forecast data
+            #end if
+            }).catch(function(e) {
+                console.log(e);
+            });
+        } else {
+            // Only show the updated time on non-archive packets
+            var epoch = parseFloat(data["dateTime"]).toFixed(0);
+            var updated = tzAdjustedMoment(epoch).format("$obs.label.time_last_updated");
+            if (pageName == "pi") {
+                var updated_text = "$obs.label.mqtt_websockets_connected_pi " + updated;
+            } else {
+                var updated_text = "$obs.label.mqtt_websockets_connected " + updated;
+            }
+            jQuery(".updated").html(updated_text);
         }
-        ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
-            //TODO brauch ich das wirklich?
-            //setTimeout(update_with_weewx_data.bind(null, weewx_data, true), 20000); // Initial call to update (date, daily high, low, etc)
-            //setTimeout(weiherhammer_debug.bind(null, weewx_data), 20000); // Make weewx_data.json available in debugging console
-        #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
-            setTimeout(ajaxforecast, 10000); // Update forecast data
-        #end if
-        }).catch(function(e) {
-            console.log(e);
-        });
-    } else {
+    } else if ((topicId == "currentwx" || topicId == "currentaq") && pageName == "mqttmon") {
         // Only show the updated time on non-archive packets
-        var epoch = parseFloat(data["dateTime"]).toFixed(0);
+        //var epoch = parseFloat(data["generated"]).toFixed(0);
+        var epoch = parseFloat(Math.floor(Date.now() / 1000)).toFixed(0);
         var updated = tzAdjustedMoment(epoch).format("$obs.label.time_last_updated");
         if (pageName == "pi") {
             var updated_text = "$obs.label.mqtt_websockets_connected_pi " + updated;
@@ -3190,7 +3254,7 @@ function update_with_mqtt_data(data) {
     jQuery(".offlineMarker").hide();
     jQuery(".loadingMarker").hide();
 
-    if (pageName == "homepage" || pageName == "sensormon" || pageName == "console") {
+    if (topicId == "weewx" && (pageName == "homepage" || pageName == "sensormon" || pageName == "console")) {
         // all obs with class = obs or class = obs_formatted
         try {
             jQuery.each(data, function(data_class, data_raw) {
@@ -3537,20 +3601,20 @@ function update_with_mqtt_data(data) {
         }
     } else if (pageName == "mqttmon") {
         // Update the MQTT Monitor page
-        // Get all span elements within the table. This is setup by Python initially
-
-        var mqttmon_data_formatted = (mqttmon_format_user == mqttmon_format_default);
+        var mqttmon_data_formatted = jQuery("#mqttmon_format_" + topicId).prop("checked");
+        //console.log("INFO: MQTT $topic update, formatted: ", mqttmon_data_formatted);
+        var table = "#mqttmon_table_" + topicId + " .";
         var data_received_ts =  moment().unix();
 
         try {
             jQuery.each(data, function(data_class, data_raw) {
-                if (!jQuery('.' + data_class).length > 0) {
-                    console.log("class not exists", data_class);
+                if (!jQuery(table + data_class).length > 0) {
+                    console.error("ERROR: MQTT $topic update, class not exists: '" + table + data_class + "'");
                     return true;
                 }
                 // update element as received
-                jQuery('.' + data_class + '-mqttmon-rcv-dot').css('background-color', 'var(--mqttmon-rcv-dot-current)');
-                jQuery('.' + data_class).data('received_ts', data_received_ts);
+                jQuery(table + data_class + '-mqttmon-rcv-dot').css('background-color', 'var(--mqttmon-rcv-dot-current)');
+                jQuery(table + data_class).data('received_ts', data_received_ts);
 
                 if (!unit_rounding_array.hasOwnProperty(data_class)) {
                     unit_rounding_array[data_class] = unit_rounding_array["default"]
@@ -3563,16 +3627,14 @@ function update_with_mqtt_data(data) {
                 if (data_raw == null) {
                     data_raw = "";
                 }
-                jQuery('.' + data_class).data('raw', data_raw);
+                jQuery(table + data_class).data('raw', data_raw);
 
                 // update format data
                 var data_formatted = data_raw;
                 if (unit_group_array.hasOwnProperty(data_class)) {
                     if (unit_group_array[data_class].includes("group_time")) {
-                        if (data_class != "cdc_MESS_DATUM") {
-                            //data_formatted = tzAdjustedMoment(parseFloat(data_raw).toFixed(0)).format("$obs.label.time_mqtt_monitor");
-                            data_formatted = tzAdjustedMoment(parseInt(data_raw)).format("$obs.label.time_mqtt_monitor");
-                        }
+                        //data_formatted = tzAdjustedMoment(parseFloat(data_raw).toFixed(0)).format("$obs.label.time_mqtt_monitor");
+                        data_formatted = tzAdjustedMoment(parseInt(data_raw)).format("$obs.label.time_mqtt_monitor");
                    } else {
                         var localeStringUseGrouping = true;
                         if (unit_group_array[data_class].includes("group_time") || unit_group_array[data_class].includes("group_pressure") || unit_group_array[data_class].includes("group_count")) {
@@ -3584,22 +3646,22 @@ function update_with_mqtt_data(data) {
                 }
 
                 // update element formatted data
-                jQuery('.' + data_class).data('formatted', data_formatted);
+                jQuery(table + data_class).data('formatted', data_formatted);
 
                 // Finally update element text
                 if (mqttmon_data_formatted) {
-                    jQuery("." + data_class).text(data_formatted);
+                    jQuery(table + data_class).text(data_formatted);
                     // general tooltip
-                    jQuery("." + data_class).prop("title", data_raw);
+                    jQuery(table + data_class).prop("title", data_raw);
                 } else {
-                    jQuery("." + data_class).text(data_raw);
+                    jQuery(table + data_class).text(data_raw);
                     // general tooltip
-                    jQuery("." + data_class).prop("title", data_formatted);
+                    jQuery(table + data_class).prop("title", data_formatted);
                 }
 
                 // Correct beaufort tooltip
                 if (data_class == "beaufort") {
-                    jQuery("." + data_class).prop("title", beaufort_cat(parseInt(data["beaufort"])));
+                    jQuery(table + data_class).prop("title", beaufort_cat(parseInt(data["beaufort"])));
                 }
             });
         } catch (err) {
@@ -3607,7 +3669,9 @@ function update_with_mqtt_data(data) {
         }
 
         // mark outdated topics
-        mqttmon_mark_outdated();
+#for $topic in $mqttmon_topics
+        setTimeout(mqttmon_mark_outdated("$topic"), (mqttmon_outdated_$topic * 1000) + 10000);
+#end for
     }
 };
 #end if
@@ -4441,6 +4505,30 @@ function showChart(json_file, prepend_renderTo = false) {
                             zIndex : 100
                         });
                     }
+
+                    // Add plotlines to yAxis options
+                    options.yAxis[this_yAxis].plotLines = yAxis_plotlines;
+                }
+
+                // Chart Cloudbase station altitude plotline
+                if (s.obsType == "cloudbase") {
+                    var yAxis_plotlines = [];
+
+					yAxis_plotlines.push({
+						color: "#3ADF00",
+						value: 394,
+						label: {
+							text: "$pgettext('chart_Cloudbase', 'station altitude')",
+							x: 0,
+							y: 15,
+							style: {
+								color: "#666666"
+							}
+						},
+						width: 1,
+						dashStyle: 'Dash',
+						zIndex : 100
+					});
 
                     // Add plotlines to yAxis options
                     options.yAxis[this_yAxis].plotLines = yAxis_plotlines;

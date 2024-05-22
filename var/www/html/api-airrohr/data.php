@@ -5,7 +5,7 @@
 
   // debug
   $data_file = "airrohr_results.json";
-  file_put_contents($data_file, json_encode($results));
+  file_put_contents($data_file, json_encode($results, JSON_PRETTY_PRINT));
 
   // copy sensor data values to values array
   $values = array();
@@ -16,29 +16,47 @@
 
   // debug
   $data_file = "airrohr_values.json";
-  file_put_contents($data_file, json_encode($values));
+  file_put_contents($data_file, json_encode($values, JSON_PRETTY_PRINT));
 
   $data = array();
   $data["dateTime"] = intval($date->getTimestamp());
+  $data["dateTimeISO"] = date("d.m.Y H:i:s", $data["dateTime"]);
 
-  if (isset($values["SDS_P2"]))
-  {
+  // SDS011
+
+  if (isset($values["SDS_P2"])) {
     $data["airrohr_pm2_5"] = floatval($values["SDS_P2"]);
   }
-  if (isset($values["SDS_P1"]))
-  {
+  if (isset($values["SDS_P1"])) {
     $data["airrohr_pm10_0"] = floatval($values["SDS_P1"]);
   }
-  if (isset($values["temperature"]))
-  {
-    $data["airrohr_outTemp"] = floatval($values["temperature"]);
+
+  // DHT22
+
+  if (isset($values["temperature"])) {
+    $data["airrohr_dht22_outTemp"] = floatval($values["temperature"]);
   }
-  if (isset($values["humidity"]))
-  {
-    $data["airrohr_outHumidity"] = floatval($values["humidity"]);
+  if (isset($values["humidity"])) {
+    $data["airrohr_dht22_outHumidity"] = floatval($values["humidity"]);
   }
-  if (isset($values["signal"]))
-  {
+
+  // BME280
+
+  if (isset($values["BME280_temperature"])) {
+    $data["airrohr_bme280_outTemp"] = floatval($values["BME280_temperature"]);
+  }
+  if (isset($values["BME280_humidity"])) {
+    $data["airrohr_bme280_outHumidity"] = floatval($values["BME280_humidity"]);
+  }
+  if (isset($values["BME280_pressure"])) {
+	if (floatval($values["BME280_pressure"]) >= 1080) {
+      $data["airrohr_pressure"] = floatval($values["BME280_pressure"] / 100.0);
+	} else {
+      $data["airrohr_pressure"] = floatval($values["BME280_pressure"]);
+    }
+  }
+
+  if (isset($values["signal"])) {
     $data["airrohr_signal_level"] = intval($values["signal"]);
     if ($data["airrohr_signal_level"] <= -100) {
       $data["airrohr_signal_percent"] = 0;
@@ -62,6 +80,10 @@
   }
 
   $data_file = "api_airrohr.json";
-  file_put_contents($data_file, json_encode($data));
+  file_put_contents($data_file, json_encode($data, JSON_PRETTY_PRINT));
+  
+  $data_file = "/home/weewx/public_html/data/json/current_airrohr.json";
+  file_put_contents($data_file, json_encode($data, JSON_PRETTY_PRINT));
+  
 ?>
 ok

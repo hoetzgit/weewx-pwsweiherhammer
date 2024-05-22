@@ -8,6 +8,7 @@ SNAPSHOT_TMP_PATH="/tmp"
 SNAPSHOT_COPYRIGHT=$(printf "\u00A9")
 SNAPSHOT_PWS="PWS Weiherhammer"
 SNAPSHOT_DATETIME=$(date '+%d.%m.%Y %H:%M:%S')
+FONT="Nimbus-Sans"
 
 SNAPSHOT_DEST_FOLDERS=(
 "/var/www/html/pwsWD/img"
@@ -19,7 +20,7 @@ SNAPSHOT_DEST_FOLDERS=(
 ls -rtl ${SNAPSHOT_TMP_PATH}/${SNAPSHOT}
 
 # convert Snapshot
-/usr/bin/convert ${SNAPSHOT_TMP_PATH}/${SNAPSHOT} -font Helvetica \
+/usr/bin/convert ${SNAPSHOT_TMP_PATH}/${SNAPSHOT} -font ${FONT} \
 -fill white -pointsize 25 -gravity NorthEast -annotate +5+5 "${SNAPSHOT_DATETIME}" \
 -fill white -pointsize 15 -gravity SouthEast -annotate +5+5 "${SNAPSHOT_COPYRIGHT} ${SNAPSHOT_PWS}" \
 ${SNAPSHOT_TMP_PATH}/${SNAPSHOT}

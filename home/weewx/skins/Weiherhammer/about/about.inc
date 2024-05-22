@@ -17,7 +17,7 @@
             <p>Wie wird denn das Wetter in <a href="https://www.weiherhammer.de/" target="_blank" rel="noreferrer">Weiherhammer</a> heute? &Uuml;blich war der Blick aus dem Fenster und auf das analoge Thermometer. Es sollte aber eine smartere L&ouml;sung her. 
             Nach einigen Funkthermometern mit Display und diversen selbstgebastelten und selbst programmierten Wetterstationen entschied ich mich, eine fertige Station zu installieren.</p>
             <p>Seit dem 25. August 2019 nutze ich meine private Wetterstation (PWS) in Weiherhammer. Mit der Webseite habe ich das aktuelle Wetter vor Ort jederzeit und &uuml;berall im Blick.
-            Ein Kombisensor ist sicher nicht optimal und auch der Aufstellstandort entspricht keiner Vorgabe, aber die Station und die Webseite erfüllt ihren Zweck und hat den Blick auf mein Fensterthermometer ersetzt.</p>
+            Ein Kombisensor ist sicher nicht optimal und auch der Aufstellstandort entspricht keiner Vorgabe, aber die Station und die Webseite erfüllen ihren Zweck und haben den Blick auf mein Fensterthermometer ersetzt.</p>
         </div>
     </div>
 
@@ -212,28 +212,25 @@
     <div class="row about-row">
         <div class="col-sm-12">
             <h2>Externe Datenquellen</h2>
-            <p>Nicht alle auf der Webseite angezeigten Daten können durch die eigene Station gemessen werden. Um z.B. eine Wettervorhersage nutzen zu k&ouml;nnen oder zur Darstellung des allgemeinen 
-            Wetterzustandes werden zus&auml;tzliche Daten von externen Quellen geladen und verarbeitet. Diverse Anbieter stellen - oft kostenfrei - Schnittstellen (sog. API's) zum Abruf diverser Daten bereit.
-            Der Deutsche Wetterdienst (DWD) stellt eine Vielzahl von Daten in Dateiform auf den <a href="https://opendata.dwd.de" target="_blank" rel="noreferrer">Open Data Servern</a> bereit.</p>
+            <p>Nicht alle auf der Webseite angezeigten Daten können durch die eigene Station gemessen werden. Um z.B. Wettervorhersagen, Warnungen oder aktuelle Beobachtungswerte zu nutzen,
+            werden zus&auml;tzliche Daten von externen Quellen geladen und verarbeitet. Diverse Anbieter stellen Schnittstellen zum Abruf dieser Daten bereit.
         </div>
     </div>
 
     <!-- Daten externer Dienste -->
     <div class="row about-row">
         <div class="col-sm-12">
-            <h3>Externe Wetterdaten</h3>
+            <h3>Aktuelle Wetterdaten, Vorhersagen und Warnungen</h3>
             <ul>
-                <li><a href="https://www.windy.com/de/-Widget-auf-Seite-einbetten/widgets?49.676,12.154,5" target="_blank" rel="noreferrer">Windy Widget</a> zur Anzeige von Wetterdaten auf der Startseite</li>
-                <li>Vorhersagen und Warnmeldungen vom <a href="https://www.dwd.de" target="_blank" rel="noreferrer">Deutscher Wetterdienst</a> (DWD). Abgefragt werden Daten der
-                  <a href="http://www.wzforum.de/forum2/read.php?38,3255813" target="_blank" rel="noreferrer">Station Weiden i.d.OPf</a> (WMO ID: 10688). Die Abfrage und Aufbereitung erfolgt mit Erweiterungen aus
-                  <a href="https://github.com/roe-dl/weewx-DWD" target="_blank" rel="noreferrer">weewx-DWD</a>.
+                <li>Das <a href="https://www.windy.com/de/-Widget-auf-Seite-einbetten/widgets?49.676,12.154,5" target="_blank" rel="noreferrer">Windy Widget</a> zur Anzeige von Wetterdaten auf der Startseite.</li>
+                <li><a href="https://dwd.de"  target="_blank" rel="noreferrer">Deutscher Wetterdienst</a> (DWD) mit Dateien von den <a href="https://opendata.dwd.de" target="_blank" rel="noreferrer">Open Data Servern</a>.
+                (<a href="http://www.wzforum.de/forum2/read.php?38,3255813" target="_blank" rel="noreferrer">Station Weiden i.d.OPf</a>, WMO-ID 10688)
                 </li>
-                <li>Vorhersagen und Warnmeldungen von <a href="https://open-meteo.com" target="_blank" rel="noreferrer">Open-Meteo</a>. Abgefragt werden Daten des DWD für den Standort der Station.
-                  Die Abfrage und Aufbereitung erfolgt mit Erweiterungen aus <a href="https://github.com/roe-dl/weewx-DWD" target="_blank" rel="noreferrer">weewx-DWD</a>.
-                </li>
-                <li>Vorhersagen und Warnmeldungen von <a href="https://www.aerisweather.com" target="_blank" rel="noreferrer">AerisWeather</a>. Die Abfrage erfolgt mit Hilfe der 
-                  <a href="https://www.aerisweather.com/support/docs/api/" target="_blank" rel="noreferrer">AerisWeather API</a>. Abgefragt werden Daten des 
-                  <a href="https://metar-taf.com/de/ETIC" target="_blank" rel="noreferrer">Army Air Field</a> (ICAO-Code ETIC) in Grafenw&ouml;hr.
+                <li>Nutzung der Daten von <a href="https://open-meteo.com" target="_blank" rel="noreferrer">Open-Meteo</a>.</li>
+                <li>Nutzung der Daten von <a href="https://brightsky.dev" target="_blank" rel="noreferrer">Bright Sky</a>.</li>
+                <li>Nutzung der Daten von <a href="https://openweathermap.org" target="_blank" rel="noreferrer">OpenWeather</a>.</li>
+                <li>Nutzung der Daten von <a href="https://www.xweather.com" target="_blank" rel="noreferrer">Vaisala Xweather</a>.
+                (<a href="https://metar-taf.com/de/ETIC" target="_blank" rel="noreferrer">Army Air Field</a> (ICAO-Code ETIC) in Grafenw&ouml;hr.)
                 </li>
             </ul>
             <h3>Erdbeben</h3>
@@ -241,15 +238,17 @@
                 <li>Anzeige von Erdbeben mit Daten der <a href="http://earthquake.usgs.gov/fdsnws/event/1/" target="_blank" rel="noreferrer">USGS.gov Earthquake Catalog Developer API</a>.</li>
             </ul>
             <h3>Luftqualit&auml;t</h3>
-            <p>Erg&auml;nzend zu meinen AirRohr-Feinstaubdaten (PM<sub>2.5</sub>/PM<sub>10</sub>) werden zur Berechnung des Luftqualit&auml;tslevels weitere Daten - Ozon (O<sub>3</sub>) und Stickstoffdioxid (NO<sub>2</sub>) - der <a href="https://www.umweltbundesamt.de/daten/luft/luftdaten/stationen/" target="_blank" rel="noreferrer">Station Weiden i.d. OPf</a>, Nikolaistra&szlig;e (Stationscode DEBY075) geladen.
-            Die Berechnung und Einteilung der Luftqualit&auml;t orientiert sich an den <a href="https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex" target="_blank" rel="noreferrer">Berechnungsgrundlagen Luftqualit&auml;tsindex</a> des <a href="https://www.umweltbundesamt.de" target="_blank" rel="noreferrer">Umweltbundesamtes</a> (UBA).</p>
+            <p>Erg&auml;nzend zu meinen AirRohr-Feinstaubdaten (PM<sub>2.5</sub> und PM<sub>10</sub>) werden zur Berechnung des Luftqualit&auml;tslevels weitere Daten (Ozon O<sub>3</sub> und Stickstoffdioxid NO<sub>2</sub>) 
+            von Stationen des <a href="https://www.umweltbundesamt.de" target="_blank" rel="noreferrer">Umweltbundesamtes</a> (UBA) geladen.
+            Abgefragt wird die l&auml;ndliche Station in <a href="https://www.lfu.bayern.de/luft/immissionsmessungen/messwerte/stationen/detail/306/172" target="_blank" rel="noreferrer">Tiefenbach, Altenschneeberg</a> (Stationscode <a href="https://www.lfu.bayern.de/luft/immissionsmessungen/doc/lueb_dokumentation/aktiv/03_Oberpfalz/04_tiefenbach_altenschneeberg.pdf" target="_blank" rel="noreferrer">DEBY072</a>) und 
+            die st&auml;dtische Station <a href="https://www.lfu.bayern.de/luft/immissionsmessungen/messwerte/stationen/detail/303/172" target="_blank" rel="noreferrer">Weiden i.d. OPf</a> (Stationscode <a href="https://www.lfu.bayern.de/luft/immissionsmessungen/doc/lueb_dokumentation/aktiv/03_Oberpfalz/05_weiden_idopf_nikolaistrasse.pdf" target="_blank" rel="noreferrer">DEBY075</a>).
+            Die Berechnung und Einteilung der Luftqualit&auml;t orientiert sich an den <a href="https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex" target="_blank" rel="noreferrer">Berechnungsgrundlagen Luftqualit&auml;tsindex</a> des Umweltbundesamtes.</p>
+            <p>Daten und <a href="https://www.weiherhammer-wetter.de/graphs/?graph=APIAQ" target="_blank" rel="noreferrer">Vergleich</a> von diesen Diensten<p>
             <ul>
-                <li><a href="https://www.umweltbundesamt.de/daten/luft/luftdaten/doc" target="_blank" rel="noreferrer">Umweltbundesamt Air Data API</a></li>
-            </ul>
-            <p>Weitere Daten zum <a href="https://www.weiherhammer-wetter.de/graphs/?graph=APIAQ" target="_blank" rel="noreferrer">Vergleich</a> von diesen Diensten<p>
-            <ul>
-                <li><a href="https://www.aerisweather.com/support/docs/api/reference/endpoints/airquality/" target="_blank" rel="noreferrer">AerisWeather Airquality API</a></li>
-                <li><a href="https://openweathermap.org/api/air-pollution" target="_blank" rel="noreferrer">OpenWeatherMap Air Pollution API</a></li>
+                <li><a href="https://www.umweltbundesamt.de/daten/luft/luftdaten/doc" target="_blank" rel="noreferrer">Umweltbundesamt</a></li>
+                <li><a href="https://www.xweather.com/docs/weather-api/endpoints/airquality" target="_blank" rel="noreferrer">Vaisala Xweather</a></li>
+                <li><a href="https://open-meteo.com/en/docs/air-quality-api" target="_blank" rel="noreferrer">Open-Meteo</a></li>
+                <li><a href="https://openweathermap.org/api/air-pollution" target="_blank" rel="noreferrer">OpenWeather</a></li>
             </ul>
         </div>
     </div>
@@ -270,16 +269,16 @@
             <ul>
                 <li>Wettersoftware <a href="https://github.com/weewx/weewx" target="_blank" rel="noreferrer">WeeWX</a>, Version: $station.version</li>
                 <li>MQTT Broker <a href="https://obrienlabs.net/go/mqttbroker" target="_blank" rel="noreferrer">Mosquitto</a> zur Aufnahme von Nachrichten per MQTT</li>
-                <li>Visualisierung dieser Webseite mit einer angepassten Version der <a href="https://github.com/poblabs/weewx-belchertown" target="_blank" rel="noreferrer">Belchertown skin</a>. Basierend auf Belchertown skin Version: 1.3</li>
-                <li>Erweiterung <a href="https://www.highcharts.com" target="_blank" rel="noreferrer">HighCharts</a> zur Erstellung von Charts auf dieser Webseite</li>
-                <li>Das <a href="https://wiki.loxberry.de/plugins/foshkplugin/start" target="_blank" rel="noreferrer">FOSHKplugin</a> (<a href="https://wiki.loxberry.de/plugins/foshkplugin/foshkplugin_generic_version" target="_blank" rel="noreferrer">generic Version</a>) zum Empfang der GW1100 Daten per HTTP, deren Aufbereitung und Weiterleitung zu WeeWX und weiteren Zielen, Version: 0.09</li>
+                <li>Visualisierung dieser Webseite mit einer angepassten Version der <a href="https://github.com/poblabs/weewx-belchertown" target="_blank" rel="noreferrer">Belchertown skin</a>. Basierend auf Belchertown skin Version: 1.3.1</li>
+                <li>Erweiterung <a href="https://www.highcharts.com" target="_blank" rel="noreferrer">HighCharts</a> zur Erstellung von Charts auf dieser Webseite, Version: 10.3.3</li>
+                <li>Das <a href="https://wiki.loxberry.de/plugins/foshkplugin/start" target="_blank" rel="noreferrer">FOSHKplugin</a> (<a href="https://wiki.loxberry.de/plugins/foshkplugin/foshkplugin_generic_version" target="_blank" rel="noreferrer">generic Version</a>) zum Empfang der GW1100 Daten per HTTP, deren Aufbereitung und Weiterleitung zu WeeWX und weiteren Zielen, Version: 0.10beta</li>
                 <li>WeeWX Treiber <a href="https://github.com/matthewwall/weewx-interceptor" target="_blank" rel="noreferrer">weewx-interceptor</a> (ecowitt-client) zum Empfang der Daten per HTTP von FOSHKplugin. An eigene Sensoren angepasst, basierend auf Version: 0.60</li>
-                <li>WeeWX Service <a href="https://github.com/gjr80/weewx-gw1000" target="_blank" rel="noreferrer">Ecowitt Gateway</a> (weewx-gw1000) zum direkten Auslesen des GW1100 f&uuml;r weitere Daten (Batteriestatus, Signalst&auml;rken), Version: 0.6.0b1</li>
-                <li>WeeWX Service <a href="https://github.com/bellrichm/WeeWX-MQTTSubscribe" target="_blank" rel="noreferrer">WeeWX-MQTTSubscribe</a> zum Empfang weiterer Daten (Solar Station, Wetter API's u.s.w.) per MQTT, Version: 2.2.3-rc01</li>
-                <li>WeeWX Service <a href="https://github.com/bellrichm/weewx-mqttpublish" target="_blank" rel="noreferrer">weewx-mqttpublish</a> zum Upload der WeeWX Daten per MQTT in den MQTT Broker, Version: 0.2.0-rc02a</li>
+                <li>WeeWX Service <a href="https://github.com/gjr80/weewx-gw1000" target="_blank" rel="noreferrer">Ecowitt Gateway</a> (weewx-gw1000) zum direkten Auslesen des GW1100 f&uuml;r weitere Daten (Batteriestatus, Signalst&auml;rken), Version: 0.6.2</li>
+                <li>WeeWX Service <a href="https://github.com/bellrichm/WeeWX-MQTTSubscribe" target="_blank" rel="noreferrer">WeeWX-MQTTSubscribe</a> zum Empfang weiterer Daten (Solar Station, Wetter API's u.s.w.) per MQTT, Version: 3.0.0-rc07a</li>
+                <!-- <li>WeeWX Service <a href="https://github.com/bellrichm/weewx-mqttpublish" target="_blank" rel="noreferrer">weewx-mqttpublish</a> zum Upload der WeeWX Daten per MQTT in den MQTT Broker, Version: 0.2.0-rc02a</li>-->
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-mqtt" target="_blank" rel="noreferrer">weewx-mqtt</a>, angepasste <a href="https://github.com/roe-dl/weewx-mqtt/tree/aggregate_values" target="_blank" rel="noreferrer">Version</a> zum Upload der WeeWX Daten per MQTT in den MQTT Broker, Version: 0.25</li>
                 <li>Erweiterungen aus <a href="https://github.com/roe-dl/weewx-DWD" target="_blank" rel="noreferrer">weewx-DWD</a>, um eine Vielzahl externer Daten abzurufen und aufzubereiten.</li>
-                <li>Erweiterung <a href="https://github.com/roe-dl/weewx-GTS" target="_blank" rel="noreferrer">weewx-GTS</a>, generiert die <a href="https://de.wikipedia.org/wiki/Gr%C3%BCnlandtemperatursumme" target="_blank" rel="noreferrer">Grünlandtemperatursumme</a> und viele weitere Daten, Version: 0.9a2</li>
+                <li>Erweiterung <a href="https://github.com/roe-dl/weewx-GTS" target="_blank" rel="noreferrer">weewx-GTS</a>, generiert die <a href="https://de.wikipedia.org/wiki/Gr%C3%BCnlandtemperatursumme" target="_blank" rel="noreferrer">Grünlandtemperatursumme</a> und viele weitere Daten, Version: 1.1</li>
                 <li>Erweiterung <a href="https://github.com/jonathankoren/weewx-aqi" target="_blank" rel="noreferrer">weewx-aqi</a>, angepasste <a href="https://github.com/hoetzgit/weewx-aqi/tree/CustomAirQualityIndex" target="_blank" rel="noreferrer">Version</a>, diese orientiert sich an den <a href="https://www.umweltbundesamt.de/berechnungsgrundlagen-luftqualitaetsindex" target="_blank" rel="noreferrer">Berechnungsgrundlagen Luftqualit&auml;tsindex</a> des Umweltbundesamtes</li>
                 <li>Erweiterung <a href="https://github.com/Jterrettaz/sunduration" target="_blank" rel="noreferrer">sunduration</a>, angepasste <a href="https://github.com/hoetzgit/weewx-pwsweiherhammer/blob/master/home/weewx/bin/user/sunshineduration.py" target="_blank" rel="noreferrer">Version</a>, Berechnung der Sonnenscheindauer in Sekunden pro Archiv Intervall</li>
                 <li>Erweiterung <a href="https://github.com/brewster76/fuzzy-archer/tree/master/bin/user" target="_blank" rel="noreferrer">historygenerator</a>, angepasste <a href="https://github.com/hoetzgit/weewx-pwsweiherhammer/blob/master/home/weewx/bin/user/tablegenerator.py" target="_blank" rel="noreferrer">Version</a> um <a href="https://www.weiherhammer-wetter.de/reports/" target="_blank" rel="noreferrer">tabellarische Reporte</a> zu erstellen.</li>
@@ -290,7 +289,7 @@
                 <li>Erweiterung <a href="https://github.com/matthewwall/weewx-owm" target="_blank" rel="noreferrer">weewx-owm</a>, angepasste <a href="https://github.com/hoetzgit/weewx-owm/tree/pws-weiherhammer" target="_blank" rel="noreferrer">Version</a>, Upload zu <a href="https://openweathermap.org" target="_blank" rel="noreferrer">OpenWeatherMap</a>, Version: 0.9</li>
                 <li>Erweiterung <a href="https://github.com/sbsrouteur/weewx-opensensemap" target="_blank" rel="noreferrer">weewx-opensensemap</a>, Upload zu <a href="https://opensensemap.org" target="_blank" rel="noreferrer">openSenseMap</a>, Version: 0.3</li>
                 <li>Erweiterung <a href="https://github.com/hoetzgit/weewx-meteoservices/tree/master" target="_blank" rel="noreferrer">weewx-meteoservices</a>, angepasste <a href="https://github.com/hoetzgit/weewx-meteoservices/tree/enable-disable-service" target="_blank" rel="noreferrer">Version</a>, Upload zu <a href="https://meteo-services.com" target="_blank" rel="noreferrer">MeteoServices</a>, Version: 3.2 - <a href="https://stations.meteo-services.com/wxupdates/Downloads/meteoservices-3.2.zip" target="_blank" rel="noreferrer">Download</a> der originalen Erweiterung direkt beim Anbieter MeteoServices</li>
-                <li>DWD Meteogramm von <a href="http://tools.wettersoftware.de" target="_blank" rel="noreferrer">wettersoftware.de</a></li>
+                <!-- <li>DWD Meteogramm von <a href="http://tools.wettersoftware.de" target="_blank" rel="noreferrer">wettersoftware.de</a></li>-->
             </ul>
         </div>
     </div>
@@ -326,12 +325,12 @@
                 <li><a href="https://jas.weiherhammer-wetter.de" target="_blank" rel="noreferrer">JAS</a> (just another skin, <a href="https://github.com/bellrichm/weewx-jas" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://neowx.weiherhammer-wetter.de" target="_blank" rel="noreferrer">NeoWX Material</a> (<a href="https://neoground.com/projects/neowx-material" target="_blank" rel="noreferrer">v1.11 Infos</a>/<a href="https://github.com/seehase/neowx-material" target="_blank" rel="noreferrer">v1.12 Infos</a>)</li>
                 <li><a href="https://pwsd.weiherhammer-wetter.de" target="_blank" rel="noreferrer">PWS Dashboard</a> (PHP Dashboard, <a href="https://pwsdashboard.com" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://mesowx.weiherhammer-wetter.de" target="_blank" rel="noreferrer">MesoWX</a> (realtime HTML frontend, <a href="https://github.com/glennmckechnie/weewx-mesowx" target="_blank" rel="noreferrer">Infos</a>)</li>
+                <li><a href="https://wxobs.weiherhammer-wetter.de" target="_blank" rel="noreferrer">wxobs</a> (<a href="https://github.com/glennmckechnie/weewx-wxobs" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://fuzzy.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Fuzzy Archer</a> (<a href="https://github.com/brewster76/fuzzy-archer" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://rtgauges.weiherhammer-wetter.de" target="_blank" rel="noreferrer">SteelSeries Weather Gauges</a> (<a href="https://github.com/mcrossley/SteelSeries-Weather-Gauges" target="_blank" rel="noreferrer">Infos</a>/<a  href="https://github.com/gjr80/weewx-realtime_gauge-data" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://sofa.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Sofa</a> (<a href="https://neoground.com/projects/sofaskin" target="_blank" rel="noreferrer">Infos</a>)</li>
                 <li><a href="https://sofa2.weiherhammer-wetter.de" target="_blank" rel="noreferrer">Sofa-CW9009</a> (<a href="https://github.com/weatherstorm/Sofaskin-CW9009" target="_blank" rel="noreferrer">Infos</a>)</li>
-                <li><a href="https://mesowx.weiherhammer-wetter.de" target="_blank" rel="noreferrer">MesoWX</a> (realtime HTML frontend, <a href="https://github.com/glennmckechnie/weewx-mesowx" target="_blank" rel="noreferrer">Infos</a>)</li>
-                <li><a href="https://wxobs.weiherhammer-wetter.de" target="_blank" rel="noreferrer">wxobs</a> (<a href="https://github.com/glennmckechnie/weewx-wxobs" target="_blank" rel="noreferrer">Infos</a>)</li>
             </ul>
         </div>
     </div>
@@ -342,10 +341,10 @@
             <h2>Weitere Informationen zur Wetterstation</h2>
             <ul>
                 <li>Standort: <a href="https://www.weiherhammer.de" target="_blank" rel="noreferrer">Weiherhammer, Bayern, Deutschland</a>
-                <li>H&ouml;he ca.: $station.altitude</li>
-                <li>Konsole Software EasyWeather Version: 1.6.5</li>
-                <li>Ecowitt GW1100 Gateway Software Version: 2.2.3</li>
-                <li>Backend- und WebServer: Diverse virtuelle VMware ESXi basierende Rechner mit Ubuntu 22.04.2 LTS, Webseite self hosted</li>
+                <li>H&ouml;he: ca $station.altitude</li>
+                <li>Konsole Software EasyWeather Version: 1.6.6</li>
+                <li>Ecowitt GW1100 Gateway Software Version: 2.3.1</li>
+                <li>Backend- und WebServer: Diverse virtuelle VMware ESXi basierende Rechner mit Ubuntu 22.04.4 LTS, Webseite self hosted</li>
                 <li>WeeWX Server uptime: $station.os_uptime.long_form</li>
                 <li>WeeWX Service uptime: $station.uptime.long_form</li>
                 <li><a href="https://www.weiherhammer-wetter.de/stationmon/?monitor=$Extras.stationmon_page_default" target="_blank" rel="noreferrer">Station Monitor</a> (work in progress)</li>

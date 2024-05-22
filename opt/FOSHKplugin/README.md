@@ -55,7 +55,7 @@ Ich übernehme keine Garantien hinsichtlich des Einsatzes dieser Software - die 
 Treffen Sie Entscheidungen die zu Personen- oder Sachschäden führen können niemals auf Grundlage dieser Software.
 Durch das Programm generierte Warnungen (z.B. Sturm oder Gewitter) können eintreffen. Das Fehlen dieser Warnungen impliziert jedoch nicht, dass diese Dinge nicht möglich sind.
 
-Oliver Engel, 05.03.2022
+Oliver Engel, 13.06.2022
 http://foshkplugin.phantasoft.de
 FOSHKplugin@phantasoft.de
 
@@ -327,6 +327,99 @@ FOSHKplugin@phantasoft.de
                             neue Config-Option Export\URL_REPAIR = True (default) fügt automatisch ein ggf. fehlendes aber für den jeweiligen Forward erforderliches "http://" in der FWD_URL ein - kann mit URL_REPAIR = False deaktiviert werden
                               es gab mehrere Fehlerberichte von Nutzern, das ein Forward (meist im EW-Format) nicht funktioniert - Grund war aber jeweils, das das "http://" in der FWD_URL vergessen wurde
                               mit diesem Automatismus erfährt der Nutzer über ein Warning im Log-File weiterhin, das die Konfiguration nicht korrekt ist - der Forward funktioniert jedoch durch diesen Eingriff
+- 2024-02-04 Release v0.10  changed: maxdailygust is now maxdailygustkmh in metric data (kmh) - the unit of maxdailygust is mph - ATTENTION! may cause compatibility issues!
+                            fixed: typo in generic-FOSHKplugin-install.sh fixed sytemd –> systemd
+                            fixed: UDP command Plugin.intvlwarning=enable/disable triggered co2warning instead (copy/paste-Error)
+                            fixed: min/max values for leaf moisture sensors 1-8 were not written to the daily CSV
+                            fixed: WS90 rain-handling - replacing the new names with the old ones now works correctly (e.g. „rrain_piezo“ –> „rainratein“)
+                            fixed: scanWS MAC address output
+                            fixed: Sending of additional temp/hum sensors now according to WeatherCloud API documentation: temp02/hum02
+                            fixed: sunhours calculation - formula corrected like WeeWX extension (Jterrettaz)
+                            fixed: modifications for altered AWEKAS-API (response OK)
+                            fixed: possible error in the creation of the daily CSV fixed
+                            fixed: LoxBerry - piezo variable names in Loxone template fixed (added mm to the name)
+                            improved: improved 10 minutes average calculation „winddir_avg10m“ (avgWind)
+                            improved: ignore „@“ in the field identifier of OUT_TEMP and OUT_HUM to standardise the assignments as with FWD_REMAP
+                            improved: Pushover notification for missing weather station changed to red text color
+                            improved: existing values can now be assigned via FWD_REMAP to the WeatherCloud keys co, no, no2, so2, o3, tempagro, et, pwrsply, battery and noise
+                            improved: sending pm25 & aqi of WH41/43 channel #1 to WeatherCloud if no WH45 present (WH45 still preferred)
+                            improved: conversion to WU: tempNf, humidityN, qcStatus, softwareType
+                            improved: better error handling for saving as file via ftp(s)
+                            improved: InfluxDB: missed forwards are queued and transmitted when the destination is available again
+                            improved: error handling for Weathercloud forwards
+                            improved: error handling for Pushover push notifications (automatic retry)
+                            improved: parameter -scanWS gathers all weather stations now - including GW2000
+                            improved: WH45 for WU - if no WH41 present, use data from WH45 instead
+                            improved: internal functions stringToDict & getfromDict
+                            improved: if the structure of the daily CSV is changed, a new file is created
+                            new: introducing REBOOT_WARNING - check wether current runtime < last runtime - if so: warn (log, push, UDP: rebootwarning=1 dailyboot=#count)
+                              can be deactivated with http: /FOSHKplugin/rebootwarning=disable and UDP: Plugin.rebootwarning=disable
+                              LoxBerry: commands are included as virtual outputs in the template
+                            new: „dailyboot“ (number of restarts) and „rebootwarning“ as keys, reset at midnight and is also part of the daily CSV (if EVAL_VALUES active)
+                              LoxBerry: Keys „rebootwarning“ and „dailyboot“ are included as virtual inputs in the template
+                            new: „sunshine“ represents the presence of sunshine; can be artificially prolonged with SUNSHINE_HOLD to prevent constant changes
+                              LoxBerry: key „sunshine“ also included in template as virtual input
+                            new: introducing SUNSHINE_HOLD = seconds - Hold time in seconds for value sunshine, this time continues to be output sunshine = True, even if there is no sunshine (default: 0)
+                            new: FWD_TYPE = MIYO; sends temperature, wind and rain state (rain = rainratemm > 0 or hourlyrainmm > 1 or dailyrainmm > 1) to a MIYO cube (irrigation system)
+                             rain forecast is still missing; could be implemented too via API AerisWeather or AccuWeather (both in test)
+                            new FWD_TYPE = INFLUX2MET and INFLUX2IMP - support of InfluxDB2 - Python 3.6 or later and Python lib influxdb-client are required!
+                              bucket = dbname; org = fwd_sid; token = fwd_pwd
+                              missed forwards are queued and transmitted when the destination is available again
+                            new: (LoxBerry) virtual input FOSHK-getMinMax for command Plugin.getminmax integrated in Loxone template
+                            new: send the fwd_type, prgname & prgver as an argument with postFile
+                            new: FWD_WARNING, FWD_WARNINT, http://ipaddress:portnumber/FOSHKplugin/fwdstat, enable/disable via http & UDP
+                            new: BATTERY_WARNING may be enabled/disabled via http & UDP
+                            new: support for leafwetness sensors for Ambient Weather stations
+                            new: change the date/time output format via Config\DT_FORMAT (default = %d.%m.%Y %H:%M:%S - dd.mm.yyyy hh:mm:ss) for all (!) date/time outputs: log, csv, push
+                            new: forward warning via Pushover
+                              after a configurable number of successive unsuccessful attempts, a push message is sent through Pushover
+                            new: statistics page for forwards: http://ipaddress:portnumber/FOSHKplugin/fwdstat
+                            new: scan weather station page: http://ipaddress:portnumber/FOSHKplugin/scanWS
+                            new: missed forwards for forward types EW and RAWEW may be queued and sent when destination is available again (with FWD-xx\FWD_QUEUE = True)
+                            new: exclude list for battery warning: BATTERY_WARNEXCLUDE - a comma separated list of keys to exclude from battery warning e.g. wh90batt
+                            new: Awekas-API: deliver weather report conditions & tendency
+                              missed forwards are automatically queued as FOSHKplugin-queue/FWD-nr/FOSHKplugin-queued-data-nr.csv in config dir (or dir configured as FWD_QDIR)
+                            new: Adaptations for installation under (Open)Suse, Synology, Fedora (zypper, ipkg, dnf) in generic version
+                            new: custom push notifications via Pushover (user-defined push messages when values exceed or fall below a definable value)
+                            new: Conversion to UTF-8 of all programme parts (may cause problems)
+                            new: Weather Report for Awekas - automatically report rain, storm and thunderstorm
+                            new: FWD_TYPE = BANNER - automatic generation of banners and stickers with current weather data
+                            new: further queryable key names for getvalue, JSON, ... and forward types MQTT, InfluxDB, BANNER and TAGFILE:
+                              prgname (FOSHKplugin)
+                              prgver (current version number)
+                              prgbuild (complete version number with beta status)
+                              winddirtext (if available, 10min winddir-mean otherwise winddir as short text (N, NE, NNO, ...)
+                              aqtime (Time of processing by FOSHKplugin)
+                              pchange1in (1 hour pressure change in inHg)
+                              pchange3in (3 hour pressure change in inHg)
+                              lightningmi (lightning distance in miles)
+                              starttime (start time of FOSHKplugin)
+                            new: FWD_TYPE = TAGFILE - user-defined output format based on tags and templates
+                            new: config option Export\LIMIT_WINDGUST = n to prevent processing of unrealistic values for windgustmph and maxdailygust (e.g. for WS80/WS90).
+                              if value >= n the windgustmph will be renamed to _windgustmph (thus not processed); last "good" maxdailygust will be used as maxdailygust
+                            new: calculation of windrun (in miles) and windrunkm (in km) and daily solar radiation sum (srsum) - also included in Loxone template
+                            new: with getvalue, the additional parameter &comma can be used to force the output of a comma (",") instead of the dot (".") in numeric values
+                            new: with Config\LINK_ADR = address in Config file you may specify a name or address for all links created by FOSHKplugin (e.g. for use on public web server)
+                            new: support of Debian Bookworm based distributions by using virtual environment venv (problem with installation of required Python libraries with pip - PEP 668)
+                            new: with Export\ADD_DEWPT = True you can enable/disable the dew point calculation for indoor sensor, WH31 and WH45 - default: False
+                              the keys are dewptinf (indoor T/H sensor), dewptNf (WH31; where N=1..8), dewptf_co2 (for WH45) and for metric units: dewptinc, dewptNc, dewptc_co2
+                              Loxone: new metric keys dewptinc, dewptNc, dewptc_co2 added to the Loxone template
+                            new: get complete dictionary with http://ipaddress:portnumber/FOSHKplugin/getFullDict (with options like separator, sorted, json)
+                            new: with Logging\COLOR_PRINT (default: True), messages in the console window are highlighted in colour (ERROR = red, WARNING = yellow and after a warning has been cancelled = green; can be deactivated with COLOR_PRINT = False
+                            new: supports the Prometheus time series database - see https://foshkplugin.phantasoft.de/generic#prometheus
+                            new: Support for the old HP1001 console (conversion to WU format)
+                            new: use "&human" to output the time as readable time (e.g. dd.mm.yyyy hh:mm:ss) for time-specific getvalue queries; output format and locale may be specified (defaults to DT_FORMAT & LANGUAGE)
+                              Example: http://192.168.15.100:8096/FOSHKplugin/getvalue?key=aqtime&human&format="%A %x %H:%M:%S"&locale=nl_NL.UTF-8 --> zaterdag 03-02-24 10:17:22
+                            new: with Export\ADD_SPREAD = True (default: False) there will be additionally spread values for indoor, outdoor and WH45 sensor as well as all WH31 calculated
+                            changed: all incoming get-requests will be URL-decoded now
+                            new: enable/disable signal quality acquisition on supported consoles with Export\ADD_SIGNAL = True (default: False)
+                            changed: with FWD_OPTION = blacklist=False, the additional values for spread and signal quality are forwarded also in Ecowitt format for this specific forward
+                            new: Introduction of a naming scheme for beta versions ("Beta YYMMDD") - displayed at startup, in the log files and on the web pages generated by FOSHKplugin
+                            new: enable debug mode if file debug.enable found in the config directory
+                              enable debug mode with bin/service.sh debug-enable and disable with bin/service.sh debug-disable - LoxBerry only
+                            changed: changed default SUN_COEF from 0.8 to 0.92 - should fit better for Germany
+                            changed: all sun related values (e.g. sunshine, srsum, sunhours, ...) are only transmitted if solarradiation is present
+                            changed: better integration with Home Assistant (MQTT discovery) - see https://foshkplugin.phantasoft.de/generic#hass
 
 ## Known-Issues
 

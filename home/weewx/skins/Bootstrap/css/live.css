@@ -1,5 +1,13 @@
+body {
+  hyphens: manual;
+}
+
+.statsHeader {
+  hyphens: auto;
+}
+
 .currentConditions {
-  color: #777;
+  color: #555;
   font-family: sans-serif;
   padding: 3% 0;
 }
@@ -7,22 +15,30 @@
 .gauge {
   width: 160px;
   height:160px;
+  min-width: 140px;
+  min-height:140px;
 }
-.gaugecol {
-  min-width: 160px;
-  min-height:160px;
-}
+
 .chart {
-  width: 400px;
-  height:250px;
+  width: 475px;
+  height:275px;
   margin-top: 3px;
   margin-bottom: 3px;
   float: left;
 }
-.stationInfo td {
-   color: #777;
-   font-family: sans-serif;
-   font-size: smaller;
+
+.stationInfo {
+  background-color: #f6f6f6;
+  color: #555;
+  margin: 1px;
+  font-family: sans-serif;
+  font-size: small;
+}
+
+.footer {
+  color: #555;
+  font-family: sans-serif;
+  font-size: xx-small;
 }
 .primaryLive, .primaryLive:active, .primaryLive:focus, .primaryLive:checked {
   background-color: #428bca;
@@ -57,17 +73,26 @@
   bottom: 5px;
 }
 
+thead.table-light th {
+  color: #333;
+  background-color: #f6f6f6;
+}
+
+.table {
+  color: #555;
+}
+
 .chartTimestampOuter {
   position: relative;
   width:100%;
   display: flex;
   justify-content: center;
-  color: #777;
+  color: #555;
   font-family: sans-serif;
   font-size: 12px;
 }
 
-.statsTime {
+.statsTime, .stationInfoRainHeader {
   color: #777;
   font-size: smaller;
 }
@@ -75,6 +100,7 @@
 td.month, td.head, td.year, td.noaa, th.month, th.head, th.year, th.noaa {
   padding: 2px;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .month {
@@ -85,4 +111,14 @@ td.month, td.head, td.year, td.noaa, th.month, th.head, th.year, th.noaa {
 .year {
   border-left-style: double;
   border-left-width: 4px;
+}
+
+h3 small {
+  color: #555;
+  font-size: 0.6em;
+  margin-left: 0.5em;
+}
+
+section {
+  scroll-margin-top: 74px;
 }

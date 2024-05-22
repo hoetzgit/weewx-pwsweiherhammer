@@ -1,5 +1,5 @@
 # calculating Gruenlandtemperatursumme
-# Copyright (C) 2021, 2022 Johanna Roedenbeck
+# Copyright (C) 2021, 2022, 2023, 2024 Johanna Roedenbeck
 
 """
 
@@ -101,7 +101,7 @@
         
 """
 
-VERSION = "0.9a2"
+VERSION = "1.1"
 
 # deal with differences between python 2 and python 3
 try:
@@ -129,6 +129,7 @@ import weedb
 import weewx
 import weewx.manager
 import weewx.units
+import weewx.defaults
 import weewx.xtypes
 import weewx.wxformulas
 import weewx.uwxutils
@@ -236,11 +237,40 @@ weewx.units.conversionDict['microgram_per_meter_cubed']['gram_per_meter_cubed'] 
 weewx.units.conversionDict['microgram_per_meter_cubed']['milligram_per_meter_cubed'] = lambda x : x*0.001
 weewx.units.conversionDict['milligram_per_meter_cubed']['gram_per_meter_cubed'] = lambda x : x*0.001
 weewx.units.conversionDict['gram_per_meter_cubed']['milligram_per_meter_cubed'] = lambda x : x*1000
-weewx.units.default_unit_format_dict.setdefault('gram_per_meter_cubed',"%.1f")
-weewx.units.default_unit_label_dict.setdefault('gram_per_meter_cubed',u" g/m³")
-weewx.units.default_unit_format_dict.setdefault('milligram_per_meter_cubed',"%.1f")
-weewx.units.default_unit_label_dict.setdefault('milligram_per_meter_cubed',u" mg/m³")
+weewx.defaults.defaults['Units']['StringFormats'].setdefault('gram_per_meter_cubed',"%.1f")
+weewx.defaults.defaults['Units']['Labels'].setdefault('gram_per_meter_cubed',u" g/m³")
+weewx.defaults.defaults['Units']['StringFormats'].setdefault('milligram_per_meter_cubed',"%.1f")
+weewx.defaults.defaults['Units']['Labels'].setdefault('milligram_per_meter_cubed',u" mg/m³")
 
+# unit centibar for 'group_moisture'
+# Note: The unit 'centibar' is defined in core WeeWX, but no conversion 
+#       to other pressure units is defined.
+weewx.units.conversionDict.setdefault('centibar',dict())
+weewx.units.conversionDict['centibar']['mbar'] = lambda x: x*10.0
+weewx.units.conversionDict['centibar']['hPa'] = lambda x: x*10.0
+weewx.units.conversionDict['centibar']['kPa'] = lambda x: x
+weewx.units.conversionDict['centibar']['mmHg'] = lambda x: x*7.5006168
+weewx.units.conversionDict['centibar']['inHg'] = lambda x: x*weewx.units.INHG_PER_MBAR*10.0
+weewx.units.conversionDict['mbar']['centibar'] = lambda x: x/10.0
+weewx.units.conversionDict['hPa']['centibar'] = lambda x: x/10.0
+weewx.units.conversionDict['kPa']['centibar'] = lambda x: x
+
+# unit pF_value for 'group_moisture'
+# Note: We assume that the suction pressure of plants physically cannot go 
+#       down to 0. So, the logarithm cannot be undefined. Nevertheless,
+#       the Davis soil moisture device can return a reading of 0. That's
+#       why we have to handle this case. The lower limit of the pF value 
+#       as shown in literature is 0.0. For those reasons a pF value of 0.0
+#       is returned for all suction pressure readings below 0.1 centibar.
+def hPa_to_pF(x):
+    if x is None: return None
+    return math.log10(abs(x)) if abs(x)>=1.0 else 0.0
+weewx.units.conversionDict['centibar']['pF_value'] = lambda x: hPa_to_pF(x*10)
+weewx.units.conversionDict['mbar']['pF_value'] = hPa_to_pF
+weewx.units.conversionDict['hPa']['pF_value'] = hPa_to_pF
+weewx.units.conversionDict['kPa']['pF_value'] = lambda x: hPa_to_pF(x*10)
+weewx.defaults.defaults['Units']['StringFormats'].setdefault('pF_value','%.1f')
+weewx.defaults.defaults['Units']['Labels'].setdefault('pF_value',u'')
 
 class GTSType(weewx.xtypes.XType):
 
@@ -490,7 +520,7 @@ class GTSType(weewx.xtypes.XType):
 
         if obs_type is None:
             raise weewx.UnknownType("obs_type is None")
-            
+        
         # time offset of local mean time (LMT)
         if obs_type=='utcoffsetLMT':
             return weewx.units.ValueTuple(self.lmt_tz.utcoffset(None).total_seconds(),'second','group_deltatime')
@@ -511,7 +541,10 @@ class GTSType(weewx.xtypes.XType):
                         'outEquiTemp','outThetaE'):
             #_result = weewx.xtypes.get_scalar('outTemp',record,db_manager)
             try:
+                # If record is None or `outTemp` not in record, then
+                # a ValueTuple with the value of None is returned
                 _result = weewx.units.as_value_tuple(record,'outTemp')
+                # If _result represents a value of None, temp_C is None, too.
                 temp_C = weewx.units.convert(_result,'degree_C')[0]
                 method = option_dict.get('method',self.svp_method)
                 if obs_type=='outSVP':
@@ -859,13 +892,12 @@ class GTSType(weewx.xtypes.XType):
         return weeutil.weeutil.genDaySpans(start_ts, stop_ts)
 
 
-    def calc_GDD_avg(self,obs_type,timespan,db_manager,method,base_t,limit_t,stop_t,islmt):
+    def gen_GDD_avg(self,obs_type,timespan,db_manager,method,base_t,limit_t,stop_t,islmt):
         """ calculate growing degree days based on the average of
             minimum and maximum temperature of the day or based of
             the average temperature of the day"""
         if not limit_t: limit_t = 1000.0
         if not stop_t: stop_t = 1000.0
-        total = 0.0
         count = 0
         try:
           for daySpan in self.__genDaySpans(islmt, timespan.start, timespan.stop):
@@ -898,7 +930,20 @@ class GTSType(weewx.xtypes.XType):
             if avg_t is not None:
                 # if the average is above upper limit set it to upper limit
                 if limit_t is not None and avg_t>limit_t: avg_t = limit_t
-                total += weewx.wxformulas.cooling_degrees(avg_t,base_t)
+                yield daySpan, weewx.wxformulas.cooling_degrees(avg_t,base_t)
+                count += 1
+        except Exception as e:
+          logerr(e)
+
+    def calc_GDD_avg(self,obs_type,timespan,db_manager,method,base_t,limit_t,stop_t,islmt):
+        """ calculate growing degree days based on the average of
+            minimum and maximum temperature of the day or based of
+            the average temperature of the day"""
+        total = 0.0
+        count = 0
+        try:
+            for _, day_val in self.gen_GDD_avg(obs_type,timespan,db_manager,method,base_t,limit_t,stop_t,islmt):
+                total += day_val
                 count += 1
         except Exception as e:
           logerr(e)
@@ -944,8 +989,12 @@ class GTSType(weewx.xtypes.XType):
                     n += 1
                     if aggregate_type=='count':
                         pass
-                    if aggregate_type=='avg':
+                    elif aggregate_type=='not_null':
+                        break
+                    elif aggregate_type in ('avg','sum'):
                         val += _x[0]
+                    elif aggregate_type=='rms':
+                        val += _x[0]*_x[0]
                     elif aggregate_type in ('min','mintime'):
                         if _x[0]<val: 
                             val = _x[0]
@@ -954,23 +1003,32 @@ class GTSType(weewx.xtypes.XType):
                         if _x[0]>val: 
                             val = _x[0]
                             valtime = _result[0]
-                    elif aggregate_type=='last':
+                    elif aggregate_type in ('last','lasttime','first','firsttime'):
                         val = _x[0]
                         valtime = _result[0]
+                        if aggregate_type in ('first','firsttime'):
+                            break
                     else:
-                        raise weewx.UnknownType("%s.%s: unknown aggregation type" % (obs_type,aggregate_type))
-            if aggregate_type=='avg': 
-                if n>0:
-                    val /= n
-                else:
-                    val = None
-            if 'time' in aggregate_type:
-                return weewx.units.ValueTuple(valtime,'unix_epoch','group_time')
+                        raise weewx.UnknownAggregation("%s.%s: unknown aggregation type" % (obs_type,aggregate_type))
+            if aggregate_type in ('not_null'):
+                return weewx.units.ValueTuple(n>0,'boolean','group_boolean')
             if aggregate_type=='count':
                 return weewx.units.ValueTuple(n,'count','group_count')
+            if 'time' in aggregate_type:
+                # mintime, maxtime, firsttime, lasttime
+                return weewx.units.ValueTuple(valtime,'unix_epoch','group_time')
+            if n==0:
+                _x = self.get_scalar(obs_type, None, None, **option_dict)
+                val = _x[0]
+            elif aggregate_type=='avg': 
+                val /= float(n)
+            elif aggregate_type=='rms':
+                val = pow(val/float(n),0.5)
             return weewx.units.ValueTuple(val,_x[1],_x[2])
         except weedb.OperationalError as e:
             raise weewx.CannotCalculate("%s.%s: Database OperationalError '%s'" % (obs_type,aggregate_type,e))
+        except (weewx.UnknownType,weewx.UnknownAggregation,weewx.CannotCalculate):
+            raise
         except (ValueError, TypeError, ArithmeticError, LookupError) as e:
             raise weewx.CannotCalculate("%s.%s: %s" % (obs_type,aggregate_type,e))
         return None
@@ -1072,13 +1130,64 @@ class GTSType(weewx.xtypes.XType):
         # accumulated growing degree days
         if obs_type=='yearGDD' or obs_type=='seasonGDD':
             #loginf("GDD %s" % option_dict)
-            #loginf("GDD %s" % aggregate_type)
+            #loginf("GDD %s.%s" % (obs_type,aggregate_type))
+            if aggregate_type.lower()=='mintime':
+                return weewx.units.ValueTuple(timespan.start,'unix_epoch','group_time')
+            if aggregate_type.lower()=='maxtime':
+                return weewx.units.ValueTuple(timespan.stop,'unix_epoch','group_time')
+            if aggregate_type.lower()=='sum':
+                raise weewx.CannotCalculate("sum aggregation makes no sense for %s" % obs_type)
             if aggregate_type.lower()=='avg':
                 if timespan.start>time.time() or (timespan.start/2+timespan.stop/2)>time.time()+90000:
                     return weewx.units.ValueTuple(None,'degree_C_day','group_degree_days')
                 return self.get_scalar(obs_type,{'dateTime':(timespan.start/2+timespan.stop/2)},db_manager,**option_dict)
+            if aggregate_type.lower()=='min':
+                return self.get_scalar(obs_type,{'dateTime':timespan.start},db_manager,**option_dict)
+            if aggregate_type.lower()=='max':
+                return self.get_scalar(obs_type,{'dateTime':timespan.stop},db_manager,**option_dict)
             if aggregate_type.lower()=='last':
                 return self.get_scalar(obs_type,{'dateTime':timespan.stop},db_manager,**option_dict)
+            if aggregate_type.lower() in ('count','not_null'):
+                # year of the timespan start
+                year_timespan = weeutil.weeutil.archiveYearSpan(timespan.start)
+                # If timespan.start is already the start of the year, archiveYearSpan()
+                # returns the previous year. So add one year.
+                if year_timespan.stop==timespan.start:
+                    year_timespan = weeutil.weeutil.archiveYearSpan(timespan.start,years_ago=-1)
+                # If `outTemp` is present from the beginning of the year up to the beginning
+                # of the timespan in question, at least one reading could be returned. This
+                # is the condition to return True
+                _, _, val = weewx.xtypes.get_series(
+                    'outTemp',
+                    TimeSpan(year_timespan.start,timespan.start+86400),
+                    db_manager,
+                    aggregate_type,
+                    86400,
+                    **option_dict
+                )
+                try:
+                    if aggregate_type=='count':
+                        val = sum(val[0])
+                    else:
+                        val = min(val[0])
+                except (TypeError,ValueError,LookupError):
+                    val = False
+                # If the timespan covers more than one year and the result is False
+                # for the first year, try the next year(s).
+                while not val and timespan.stop>year_timespan.stop:
+                    year_timespan = weeutil.weeutil.archiveYearSpan(year_timespan.stop,years_ago=-1)
+                    val = weewx.xtypes.get_aggregate(
+                        'outTemp',
+                        TimeSpan(year_timespan.start,year_timespan.start+86400),
+                        aggregate_type,
+                        db_manager,
+                        **option_dict
+                    )[0]
+                # return result
+                if aggregate_type=='count':
+                    return weewx.units.ValueTuple(val,'count','group_count')
+                else:
+                    return weewx.units.ValueTuple(val,'boolean','group_boolean')
             raise weewx.UnknownAggregation("%s undefinded aggregation %s" % (obs_type,aggregate_type))
 
         # derived meteorological readings
@@ -1091,11 +1200,13 @@ class GTSType(weewx.xtypes.XType):
             raise weewx.UnknownType(obs_type)
         
         # aggregation types that are defined for those values
-        if aggregate_type not in ['avg','max','min','last','maxtime','mintime','lasttime']:
+        if aggregate_type not in ['sum','count','avg','max','min','last','maxtime','mintime','lasttime','not_null']:
             raise weewx.UnknownAggregation("%s undefinded aggregation %s" % (obs_type,aggregate_type))
 
         if timespan is None:
             raise weewx.CannotCalculate("%s %s no timespan" % (obs_type,aggregate_type))
+        if aggregate_type=='sum':
+            raise weewx.CannotCalculate("sum aggregation makes no sense for %s" % obs_type)
         if db_manager is None:
             if self.db_manager_ok:
                 logerr("%s: no database reference" % obs_type)
@@ -1113,6 +1224,7 @@ class GTSType(weewx.xtypes.XType):
         __maxtime = None
         __min = 10000000
         __mintime = None
+        __count = 0
         __ts = _soya_ts
         # Even if the time span starts after May 31st, the end value
         # is needed for some aggregations. So we have to calculate 
@@ -1123,12 +1235,15 @@ class GTSType(weewx.xtypes.XType):
             # update minimum and maximum
             if __ts in self.gts_values:
                 for __i,__val in enumerate(self.gts_values[__ts]):
-                    if __val is not None and __val>__max:
-                        __max = __val
-                        __maxtime = __ts+__i*86400
-                    if __val is not None and __val<__min:
-                        __min = __val
-                        __mintime = __ts+__i*86400
+                    if __val is not None and (__ts+__i*86400)>startOfDayTZ(timespan.start,__ts) and (__ts+__i*86400)<=timespan.stop:
+                        if __val>__max:
+                            __max = __val
+                            __maxtime = __ts+__i*86400
+                        if __val<__min:
+                            __min = __val
+                            __mintime = __ts+__i*86400
+                        if __val is not None:
+                            __count += 1
             # next year
             __ts=startOfYearTZ(__ts+31708800,self.lmt_tz)
         
@@ -1204,6 +1319,10 @@ class GTSType(weewx.xtypes.XType):
                 __x=weewx.units.ValueTuple(__min,'degree_C_day','group_degree_day')
             elif aggregate_type=='mintime':
                 __x=weewx.units.ValueTuple(__mintime,'unix_epoch','group_time')
+            elif aggregate_type=='not_null':
+                __x = (__mintime is not None or __maxtime is not None,'boolean','group_boolean')
+            elif aggregate_type=='count':
+                __x = (__count,'count','group_count')
             else:
                 raise weewx.CannotCalculate("%s %s" % (obs_type,aggregate_type))
             """
@@ -1235,8 +1354,13 @@ class GTSType(weewx.xtypes.XType):
                 return weewx.units.ValueTuple(__x,'unix_epoch','group_time')
                     
         raise weewx.CannotCalculate("%s %s" % (obs_type,aggregate_type))
+    
 
-
+try:
+    import user.barometer
+    has_baro = True
+except ImportError:
+    has_baro = False
 
 # This is a WeeWX service, whose only job is to register and unregister the extension
 class GTSService(StdService):
@@ -1246,8 +1370,9 @@ class GTSService(StdService):
         
         # the station's location
         # (needed for calculation of the local mean time (LMT))
-        __lat=engine.stn_info.latitude_f
-        __lon=engine.stn_info.longitude_f
+        __lat = engine.stn_info.latitude_f
+        __lon = engine.stn_info.longitude_f
+        __alt_vt = engine.stn_info.altitude_vt
 
         # saturation vapor pressure calculation method
         __svp_method = config_dict.get('StdWXCalculate',{}).get('WXXTypes',{}).get('VaporPressure',{})
@@ -1256,11 +1381,34 @@ class GTSService(StdService):
         self.GTSextension=GTSType(__lat,__lon,__svp_method)
         
         # Register the class
-        weewx.xtypes.xtypes.append(self.GTSextension)
+        archive_seen = False
+        summaries_seen = False
+        for idx,xtype in enumerate(weewx.xtypes.xtypes):
+            if (isinstance(xtype,weewx.xtypes.XTypeTable) or
+                                            (archive_seen and summaries_seen)):
+                weewx.xtypes.xtypes.insert(idx,self.GTSextension)
+                break
+            if isinstance(xtype,weewx.xtypes.ArchiveTable):
+                archive_seen = True
+            elif isinstance(xtype,weewx.xtypes.DailySummaries):
+                summaries_seen = True
+        else:
+            weewx.xtypes.xtypes.append(self.GTSextension)
         
         # Register the tags 
         # Note: This can be overwritten by the 'search_list' entry in skin_dict
         weewx.cheetahgenerator.default_search_list.append('user.dayboundarystats.DayboundaryStats')
+        
+        # Register barometer workaround
+        loginf('PressureCooker %s' % has_baro)
+        if has_baro:
+            pc_dict =  config_dict.get('StdWXCalculate',{}).get('PressureCooker',{})
+            self.barometer = user.barometer.PressureCooker(__alt_vt,
+                max_delta_12h=weeutil.weeutil.to_float(pc_dict.get('max_delta_12h',1800)),
+                altimeter_algorithm=pc_dict.get('altimeter',{}).get('algorithm','aaASOS'),
+                barometer_algorithm=pc_dict.get('barometer',{}).get('algorithm','paWView'))
+            loginf('PressureCooker %s ' % self.barometer)
+            weewx.xtypes.xtypes.append(self.barometer)
         
     def shutDown(self):
     
@@ -1269,5 +1417,7 @@ class GTSService(StdService):
         
         # Remove tag registration
         weewx.cheetahgenerator.default_search_list.remove('user.dayboundarystats.DayboundaryStats')
-
-
+        
+        # Remove barometer workaround
+        if has_baro:
+            weewx.xtypes.xtypes.remove(self.barometer)

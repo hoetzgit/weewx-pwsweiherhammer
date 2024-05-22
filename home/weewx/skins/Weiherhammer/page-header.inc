@@ -3,8 +3,8 @@
     <div class="row">
         <div class="col-sm-1 wx-stn-info-current-obs">
             <div class="obs-header-icon">
-                #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1' and $current_obs_icon != ""
-                <img id="wxicon" src="$relative_url/images/$current_obs_icon" alt="Wettersymbol $current_obs_icon">
+                #if $currentwx_enabled == "1"
+                <img id="wxicon" src="$relative_url/$currentwx_icon" alt="Aktuelles Wettersymbol $relative_url/$currentwx_icon">
                 #end if
             </div>
             <div class="obs-header-outtemp">$current.outTemp</div>

@@ -1,23 +1,29 @@
+const AVG = "avg";
+const SUM = "sum";
+const CHART = "Chart";
+const CHARTS = "charts";
+
 let weewxData;
-let weewxDataUrl = "weewxData.js";
+let weewxDataUrl = "weewxData.json";
+let stationInfoDataUrl = "reportData.json";
 let gauges = {};
 let charts = {};
 let lastAsyncReloadTimestamp = Date.now();
 let lastGoodStamp = lastAsyncReloadTimestamp / 1000;
 let archiveIntervalSeconds;
-let locale;
 let localeWithDash;
 let lang;
 let eChartsLocale;
 let maxAgeHoursMS;
 let intervalData = {};
 
-fetch(weewxDataUrl).then(function (u) {
+fetch(weewxDataUrl, {
+    cache: "no-store"
+}).then(function (u) {
     return u.json();
 }).then(function (serverData) {
     weewxData = serverData;
     archiveIntervalSeconds = weewxData.config.archive_interval;
-    locale = weewxData.config.locale;
     localeWithDash = locale.replace("_", "-");
     lang = locale.split("_")[0];
     eChartsLocale = lang.toUpperCase();
@@ -69,6 +75,9 @@ fetch(weewxDataUrl).then(function (u) {
                 let timestamp;
                 if (jPayload.dateTime !== undefined) {
                     timestamp = parseInt(jPayload.dateTime) * 1000;
+                    if (Date.now() - timestamp > archiveIntervalSeconds * 1000) {
+                        return;
+                    }
                 } else {
                     timestamp = Date.now();
                 }
@@ -83,32 +92,30 @@ fetch(weewxDataUrl).then(function (u) {
                 for (let chartId of Object.keys(charts)) {
                     let chart = charts[chartId];
                     chart.chartId = chartId;
-                    if (chart.weewxData.aggregate_interval_minutes !== undefined) {
-                        addAggregatedChartValues(chart, jPayload, timestamp, chart.weewxData.aggregate_interval_minutes);
-                    } else {
-                        addValues(chart, jPayload, timestamp);
-                    }
+                    addValues(chart, jPayload, timestamp);
                 }
                 let lastUpdate = document.getElementById("lastUpdate");
-                lastUpdate.innerHTML = date.toLocaleDateString(localeWithDash) + ", " + date.toLocaleTimeString(localeWithDash);
+                lastUpdate.innerHTML = formatDateTime(date);
             });
         }
     }
-    if(typeof loadGauges === "function" && typeof loadCharts === "function") {
+    if (typeof loadGauges === "function") {
         loadGauges();
+    }
+    if (typeof loadCharts === "function") {
         loadCharts();
-    } else {
-        setTimeout(asyncReloadWeewxData, 1);
     }
 }).catch(err => {
-        throw err
+    throw err
 });
+
+setInterval(checkAsyncReload, 60000);
 
 function setGaugeValue(gauge, value, timestamp) {
     let option = gauge.getOption();
     let valueSeries = option.series[0];
     addValue(gauge.weewxData.dataset, value, timestamp);
-    if(option.series[1] !== undefined) {
+    if (option.series[1] !== undefined) {
         option.series[1].axisLine.lineStyle.color = getHeatColor(valueSeries.max, valueSeries.min, valueSeries.splitNumber, valueSeries.axisTick.splitNumber, gauge.weewxData.dataset.data);
     }
     gauge.setOption(option);
@@ -116,56 +123,62 @@ function setGaugeValue(gauge, value, timestamp) {
 }
 
 function updateGaugeValue(newValue, gauge) {
-   let option = gauge.getOption();
-   let currentValue = option.series[0].data[0].value;
-   if(gauge.isCircular !== undefined && gauge.isCircular && Math.abs(newValue - currentValue) > 180) {
-     let currentAnimationEasingUpdate = option.series[0].animationEasingUpdate;
-     let currentAnimationSetting = option.animation;
-     option.series[0].animationEasingUpdate = 'linear';
-     let toNorth = 360;
-     let fromNorth = 0;
-     if(currentValue < 180) {
-       toNorth = 0;
-       fromNorth = 360;
-     }
-     option.series[0].data[0].value = toNorth;
-     gauge.setOption(option);
-     option.animation = false;
-     option.series[0].data[0].value = fromNorth;
-     gauge.setOption(option);
-     option.animation = currentAnimationSetting;
-     option.series[0].animationEasingUpdate = currentAnimationEasingUpdate;
-     option.series[0].data[0].value = newValue;
-     gauge.setOption(option);
-   } else {
-        option.series[0].data[0].value = newValue;
-   }
-   gauge.setOption(option);
- }
-
-function addAggregatedChartValues(chart, jPayload, timestamp, aggregateIntervalMinutes) {
-    let option = chart.getOption();
-    for (let dataset of option.series) {
-        let value = convert(chart.weewxData[dataset.weewxColumn], getValue(jPayload, dataset.payloadKey));
-        if (!isNaN(value)) {
-            addAggregatedChartValue(dataset, value, timestamp, aggregateIntervalMinutes);
-            chart.setOption(option);
-            if(chart.chartId !== undefined) {
-                let chartElem = document.getElementById(chart.chartId + "_timestamp");
-                chartElem.innerHTML = formatDateTime(timestamp);
-            }
+    let option = gauge.getOption();
+    let currentValue = option.series[0].data[0].value;
+    if (gauge.isCircular !== undefined && gauge.isCircular && Math.abs(newValue - currentValue) > 180) {
+        let currentAnimationEasingUpdate = option.series[0].animationEasingUpdate;
+        let currentAnimationSetting = option.animation;
+        option.series[0].animationEasingUpdate = 'linear';
+        let toNorth = 360;
+        let fromNorth = 0;
+        if (currentValue < 180) {
+            toNorth = 0;
+            fromNorth = 360;
         }
+        option.series[0].data[0].value = toNorth;
+        gauge.setOption(option);
+        option.animation = false;
+        option.series[0].data[0].value = fromNorth;
+        gauge.setOption(option);
+        option.animation = currentAnimationSetting;
+        option.series[0].animationEasingUpdate = currentAnimationEasingUpdate;
+        option.series[0].data[0].value = newValue;
+        gauge.setOption(option);
+    } else {
+        option.series[0].data[0].value = newValue;
     }
+    gauge.setOption(option);
 }
 
 function addValues(chart, jPayload, timestamp) {
     let option = chart.getOption();
+    if (option === undefined || option === null) {
+        return;
+    }
     for (let dataset of option.series) {
         dataset.chartId = chart.chartId;
         let value = convert(chart.weewxData[dataset.weewxColumn], getValue(jPayload, dataset.payloadKey));
-        if (!isNaN(value)) {
+        addValueAndUpdateChart(chart, option, dataset, value, timestamp);
+    }
+}
+
+function addValueAndUpdateChart(chart, option, dataset, value, timestamp) {
+    if (!isNaN(value)) {
+        let aggregateType = SUM;
+        if (chart.weewxData[dataset.weewxColumn].aggregateType !== undefined) {
+            aggregateType = chart.weewxData[dataset.weewxColumn].aggregateType;
+        }
+        if (chart.weewxData[dataset.weewxColumn].aggregateInterval !== undefined) {
+            addAggregatedChartValue(dataset, value, timestamp, chart.weewxData[dataset.weewxColumn].aggregateInterval, aggregateType);
+            timestamp = Date.now(); // Axis timestamps for aggregated series are not fitting for updating "last updated" in chart
+        } else {
             addValue(dataset, value, timestamp);
-            chart.setOption(option);
+        }
+        chart.setOption(option);
+
+        if (dataset.chartId !== undefined) {
+            let chartElem = document.getElementById(dataset.chartId + "_timestamp");
+            chartElem.innerHTML = formatDateTime(timestamp);
         }
     }
 }
@@ -180,7 +193,7 @@ function addValue(dataset, value, timestamp) {
         //some stations update windSpeed more often than gust: if current speed > gust, update gust, but only for current gauge value
         //other values will be updated when regular message arrives
         let windGustGauge = gauges.windGustGauge;
-        if(windGustGauge !== undefined && value > windGustGauge.getOption().series[0].data[0].value) {
+        if (windGustGauge !== undefined && value > windGustGauge.getOption().series[0].data[0].value) {
             setGaugeValue(windGustGauge, value, timestamp);
         }
     }
@@ -190,10 +203,6 @@ function addValue(dataset, value, timestamp) {
         value = getIntervalValue(type, currentIntervalData, value);
     }
     data.push([timestamp, value]);
-    if(dataset.chartId !== undefined) {
-        let chartElem = document.getElementById(dataset.chartId + "_timestamp");
-        chartElem.innerHTML = formatDateTime(timestamp);
-    }
     rotateData(dataset.data);
 }
 
@@ -206,7 +215,7 @@ function getIntervalData(type, intervalStart) {
         intervalData[type] = currentIntervalData;
         return currentIntervalData;
     } else {
-        return currentIntervalData = intervalData[type];
+        return intervalData[type];
     }
 }
 
@@ -214,7 +223,7 @@ function getIntervalValue(type, currentIntervalData, value) {
     if (type === "windGust") {
         return getMaxIntervalValue(currentIntervalData, value);
     }
-    if (type === "windDir") {
+    if (type === "windDir" && intervalData.windSpeed !== undefined) {
         return calcWindDir(currentIntervalData, intervalData.windSpeed);
     }
     return getAverageIntervalValue(currentIntervalData, value);
@@ -238,19 +247,29 @@ function getAverageIntervalValue(currentIntervalData, value) {
     return value / (currentIntervalData.values.length + 1);
 }
 
-function addAggregatedChartValue(dataset, value, timestamp, intervalMinutes) {
-    setAggregatedChartEntry(value, timestamp, intervalMinutes, dataset.data);
+function addAggregatedChartValue(dataset, value, timestamp, intervalSeconds, aggregateType) {
+    setAggregatedChartEntry(value, timestamp, intervalSeconds, dataset.data, aggregateType);
     rotateData(dataset.data);
 }
 
-function setAggregatedChartEntry(value, timestamp, intervalMinutes, data) {
-    let duration = intervalMinutes * 60000;
+function setAggregatedChartEntry(value, timestamp, aggregateInterval, data, aggregateType) {
+    if (value === null || value === undefined) {
+        return;
+    }
+    let duration = aggregateInterval * 1000;
     let intervalStart = getIntervalStart(timestamp, duration) + duration / 2;
     if (data.length > 0 && data[data.length - 1][0] === intervalStart) {
-        let intervalSum = Number.parseFloat(data[data.length - 1][1]) + value;
-        data[data.length - 1][1] = intervalSum;
+        let aggregatedValue;
+        if (aggregateType === AVG) {
+            let valueCount = data[data.length - 1][2];
+            aggregatedValue = (Number.parseFloat(data[data.length - 1][1]) * valueCount + value) / (valueCount + 1);
+        } else {
+            aggregatedValue = Number.parseFloat(data[data.length - 1][1]) + value;
+        }
+        data[data.length - 1][1] = aggregatedValue;
+        data[data.length - 1][2]++;
     } else {
-        data.push([intervalStart, value]);
+        data.push([intervalStart, value, 1]);
     }
 }
 
@@ -302,17 +321,27 @@ function calcWindDir(windDirIntervaldata, windSpeedIntervaldata) {
 
 function formatDateTime(timestamp) {
     let date = new Date(timestamp);
-    return date.toLocaleDateString(localeWithDash) + ", " + date.toLocaleTimeString(localeWithDash);
+    return date.toLocaleDateString(localeWithDash) + ", " + formatTime(timestamp);
+}
+
+function formatTime(timestamp) {
+    let date = new Date(timestamp);
+    return date.toLocaleTimeString(localeWithDash);
 }
 
 function checkAsyncReload() {
-    if(true || (Date.now() - lastAsyncReloadTimestamp) / 1000 > archiveIntervalSeconds) {
-        fetch("ts.js").then(function (u) {
+    log_debug(`async reload due in ${Math.round(archiveIntervalSeconds - (Date.now() - lastAsyncReloadTimestamp) / 1000)} seconds.`);
+    if ((Date.now() - lastAsyncReloadTimestamp) / 1000 > archiveIntervalSeconds) {
+        fetch("ts.json", {
+            cache: "no-store"
+        }).then(function (u) {
             return u.json();
         }).then(function (serverData) {
-            if(Number.parseInt(serverData.lastGoodStamp) > lastGoodStamp) {
+            if (Number.parseInt(serverData.lastGoodStamp) > lastGoodStamp) {
                 lastGoodStamp = serverData.lastGoodStamp;
                 asyncReloadWeewxData();
+                asyncReloadReportData();
+                lastAsyncReloadTimestamp = Date.now();
             }
         }).catch(err => {
             throw err
@@ -321,29 +350,157 @@ function checkAsyncReload() {
 }
 
 function asyncReloadWeewxData() {
-    fetch(weewxDataUrl).then(function (u) {
+    fetch(weewxDataUrl, {
+        cache: "no-store"
+    }).then(function (u) {
         return u.json();
     }).then(function (serverData) {
+        let newerItems = [];
+        for (let chartItem of weewxData[CHARTS].live_chart_items) {
+            newerItems[chartItem] = [];
+            for (let seriesName of Object.keys(weewxData[CHARTS][chartItem])) {
+                if (serverData[seriesName] !== undefined && serverData[seriesName].slice(-1)[0] !== undefined) {
+                    let seriesData = getSeriesData(chartItem, seriesName);
+                    if (seriesData !== undefined) {
+                        newerItems[chartItem][seriesName] = setNewerItems(seriesData, serverData[seriesName], weewxData[CHARTS][chartItem], seriesName);
+                    }
+                }
+            }
+        }
         weewxData = serverData;
         loadGauges();
-        if(typeof loadCharts === 'function') {
+        if (typeof loadCharts === 'function') {
             loadCharts();
+        }
+        let date = new Date(lastGoodStamp * 1000);
+        let lastUpdate = document.getElementById("lastUpdate");
+        lastUpdate.innerHTML = formatDateTime(date);
+        appendNewerItems(newerItems);
+    }).catch(err => {
+        throw err
+    });
+}
+
+function asyncReloadReportData() {
+    fetch(stationInfoDataUrl, {
+        cache: "no-store"
+    }).then(function (u) {
+        return u.json();
+    }).then(function (reportData) {
+        for (let aFunction of updateFunctions) {
+            aFunction(reportData);
         }
     }).catch(err => {
         throw err
     });
 }
 
+function setNewerItems(seriesData, serverSeriesData, configs, seriesName) {
+    let config = configs[seriesName];
+    let newerItems = [];
+    if (config.aggregateInterval === undefined) {
+        let newestServerTimestamp = serverSeriesData[serverSeriesData.length - 1][0];
+        let aItem = seriesData.pop();
+        while (aItem !== undefined && aItem[0] > newestServerTimestamp) {
+            newerItems.push(aItem);
+            aItem = seriesData.pop();
+        }
+    } else {
+        let aggregatedServerSeriesData = aggregate(serverSeriesData, config.aggregateInterval, config.aggregateType);
+        if (aggregatedServerSeriesData.length > 0) {
+            let newestServerTimestamp = aggregatedServerSeriesData[aggregatedServerSeriesData.length - 1][0];
+            let aItem = seriesData.pop();
+
+            while (aItem !== undefined && aItem[0] >= newestServerTimestamp) {
+                if (aItem !== undefined && aItem[0] === newestServerTimestamp) {
+                    aggregatedServerSeriesData.pop();
+                    aggregatedServerSeriesData.push(aItem);
+                }
+                if (aItem !== undefined && aItem[0] > newestServerTimestamp) {
+                    newerItems.push(aItem);
+                }
+                aItem = seriesData.pop();
+            }
+            serverSeriesData = aggregatedServerSeriesData;
+        }
+    }
+    return newerItems;
+}
+
+function appendNewerItems(newerItems) {
+    for (let chartItem of Object.keys(newerItems)) {
+        let chartId = chartItem + CHART;
+        let chart = charts[chartId];
+        let option = chart.getOption();
+        for (let dataset of option.series) {
+            dataset.chartId = chartId;
+            let newData = newerItems[chartItem][dataset.weewxColumn];
+            if (newData.length > 0) {
+                for (let data of newData) {
+                    let value = data[1];
+                    let timestamp = data[0];
+                    log_debug(`updating ${dataset.weewxColumn} of ${chartId} value=${value}, timestamp=${timestamp}(${formatDateTime(timestamp)}).`);
+                    addValueAndUpdateChart(chart, option, dataset, value, timestamp);
+                }
+            }
+        }
+    }
+}
+
 function getValue(obj, path) {
-    if(path === undefined) {
+    if (path === undefined) {
         return;
     }
     let pathArray = path.split(".");
     let value = obj;
-    for(let i = 0; i < pathArray.length; i++) {
-        if(value !== undefined && value[pathArray[i]] !== undefined) {
-  	        value = value[pathArray[i]];
-  	    }
+    for (let i = 0; i < pathArray.length; i++) {
+        if (value !== undefined && value[pathArray[i]] !== undefined) {
+            value = value[pathArray[i]];
+        }
     }
     return value;
+}
+
+function getSeriesData(chartItem, seriesName) {
+    for (let series of charts[chartItem + CHART].getOption().series) {
+        if (series.weewxColumn !== undefined && series.weewxColumn === seriesName) {
+            return series.data;
+        }
+    }
+    return undefined;
+}
+
+function log_debug(message) {
+    if (weewxData.config.debug_front_end !== undefined && "true" === weewxData.config.debug_front_end.toLowerCase()) {
+        console.log(message);
+    }
+}
+
+function setInnerHTML(element, value) {
+    if (element !== null && element !== undefined && value !== null && value !== undefined) {
+        element.innerHTML = value;
+    }
+}
+
+function aggregate(data, aggregateInterval, aggregateType) {
+    if (aggregateInterval === undefined || aggregateType === undefined) {
+        return data;
+    }
+    let aggregatedData = [];
+    if (data !== null && data !== undefined) {
+        for (let entry of data) {
+            //timestamp needs to be shifted one archive_interval to show the readings in the correct time window
+            if (entry[1] !== undefined) {
+                setAggregatedChartEntry(entry[1], entry[0] - Number(weewxData.config.archive_interval) * 1000, aggregateInterval, aggregatedData);
+            }
+        }
+        if (aggregateType === AVG && aggregatedData.length > 0) {
+            for (let entry of aggregatedData) {
+                if (entry[2] !== 0) {
+                    entry[1] = entry[1] / entry[2];
+                }
+            }
+        }
+    }
+    return aggregatedData;
 }

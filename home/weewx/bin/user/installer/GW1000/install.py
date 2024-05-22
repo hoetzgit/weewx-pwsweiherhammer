@@ -10,11 +10,14 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
                       Installer for Ecowitt Gateway Driver
 
-Version: 0.6.0.b1                                      Date: 16 April 2023
+Version: 0.6.1                                         Date: 21 February 2024
 
 Revision History
-    16 April 2023       v0.6.0b1
+    21 February 2024    v0.6.1
         -   no change, version increment only
+    7 February 2024     v0.6.0
+        -   remove distutils.StrictVersion dependency
+        -   added extractor config for heap_free
     13 June 2022        v0.5.0
         -   changed descriptive name of extension
         -   changed reference to 'GW1000 driver' to 'Ecowitt gateway driver'
@@ -46,7 +49,6 @@ Revision History
 
 # python imports
 import configobj
-from distutils.version import StrictVersion
 from setup import ExtensionInstaller
 
 # import StringIO, use six.moves due to python2/python3 differences
@@ -56,8 +58,8 @@ from six.moves import StringIO
 import weewx
 
 
-REQUIRED_VERSION = "3.7.0"
-GW1000_VERSION = "0.6.0b1"
+REQUIRED_WEEWX_VERSION = "3.7.0"
+GW1000_VERSION = "0.6.1"
 # define our config as a multiline string so we can preserve comments
 gw1000_config = """
 [GW1000]
@@ -133,6 +135,8 @@ gw1000_config = """
     [[pm10_24h_avg]]
         extractor = last
     [[co2_24h_avg]]
+        extractor = last
+    [[heap_free]]
         extractor = last
     [[wh40_batt]]
         extractor = last
@@ -373,15 +377,36 @@ gw1000_config = """
 gw1000_dict = configobj.ConfigObj(StringIO(gw1000_config))
 
 
+def version_compare(v1, v2):
+    """Basic 'distutils' and 'packaging' free version comparison.
+
+    v1 and v2 are WeeWX version numbers in string format.
+
+    Returns:
+        0 if v1 and v2 are the same
+        -1 if v1 is less than v2
+        +1 if v1 is greater than v2
+    """
+
+    import itertools
+    mash = itertools.zip_longest(v1.split('.'), v2.split('.'), fillvalue='0')
+    for x1, x2 in mash:
+        if x1 > x2:
+            return 1
+        if x1 < x2:
+            return -1
+    return 0
+
+
 def loader():
     return Gw1000Installer()
 
 
 class Gw1000Installer(ExtensionInstaller):
     def __init__(self):
-        if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_VERSION):
+        if version_compare(weewx.__version__, REQUIRED_WEEWX_VERSION) < 0:
             msg = "%s requires WeeWX %s or greater, found %s" % (''.join(('Ecowitt gateway driver ', GW1000_VERSION)),
-                                                                 REQUIRED_VERSION,
+                                                                 REQUIRED_WEEWX_VERSION,
                                                                  weewx.__version__)
             raise weewx.UnsupportedFeature(msg)
         super(Gw1000Installer, self).__init__(

@@ -52,7 +52,8 @@
             <span class="issued-DWD">$obs.label.forecast_issuedWBX_dwd_paused</span>
         </div>
         <div class="col-md-12 forecast-content">
-            <p>zur Zeit keine Warnungen (Daten werden vom DWD im Zeitraum <b>M&auml;rz</b> bis <b>Oktober</b> zur Verf&uuml;gung gestellt.)</p>
+            <p>zur Zeit keine Warnungen</p>
+            <p><b>Hinweis:</b> Daten zum Waldbrandgefahrenindex werden vom DWD nur im Zeitraum <b>M&auml;rz</b> bis <b>Oktober</b> zur Verf&uuml;gung gestellt.</p>
         </div>
     #end if
     </div>

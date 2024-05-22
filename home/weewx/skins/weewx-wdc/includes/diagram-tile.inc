@@ -7,6 +7,8 @@
 #end if
 #set $partial_obs_key = $get_custom_data_binding_obs_key($partial_obs)
 
+#set $diagram_props = $get_diagram_props($partial_obs, $context)
+
 <div class="$diagram_classes">
   <div class="bx--tile diagram-tile" data-test="$partial_obs">
     <div class="bx--row">
@@ -26,6 +28,7 @@
           #set $series_name = $partial_obs + 'Series' + str($diagram_index)
           #set $partial_obs_binding = $get_data_binding($partial_obs, $context)
 
+          <!--TODO: Implement custom context logic from combined-diagram-tile template-->
           <!--prettier-ignore-->
           #if $context == 'month' and $use_parameter_month
             #set $obs_context = $month($data_binding=$partial_obs_binding)
@@ -44,6 +47,7 @@
             var $series_name = $get_diagram_data($observation=$partial_obs, $observation_key=$partial_obs_key, $context_key=$context, $start_ts=$obs_context.start.raw, $end_ts=$obs_context.end.raw, $data_binding=$partial_obs_binding, $alltime_start=$alltime.start.format('%d.%m.%Y'), alltime_end=$alltime.end.format('%d.%m.%Y'));
           </script>
 
+          <!--prettier-ignore-->
           <div
             class="diagram"
             data-labels="['$obs.label[$partial_obs]']"
@@ -51,10 +55,12 @@
             data-value="$series_name"
             data-unit="['$get_unit_label($get_unit_for_obs($partial_obs, $partial_obs_key, $context))']"
             data-observations="['$partial_obs']"
-            data-diagram="['$get_diagram($partial_obs)']"
+            ## Not used, just for consistency with combined-diagram-tile template
+            data-combinedkeys="['$partial_obs']"
+            data-diagram="['$get_diagram($partial_obs, $context)']"
             data-context="$context"
             data-aggregate-type="['$get_aggregate_type($partial_obs, $context)']"
-            data-nivo-props="$get_diagram_props($partial_obs, $context)"
+            data-nivo-props="$diagram_props"
           ></div>
         </div>
       </div>

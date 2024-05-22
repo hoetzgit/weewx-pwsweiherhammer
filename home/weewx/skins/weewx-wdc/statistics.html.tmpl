@@ -16,8 +16,8 @@
   <body class="theme-$DisplayOptions.get('layout', 'alternative')">
     #include "includes/ui-shell.inc"
 
-    <main>
-      <section class="main bx--content">
+    <main class="main bx--content">
+      <section>
         <div class="bx--grid bx--grid--full-width">
           <div class="bx--row">
             <header class="bx--col page-header">
@@ -63,6 +63,11 @@
         </div>
       </section>
     </main>
+
+    <!--Stat tile Modals-->
+    #if $DisplayOptions.get('layout', 'alternative') == 'alternative'
+      #include "includes/stat-tile-modals.inc"
+    #end if
 
     #include "includes/footer.inc"
 

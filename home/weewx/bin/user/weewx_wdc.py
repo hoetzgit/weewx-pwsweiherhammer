@@ -1,13 +1,14 @@
 # coding: utf-8
 #
-#    Copyright (c) 2023 David Baetge <david.baetge@gmail.com>
+#    Copyright (c) 2023 David Baetge <david.baetge@gmail.com>,
+#      Vince Skahan (last_rain and time_since_last_rain),
+#      Pat O'Brien (Consecutive Days With/Without Rain)
 #
 #    Distributed under the terms of the GNU Public License (GPLv3)
 #
-#    @see http://weewx.com/docs/sle.html
-#
 import datetime
 import calendar
+import pprint
 import time
 import os
 import json
@@ -25,7 +26,7 @@ from weewx.units import (
 from weewx.wxformulas import beaufort
 from weeutil.weeutil import TimeSpan, rounder, to_bool, to_int, startOfDay, startOfArchiveDay
 from weeutil.config import search_up, accumulateLeaves
-
+from weewx.tags import TimespanBinder
 
 try:
     import weeutil.logger
@@ -58,6 +59,281 @@ except ImportError:
         logmsg(syslog.LOG_ERR, msg)
 
 
+class RainTags(SearchList):
+    """"
+    Code for last_rain and time_since_last_rain is taken
+    (and slightly modified) from
+    https://github.com/vinceskahan/vds-weewx-lastrain-extension
+
+    reused massively from wdSearchX3.py in weewx-wd 1.0 at Gary's suggestion
+
+    some code also reused_from/stolen_from/insulting weewx station.py
+    per Tom's suggestion
+
+    Basic concpet of most_days_with_rain and most_days_without_rain is partially
+    copied from https://github.com/poblabs/weewx-belchertown
+    """
+
+    def __init__(self, generator):
+        SearchList.__init__(self, generator)
+
+    def get_extension_list(self, timespan, db_lookup):
+        """Returns a search list extension with datetime of last rain and secs since then.
+
+        Parameters:
+          timespan: An instance of weeutil.weeutil.TimeSpan. This will
+                    hold the start and stop times of the domain of
+                    valid times.
+
+          db_lookup: This is a function that, given a data binding
+                     as its only parameter, will return a database manager
+                     object.
+
+        Returns:
+          last_rain:            A ValueHelper containing the datetime of the last rain
+          time_since_last_rain: A ValueHelper containing the seconds since last rain
+          most_days_with_rain:  A dict containing
+            start                   A ValueHelper containing the datetime of the start of the period
+            end                     A ValueHelper containing the datetime of the end of the period
+            amount                  A ValueHelper containing the amount of rain in the period
+            days_with_rain          The number of days with rain (raw int value)
+            days_with_rain_delta    A ValueHelper containing the number of seconds in the period
+          most_days_without_rain: A dict containing
+            start                   A ValueHelper containing the datetime of the start of the period
+            end                     A ValueHelper containing the datetime of the end of the period
+            days_without_rain       The number of days without rain (raw int value)
+            days_without_rain_delta A ValueHelper containing the number of seconds in the period
+        """
+
+        wx_manager = db_lookup()
+
+        ##
+        # Get date and time of last rain
+        ##
+        # Returns unix epoch of archive period of last rain
+        ##
+        # Result is returned as a ValueHelper so standard Weewx formatting
+        # is available eg $last_rain.format("%d %m %Y")
+        ##
+
+        # Get ts for day of last rain from statsdb
+        # Value returned is ts for midnight on the day the rain occurred
+        _row = wx_manager.getSql(
+            "SELECT MAX(dateTime) FROM archive_day_rain WHERE sum > 0")
+
+        last_rain_ts = _row[0]
+        # Now if we found a ts then use it to limit our search on the archive
+        # so we can find the last archive record during which it rained. Wrap
+        # in a try statement just in case
+
+        if last_rain_ts is not None:
+            try:
+                _row = wx_manager.getSql("SELECT MAX(dateTime) FROM archive WHERE rain > 0 AND dateTime > ? AND dateTime <= ?",
+                                         (last_rain_ts, last_rain_ts + 86400))
+                last_rain_ts = _row[0]
+            except:
+                last_rain_ts = None
+        else:
+            # the dreaded you should never reach here block
+            # intent is to belt'n'suspender for a new db with no rain recorded yet
+            last_rain_ts = None
+
+        # Wrap our ts in a ValueHelper
+        last_rain_vt = (last_rain_ts, 'unix_epoch', 'group_time')
+        last_rain_vh = ValueHelper(
+            last_rain_vt, formatter=self.generator.formatter, converter=self.generator.converter)
+
+        # next idea stolen with thanks from weewx station.py
+        # note this is delta time from 'now' not the last weewx db time
+        #  - weewx used time.time() but weewx-wd suggests timespan.stop()
+        delta_time = time.time() - last_rain_ts if last_rain_ts else None
+
+        # Wrap our ts in a ValueHelper
+        delta_time_vt = (delta_time, 'second', 'group_deltatime')
+
+        last_rain_delta_time_vh = ValueHelper(delta_time_vt, context='long_delta',
+                                              formatter=self.generator.formatter, converter=self.generator.converter)
+
+        ##
+        # Get date and value of most consecutive days with rain
+        ##
+        at_days_with_rain_total = 0
+        at_days_with_rain_total_amount = 0
+        at_days_without_rain_total = 0
+        at_days_with_rain_output = []
+        at_days_without_rain_output = []
+        at_rain_query = wx_manager.genSql(
+            "SELECT dateTime, sum FROM archive_day_rain WHERE count > 0;"
+        )
+
+        # Create empty list and append at_rain_query rows.
+        rain_query_list = []
+        years = []
+        with_rain_period = None
+        without_rain_period = None
+
+        for row in at_rain_query:
+            rain_query_list.append(row)
+            # Get all years from records.
+            year = datetime.datetime.fromtimestamp(
+                row[0]).strftime('%Y')
+            if year not in years:
+                years.append(year)
+
+        for index in range(len(rain_query_list)):
+            row = rain_query_list[index]
+            # Original MySQL way: CASE WHEN sum!=0 THEN @total+1 ELSE 0 END
+            # pprint.pprint(row)
+            if row[1] != 0:
+                with_period_end = False
+                at_days_with_rain_total += 1
+                at_days_with_rain_total_amount = at_days_with_rain_total_amount + \
+                    row[1]
+
+                # Create rain period if not exists.
+                if at_days_with_rain_total == 1:
+                    with_rain_period = {
+                        "start": row[0],
+                        "end": row[0],
+                        "days_with_rain": at_days_with_rain_total,
+                        "amount": row[1],
+                    }
+
+                # Update period
+                if at_days_with_rain_total > 1:
+                    with_rain_period["end"] = row[0]
+                    with_rain_period["days_with_rain"] = at_days_with_rain_total
+                    with_rain_period["amount"] = at_days_with_rain_total_amount
+
+            else:
+                at_days_with_rain_total = 0
+                at_days_with_rain_total_amount = 0
+                with_period_end = True
+
+            # Original MySQL way: CASE WHEN sum=0 THEN @total+1 ELSE 0 END
+            if row[1] == 0:
+                without_period_end = False
+                at_days_without_rain_total += 1
+
+                # Create rain period if not exists.
+                if at_days_without_rain_total == 1:
+                    without_rain_period = {
+                        "start": row[0],
+                        "end": row[0],
+                        "days_without_rain": at_days_without_rain_total,
+                    }
+
+                # Update period
+                if at_days_without_rain_total > 1:
+                    without_rain_period["end"] = row[0]
+                    without_rain_period["days_without_rain"] = at_days_without_rain_total
+            else:
+                at_days_without_rain_total = 0
+                without_period_end = True
+
+            # Rain period ended, append to output.
+            if with_rain_period is not None and with_period_end is True:
+                # Tranform raw amount value to ValueHelper.
+                rain_vt = (with_rain_period["amount"], 'inch', 'group_rain')
+                rain_vh = ValueHelper(
+                    rain_vt, formatter=self.generator.formatter, converter=self.generator.converter)
+
+                with_rain_period["amount"] = rain_vh
+
+                # Transform raw days_with_rain value to ValueHelper.
+                delta_time = with_rain_period['end'] - \
+                    with_rain_period['start'] + 86400
+                delta_time_vt = (delta_time, 'second', 'group_deltatime')
+                delta_time_vh = ValueHelper(delta_time_vt,
+                                            formatter=self.generator.formatter, converter=self.generator.converter)
+                with_rain_period["days_with_rain_delta"] = delta_time_vh
+
+                # Tranform raw start and end value to ValueHelper.
+                start_vt = (with_rain_period["start"],
+                            'unix_epoch', 'group_time')
+                start_vh = ValueHelper(
+                    start_vt, formatter=self.generator.formatter, converter=self.generator.converter)
+                end_vt = (with_rain_period["end"], 'unix_epoch', 'group_time')
+                end_vh = ValueHelper(
+                    end_vt, formatter=self.generator.formatter, converter=self.generator.converter)
+
+                with_rain_period["start"] = start_vh
+                with_rain_period["end"] = end_vh
+
+                at_days_with_rain_output.append(with_rain_period)
+                with_rain_period = None
+
+            # No rain period ended, append to output.
+            if without_rain_period is not None and without_period_end is True:
+                # Transform raw days_with_rain value to ValueHelper.
+                delta_time = without_rain_period['end'] - \
+                    without_rain_period['start'] + 86400
+                delta_time_vt = (delta_time, 'second', 'group_deltatime')
+                delta_time_vh = ValueHelper(delta_time_vt,
+                                            formatter=self.generator.formatter, converter=self.generator.converter)
+                without_rain_period["days_without_rain_delta"] = delta_time_vh
+
+                # Tranform raw start and end value to ValueHelper.
+                start_vt = (without_rain_period["start"],
+                            'unix_epoch', 'group_time')
+                start_vh = ValueHelper(
+                    start_vt, formatter=self.generator.formatter, converter=self.generator.converter)
+                end_vt = (without_rain_period["end"],
+                          'unix_epoch', 'group_time')
+                end_vh = ValueHelper(
+                    end_vt, formatter=self.generator.formatter, converter=self.generator.converter)
+
+                without_rain_period["start"] = start_vh
+                without_rain_period["end"] = end_vh
+
+                at_days_without_rain_output.append(without_rain_period)
+                without_rain_period = None
+
+        if len(at_days_with_rain_output) > 0:
+            at_days_with_rain = max(
+                at_days_with_rain_output, key=lambda x: x['days_with_rain'])
+
+            # Add values for all years.
+            for year in years:
+                at_days_with_rain_output_per_year = list(filter(
+                    lambda x: datetime.datetime.fromtimestamp(x['start'].raw).strftime('%Y') == year, at_days_with_rain_output))
+
+                if len(at_days_with_rain_output_per_year) > 0:
+                    at_days_with_rain[year] = max(
+                        at_days_with_rain_output_per_year, key=lambda x: x['days_with_rain'])
+                else:
+                    at_days_with_rain[year] = None
+
+        else:
+            at_days_with_rain = None
+
+        if len(at_days_without_rain_output) > 0:
+            at_days_without_rain = max(
+                at_days_without_rain_output, key=lambda x: x['days_without_rain'])
+
+            # Add values for all years.
+            for year in years:
+                at_days_without_rain_output_per_year = list(filter(
+                    lambda x: datetime.datetime.fromtimestamp(x['start'].raw).strftime('%Y') == year, at_days_without_rain_output))
+
+                if len(at_days_without_rain_output_per_year) > 0:
+                    at_days_without_rain[year] = max(
+                        at_days_without_rain_output_per_year, key=lambda x: x['days_without_rain'])
+                else:
+                    at_days_without_rain[year] = None
+        else:
+            at_days_without_rain = None
+
+        search_list_extension = {
+            'last_rain': last_rain_vh,
+            'time_since_last_rain':  last_rain_delta_time_vh,
+            'most_days_with_rain': at_days_with_rain,
+            "most_days_without_rain": at_days_without_rain
+        }
+
+        return [search_list_extension]
+
+
 class WdcGeneralUtil(SearchList):
     def __init__(self, generator):
         SearchList.__init__(self, generator)
@@ -77,6 +353,35 @@ class WdcGeneralUtil(SearchList):
             "data_binding",
             "wx_binding"
         )
+
+    def format_raw_value(self, value, obs):
+        """
+        Returns a ValueHelper for a raw value and an obs type.
+
+        Args:
+            value (float): The value
+            obs (string): The observation
+        """
+        target_unit_t = self.generator.converter.getTargetUnit(
+            obs_type=obs)
+        value_vt = (value, target_unit_t[0], target_unit_t[1])
+
+        return ValueHelper(value_t=value_vt, formatter=self.generator.formatter)
+
+    def get_software_obs(self):
+        """
+        Get the observations provided by software (weewx calculations), was
+        added because the has_data check fails for GTS, seasonGDD or yearGDD.
+
+        Returns:
+            list: The software observations
+        """
+        try:
+            obs = filter(
+                lambda x: "software" in x[1], self.generator.config_dict["StdWXCalculate"]["Calculations"].items())
+            return list(dict(obs).keys())
+        except KeyError:
+            return []
 
     def get_locale(self):
         """
@@ -100,7 +405,23 @@ class WdcGeneralUtil(SearchList):
             if report_lang == "it":
                 return 'it-IT'
 
+            if report_lang == "nl":
+                return 'nl-NL'
+
             return 'en-US'
+
+    def getValueHelper(self, value_vt):
+        """
+        Get a value helper for a value_vt.
+
+        Args:
+            value_vt (tuple): A value tuple
+
+        Returns:
+            obj: A value helper
+        """
+        value_vt = self.generator.converter.convert(value_vt)
+        return ValueHelper(value_t=value_vt, formatter=self.generator.formatter)
 
     def get_custom_data_binding_obs_key(self, obs_key):
         """
@@ -201,7 +522,7 @@ class WdcGeneralUtil(SearchList):
         path = kwargs.get("path", None)
         base_path = self.skin_dict["Extras"].get("base_path", "/")
 
-        if path is None:
+        if path is None or path == "/":
             return base_path
 
         return base_path + path
@@ -248,6 +569,12 @@ class WdcGeneralUtil(SearchList):
 
         return False
 
+    def show_cmon_page(self):
+        if "computer_monitor" in self.generator_to_date:
+            return True
+
+        return False
+
     def get_time_format_dict(self):
         return self.time_format
 
@@ -273,7 +600,10 @@ class WdcGeneralUtil(SearchList):
             else:
                 return unit_label
         except KeyError:
-            return ' ' + unit
+            if unit is not None:
+                return ' ' + unit
+            else:
+                return ''
 
     def get_unit_for_obs(self, observation, observation_key, context, combined=None, combined_key=None):
         """
@@ -719,6 +1049,7 @@ class WdcGeneralUtil(SearchList):
         for static_page in static_templates:
             static_pages.append(
                 {
+                    "name": static_page,
                     "title": static_templates[static_page]["title"],
                     "link": static_templates[static_page]["template"].replace(
                         ".tmpl", ""
@@ -727,6 +1058,24 @@ class WdcGeneralUtil(SearchList):
             )
 
         return static_pages
+
+    def get_static_page_title(self, page):
+        """
+        Get static page title.
+
+        Args:
+            page (string): The page
+
+        Returns:
+            str: The page title
+        """
+        static_pages = self.get_static_pages()
+
+        for static_page in static_pages:
+            if static_page["name"] == page:
+                return static_page["title"]
+
+        return ''
 
     def get_ordinates(self):
         default_ordinate_names = [
@@ -811,6 +1160,48 @@ class WdcGeneralUtil(SearchList):
 
 
 class WdcArchiveUtil(SearchList):
+    def __init__(self, generator):
+        SearchList.__init__(self, generator)
+
+    def get_extension_list(self, timespan, db_lookup):
+        """Returns a search list extension with two additions.
+
+        Parameters:
+          timespan: An instance of weeutil.weeutil.TimeSpan. This will
+                    hold the start and stop times of the domain of
+                    valid times.
+
+          db_lookup: This is a function that, given a data binding
+                     as its only parameter, will return a database manager
+                     object.
+        """
+
+        self.db_lookup = db_lookup
+
+        search_list_extension = {
+            "get_stat_table_month_obs": self.get_stat_table_month_obs,
+            "get_day_archive_enabled": self.get_day_archive_enabled,
+            "get_archive_days_array": self.get_archive_days_array,
+            "filter_months": self.filter_months,
+            "fake_get_report_years": self.fake_get_report_years,
+        }
+
+        return [search_list_extension]
+
+    def get_stat_table_month_obs(self, start_ts, end_ts):
+        """
+        Returns a TimeSpanBinder a period.
+
+        Args:
+            start_ts (int): The start timestamp
+            end_ts (int): The end timestamp
+        """
+        month_timespan = TimeSpan(start_ts, end_ts)
+        month_timespan_binder = TimespanBinder(month_timespan, self.db_lookup,
+                                               formatter=self.generator.formatter,
+                                               converter=self.generator.converter)
+        return month_timespan_binder
+
     def get_day_archive_enabled(self):
         """
         Get day archive enabled.
@@ -984,6 +1375,16 @@ class WdcDiagramUtil(SearchList):
         else:
             wobs = observation_key
 
+        # Include any given config to the XType call.
+        obs_props = self.get_diagram_props_obs(
+            observation, context_key, combined_key=combined_key)
+        if 'aggregate_type' in obs_props:
+            obs_props.pop("aggregate_type")
+        if 'aggregate_interval' in obs_props:
+            obs_props.pop("aggregate_interval")
+        if 'observations' in obs_props:
+            obs_props.pop('observations')
+
         obs_start_vt, obs_stop_vt, obs_vt = weewx.xtypes.get_series(
             wobs,
             TimeSpan(start_ts, end_ts),
@@ -993,7 +1394,8 @@ class WdcDiagramUtil(SearchList):
                 observation=observation, context=context_key,
                 alltime_start=alltime_start, alltime_end=alltime_end,
                 combined_key=combined_key
-            )
+            ),
+            **obs_props
         )
 
         unit_default = self.generator.converter.getTargetUnit(
@@ -1025,26 +1427,48 @@ class WdcDiagramUtil(SearchList):
             zip(obs_start_vt[0], obs_stop_vt[0], obs_vt[0]))
         )
 
-    def get_diagram(self, observation):
+    def get_diagram(self, observation, context_key, *args, **kwargs):
         """
         Choose between line and bar.
 
         Args:
             observation (string): The observation
+            context_key (string): The context
 
         Returns:
             str: A diagram string
         """
+        combined_key = kwargs.get("combined_key", None)
+        combined_obs = kwargs.get("combined_obs", None)
+
+        type = "line"
+        if observation == "rain" or observation == "ET":
+            type = "bar"
+
         try:
             type = self.skin_dict["DisplayOptions"]["diagrams"][observation]["type"]
-            return type
         except KeyError:
             pass
 
-        if observation == "rain" or observation == "ET":
-            return "bar"
+        if combined_key is None:
+            try:
+                type = self.skin_dict["DisplayOptions"]["diagrams"][context_key]["observations"][observation]["type"]
+            except KeyError:
+                pass
 
-        return "line"
+        if combined_key is not None:
+            try:
+                type = self.skin_dict["DisplayOptions"]["diagrams"]["combined_observations"][combined_key]["obs"][combined_obs]["type"]
+            except KeyError:
+                pass
+
+            try:
+                type = self.skin_dict["DisplayOptions"]["diagrams"][context_key][
+                    "observations"][combined_key]["obs"][combined_obs]["type"]
+            except KeyError:
+                pass
+
+        return type
 
     def get_aggregate_type(self, observation, context, *args, **kwargs):
         """
@@ -1215,6 +1639,115 @@ class WdcDiagramUtil(SearchList):
 
                 return 3600 * 96  # 4 days
 
+    def get_diagram_props(self, obs, context):
+        """
+        Get diagram props from skin.conf.
+
+        Args:
+            obs (string): Observation
+            context (string): Day, week, month, year, alltime
+
+        Returns:
+            dict: Diagram props for d3.js.
+        """
+        if context == "yesterday":
+            context = "day"
+
+        diagrams_config = self.skin_dict["DisplayOptions"]["diagrams"]
+        diagram_base_props = diagrams_config[self.get_diagram(obs, context)]
+
+        try:
+            diagram_context_props = accumulateLeaves(
+                diagrams_config[context]['observations'][obs], max_level=3)
+        except KeyError:
+            try:
+                diagram_context_props = accumulateLeaves(
+                    diagrams_config[context]['observations'], max_level=2)
+            except KeyError:
+                diagram_context_props = {}
+
+        if obs in diagrams_config:
+            return {
+                **diagram_base_props,
+                **diagrams_config[obs],
+                **diagram_context_props
+            }
+        elif obs in diagrams_config["combined_observations"]:
+            if context in diagrams_config and 'observations' in diagrams_config[context] and obs in diagrams_config[context]['observations']:
+                return {
+                    **diagram_base_props,
+                    **diagrams_config["combined_observations"][obs],
+                    **diagram_context_props,
+                }
+            else:
+                return {
+                    **diagram_base_props,
+                    **diagrams_config["combined_observations"][obs],
+                }
+        else:
+            return {
+                **diagram_base_props,
+                **diagram_context_props
+            }
+
+    def get_diagram_props_obs(self, observation, context, *args, **kwargs):
+        """
+        Same as get_diagram_props, but for specific observations. Returns
+        the values in [combined_observations][X][observations][obs]
+        instead of [combined_observations][X].
+
+        Args:
+            observation (string): The observation
+            context (string): Day, week, month, year, alltime
+
+        Returns:
+            dict: A dict of props
+        """
+        combined_key = kwargs.get("combined_key", None)
+
+        if context == "yesterday":
+            context = "day"
+
+        # Most basic config.
+        try:
+            props = self.skin_dict["DisplayOptions"]["diagrams"][observation]
+        except KeyError:
+            props = {}
+
+        # Context config.
+        try:
+            props_context = accumulateLeaves(self.skin_dict["DisplayOptions"]["diagrams"][context][
+                "observations"][observation], 3)
+        except KeyError:
+            props_context = self.skin_dict["DisplayOptions"]["diagrams"][context]
+        finally:
+            props = {**props, **props_context}
+
+        # Combined config.
+        if combined_key is not None:
+            try:
+                combined_props = accumulateLeaves(self.skin_dict["DisplayOptions"]["diagrams"][
+                    "combined_observations"][combined_key]["obs"][observation], 3)
+            except KeyError:
+                combined_props = self.skin_dict["DisplayOptions"]["diagrams"][
+                    "combined_observations"][combined_key]
+            finally:
+                props = {**props, **combined_props}
+
+            try:
+                props_context_obs = accumulateLeaves(self.skin_dict["DisplayOptions"]["diagrams"][
+                    context]["observations"][combined_key]["obs"][observation], 3)
+            except KeyError:
+                try:
+                    props_context_obs = self.skin_dict["DisplayOptions"]["diagrams"][
+                        context]["observations"][combined_key]
+                except KeyError:
+                    props_context_obs = {}
+            finally:
+                props = {**props, **props_context_obs}
+
+        return props
+
     def get_diagram_boundary(self, context):
         """
         boundary for observations series for diagrams.
@@ -1328,15 +1861,28 @@ class WdcDiagramUtil(SearchList):
         except KeyError:
             rounding = None
 
+        unit = self.general_util.get_unit_for_obs(
+            observation, observation_key, context)
+
+        # Fallback to a simple string parsing of [[StringFormats]].
+        if rounding is None:
+            try:
+                unit_string_format = self.skin_dict["Units"]["StringFormats"][unit]
+
+                # Careful! Potential for bugs here.
+                for c in unit_string_format:
+                    if c.isdigit():
+                        rounding = c
+                        break
+            except KeyError:
+                rounding = None
+
         if rounding is not None:
             return int(rounding)
 
         # Default roundings.
         if context is None:
             context = 'day'
-
-        unit = self.general_util.get_unit_for_obs(
-            observation, observation_key, context)
 
         if observation == "UV" or observation == "cloudbase":
             return 0
@@ -1383,43 +1929,44 @@ class WdcDiagramUtil(SearchList):
 
         return hour_delta
 
-    def get_diagram_props(self, obs, context):
+    def get_gauge_diagram_props(self, obs, context):
         """
-        Get nivo props from skin.conf.
+        Get gauge props from skin.conf.
 
         Args:
             obs (string): Observation
             context (string): Day, week, month, year, alltime
 
         Returns:
-            dict: Nivo props.
+            dict: Diagram props for d3.js.
         """
         if context == "yesterday":
             context = "day"
 
-        diagrams_config = self.skin_dict["DisplayOptions"]["diagrams"]
-        diagram_base_props = diagrams_config[self.get_diagram(obs)]
+        diagrams_config = self.skin_dict["DisplayOptions"]["Gauges"][context][obs]
 
-        try:
-            diagram_context_props = accumulateLeaves(
-                diagrams_config[context]['observations'][obs], max_level=3)
-        except KeyError:
-            diagram_context_props = {}
+        return accumulateLeaves(diagrams_config, max_level=2)
 
-        if obs in diagrams_config:
-            return {
-                **diagram_base_props,
-                **diagrams_config[obs],
-                **diagram_context_props
-            }
-        elif obs in diagrams_config["combined_observations"]:
-            return {
-                **diagram_base_props,
-                **diagrams_config["combined_observations"][obs],
-                **diagram_context_props
-            }
-        else:
-            return diagram_base_props
+    def get_gauge_diagram_prop(self, obs, prop, context):
+        """
+        Get gauge prop from skin.conf.
+
+        Args:
+            obs (string): Observation
+            prop (string): Prop
+            context (string): Day, week, month, year, alltime
+
+        Returns:
+            sring|number: Diagram prop for d3.js.
+        """
+        if context == "yesterday":
+            context = "day"
+
+        diagrams_config = self.skin_dict["DisplayOptions"]["Gauges"][context][obs]
+
+        value = search_up(diagrams_config, prop, None)
+
+        return value
 
     def get_windrose_data(self, start_ts, end_ts, context):
         """
@@ -1436,6 +1983,11 @@ class WdcDiagramUtil(SearchList):
             show_beaufort = self.generator.skin_dict["DisplayOptions"]["windRose_show_beaufort"]
         except KeyError:
             show_beaufort = False
+
+        try:
+            show_legend_units = to_bool(self.generator.skin_dict["DisplayOptions"]["windRose_legend_show_units"])
+        except KeyError:
+            show_legend_units = True
 
         db_manager = self.generator.db_binder.get_manager(
             data_binding=search_up(
@@ -1460,7 +2012,7 @@ class WdcDiagramUtil(SearchList):
                     wind_upper_vt = self.generator.converter.convert(
                         (5, "km_per_hour", "group_speed"))
                     name = ValueHelper(
-                        value_t=wind_upper_vt, formatter=self.generator.formatter).format()
+                        value_t=wind_upper_vt, formatter=self.generator.formatter).format(add_label=show_legend_units)
                 # Bft 2
                 elif i == 1:
                     wind_lower_vt = self.generator.converter.convert(
@@ -1468,9 +2020,9 @@ class WdcDiagramUtil(SearchList):
                     wind_upper_vt = self.generator.converter.convert(
                         (11, "km_per_hour", "group_speed"))
                     name = ValueHelper(value_t=wind_lower_vt,
-                                       formatter=self.generator.formatter).format(
-                    ) + " - " + ValueHelper(value_t=wind_upper_vt,
-                                            formatter=self.generator.formatter).format()
+                                       formatter=self.generator.formatter).format(add_label=show_legend_units
+                                                                                  ) + " - " + ValueHelper(value_t=wind_upper_vt,
+                                                                                                          formatter=self.generator.formatter).format(add_label=show_legend_units)
                 # Bft 3
                 elif i == 2:
                     wind_lower_vt = self.generator.converter.convert(
@@ -1478,9 +2030,9 @@ class WdcDiagramUtil(SearchList):
                     wind_upper_vt = self.generator.converter.convert(
                         (19, "km_per_hour", "group_speed"))
                     name = ValueHelper(value_t=wind_lower_vt,
-                                       formatter=self.generator.formatter).format(
-                    ) + " - " + ValueHelper(value_t=wind_upper_vt,
-                                            formatter=self.generator.formatter).format()
+                                       formatter=self.generator.formatter).format(add_label=show_legend_units
+                                                                                  ) + " - " + ValueHelper(value_t=wind_upper_vt,
+                                                                                                          formatter=self.generator.formatter).format(add_label=show_legend_units)
                 # Bft 4
                 elif i == 3:
                     wind_lower_vt = self.generator.converter.convert(
@@ -1488,9 +2040,9 @@ class WdcDiagramUtil(SearchList):
                     wind_upper_vt = self.generator.converter.convert(
                         (28, "km_per_hour", "group_speed"))
                     name = ValueHelper(value_t=wind_lower_vt,
-                                       formatter=self.generator.formatter).format(
-                    ) + " - " + ValueHelper(value_t=wind_upper_vt,
-                                            formatter=self.generator.formatter).format()
+                                       formatter=self.generator.formatter).format(add_label=show_legend_units
+                                                                                  ) + " - " + ValueHelper(value_t=wind_upper_vt,
+                                                                                                          formatter=self.generator.formatter).format(add_label=show_legend_units)
                 # Bft 5
                 elif i == 4:
                     wind_lower_vt = self.generator.converter.convert(
@@ -1498,15 +2050,15 @@ class WdcDiagramUtil(SearchList):
                     wind_upper_vt = self.generator.converter.convert(
                         (38, "km_per_hour", "group_speed"))
                     name = ValueHelper(value_t=wind_lower_vt,
-                                       formatter=self.generator.formatter).format(
-                    ) + " - " + ValueHelper(value_t=wind_upper_vt,
-                                            formatter=self.generator.formatter).format()
+                                       formatter=self.generator.formatter).format(add_label=show_legend_units
+                                                                                  ) + " - " + ValueHelper(value_t=wind_upper_vt,
+                                                                                                          formatter=self.generator.formatter).format(add_label=show_legend_units)
                 # Bft 6 and higher
                 elif i == 5:
                     wind_lower_vt = self.generator.converter.convert(
                         (39, "km_per_hour", "group_speed"))
                     name = ValueHelper(
-                        value_t=wind_lower_vt, formatter=self.generator.formatter).format()
+                        value_t=wind_lower_vt, formatter=self.generator.formatter).format(add_label=show_legend_units)
 
             windrose_data.append(
                 {
@@ -1572,12 +2124,14 @@ class WdcDiagramUtil(SearchList):
 
         # Calculate percentages.
         num_of_values = len(list(windSpeed_vt[0]))
-        for index, data in enumerate(windrose_data):
-            for p_index, percent in enumerate(data["r"]):
-                windrose_data[index]["r"][p_index] = round(
-                    # todo: division by zero
-                    (percent / num_of_values) * 100
-                )
+
+        if num_of_values > 0:
+            for index, data in enumerate(windrose_data):
+                for p_index, percent in enumerate(data["r"]):
+                    windrose_data[index]["r"][p_index] = round(
+                        # todo: division by zero
+                        (percent / num_of_values) * 100
+                    )
 
         return windrose_data
 
@@ -1737,12 +2291,15 @@ class WdcStatsUtil(SearchList):
                 aggregate_interval="day"
             )
 
+            # TODO: Programmatic conversion, WeeWX best practice?
             if windGust_target_unit_vt[0] in ("km_per_hour", "km_per_hour2"):
                 value = 62.0
             if windGust_target_unit_vt[0] in ("mile_per_hour", "mile_per_hour2"):
                 value = 38.5
             if windGust_target_unit_vt[0] in ("meter_per_second", "meter_per_second2"):
                 value = 17.2
+            if windGust_target_unit_vt[0] in ("knot"):
+                value = 33.5
 
             days = filter(
                 lambda windGust: windGust is not None and self.generator.converter.convert(
@@ -1838,12 +2395,15 @@ class WdcStatsUtil(SearchList):
             )
 
         if day == "stormDays":
+            # TODO: Programmatic conversion, WeeWX best practice?
             if windGust_target_unit_vt[0] == "km_per_hour":
                 value = "62"
             if windGust_target_unit_vt[0] == "mile_per_hour":
                 value = "38.5"
             if windGust_target_unit_vt[0] == "meter_per_second":
                 value = "17.2"
+            if windGust_target_unit_vt[0] == "knot":
+                value = "33.5"
 
             return (
                 self.obs.label["windGust"]
@@ -2199,7 +2759,7 @@ class WdcTableUtil(SearchList):
                         carbon_values.append(
                             {
                                 "time": cs_time_dt.isoformat(),
-                                observation: table_data_rounded,
+                                observation: table_data_rounded if table_data_rounded is not None else "-",
                                 "id": table_start_ts,
                             }
                         )

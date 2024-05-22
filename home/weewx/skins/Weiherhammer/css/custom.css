@@ -60,6 +60,23 @@ Royal Blue: #4169e1
 Bootstrap Button: #337ab7
 */
 
+button,
+input[type="button"],
+input[type="reset"],
+input[type="submit"],
+.button {
+    /* Removed in favor for dark mode dynamic switching */
+    /* background-color: #333; */
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 300;
+    padding: 16px 24px;
+    text-transform: none;
+    width: auto;
+}
+
 a {
     color: var(--link-color);
     text-decoration: none;
@@ -1229,6 +1246,7 @@ sub { top: 0.4em; }
 .forecast-content {
     margin-bottom: 10px;
     padding-left: 0;
+	border-bottom: 1px solid #D7D7D7;
 }
 
 .dark .forecast-content {
@@ -1268,25 +1286,22 @@ sub { top: 0.4em; }
     text-align: center;
 }
 
+/* current weather conditions provider radios */
 
-/* TODO */
-/* current weather conditions provider test **/
-
-.ProviderRadiosHead, .dark .ProviderRadiosHead {
+.currentwx-radios-head, .dark .currentwx-radios-head {
     font-size:10px;
     text-align:center;
-    /* padding-top: 5px; */
     padding-bottom: 0px;
 }
 
-.ProviderRadios, .dark .ProviderRadios{
+.currentwx-radios, .dark .currentwx-radios{
     text-align:center;
     padding-top: 0px;
     padding-bottom: 0px;
     line-height: 100%;
 }
 
-.ProviderRadiosSelected, .dark .ProviderRadiosSelected {
+.currentwx-radios-selected, .dark .currentwx-radios-selected {
     font-size:10px;
     text-align:center;
     padding-top: 0px;

@@ -45,6 +45,7 @@ from weeutil.weeutil import (
     to_bool,
     to_float,
     to_int,
+    option_as_list,
 )
 from weewx.cheetahgenerator import SearchList
 from weewx.tags import TimespanBinder
@@ -1624,11 +1625,129 @@ class getData(SearchList):
         all_obs_unit_labels_json["visibility"] = " km"
         all_obs_rounding_json["cloudcover"] = 0
         all_obs_unit_labels_json["cloudcover"] = "%"
-
-        # add absolute humidity to relative humidity
-        # https://github.com/roe-dl/weewx-GTS/discussions/14
         all_obs_rounding_json["outHumAbs"] = 1
         all_obs_unit_labels_json["outHumAbs"] = " g/m³"
+
+
+        # ================================================================================
+        # current weather conditions (icon, short weather text, cloudcover, visibility)
+        # ================================================================================
+
+
+        currentwx_icon   = "unknown.png"
+        currentwx_text   = "unbekannt"
+        currentwx_source = "unbekannt"
+        currentwx_visibility = "N/A"
+        currentwx_cloudcover = "N/A"
+        currentwx_provider = "N/A"
+        currentwx_provider_list = list()
+        currentwx_provider_toggle = "0"
+        currentwx_provider_toggle_visible = "0"
+        currentwx_enabled = to_bool(self.generator.skin_dict["Extras"].get("currentwx_enabled", False))
+        if currentwx_enabled:
+            data = dict()
+            provider = self.generator.skin_dict["Extras"].get("currentwx_provider", "aeris-metar")
+            provider_list = option_as_list(self.generator.skin_dict["Extras"].get("currentwx_provider_list", list()))
+            provider_toggle = to_bool(self.generator.skin_dict["Extras"].get("currentwx_provider_toggle", False))
+            provider_toggle_visible = to_bool(self.generator.skin_dict["Extras"].get("currentwx_provider_toggle_visible", False))
+            stale_timer = to_int(self.generator.skin_dict["Extras"].get("currentwx_stale_timer", 300))
+            url = self.generator.skin_dict["Extras"].get("currentwx_url", "https://data.weiherhammer-wetter.de/json/currentwx_total.json")
+            file = html_root + self.generator.skin_dict["Extras"].get("currentwx_file", "/json/currentwx_total.json")
+
+            # Determine if the file exists and get it's modified time, enhanced
+            # for 1 hr forecast to load close to the hour
+            is_stale = False
+            if os.path.isfile(file):
+                if (int(time.time()) - int(os.path.getmtime(file))) > int(stale_timer):
+                    is_stale = True
+                else:
+                    # catches repeated calls every archive interval (300secs)
+                    if (time.strftime("%M") < "05" and int(time.time()) - int(os.path.getmtime(file))) > int(300):
+                        is_stale = True
+            else:
+                # File doesn't exist, download a new copy
+                is_stale = True
+
+            # File is stale, download a new copy
+            if is_stale:
+                try:
+                    import requests
+                    headers = {"User-Agent": "PWS Weiherhammer"}
+                    response = requests.get(url, headers=headers)
+                    content_type = response.headers.get("Content-Type")
+                    if response.status_code == 200 and content_type:
+                        if "application/json" in content_type:
+                            try:
+                                data = response.json()
+                            except JSONDecodeError:
+                                logerr("Error, response could not be serialized")
+                                logerr("url %s" % (url))
+                        elif "text/plain" in content_type or "text/html" in content_type:
+                            data = response.text
+                        else:
+                            data = response.content.decode("utf-8")
+                        # Save currentwx data to file. w+ creates the file if it doesn't
+                        # exist, and truncates the file and re-writes it everytime
+                        try:
+                            with open(file, "w") as file:
+                                file.write(json.dumps(data))
+                                file.close()
+                        except IOError as e:
+                            raise Warning("Error writing currentwx info to %s. Reason: %s" % (file, e))
+                            logerr("Error writing currentwx info to %s. Reason: %s" % (file, e))
+                    else:
+                        logerr("Error reading currentwx info from %s. Status: %s" % (url, reply.status_code))
+                except ConnectionError as e:
+                    raise Warning("Error reading currentwx info from %s. Reason: %s" % (url, e))
+                    logerr("Error reading currentwx info from %s. Reason: %s" % (url, e))
+            else:
+                try:
+                    with open(file, "r") as read_file:
+                        data = json.load(read_file)
+                except (IOError, ValueError, JSONDecodeError) as e:
+                    raise Warning("Error reading currentwx info from %s. Reason: %s" % (file, e))
+                    logerr("Error reading currentwx info from %s. Reason: %s" % (file, e))
+
+            for prov in provider_list:
+                if prov in data:
+                    currentwx_provider_list.append(prov)
+            currentwx_provider = provider if provider in currentwx_provider_list else currentwx_provider
+            currentwx_provider_toggle = "1" if provider_toggle and currentwx_provider != "N/A" and len(currentwx_provider_list) > 1 else currentwx_provider_toggle
+            currentwx_provider_toggle_visible = "1" if provider_toggle_visible and currentwx_provider_toggle else currentwx_provider_toggle_visible
+            data = data.get(currentwx_provider, dict())
+            currentwx_icon   = data.get("weathericon", currentwx_icon)
+            currentwx_text   = data.get("weathertext", currentwx_text)
+            currentwx_source = data.get("sourceProviderHTML", currentwx_source)
+            visibility = data.get("visibility", currentwx_visibility)
+            if visibility != currentwx_visibility:
+                if to_int(all_obs_rounding_json["visibility"]) == 0:
+                    currentwx_visibility = to_int(visibility)
+                else:
+                    currentwx_visibility = round(to_float(visibility), to_int(all_obs_rounding_json["visibility"]))
+            cloudcover = data.get("cloudcover", currentwx_cloudcover)
+            if cloudcover != currentwx_cloudcover:
+                if to_int(all_obs_rounding_json["cloudcover"]) == 0:
+                    currentwx_cloudcover = to_int(cloudcover)
+                else:
+                    currentwx_cloudcover = round(to_float(cloudcover), to_int(all_obs_rounding_json["cloudcover"]))
+
+
+        # ================================================================================
+        # forecast weather conditions (1h, 3h, 24h)
+        # ================================================================================
+
+
+        forecastwx_enabled = to_bool(self.generator.skin_dict["Extras"].get("forecastwx_enabled", False))
+        if forecastwx_enabled:
+            data = dict()
+            provider = self.generator.skin_dict["Extras"].get("forecastwx_provider", "dwd-mosmix")
+            provider_list = option_as_list(self.generator.skin_dict["Extras"].get("forecastwx_provider_list", list()))
+            provider_toggle = to_bool(self.generator.skin_dict["Extras"].get("forecastwx_provider_toggle", False))
+            provider_toggle_visible = to_bool(self.generator.skin_dict["Extras"].get("forecastwx_provider_toggle_visible", False))
+            stale_timer = to_int(self.generator.skin_dict["Extras"].get("forecastwx_stale_timer", 300))
+            url = self.generator.skin_dict["Extras"].get("currentwx_url", "https://data.weiherhammer-wetter.de/json/forecastwx_total.json")
+            file = html_root + self.generator.skin_dict["Extras"].get("currentwx_file", "/json/forecastwx_total.json")
+
 
 
         # ================================================================================
@@ -2576,16 +2695,30 @@ class getData(SearchList):
                 )
 
             if obs == "visibility":
-                if (visibility != "N/A"):
-                    visibility = locale.format("%g",visibility)
-                    obs_output = str(visibility) + " " + str(visibility_unit)
+                if currentwx_enabled:
+                    if (currentwx_visibility != "N/A"):
+                        visibility = locale.format("%g", currentwx_visibility)
+                        obs_output = str(visibility) + all_obs_unit_labels_json["visibility"]
+                    else:
+                        obs_output = currentwx_visibility
                 else:
-                    obs_output = str(visibility)
+                    if (visibility != "N/A"):
+                        visibility = locale.format("%g",visibility)
+                        obs_output = str(visibility) + " " + str(visibility_unit)
+                    else:
+                        obs_output = str(visibility)
             elif obs == "cloudcover":
-                if (cloudcover != "N/A"):
-                    obs_output = str(cloudcover) + str(cloudcover_unit)
+                if currentwx_enabled:
+                    if (currentwx_cloudcover != "N/A"):
+                        cloudcover = locale.format("%g", currentwx_cloudcover)
+                        obs_output = str(cloudcover) + all_obs_unit_labels_json["cloudcover"]
+                    else:
+                        obs_output = currentwx_cloudcover
                 else:
-                    obs_output = str(cloudcover)
+                    if (cloudcover != "N/A"):
+                        obs_output = str(cloudcover) + str(cloudcover_unit)
+                    else:
+                        obs_output = str(cloudcover)
             elif obs == "rainWithRainRate":
                 # rainWithRainRate Rain shows rain daily sum and rain rate
                 obs_binder = weewx.tags.ObservationBinder(
@@ -2942,6 +3075,19 @@ class getData(SearchList):
             "noaa_header_html": noaa_header_html,
             "default_noaa_file": default_noaa_file,
 
+            "currentwx_enabled": "1" if currentwx_enabled else "0",
+            "currentwx_provider": currentwx_provider,
+            "currentwx_provider_toggle": currentwx_provider_toggle,
+            "currentwx_provider_toggle_visible": currentwx_provider_toggle_visible,
+            "currentwx_provider_list": currentwx_provider_list,
+            "currentwx_icon": currentwx_icon,
+            "currentwx_text": currentwx_text,
+            "currentwx_source": currentwx_source,
+            "currentwx_visibility": currentwx_visibility,
+            "currentwx_visibility_unit": all_obs_unit_labels_json["visibility"],
+            "currentwx_cloudcover": currentwx_cloudcover,
+            "currentwx_cloudcover_unit": all_obs_unit_labels_json["cloudcover"],
+
             "alerts_provider": alerts_provider,
             "alerts_provider_list": alerts_provider_list,
             "alerts_provider_toggle": alerts_provider_toggle,
@@ -2983,6 +3129,7 @@ class getData(SearchList):
             "all_obs_unit_labels_json": json.dumps(all_obs_unit_labels_json),
             "all_obs_unit_groups_json": json.dumps(all_obs_unit_groups_json),
             "current_obs_raw_json": json.dumps(current_obs_raw_json),
+
             "earthquake_time": eqtime,
             "earthquake_url": equrl,
             "earthquake_place": eqplace,
@@ -3620,29 +3767,64 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                         ] = yAxis_max
 
                     # Add rounding from weewx.conf/skin.conf so Highcharts can use it
-                    if observation_type == "rainTotal":
-                        rounding_obs_lookup = "rain"
-                    elif observation_type == "weatherRange":
-                        rounding_obs_lookup = weatherRange_obs_lookup
-                    elif observation_type == "haysChart":
-                        rounding_obs_lookup = "windSpeed"
-                    else:
-                        rounding_obs_lookup = observation_type
-                    try:
-                        obs_group = weewx.units.obs_group_dict[rounding_obs_lookup]
-                        obs_unit = self.converter.group_unit_dict[obs_group]
-                        obs_round = self.skin_dict["Units"]["StringFormats"].get(
-                            obs_unit, "0"
-                        )[2]
-                        output[chart_group][plotname]["series"][line_name][
-                            "rounding"
-                        ] = obs_round
-                    except:
-                        # Not a valid weewx schema name - maybe this is
-                        # windRose or something?
-                        output[chart_group][plotname]["series"][line_name][
-                            "rounding"
-                        ] = "-1"
+                    # if observation_type == "rainTotal":
+                        # rounding_obs_lookup = "rain"
+                    # elif observation_type == "weatherRange":
+                        # rounding_obs_lookup = weatherRange_obs_lookup
+                    # elif observation_type == "haysChart":
+                        # rounding_obs_lookup = "windSpeed"
+                    # else:
+                        # rounding_obs_lookup = observation_type
+                    # try:
+                        # obs_group = weewx.units.obs_group_dict[rounding_obs_lookup]
+                        # obs_unit = self.converter.group_unit_dict[obs_group]
+                        # obs_round = self.skin_dict["Units"]["StringFormats"].get(
+                            # obs_unit, "0"
+                        # )[2]
+                        # output[chart_group][plotname]["series"][line_name][
+                            # "rounding"
+                        # ] = obs_round
+                    # except:
+                        # # Not a valid weewx schema name - maybe this is
+                        # # windRose or something?
+                        # output[chart_group][plotname]["series"][line_name][
+                            # "rounding"
+                        # ] = "-1"
+
+                    obs_round = None
+                    if (obs_round is None and 
+                        self.chart_dict[chart_group][plotname][line_name].get("numberFormat",dict()).get(
+                            "decimals") is not None
+                       ):
+                        # The user specified decimals. Use them for rounding,
+                        # too.
+                        try:
+                            obs_round = float(self.chart_dict[chart_group][plotname][line_name]["numberFormat"]["decimals"])
+                        except (ValueError,TypeError):
+                            logerr("cannot use numberFormat decimals %s for rounding" % self.chart_dict[chart_group][plotname][line_name]["numberFormat"]["decimals"])
+                    if obs_round is None:
+                        # Add rounding from weewx.conf/skin.conf so Highcharts can use it
+                        if observation_type == "rainTotal":
+                            rounding_obs_lookup = "rain"
+                        elif observation_type == "weatherRange":
+                            rounding_obs_lookup = weatherRange_obs_lookup
+                        elif observation_type == "haysChart":
+                            rounding_obs_lookup = "windSpeed"
+                        else:
+                            rounding_obs_lookup = observation_type
+                        try:
+                            obs_group = weewx.units.obs_group_dict[rounding_obs_lookup]
+                            obs_unit = self.converter.group_unit_dict[obs_group]
+                            obs_round = self.skin_dict["Units"]["StringFormats"].get(
+                                obs_unit, "0"
+                            )[2]
+                        except:
+                            # Not a valid weewx schema name - maybe this is
+                            # windRose or something?
+                            obs_round = -1
+                    output[chart_group][plotname]["series"][line_name][
+                        "rounding"
+                    ] = obs_round
 
                     # Set default colors, unless the user has specified
                     # otherwise in graphs.conf
@@ -3671,7 +3853,8 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                         mirrored_value,
                         weatherRange_obs_lookup,
                         wind_rose_color,
-                        special_target_unit
+                        special_target_unit,
+                        obs_round
                     )
 
                     # Build the final series data JSON
@@ -3741,7 +3924,8 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
         mirrored_value,
         weatherRange_obs_lookup,
         wind_rose_color,
-        special_target_unit
+        special_target_unit,
+        obs_round
     ):
         """
         Get the SQL vectors for the observation, the aggregate type and the
@@ -4644,8 +4828,11 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
         self.insert_null_value_timestamps_to_end_ts(time_start_vt, time_stop_vt, obs_vt, start_ts, end_ts, aggregate_interval)
         
         if special_target_unit:
-            # logdbg("unit_group=%s source_unit=%s special_target_unit=%s" % (obs_vt[2],obs_vt[1],special_target_unit))
-            obs_vt = weewx.units.Converter({obs_vt[2]:special_target_unit}).convert(obs_vt)
+            #logdbg("unit_group=%s source_unit=%s special_target_unit=%s" % (obs_vt[2],obs_vt[1],special_target_unit))
+            try:
+                obs_vt = weewx.units.Converter({obs_vt[2]:special_target_unit}).convert(obs_vt)
+            except Exception as e:
+                logerr("unit_group=%s source_unit=%s special_target_unit=%s" % (obs_vt[2],obs_vt[1],special_target_unit))
         else:
             obs_vt = self.converter.convert(obs_vt)
 
@@ -4678,10 +4865,23 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                     round(x, usage_round) if x is not None else None for x in obs_vt[0]
                 ]
             else:
+                # try:
+                   # usage_round = int(
+                       # self.skin_dict["Units"]["StringFormats"].get(obs_vt[1], "2f")[-2]
+                   # )
+                # except ValueError:
+                   # loginf (
+                      # "Observation %s is using unit %s that returns %s for StringFormat, rather than float point decimal format value - using 0 as rounding"
+                      # % (observation, obs_vt[1], self.skin_dict["Units"]["StringFormats"].get(obs_vt[1]))
+                   # )
+                   # usage_round = 0
                 try:
-                   usage_round = int(
-                       self.skin_dict["Units"]["StringFormats"].get(obs_vt[1], "2f")[-2]
-                   )
+                   if obs_round is None:
+                       usage_round = int(
+                           self.skin_dict["Units"]["StringFormats"].get(obs_vt[1], "2f")[-2]
+                       )
+                   else:
+                       usage_round = int(obs_round)+1
                 except ValueError:
                    loginf (
                       "Observation %s is using unit %s that returns %s for StringFormat, rather than float point decimal format value - using 0 as rounding"

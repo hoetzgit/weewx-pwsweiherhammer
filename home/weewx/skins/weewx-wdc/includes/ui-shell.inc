@@ -6,7 +6,7 @@
 
 <script
   type="module"
-  src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/ui-shell.min.js"
+  src="https://1.www.s81c.com/common/carbon/web-components/version/v1.27.0/ui-shell.min.js"
 ></script>
 <script
   type="module"
@@ -20,7 +20,13 @@
   ></bx-header-menu-button>
   <bx-header-name href="$get_base_path(path='index.html')" prefix="">
     <!--prettier-ignore-->
-    #include "includes/icons/wdc.svg"
+    #if 'logo_image' in $Extras
+    <img class="logo" src="$Extras['logo_image']" alt="$gettext('Logo')" />
+    <!--prettier-ignore-->
+    #else
+      #include "includes/icons/wdc.svg"
+    #end if
+
     <span part="prefix" class="bx--header__name--prefix">WeeWX</span>
     $station.location
   </bx-header-name>
@@ -257,6 +263,42 @@
     #end if
 
     <!--prettier-ignore-->
+    #if $show_cmon_page
+    <bx-side-nav-link href="$get_base_path(path='computer-monitor.html')">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 32 32"
+        slot="title-icon"
+        width="16"
+        height="16"
+      >
+        <defs>
+          <style>
+            .cls-1 {
+              fill: none;
+            }
+          </style>
+        </defs>
+        <path
+          d="M28,16v6H4V6h7V4H4A2,2,0,0,0,2,6V22a2,2,0,0,0,2,2h8v4H8v2H24V28H20V24h8a2,2,0,0,0,2-2V16ZM18,28H14V24h4Z"
+          transform="translate(0 0)"
+        />
+        <path
+          d="M18,18h-.01a1,1,0,0,1-.9511-.7253L15.2456,11H11V9h5a1,1,0,0,1,.9615.7252l1.0742,3.7589,3.0088-9.7783A1.0142,1.0142,0,0,1,22,3a.98.98,0,0,1,.9487.6838L24.7207,9H30v2H24a1,1,0,0,1-.9487-.6838l-1.0132-3.04L18.9556,17.2942A1,1,0,0,1,18,18Z"
+          transform="translate(0 0)"
+        />
+        <rect
+          data-name="&lt;Transparent Rectangle&gt;"
+          class="cls-1"
+          width="32"
+          height="32"
+        />
+      </svg>
+      <span>$gettext("Computer Monitor")</span>
+    </bx-side-nav-link>
+    #end if
+
+    <!--prettier-ignore-->
     #for $static_page in $get_static_pages()
     <bx-side-nav-link href="$get_base_path(path=$static_page['link'])">
       <svg
@@ -341,6 +383,13 @@
 </script>
 
 <script>
+  // Default theme.
+  const defaultTheme = window.weewxWdcConfig.defaultTheme;
+
+  if (!("weewx.weewx_wdc.color-theme" in localStorage) && defaultTheme !== "auto") {
+    localStorage.setItem("weewx.weewx_wdc.color-theme", defaultTheme);
+  }
+
   var themeToggleDarkIcon = document.querySelectorAll(
     '[data-id="theme-toggle-dark-icon"]'
   );
@@ -350,8 +399,8 @@
 
   // Change the icons inside the button based on previous settings
   if (
-    localStorage.getItem("color-theme") === "dark" ||
-    (!("color-theme" in localStorage) &&
+    localStorage.getItem("weewx.weewx_wdc.color-theme") === "dark" ||
+    (!("weewx.weewx_wdc.color-theme" in localStorage) &&
       window.matchMedia("(prefers-color-scheme: dark)").matches)
   ) {
     document.documentElement.classList.add("dark");
@@ -377,23 +426,23 @@
       });
 
       // if set via local storage previously
-      if (localStorage.getItem("color-theme")) {
-        if (localStorage.getItem("color-theme") === "light") {
+      if (localStorage.getItem("weewx.weewx_wdc.color-theme")) {
+        if (localStorage.getItem("weewx.weewx_wdc.color-theme") === "light") {
           document.documentElement.classList.add("dark");
-          localStorage.setItem("color-theme", "dark");
+          localStorage.setItem("weewx.weewx_wdc.color-theme", "dark");
         } else {
           document.documentElement.classList.remove("dark");
-          localStorage.setItem("color-theme", "light");
+          localStorage.setItem("weewx.weewx_wdc.color-theme", "light");
         }
 
         // if NOT set via local storage previously
       } else {
         if (document.documentElement.classList.contains("dark")) {
           document.documentElement.classList.remove("dark");
-          localStorage.setItem("color-theme", "light");
+          localStorage.setItem("weewx.weewx_wdc.color-theme", "light");
         } else {
           document.documentElement.classList.add("dark");
-          localStorage.setItem("color-theme", "dark");
+          localStorage.setItem("weewx.weewx_wdc.color-theme", "dark");
         }
       }
     });

@@ -2,11 +2,11 @@
     "title":"Liste von Bauernregeln",
     "description":"Die Liste von Bauernregeln ist nach dem Jahreslauf von Januar bis Dezember geordnet.",
     "datasource":"Wikipedia",
-    "datasource_version":"14.02.2023 02:11",
+    "datasource_version":"05.08.2023 12:59",
     "datasource_url":"https://de.wikipedia.org/wiki/Liste_von_Bauernregeln",
     "file_creator":"Henry Ott",
-    "file_version":"1.0.3",
-    "file_modification":"24.03.2023 16:19",
+    "file_version":"1.0.4",
+    "file_modification":"29.12.2023 15:21",
     "months":{
         "1":{
             "general":{
@@ -1239,7 +1239,7 @@
                         "Philippi und Jakobi (1. Mai), sind dann noch zwei Grobi",
                         "Pankraz, Servaz, Bonifazi (12., 13., 14. Mai), das sind erst drei Lumpazi.",
                         "Oft der Urban gar (25. Mai), ist streng fürwahr, und Peter und Paul (29. Juni), die sind meist nur faul.",
-                        "Vor Bonifaz kein Sommer, nach der Sophie (15. Mai) kein Frost",
+                        "Vor Bonifaz kein Sommer, nach der Sophie (15. Mai) kein Frost.",
                         "Wer seine Schafe schert vor Bonifaz, dem ist die Woll’ lieber als das Schaf."
                     ]
                 },
@@ -1377,6 +1377,7 @@
                     "Ohne Tau kein Regen heißts im Juni allerwegen.",
                     "Im Juni kühl und trocken, gibt’s was in die Milch zu brocken.",
                     "Was im Juni nicht wächst, gehört in den Ofen.",
+					"Alles Glück der Erde liegt auf der Rücken der Pferde",
                     "Wenn im Juni der Nordwind weht, das Korn zur Ernte trefflich steht.",
                     "Gibt’s im Juni Donnerwetter, wird gewiss das Getreide fetter.",
                     "Im Juni ein Gewitterschauer macht das Herz gar froh den Bauer.",
@@ -1635,7 +1636,7 @@
                     "name":"Mariä Heimsuchung, Hinweis: Der Festtag wurde nach dem Zweiten Vatikanischen Konzil Mitte der 1960er Jahre auf den 31. Mai verlegt.",
                     "rules":[
                         "Mariä Heimsuch wird’s bestellt, wie’s Wetter sich 40 Tage hält.",
-                        "Geht Maria übes Gebirge nass, bleibt leer Scheune und Fass."
+                        "Geht Maria übers Gebirge nass, bleibt leer Scheune und Fass."
                     ]
                 },
                 "3":{
@@ -2024,7 +2025,8 @@
                         "Bleibt St. Barthol im Regen steh’n, ist ein guter Herbst vorherzuseh’n.",
                         "Sind Lorenz (10. August) und Bartel schön, bleiben die Kräuter noch lange stehn.",
                         "Bartholomä voll Sonnenglut macht Wein und Reben stark und gut.",
-                        "Bartholomä-Mann werden d'Nuss'n braun"
+                        "Bartholomä-Mann werden d'Nuss'n braun",
+						"Um Barthelmä schaut der Schnee über's Joch her."
                     ]
                 },
                 "25":{

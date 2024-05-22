@@ -1,11 +1,20 @@
-##    Copyright (c) 2021-2022 Rich Bell <bellrichm@gmail.com>
+##    Copyright (c) 2021-2023 Rich Bell <bellrichm@gmail.com>
 ##    See the file LICENSE.txt for your rights.
 
-<div class="col-12 col-xl-6 mb-4">
+#set modal_classes = ''
+#if $current_modal_global
+    #set modal_classes = 'data-bs-toggle="modal" data-bs-target="#currentModal"'
+#end if
+
+#set grid_cols = $getVar('$Extras.pages.' + $page + '.' + $section_global + '.grid_cols', 
+                            $getVar('$Extras.pages.' + $page + '.grid_cols',
+                                $getVar('$Extras.grid_cols')))
+<div class="$grid_cols">
     <div class="card">
         <div class="card-body text-center">
             #if $getVar('$Extras.current.observation', False)
-              <h1 class="card-title" id="$Extras.current.observation"></h1>
+              #set line = '<h1 class="card-title" ' + $modal_classes + ' id="' + $Extras.current.observation + '"></h1>'
+              $line
             #end if
             #if $getVar("$Extras.display_aeris_observation", False)
                 <div class="card-text" id="currentObservation"></div>
@@ -23,7 +32,7 @@
                     #end for
                 </tbody>
             </table>
-            <div id="updateDate"></div>
+            <div id="updateDateDiv"></div>
         </div>
     </div>
 </div>

@@ -1,0 +1,60 @@
+#errorCatcher Echo
+#encoding UTF-8
+#import datetime
+
+    #if os.path.exists("dwd/SchilderMS.jpg")
+    <!-- DWD Warnungen -->
+    <div class="row">
+        <div class="col-md-12 forecast-headline">
+            $obs.label.forecast_header_warnings_by
+            <span class="issued-DWD"> $obs.label.forecast_issuedWarnings_dwd</span>
+        </div>
+        <div class="col-sm-12 forecast-content dwdwarningsbay" style="margin-top:5px;">
+            <a href="https://www.dwd.de/DE/wetter/warnungen_gemeinden/warnWetter_node.html?ort=Weiherhammer&bundesland=bay" target="_blank" rel="noreferrer"><img itemprop="image" src="/dwd/SchilderMS.jpg" alt="Die Warnlage in Bayern"></a>
+        </div>
+    </div>
+    #end if
+
+    #if os.path.exists("dwd/warn-NEW.inc")
+    <div class="row">
+        <div class="col-md-12 forecast-headline">
+            $obs.label.forecast_header_warnings_new
+        </div>  
+        <div class="col-md-12 forecast-content">
+            #include "dwd/warn-NEW.inc"
+        </div>
+    </div>
+    #end if
+
+    #if os.path.exists("dwd/warn-WEIHERHAMMER.inc")
+    <div class="row">
+        <div class="col-md-12 forecast-headline">
+            $obs.label.forecast_header_warnings_whm
+        </div>
+        <div class="col-md-12 forecast-content">
+            #include raw "dwd/warn-WEIHERHAMMER.inc"
+        </div>
+    </div>
+    #end if
+
+    #if os.path.exists("dwd/wbx_tab_BY.inc")
+    <div class="row">
+    #set $start = 300
+    #set $end = 1105
+    #set $act = int(datetime.date.today().strftime("%m%d"))
+    ## DWD Waldbrandgefahrenindex only in the period March to October
+    #if $act > $start and $act < $end
+        #include "dwd/wbx_tab_BY.inc"
+    #else
+        <!-- DWD Waldbrandgefahrenindex -->
+        <div class="col-md-12 wbx-headline">
+            $obs.label.forecast_header_wbx
+            <span class="issued-DWD">$obs.label.forecast_issuedWBX_dwd_paused</span>
+        </div>
+        <div class="col-md-12 forecast-content">
+            <p>zur Zeit keine Warnungen</p>
+            <p><b>Hinweis:</b> Daten zum Waldbrandgefahrenindex werden vom DWD nur im Zeitraum <b>M&auml;rz</b> bis <b>Oktober</b> zur Verf&uuml;gung gestellt.</p>
+        </div>
+    #end if
+    </div>
+    #end if

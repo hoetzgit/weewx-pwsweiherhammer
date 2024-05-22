@@ -3,7 +3,7 @@
 #    Author: Michael Kainzbauer (github: mkainzbauer)
 """generator for configuration and initializing live data skin
 
-Tested on Weewx release 4.3.0.
+Tested on Weewx release 4.10.1.
 Tested with sqlite, may not work with other databases.
 
 Directions for use:
@@ -28,11 +28,17 @@ import logging
 import json
 import os.path
 
-import weeutil.weeutil
 import weewx.reportengine
-from weewx.units import convert
 
+try:
+    from weeutil.weeutil import accumulateLeaves
+except:
+    from weeutil.config import accumulateLeaves
+from weeutil.config import merge_config
+from weewx.units import convert
+from weeutil.weeutil import to_bool
 from user.sunevents import SunEvents
+
 
 log = logging.getLogger(__name__)
 
@@ -56,7 +62,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         self.gauge_dict = self.skin_dict['LiveGauges']
         self.chart_dict = self.skin_dict['LiveCharts']
         self.units_dict = self.skin_dict['Units']
+        merge_config(self.units_dict, self.config_dict['StdReport']['Defaults']['Units'])
         self.labels_dict = self.skin_dict['Labels']
+        merge_config(self.labels_dict, self.config_dict['StdReport']['Defaults']['Labels'])
         self.frontend_data = {}
 
         # Create a converter to get this into the desired units
@@ -70,6 +78,16 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         batch_records = db_manager.genBatchRecords(self.lastGoodStamp - 1, self.lastGoodStamp)
 
         self.transition_angle = 8
+        try:
+            self.transition_angle = int(self.chart_dict['transition_angle'])
+        except KeyError:
+            log.debug('Using default transition_angle %s' % self.transition_angle)
+
+        self.show_daynight = True
+        try:
+            self.show_daynight = to_bool(self.chart_dict['show_daynight'])
+        except KeyError:
+            log.debug('show_daynight is on')
 
         try:
             for rec in batch_records:
@@ -85,20 +103,26 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 self.record_dict_vtd[key] = None
 
     def gen_data(self):
-        """Generate data."""
         start_time = time.time()
         ngen = 0
+        unit_systems = {'US': weewx.units.USUnits, 'METRIC': weewx.units.MetricUnits, 'METRICWX': weewx.units.MetricWXUnits}
+        source_unit_system = self.config_dict['StdConvert']['target_unit']
+
         self.frontend_data['config'] = self.json_dict
         self.frontend_data['config']['archive_interval'] = self.config_dict['StdArchive']['archive_interval']
+
         self.frontend_data['gauges'] = self.gauge_dict
         self.frontend_data['charts'] = self.chart_dict
+        self.frontend_data['source_unit_system'] = {'type': source_unit_system}
+        for unit_system_item in unit_systems[source_unit_system].items():
+            self.frontend_data['source_unit_system'][unit_system_item[0]] = unit_system_item[1]
         self.frontend_data['units'] = self.units_dict
         self.frontend_data['labels'] = self.labels_dict
-        live_options = weeutil.weeutil.accumulateLeaves(self.json_dict)
+        live_options = accumulateLeaves(self.json_dict)
 
         for gauge in self.gauge_dict.sections:
             data_type = self.gauge_dict[gauge].get('data_type', gauge)
-            ret, gauge_history = self.gen_history_data(gauge, data_type, live_options, self.gauge_dict[gauge].get('data_binding', None))
+            ret, gauge_history = self.gen_history_data(gauge, data_type, live_options, self.gauge_dict[gauge].get('data_binding', None), None)
             self.frontend_data['gauges'][gauge]['target_unit'] = self.get_target_unit(gauge)
             self.frontend_data['gauges'][gauge]['obs_group'] = self.get_obs_group(gauge)
 
@@ -109,7 +133,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         for chart in self.chart_dict.sections:
             for category in self.chart_dict[chart].sections:
                 data_type = self.chart_dict[chart][category].get('data_type', category)
-                ret, category_history = self.gen_history_data(category, data_type, live_options, self.chart_dict[chart][category].get('data_binding'))
+                plotType = self.chart_dict[chart][category].get('plotType', 'line')
+                ret, category_history = self.gen_history_data(category, data_type, live_options, self.chart_dict[chart][category].get('data_binding'), plotType)
                 self.frontend_data['charts'][chart][category]['target_unit'] = self.get_target_unit(category)
                 self.frontend_data['charts'][chart][category]['obs_group'] = self.get_obs_group(category)
 
@@ -130,13 +155,14 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         self.frontend_data['day_night_events'] = events
 
         # Write JSON self.frontend_data output if a filename is specified
-        data_filename = 'weewxData.js'
-        timestamp_filename = 'ts.js'
+        data_filename = 'weewxData.json'
+        timestamp_filename = 'ts.json'
         html_root = os.path.join(self.config_dict['WEEWX_ROOT'], live_options['HTML_ROOT'])
-        if data_filename is not None:
-            self.write_json(os.path.join(html_root, data_filename))
-        if timestamp_filename is not None:
-            self.write_ts_file(os.path.join(html_root, timestamp_filename))
+
+        if not os.path.exists(html_root):
+            os.makedirs(html_root)
+        self.write_json(os.path.join(html_root, data_filename))
+        self.write_ts_file(os.path.join(html_root, timestamp_filename))
 
         finish_time = time.time()
 
@@ -157,7 +183,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             log.info("JSONGenerator: weewx.units.obs_group_dict['%s'] is not present, using the empty string." % column_name)
             return ""
 
-    def gen_history_data(self, obs_name, column_name, live_options, binding_name):
+    def gen_history_data(self, obs_name, column_name, live_options, binding_name, plotType):
         log.debug("Generating history for obs_name %s and column_name %s with binding %s" % (obs_name, column_name, binding_name))
         if obs_name in self.frontend_data:
             log.debug("Data for observation %s has already been collected." % obs_name)
@@ -189,17 +215,30 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     logging.exception("Could not get db_manager for default binding")
 
             batch_records = db_manager.genBatchRecords(self.lastGoodStamp - timespan * 60 * 60, self.lastGoodStamp)
+
             for rec in batch_records:
-                db_value_tuple = weewx.units.as_value_tuple(rec, column_name)
+                try:
+                    db_value_tuple = weewx.units.as_value_tuple(rec, column_name)
+                except:
+                    log.debug("JSONGenerator: Ignoring data for column '%s', is this column in the database table?" % (column_name))
+                    return 0, None
+
                 if target_unit == "":
                     history_value = rec[column_name]
                 else:
                     history_value = weewx.units.convert(db_value_tuple, target_unit)[0]
                 try:
-                    history_list.append(float(history_value))
+                    if history_value is None:
+                        history_list.append(history_value)
+                    else:
+                        history_list.append(float(history_value))
                     time_list.append(rec['dateTime'] * 1000)
                 except:
                     log.debug("JSONGenerator: Cannot decode reading of '%s' for column '%s'" % (history_value, column_name))
+
+
+
+
 
         log.debug("returning history list")
         return 1, list(zip(time_list, history_list))
@@ -226,18 +265,17 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
 
     def get_day_night_events(self, start, end, lon, lat, altitude_m):
-        if 'ephem' not in sys.modules:
+        if 'ephem' not in sys.modules or not self.show_daynight:
             return []
 
-        above_below_horizon_angle = 6
-        events = SunEvents(start, end, lon, lat, int(altitude_m)).get_transits(above_below_horizon_angle)
+        events = SunEvents(start, end, lon, lat, int(altitude_m)).get_transits(self.transition_angle)
         for event in events:
             event[0] = event[0] * 1000
             angle = event[1]
-            darkening_extent = abs(((event[1] - above_below_horizon_angle) / 2) / above_below_horizon_angle)
-            if angle >= above_below_horizon_angle:
+            darkening_extent = abs(((event[1] - self.transition_angle) / 2) / self.transition_angle)
+            if angle >= self.transition_angle:
                 darkening_extent = 0
-            if angle <= -above_below_horizon_angle:
+            if angle <= -self.transition_angle:
                 darkening_extent = 1
             event[1] = darkening_extent
         return events

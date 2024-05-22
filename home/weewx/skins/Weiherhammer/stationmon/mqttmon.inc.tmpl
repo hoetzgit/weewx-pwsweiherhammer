@@ -1,31 +1,59 @@
 #errorCatcher Echo
 #encoding UTF-8
 #import datetime
+#set $topic_default = $Extras.get('mqttmon_topic_default', 'weewx')
+#set $topics = $to_list($Extras.get('mqttmon_topics', ['$topic_default']))
 #if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
 <script type="text/javascript">
-    #if $Extras.has_key("mqttmon_outdated_treshold") and $Extras.mqttmon_outdated_treshold != ""
-    const mqttmon_outdated_treshold = parseInt($Extras.mqttmon_outdated_treshold);
+    #if $Extras.has_key("mqttmon_outdated_weewx") and $Extras.mqttmon_outdated_weewx != ""
+    const mqttmon_outdated_weewx = parseInt($Extras.mqttmon_outdated_weewx);
     #else
-    const mqttmon_outdated_treshold = parseInt(#echo $archive_interval_ms / 1000#);
+    const mqttmon_outdated_weewx = parseInt(#echo $archive_interval_ms / 1000#);
     #end if
-    
+    #if $Extras.has_key("mqttmon_outdated_currentwx") and $Extras.mqttmon_outdated_currentwx != ""
+    const mqttmon_outdated_currentwx = parseInt($Extras.mqttmon_outdated_currentwx);
+    #else
+    const mqttmon_outdated_currentwx = parseInt(#echo $archive_interval_ms / 1000#);
+    #end if
+    #if $Extras.has_key("mqttmon_outdated_currentaq") and $Extras.mqttmon_outdated_currentaq != ""
+    const mqttmon_outdated_currentaq = parseInt($Extras.mqttmon_outdated_currentaq);
+    #else
+    const mqttmon_outdated_currentaq = parseInt(#echo $archive_interval_ms / 1000#);
+    #end if
+
+    // MQTT value format
+    #if $Extras.has_key("mqttmon_format_toggle") and $Extras.mqttmon_format_toggle == "1"
     #if $Extras.has_key("mqttmon_format_default") and $Extras.mqttmon_format_default != ""
     const mqttmon_format_default = "$Extras.mqttmon_format_default";
     #else
     const mqttmon_format_default = "formatted";
     #end if
-    #if $Extras.has_key("mqttmon_format_toggle") and $Extras.mqttmon_format_toggle == "1"
-    if ( sessionStorage.getItem("mqttmon_format_user") === null ) {
-        sessionStorage.setItem("mqttmon_format_user", mqttmon_format_default);
+    #for $topic in $topics
+    #set formatid = 'mqttmon_format_' + $topic + '_user'
+    if (sessionStorage.getItem("$formatid") === null ) {
+        sessionStorage.setItem("$formatid", mqttmon_format_default);
     }
-    var mqttmon_format_user = sessionStorage.getItem("mqttmon_format_user");
-    if (mqttmon_format_user == mqttmon_format_default) {
-        var mqttmon_format_checked = true;
+    var $formatid = sessionStorage.getItem("$formatid");
+    if ($formatid == mqttmon_format_default) {
+        jQuery("#mqttmon_format_$topic").prop("checked", true);
     } else {
-        var mqttmon_format_checked = false;
-    }
+        jQuery("#mqttmon_format_$topic").prop("checked", false);
+    };
+    #end for
+    #end if
+
+    // MQTT topics
+    #if $Extras.has_key("mqttmon_topics_toggle") and $Extras.mqttmon_topics_toggle == "1"
+    #if $Extras.has_key("mqttmon_topics_default") and $Extras.mqttmon_topics_default != ""
+    const mqttmon_topics_default = "$Extras.mqttmon_topics_default";
     #else
-    var mqttmon_format_user = mqttmon_format_default;
+    const mqttmon_topics_default = "weewx";
+    #end if
+    if ( sessionStorage.getItem("mqttmon_topics_user") === null ) {
+        sessionStorage.setItem("mqttmon_topics_user", mqttmon_topics_default);
+    }
+    var mqttmon_topics_user = sessionStorage.getItem("mqttmon_topics_user");
+    mqttmon_switch_topics(mqttmon_topics_user);
     #end if
 
     ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
@@ -34,10 +62,14 @@
 
         jQuery(document).ready(function() {
             #if $Extras.has_key("mqttmon_format_toggle") and $Extras.mqttmon_format_toggle == "1"
-            jQuery("#" + "mqttmonFormatSwitch").prop("checked", mqttmon_format_checked);
-            jQuery("#" + "mqttmonFormatSwitch").change(function () {
-                mqttmon_switch_format();
+            #for $topic in $topics
+            jQuery("#mqttmon_format_$topic").change(function () {
+                mqttmon_switch_format("$topic");
             });
+            jQuery("#mqttmon_radio_$topic").click(function () {
+                mqttmon_switch_topics("$topic");
+            });
+            #end for
             #end if
 
             // Update the Last Updated timestamp with moment.js,
@@ -49,40 +81,54 @@
         console.error(e);
     });
 </script>
+#end if
+#if $Extras.has_key('mqttmon_topics_toggle') and $Extras.mqttmon_topics_toggle == '1'
+<div class="row form-check form-check-inline mqttmon_topic_radios stationmon-buttons">
+    <div class="btn-group" data-toggle="buttons">
+#for $topic in $topics
+#set $topicid = 'mqttmon_radio_' + $topic
+        <label class="btn btn-default mqttmon_topic_radios" id="$topicid"<input type="radio" />$gettext('button topics '+$topic)</label>
+#end for
+    </div>
+</div>
+#else
+    <!-- MQTT Monitor: Topic Toggle disabled -->
+#end if
+#for $topic in $topics
 <div class="row mqttmon-row">
     <div class="col-xs-12 mqttmon-table-container">
-        <table class="table table-striped mqttmon-table">
+        <table class="table table-striped mqttmon-table" id="mqttmon_table_$topic" style="display: none;">
             <thead class="table-light mqttmon-table-head">
                 <tr>
-                    <th scope="col" class="mqttmon-table-head-headline" colspan=2>$gettext('broker') <b>$Extras.mqtt_websockets_host</b> $gettext('topics') <b>$Extras.mqtt_websockets_topic/#</b></th>
+                    <th scope="col" class="mqttmon-table-head-headline" colspan=2>$gettext('broker'): <b>$Extras.mqtt_websockets_host</b><br>$gettext('topics'): <b>$gettext('text topic '+$topic)</b></th>
                 </tr>
                 <tr>
                     <th scope="col" class="mqttmon-table-head-subheadline">
                         <div class="mqttmon-legend">
                             <span class="mqttmon-rcv-dot" style="margin-left: 10px;background-color: var(--mqttmon-rcv-dot-current);"></span>$gettext('current')
-                            <span class="mqttmon-rcv-dot" style="margin-left: 5px;background-color: var(--mqttmon-rcv-dot-outdated);"></span>$gettext('older') 60s
+                            <span class="mqttmon-rcv-dot" style="margin-left: 5px;background-color: var(--mqttmon-rcv-dot-outdated);"></span>$gettext('older')
                             <span class="mqttmon-rcv-dot" style="margin-left: 5px;background-color: var(--mqttmon-rcv-dot-none);"></span>$gettext('not yet received')
                         </div>
                     </th>
                     #if $Extras.has_key("mqttmon_format_toggle") and $Extras.mqttmon_format_toggle == "1"
                     <th scope="col" class="mqttmon-table-head-subheadline">
                         <div class="form-check form-switch mqttmon-format-switch">
-                            <input class="form-check-input mqttmon-format-switch-input" type="checkbox" role="switch" id="mqttmonFormatSwitch"/>
-                            <label class="form-check-label mqttmon-format-switch-label" for="mqttmonFormatSwitch">$gettext('formatted')</label>
+                            <input class="form-check-input mqttmon-format-switch-input" type="checkbox" role="switch" id="mqttmon_format_$topic"</input>
+                            <label class="form-check-label mqttmon-format-switch-label" for="mqttmon_format_$topic">$gettext('formatted')</label>
                         </div>
                     </th>
                     #end if
                 </tr>
             </thead>
-            <tbody class="table-group-divider mqttmon-table-body mqttmon-data">
-            #set $file = "stationmon/mqttmontopics.inc"
+            <tbody class="table-group-divider mqttmon-table-body mqttmon-data mqttmon-data-$topic">
+            #set $file = 'stationmon/topics_' + $topic + '.inc'
             #if os.path.exists($file)
             <!-- Begin $file -->
-            #include $file
+            #include raw $file
             <!-- End $file -->
             #end if
             </tbody>
         </table>
     </div>
 </div>
-#end if
+#end for

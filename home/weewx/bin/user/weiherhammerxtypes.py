@@ -91,6 +91,16 @@ DEFAULTS_INI = """
             threshold_min = 0.0
             # valid values radiation or threshold
             evaluate_min = radiation
+		[[[cloudwatcher]]]
+			k1 = 33
+			k2 = 0
+			k3 = 4
+			k4 = 100
+			k5 = 100
+			k6 = 0
+			k7 = 0
+			temp_clear = -8
+			temp_overcast = 0
     [[PressureCooker]]
         max_delta_12h = 1800
         [[[altimeter]]]
@@ -126,6 +136,10 @@ weewx.units.obs_group_dict['solar_thswIndex'] = "group_temperature"
 weewx.units.obs_group_dict['solar_thwIndex'] = "group_temperature"
 weewx.units.obs_group_dict['solar_wetBulb'] = "group_temperature"
 weewx.units.obs_group_dict['solar_windchill'] = "group_temperature"
+# Nova PM Sensor SDS011, DHT22(AM2302), BME280 and Wifi
+weewx.units.obs_group_dict['airrohr_barometer'] = 'group_pressure'
+weewx.units.obs_group_dict['airrohr_dht22_dewpoint'] = 'group_temperature'
+weewx.units.obs_group_dict['airrohr_bme280_dewpoint'] = 'group_temperature'
 # AllSky camera
 weewx.units.obs_group_dict['asky_box_altimeter'] = 'group_pressure'
 weewx.units.obs_group_dict['asky_box_barometer'] = 'group_pressure'
@@ -135,6 +149,8 @@ weewx.units.obs_group_dict['asky_dome_dewpoint'] = 'group_temperature'
 # MLX90614 Cloudcover Station
 weewx.units.obs_group_dict['cloudwatcher_cloudpercent'] = 'group_percent'
 weewx.units.obs_group_dict['cloudwatcher_weathercode'] = 'group_count'
+weewx.units.obs_group_dict['cloudwatcher_diffTemp'] = 'group_temperature'
+weewx.units.obs_group_dict['cloudwatcher_corrSkyTemp'] = 'group_temperature'
 #
 # Tests
 weewx.units.obs_group_dict['thswIndex2'] = "group_temperature"
@@ -143,6 +159,7 @@ weewx.units.obs_group_dict['wetBulb2'] = "group_temperature"
 weewx.units.obs_group_dict['solar_thswIndex2'] = "group_temperature"
 weewx.units.obs_group_dict['solar_thwIndex2'] = "group_temperature"
 weewx.units.obs_group_dict['solar_wetBulb2'] = "group_temperature"
+weewx.units.obs_group_dict['possibly snow'] = "group_count"
 
 
 VERSION = '0.4'
@@ -157,7 +174,8 @@ class WXXTypes(weewx.xtypes.XType):
                  sunshine_radiation_min,
                  sunshine_threshold_min,
                  sunshine_evaluate_min,
-                 solar_heatindex_algo
+                 solar_heatindex_algo,
+                 cloudwatcher_dict
                  ):
         self.alt = altitude
         self.lat = latitude
@@ -169,6 +187,7 @@ class WXXTypes(weewx.xtypes.XType):
         self.sunshine_radiation_min = to_float(sunshine_radiation_min)
         self.sunshine_threshold_min = to_float(sunshine_threshold_min)
         self.sunshine_evaluate_min = sunshine_evaluate_min.lower()
+        self.cloudwatcher_dict = cloudwatcher_dict
 
         if self.sunshineThreshold_debug > 0:
             logdbg("sunshineThreshold, monthly coeff is %s" % str(self.sunshineThreshold_coeff_dict))
@@ -233,6 +252,30 @@ class WXXTypes(weewx.xtypes.XType):
             u = 'degree_F'
         else:
             val = weewx.wxformulas.dewpointC(data['solar_outTemp'], data['solar_outHumidity'])
+            u = 'degree_C'
+        return ValueTuple(val, u, 'group_temperature')
+
+    @staticmethod
+    def calc_airrohr_dht22_dewpoint(key, data, db_manager=None):
+        if 'airrohr_dht22_outTemp' not in data or 'airrohr_dht22_outHumidity' not in data:
+            raise weewx.CannotCalculate(key)
+        if data['usUnits'] == weewx.US:
+            val = weewx.wxformulas.dewpointF(data['airrohr_dht22_outTemp'], data['airrohr_dht22_outHumidity'])
+            u = 'degree_F'
+        else:
+            val = weewx.wxformulas.dewpointC(data['airrohr_dht22_outTemp'], data['airrohr_dht22_outHumidity'])
+            u = 'degree_C'
+        return ValueTuple(val, u, 'group_temperature')
+
+    @staticmethod
+    def calc_airrohr_bme280_dewpoint(key, data, db_manager=None):
+        if 'airrohr_bme280_outTemp' not in data or 'airrohr_bme280_outHumidity' not in data:
+            raise weewx.CannotCalculate(key)
+        if data['usUnits'] == weewx.US:
+            val = weewx.wxformulas.dewpointF(data['airrohr_bme280_outTemp'], data['airrohr_bme280_outHumidity'])
+            u = 'degree_F'
+        else:
+            val = weewx.wxformulas.dewpointC(data['airrohr_bme280_outTemp'], data['airrohr_bme280_outHumidity'])
             u = 'degree_C'
         return ValueTuple(val, u, 'group_temperature')
 
@@ -473,9 +516,8 @@ class WXXTypes(weewx.xtypes.XType):
         val = user.weiherhammerformulas.wh65_batt_to_percent(data['wh65_batt'])
         return ValueTuple(val, 'percent', 'group_percent')
 
-    @staticmethod
     # new calc cloudpercent with WeeWX "outTemp", not with sensor "ambTemp"
-    def calc_cloudwatcher_cloudpercent(key, data, db_manager=None):
+    def calc_cloudwatcher_cloudpercent(self, key, data, db_manager=None):
         #loginf("Calculation of WeeWX cloudwatcher_cloudpercent.")
         #loginf("Calculation of WeeWX cloudwatcher_cloudpercent data: %s" % str(data))
         if 'cloudwatcher_skyTemp' not in data or data['cloudwatcher_skyTemp'] is None or 'outTemp' not in data or data['outTemp'] is None:
@@ -488,9 +530,21 @@ class WXXTypes(weewx.xtypes.XType):
             skyTemp = FtoC(skyTemp)
         #loginf("Calculation of WeeWX cloudwatcher_cloudpercent outTemp: %s" % str(outTemp))
         #loginf("Calculation of WeeWX cloudwatcher_cloudpercent skyTemp: %s" % str(skyTemp))
-        val = user.weiherhammerformulas.weewx_cloudwatcher_cloudpercent(outTemp, skyTemp)
+        val = user.weiherhammerformulas.pws_cloudpercent(outTemp, skyTemp, self.cloudwatcher_dict)
         #loginf("Calculation of WeeWX cloudwatcher_cloudpercent percent: %s" % str(val))
         return ValueTuple(val, 'percent', 'group_percent')
+
+    # calculate the corrected SkyTemp
+    def calc_cloudwatcher_corrSkyTemp(self, key, data, db_manager=None):
+        if 'cloudwatcher_skyTemp' not in data or data['cloudwatcher_skyTemp'] is None or 'outTemp' not in data or data['outTemp'] is None:
+            raise weewx.CannotCalculate(key)
+        outTemp = data['outTemp']
+        skyTemp = data['cloudwatcher_skyTemp']
+        if data['usUnits'] == weewx.US:
+            outTemp = FtoC(outTemp)
+            skyTemp = FtoC(skyTemp)
+        val = user.weiherhammerformulas.skyTempCorr(outTemp, skyTemp, self.cloudwatcher_dict)
+        return ValueTuple(val, 'degree_C', 'group_temperature')
 
     @staticmethod
     # calc with WeeWX cloudpercent
@@ -510,6 +564,24 @@ class WXXTypes(weewx.xtypes.XType):
             thunderstorm10 = None
 
         val = user.weiherhammerformulas.pws_weathercode(data['cloudwatcher_cloudpercent'], rain10, thunderstorm10)
+        return ValueTuple(val, 'count', 'group_count')
+
+    @staticmethod
+    # calc possibly snow
+    def calc_possibly_snow(key, data, db_manager=None):
+        if 'outTemp' not in data or 'outHumidity' not in data or 'windSpeed' not in data or 'barometer' not in data:
+            raise weewx.CannotCalculate(key)
+        outTemp_vt = weewx.units.as_value_tuple(data, 'outTemp')
+        windSpeed_vt = weewx.units.as_value_tuple(data, 'windSpeed')
+        barometer_vt = weewx.units.as_value_tuple(data, 'barometer')
+        outTemp_C = weewx.units.convert(outTemp_vt, 'degree_C')[0]
+        windSpeed_mps = weewx.units.convert(windSpeed_vt, 'meter_per_second')[0]
+        barometer_hpa = weewx.units.convert(barometer_vt, 'hPa')[0]
+        if 'cloudwatcher_cloudpercent_avg5m' in data:
+            cloudpercent = data.get('cloudwatcher_cloudpercent_avg5m')
+        else:
+            cloudpercent = None
+        val = user.weiherhammerformulas.possibly_snow(outTemp_C, data['outHumidity'], windSpeed_mps, barometer_hpa, cloudpercent)
         return ValueTuple(val, 'count', 'group_count')
 
 #
@@ -537,6 +609,8 @@ class PressureCooker(weewx.xtypes.XType):
         self.asky_box_temp_12h_vt = None
         # Solar Station Temperature 12 hours ago as a ValueTuple
         self.solar_temp_12h_vt = None
+        # airRohr Temperature (BME280) 12 hours ago as a ValueTuple
+        self.airrohr_temp_12h_vt = None
 
     def _get_asky_box_temp_12h(self, ts, dbmanager):
         """Get the temperature as a ValueTuple from 12 hours ago.  The value will
@@ -552,11 +626,11 @@ class PressureCooker(weewx.xtypes.XType):
                 or abs(self.ts_12h - ts_12h) < self.max_delta_12h:
             # Hit the database to get a newer temperature.
             record = dbmanager.getRecord(ts_12h, max_delta=self.max_delta_12h)
-            if record and 'outTemp' in record:
+            if record and 'asky_box_temperature' in record:
                 # Figure out what unit the record is in ...
-                unit = weewx.units.getStandardUnitType(record['usUnits'], 'outTemp')
+                unit = weewx.units.getStandardUnitType(record['usUnits'], 'asky_box_temperature')
                 # ... then form a ValueTuple.
-                self.asky_box_temp_12h_vt = weewx.units.ValueTuple(record['outTemp'], *unit)
+                self.asky_box_temp_12h_vt = weewx.units.ValueTuple(record['asky_box_temperature'], *unit)
             else:
                 # Invalidate the temperature ValueTuple from 12h ago
                 self.asky_box_temp_12h_vt = None
@@ -579,11 +653,11 @@ class PressureCooker(weewx.xtypes.XType):
                 or abs(self.ts_12h - ts_12h) < self.max_delta_12h:
             # Hit the database to get a newer temperature.
             record = dbmanager.getRecord(ts_12h, max_delta=self.max_delta_12h)
-            if record and 'outTemp' in record:
+            if record and 'solar_outTemp' in record:
                 # Figure out what unit the record is in ...
-                unit = weewx.units.getStandardUnitType(record['usUnits'], 'outTemp')
+                unit = weewx.units.getStandardUnitType(record['usUnits'], 'solar_outTemp')
                 # ... then form a ValueTuple.
-                self.solar_temp_12h_vt = weewx.units.ValueTuple(record['outTemp'], *unit)
+                self.solar_temp_12h_vt = weewx.units.ValueTuple(record['solar_outTemp'], *unit)
             else:
                 # Invalidate the temperature ValueTuple from 12h ago
                 self.solar_temp_12h_vt = None
@@ -592,12 +666,40 @@ class PressureCooker(weewx.xtypes.XType):
 
         return self.solar_temp_12h_vt
 
+    # airRohr BME280 only
+    def _get_airrohr_temp_12h(self, ts, dbmanager):
+        """Get the temperature as a ValueTuple from 12 hours ago.  The value will
+         be None if no temperature is available.
+         """
+
+        ts_12h = ts - 12 * 3600
+
+        # Look up the temperature 12h ago if this is the first time through,
+        # or we don't have a usable temperature, or the old temperature is too stale.
+        if self.ts_12h is None \
+                or self.airrohr_temp_12h_vt is None \
+                or abs(self.ts_12h - ts_12h) < self.max_delta_12h:
+            # Hit the database to get a newer temperature.
+            record = dbmanager.getRecord(ts_12h, max_delta=self.max_delta_12h)
+            if record and 'airrohr_bme280_outTemp' in record:
+                # Figure out what unit the record is in ...
+                unit = weewx.units.getStandardUnitType(record['usUnits'], 'airrohr_bme280_outTemp')
+                # ... then form a ValueTuple.
+                self.airrohr_temp_12h_vt = weewx.units.ValueTuple(record['airrohr_bme280_outTemp'], *unit)
+            else:
+                # Invalidate the temperature ValueTuple from 12h ago
+                self.airrohr_temp_12h_vt = None
+            # Save the timestamp
+            self.ts_12h = ts_12h
+
+        return self.airrohr_temp_12h_vt
+
     def get_scalar(self, key, record, dbmanager, **option_dict):
-        if key == 'asky_box_pressure' or key == 'solar_pressure':
+        if key == 'asky_box_pressure' or key == 'solar_pressure' or key == 'airrohr_pressure':
             return self.pressure(record, dbmanager, key)
-        elif key == 'asky_box_altimeter' or key == 'solar_altimeter':
+        elif key == 'asky_box_altimeter' or key == 'solar_altimeter' or key == 'airrohr_altimeter':
             return self.altimeter(record, key)
-        elif key == 'asky_box_barometer' or key == 'solar_barometer':
+        elif key == 'asky_box_barometer' or key == 'solar_barometer' or key == 'airrohr_barometer':
             return self.barometer(record, key)
         else:
             raise weewx.UnknownType(key)
@@ -612,8 +714,11 @@ class PressureCooker(weewx.xtypes.XType):
         elif obs == 'solar_pressure':
             if any(key not in record for key in ['usUnits', 'solar_outTemp', 'solar_barometer', 'solar_outHumidity']):
                 raise weewx.CannotCalculate(obs)
+        elif obs == 'airrohr_pressure':
+            if any(key not in record for key in ['usUnits', 'airrohr_bme280_outTemp', 'airrohr_barometer', 'airrohr_bme280_outHumidity']):
+                raise weewx.CannotCalculate(obs)
 
-        # Get the temperature in Fahrenheit from 12 hours ago
+        # Get the AllSky CAM temperature in Fahrenheit from 12 hours ago
         if obs == 'asky_box_pressure':
             temp_12h_vt = self._get_asky_box_temp_12h(record['dateTime'], dbmanager)
             if temp_12h_vt is None \
@@ -640,6 +745,8 @@ class PressureCooker(weewx.xtypes.XType):
                     temp_12h_F[0],
                     record_US['asky_box_humidity']
                 )
+
+        # Get the solar station temperature in Fahrenheit from 12 hours ago
         elif obs == 'solar_pressure':
             temp_12h_vt = self._get_solar_temp_12h(record['dateTime'], dbmanager)
             if temp_12h_vt is None \
@@ -667,6 +774,34 @@ class PressureCooker(weewx.xtypes.XType):
                     record_US['solar_outHumidity']
                 )
 
+        # Get the airRohr temperature (BME289) in Fahrenheit from 12 hours ago
+        elif obs == 'airrohr_pressure':
+            temp_12h_vt = self._get_airrohr_temp_12h(record['dateTime'], dbmanager)
+            if temp_12h_vt is None \
+                    or temp_12h_vt[0] is None \
+                    or record['airrohr_bme280_outTemp'] is None \
+                    or record['airrohr_barometer'] is None \
+                    or record['airrohr_bme280_outHumidity'] is None:
+                pressure = None
+            else:
+                # The following requires everything to be in US Customary units.
+                # Rather than convert the whole record, just convert what we need:
+                record_US = weewx.units.to_US({'usUnits': record['usUnits'],
+                                               'airrohr_bme280_outTemp': record['airrohr_bme280_outTemp'],
+                                               'airrohr_barometer': record['airrohr_barometer'],
+                                               'airrohr_bme280_outHumidity': record['airrohr_bme280_outHumidity']})
+                # Get the altitude in feet
+                altitude_ft = weewx.units.convert(self.altitude_vt, "foot")
+                # The outside temperature in F.
+                temp_12h_F = weewx.units.convert(temp_12h_vt, "degree_F")
+                pressure = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(
+                    record_US['airrohr_barometer'],
+                    altitude_ft[0],
+                    record_US['airrohr_bme280_outTemp'],
+                    temp_12h_F[0],
+                    record_US['airrohr_bme280_outHumidity']
+                )
+
         return ValueTuple(pressure, 'inHg', 'group_pressure')
 
     def altimeter(self, record, obs):
@@ -676,6 +811,9 @@ class PressureCooker(weewx.xtypes.XType):
                 raise weewx.CannotCalculate(obs)
         elif obs == 'solar_altimeter':
             if 'solar_pressure' not in record:
+                raise weewx.CannotCalculate(obs)
+        elif obs == 'airrohr_altimeter':
+            if 'airrohr_pressure' not in record:
                 raise weewx.CannotCalculate(obs)
 
         # Convert altitude to same unit system of the incoming record
@@ -693,6 +831,8 @@ class PressureCooker(weewx.xtypes.XType):
             altimeter = formula(record['asky_box_pressure'], altitude[0], self.altimeter_algorithm)
         elif obs == 'solar_altimeter':
             altimeter = formula(record['solar_pressure'], altitude[0], self.altimeter_algorithm)
+        elif obs == 'airrohr_altimeter':
+            altimeter = formula(record['airrohr_pressure'], altitude[0], self.altimeter_algorithm)
 
         return ValueTuple(altimeter, u, 'group_pressure')
 
@@ -703,6 +843,9 @@ class PressureCooker(weewx.xtypes.XType):
                 raise weewx.CannotCalculate(obs)
         elif obs == 'solar_barometer':
             if 'solar_pressure' not in record or 'solar_outTemp' not in record:
+                raise weewx.CannotCalculate(obs)
+        elif obs == 'airrohr_barometer':
+            if 'airrohr_pressure' not in record or 'airrohr_bme280_outTemp' not in record:
                 raise weewx.CannotCalculate(obs)
 
         # Convert altitude to same unit system of the incoming record
@@ -720,6 +863,8 @@ class PressureCooker(weewx.xtypes.XType):
             barometer = formula(record['asky_box_pressure'], altitude[0], record['asky_box_temperature'])
         elif obs == 'solar_barometer':
             barometer = formula(record['solar_pressure'], altitude[0], record['solar_outTemp'])
+        elif obs == 'airrohr_barometer':
+            barometer = formula(record['airrohr_pressure'], altitude[0], record['airrohr_bme280_outTemp'])
 
         return ValueTuple(barometer, u, 'group_pressure')
 
@@ -770,6 +915,8 @@ class WeiherhammerXTypes(StdService):
             logerr("Invalid value evaluate_min '%s', using default 'radiation' instead!" % sunshine_evaluate_min)
             sunshine_evaluate_min = 'radiation'
 
+        cloudwatcher_corrfactor_dict = option_dict.get('cloudwatcher_corrfactor', {})
+
         # Instantiate an instance of WXXTypes:
         self.wxxtypes = WXXTypes(altitude, latitude, longitude, 
                                  sunshineThreshold_debug,
@@ -778,7 +925,8 @@ class WeiherhammerXTypes(StdService):
                                  sunshine_radiation_min,
                                  sunshine_threshold_min,
                                  sunshine_evaluate_min,
-                                 solar_heatindex_algo
+                                 solar_heatindex_algo,
+                                 cloudwatcher_corrfactor_dict
                                  )
         # Register it:
         weewx.xtypes.xtypes.append(self.wxxtypes)

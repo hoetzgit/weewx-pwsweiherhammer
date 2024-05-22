@@ -156,13 +156,12 @@
 
                 #end if
 
-                // only temporary test
-                #if $Extras.has_key('current_provider_toggle') and $Extras.current_provider_toggle == '1'
-                jQuery(".current-obs-symbol").dblclick(function(){
-                    if (jQuery(".ProviderRadios").is(":visible")) {
-                        jQuery(".ProviderRadios").hide();
+                #if $currentwx_enabled == "1"
+                jQuery(".currentwx_wethericon").dblclick(function(){
+                    if (jQuery(".currentwx-radios").is(":visible")) {
+                        jQuery(".currentwx-radios").hide();
                     } else {
-                        jQuery(".ProviderRadios").show();
+                        jQuery(".currentwx-radios").show();
                     }
                 });
                 #end if
@@ -213,30 +212,34 @@
                             <div class="col-sm-12 weather-obs-top">
                                 <!-- current conditions -->
                                 <div class="col-xs-6 current_obs_top current_obs_top_left">
+                                    #if $currentwx_enabled == "1"
                                     <div class="row">
-                                        #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1' and $current_obs_icon != ""
-                                        <img class="current-obs-symbol" id="wxicon" src="$relative_url/images/$current_obs_icon" alt="Aktuelles Wettersymbol $current_obs_icon">
-                                        #end if
+                                        <img class="current-obs-symbol currentwx_wethericon" id="wxicon" src="$relative_url/$currentwx_icon" alt="Aktuelles Wettersymbol $relative_url/$currentwx_icon">
                                     </div>
                                     <div class="row current-obs-text">
-                                        <span class="current_obs_summary">$current_obs_summary</span>
+                                        <span class="current_obs_summary currentwx_weathertext">$currentwx_text</span>
                                     </div>
-                                    #if $Extras.has_key('current_provider_toggle') and $Extras.current_provider_toggle == '1'
-                                    <div class="row ProviderRadiosHead">$gettext('data provider')</div>
-                                    <div class="row ProviderRadiosSelected"><span class="current_provider_source_api">$current_obs_source</span></div><!-- AJAX -->
-                                    <div class="row form-check form-check-inline ProviderRadios" hidden>
-                                      #set $providers = $to_list($Extras.get('current_provider_list', ['dwd_mosmix']))
-                                      #set $provider_default = $Extras.get('current_provider', 'dwd_mosmix')
+                                    #if $currentwx_provider_toggle == "1"
+                                    #set $hidden = " hidden"
+                                    #if $currentwx_provider_toggle_visible == "1"
+                                      #set $hidden = None
+                                    #end if
+                                    <div class="row currentwx-radios-head">$gettext("currentwx_provider")</div>
+                                    <div class="row currentwx-radios-selected"><span class="currentwx_source">$currentwx_source</span></div><!-- AJAX -->
+                                    <div class="row form-check form-check-inline currentwx-radios"$hidden>
+                                      #set $providers = $to_list($currentwx_provider_list)
+                                      #set $provider_default = $currentwx_provider
                                       #for $provider in $providers
-                                        #set $providerid = "provider_radio_" + $provider
+                                        #set $providerid = "currentwx_radio_" + $provider
                                         #if $provider == $provider_default
                                           #set $checked = " checked"
                                         #else
                                           #set $checked = None
                                         #end if
-                                        <input class="form-check-input ProviderRadios" type="radio" name="current_provider_radio" id="$providerid" value="$provider"$checked hidden>
+                                        <input class="form-check-input currentwx-radios" type="radio" name="currentwx_radio" id="$providerid" value="$provider" rel="tooltip" title=""$checked$hidden>
                                       #end for
                                     </div>
+                                    #end if
                                     #end if
                                 </div>
                                 <!-- current temperature and feelslike -->
@@ -282,7 +285,7 @@
                                         <div class="compass">
                                             <div class="direction">
                                                 <span class="curwinddir">
-                                                #if $current.windDir.ordinal_compass == "N/A"
+                                                #if $current.windDir.ordinal_compass == "$gettext('not available')"
                                                 --
                                                 #else
                                                 $current.windDir.ordinal_compass
@@ -378,7 +381,7 @@
                                             <td class="pws-aqi-table-title border-left" rel="tooltip" title="$obs.label.ttt_no2_short"><span class="pws_aqi_no2_dot"></span>$obs.label.uba_no2_short</td><!-- AJAX -->
                                         </tr>
                                         <tr>
-                                            <td class="pws-aqi-table-value border-left"><span class="uba_03">$current.uba_o3</span></td><!-- AJAX -->
+                                            <td class="pws-aqi-table-value border-left"><span class="uba_o3">$current.uba_o3</span></td><!-- AJAX -->
                                             <td class="pws-aqi-table-value border-left"><span class="uba_no2">$current.uba_no2</span></td><!-- AJAX -->
                                         </tr>
                                     </tbody>

@@ -1,17 +1,26 @@
 from weecfg.extension import ExtensionInstaller
 
-def loader():
-    return OBWX_Installer()
+#-------- extension info -----------
 
-class OBWX_Installer(ExtensionInstaller):
+VERSION      = "V.10"
+NAME         = 'OBWX'
+DESCRIPTION  = 'Weather Data Console'
+AUTHOR       = "StormchaserTech"
+AUTHOR_EMAIL = "https://github.com/stormchasertech/obwx"
+
+#-------- main loader -----------
+
+def loader():
+    return ScT_Installer()
+
+class ScT_Installer(ExtensionInstaller):
     def __init__(self):
-        super(OBWX_Installer, self).__init__(
-            version='0.31',
-            name='obwx',
-            description='Weather Data Console',
-            author='StormchaserTech',
-            author_email='stormchaserlitofb@gmail.com',
-            data_services='user.obwx.GetAerisForecast',
+        super(ScT_Installer, self).__init__(
+            version=VERSION,
+            name=NAME,
+            description=DESCRIPTION,
+            author=AUTHOR,
+            author_email=AUTHOR_EMAIL,
             config={
                 'StdReport': {
                     'OBWX': {
@@ -19,20 +28,18 @@ class OBWX_Installer(ExtensionInstaller):
                         'HTML_ROOT' : 'obwx',
                         'enable': True,
                         'Extras' : {
-                            'html_title': 'obwx',
                             'logo_img' : 'logo.png',
                             'logo_title' : 'Site Title',
                             'logo_alt' : 'Site Alt',
                             'api_id' : '',
                             'api_secret' : '',
-                            'api_call_frequency' : '240',
+                            'api_call_freqency' : '240',
                             'websocket_enable' : '',
                             'websocket_host' : '',
                             'websocket_port' : '8080',
                             'websocket_topic' : '',
                             'metar_id_1' : '',
                             'metar_id_2' : '',
-                            'timezone' : 'undefined',
                         }
                     }
                 }
@@ -44,8 +51,6 @@ class OBWX_Installer(ExtensionInstaller):
                     'skins/obwx/index.html.tmpl',
                     'skins/obwx/obwx.css',
                     'skins/obwx/obwx.js.tmpl',
-                    'skins/obwx/archive.json.tmpl',
-                    'skins/obwx/manifest.json.tmpl',
                     ]
                 ),
                 ('skins/obwx/icons',

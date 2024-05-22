@@ -720,6 +720,335 @@ class Consumer(object):
             return calendar.timegm(ts)
 
 
+"""
+Capture data from devices that transmit using ecowitt protocol, such as the
+Fine Offset GW1000 bridge.
+
+* the bridge attempts to upload to rtpdate.ecowitt.net using HTTP GET
+* the protocol is called 'ecowitt' - it is similar to but incompatible with WU
+
+The ecowitt.net server responds with HTTP 200.  However, the payload varies
+depending on the configuration.
+
+When the device is not registered, the ecowitt.net server replies with:
+
+{"errcode":"40001","errmsg":"invalid passkey"}
+
+When the device has been registered, the ecowitt.net server replies with:
+
+{"errcode":"0","errmsg":"ok","UTC_offset":"-18000"}
+
+The device is a bit chatty - every 2 seconds it does a UDP broadcast.  Every
+10 seconds it does an ARP broadcast.
+
+The UDP broadcast packet is 35 bytes.  It contains the MAC address, IP address,
+and SSID of the GW1000.  For example:
+
+FFFF120021807D5A3D537AC0A84C08AFC810475731303030422D5749464935333741B3
+
+which breaks down to:
+
+FFFF 120021 807D5A3D537A C0A84C08 AFC810 475731303030422D5749464935333741
+     ------ ------------ -------- ------ --------------------------------
+     ?      MAC          IPADDR   ?       G W 1 0 0 0 B - W I F I 5 3 7 A
+
+Here the IPADDR is 192.168.76.8, and the SSID uses the last 4 digits of the
+MAC address.
+"""
+class EcowittClient(Consumer):
+    """Use the ecowitt protocol (not WU protocol) to capture data"""
+
+    def __init__(self, **stn_dict):
+        super(EcowittClient, self).__init__(
+            EcowittClient.Parser(), handler=EcowittClient.Handler, **stn_dict)
+
+    class Handler(Consumer.Handler):
+
+        def get_response(self):
+            return '{"errcode":"0","errmsg":"ok","UTC_offset":"-18000"}'
+
+    class Parser(Consumer.Parser):
+
+        # map labels to observation names
+        LABEL_MAP = {
+            'baromabsin': 'pressure',
+            'baromrelin': 'barometer',
+            'batt1': 'battery_1',
+            'batt2': 'battery_2',
+            'batt3': 'battery_3',
+            'batt4': 'battery_4',
+            'batt5': 'battery_5',
+            'batt6': 'battery_6',
+            'batt7': 'battery_7',
+            'batt8': 'battery_8',
+            'brightness': 'luminosity',
+            'cloudf': 'foshk_cloudbase',
+            'co2': 'co2',
+            'co2_24h': 'co2_24h',
+            'co2_batt': 'co2_batt',
+            'dailyrainin': 'dailyrain',
+            'dewptf': 'foshk_dewpoint',
+            'eventrainin': 'eventrain',
+            'feelslikef': 'foshk_feelslike',
+            'heatindexf': 'foshk_heatindex',
+            'hourlyrainin': 'hourlyrain',
+            'humi_co2': 'humi_co2',
+            'humidity': 'humidity_out',
+            'humidity1': 'humidity_1',
+            'humidity2': 'humidity_2',
+            'humidity3': 'humidity_3',
+            'humidity4': 'humidity_4',
+            'humidity5': 'humidity_5',
+            'humidity6': 'humidity_6',
+            'humidity7': 'humidity_7',
+            'humidity8': 'humidity_8',
+            'humidityin': 'humidity_in',
+            'interval': 'station_interval',
+            'isintvl': 'foshk_interval',
+            'leaf_batt1': 'leaf_batt1',
+            'leaf_batt2': 'leaf_batt2',
+            'leaf_batt3': 'leaf_batt3',
+            'leaf_batt4': 'leaf_batt4',
+            'leaf_batt5': 'leaf_batt5',
+            'leaf_batt6': 'leaf_batt6',
+            'leaf_batt7': 'leaf_batt7',
+            'leaf_batt8': 'leaf_batt8',
+            'leafwetness_ch1': 'leafwetness_ch1',
+            'leafwetness_ch2': 'leafwetness_ch2',
+            'leafwetness_ch3': 'leafwetness_ch3',
+            'leafwetness_ch4': 'leafwetness_ch4',
+            'leafwetness_ch5': 'leafwetness_ch5',
+            'leafwetness_ch6': 'leafwetness_ch6',
+            'leafwetness_ch7': 'leafwetness_ch7',
+            'leafwetness_ch8': 'leafwetness_ch8',
+            'leak_ch1': 'leak_ch1',
+            'leak_ch2': 'leak_ch2',
+            'leak_ch3': 'leak_ch3',
+            'leak_ch4': 'leak_ch4',
+            'leakbatt1': 'leakbatt1',
+            'leakbatt2': 'leakbatt2',
+            'leakbatt3': 'leakbatt3',
+            'leakbatt4': 'leakbatt4',
+            'lightning': 'lightning_distance',
+            'lightning_num': 'lightning_num',
+            'lightning_time': 'lightning_time',
+            'maxdailygust': 'maxdailygust',
+            'model': 'model',
+            'monthlyrainin': 'monthlyrain',
+            'pm10_24h_co2': 'pm10_24h_co2',
+            'pm10_co2': 'pm10_co2',
+            'pm25_24h_co2': 'pm25_24h_co2',
+            'pm25_avg_24h_ch1': 'pm25_avg_24h_ch1',
+            'pm25_avg_24h_ch2': 'pm25_avg_24h_ch2',
+            'pm25_avg_24h_ch3': 'pm25_avg_24h_ch3',
+            'pm25_avg_24h_ch4': 'pm25_avg_24h_ch4',
+            'pm25_ch1': 'pm25_ch1',
+            'pm25_ch2': 'pm25_ch2',
+            'pm25_ch3': 'pm25_ch3',
+            'pm25_ch4': 'pm25_ch4',
+            'pm25_co2': 'pm25_co2',
+            'pm25batt1': 'pm25batt1',
+            'pm25batt2': 'pm25batt2',
+            'pm25batt3': 'pm25batt3',
+            'pm25batt4': 'pm25batt4',
+            'rainratein': 'rain_rate',
+            'rainyear': 'rainyear',
+            'soilbatt1': 'soilbatt1',
+            'soilbatt2': 'soilbatt2',
+            'soilbatt3': 'soilbatt3',
+            'soilbatt4': 'soilbatt4',
+            'soilbatt5': 'soilbatt5',
+            'soilbatt6': 'soilbatt6',
+            'soilbatt7': 'soilbatt7',
+            'soilbatt8': 'soilbatt8',
+            'soilmoisture1': 'soil_moisture_1',
+            'soilmoisture2': 'soil_moisture_2',
+            'soilmoisture3': 'soil_moisture_3',
+            'soilmoisture4': 'soil_moisture_4',
+            'soilmoisture5': 'soil_moisture_5',
+            'soilmoisture6': 'soil_moisture_6',
+            'soilmoisture7': 'soil_moisture_7',
+            'soilmoisture8': 'soil_moisture_8',
+            'solarradiation': 'solar_radiation',
+            'stationtype':  'stationtype',
+            'sunhours' : 'foshk_sunhours',
+            'sunshine': 'foshk_sunshine',
+            'temp1f': 'temperature_1',
+            'temp2f': 'temperature_2',
+            'temp3f': 'temperature_3',
+            'temp4f': 'temperature_4',
+            'temp5f': 'temperature_5',
+            'temp6f': 'temperature_6',
+            'temp7f': 'temperature_7',
+            'temp8f': 'temperature_8',
+            'tempf': 'temperature_out',
+            'tempinf': 'temperature_in',
+            'tf_batt1': 'tf_batt1',
+            'tf_batt2': 'tf_batt2',
+            'tf_batt3': 'tf_batt3',
+            'tf_batt4': 'tf_batt4',
+            'tf_batt5': 'tf_batt5',
+            'tf_batt6': 'tf_batt6',
+            'tf_batt7': 'tf_batt7',
+            'tf_batt8': 'tf_batt8',
+            'tf_ch1': 'tf_ch1',
+            'tf_ch2': 'tf_ch2',
+            'tf_ch3': 'tf_ch3',
+            'tf_ch4': 'tf_ch4',
+            'tf_ch5': 'tf_ch5',
+            'tf_ch6': 'tf_ch6',
+            'tf_ch7': 'tf_ch7',
+            'tf_ch8': 'tf_ch8',
+            'tf_co2': 'tf_co2',
+            'totalrainin': 'rain_total',
+            'uv': 'uv',
+            'weeklyrainin': 'weeklyrain',
+            'wh25batt': 'wh25batt',
+            'wh26batt': 'wh26batt',
+            'wh40batt': 'wh40batt',
+            'wh57batt': 'wh57batt',
+            'wh65batt': 'wh65batt',
+            'wh68batt': 'wh65batt',
+            'wh80batt': 'wh80batt',
+            'wh90batt': 'wh90batt',
+            'windchillf': 'foshk_windchill',
+            'winddir': 'wind_dir',
+            'winddir_avg10m': 'foshk_winddir_avg10m',
+            'windgustmph': 'wind_gust',
+            'windgustmph_max10m': 'foshk_windgust_max10m',
+            'windspdmph_avg10m': 'foshk_windspeed_avg10m',
+            'windspeedmph': 'wind_speed',
+            'yearlyrainin': 'yearlyrain'
+        }
+
+        IGNORED_LABELS = [
+            # Ecowitt
+            'PASSKEY', 'dateutc', 'freq', 'heap'
+            # using these values from weewx-gw1000 API call instead from interceptor driver
+            ,'batt1', 'batt2', 'batt3', 'soilbatt1', 'soilad1', 'wh57batt', 'wh65batt', 'maxdailygust', 'brightness'
+            # additional values from FOSHKplugin
+            ,'ptrend1', 'pchange1', 'ptrend3', 'pchange3', 'runtime', 'isintvl10', 'osunhours', 'nsunhours', 'windrun', 'srsum', 'dewptinf'
+        ]
+
+        def __init__(self):
+            self._last_rain = None
+            self._rain_mapping_confirmed = False
+            self._last_strikes_total = None
+            self._strikes_mapping_confirmed = False
+            self._model = None
+            self._stationtype = None
+
+        @staticmethod
+        def _delta_strikes(strikes, last_strikes):
+            if strikes is None:
+                return None
+            if last_strikes is None:
+                loginf("skipping lightning strikes measurement of %s: no last strikes" % strikes)
+                return None
+            if strikes < last_strikes:
+                loginf("lightning strikes wraparound detected: new=%s last=%s" %
+                       (strikes, last_strikes))
+                return strikes
+            return strikes - last_strikes
+
+        def parse(self, s):
+            pkt = dict()
+            try:
+                data = _cgi_to_dict(s)
+                pkt['dateTime'] = self.decode_datetime(
+                    data.pop('dateutc', int(time.time() + 0.5)))
+                pkt['usUnits'] = weewx.US
+
+                # some devices (e.g., HP2551_V1.5.7) emit something that looks
+                # a lot like ecowitt protocol, but not quite.  one thing that
+                # they get wrong is the rain - that have no totalrainin.  so
+                # for those devices, substitute a different cumulative rain
+                # measurement.  do this only once, and do not be fooled by
+                # partial packets.
+                if 'stationtype' in data:
+                    pkt['stationtype'] = data['stationtype']
+                    if self._stationtype != data['stationtype']:
+                       self._stationtype = data['stationtype']
+                       loginf("Station_type: %s" % (data['stationtype']))
+
+                if 'model' in data:
+                    pkt['model'] = data['model']
+                    if self._model != data['model']:
+                       self._model = data['model']  
+                       loginf("Hardware_model: %s" % (data['model']))
+
+                if 'totalrainin' not in data and 'yearlyrainin' in data:
+                    pkt['rainyear'] = self.decode_float(data['yearlyrainin']) if data['yearlyrainin'] != '' else 0
+
+                if not self._rain_mapping_confirmed:
+                    if 'totalrainin' not in data and 'yearlyrainin' in data:
+                        self.LABEL_MAP.pop('totalrainin')
+                        self.LABEL_MAP['yearlyrainin'] = 'rain_total'
+                        self._rain_mapping_confirmed = True
+                        loginf("using 'yearlyrainin' for rain_total")
+                    elif 'totalrainin' in data:
+                        self._rain_mapping_confirmed = True
+                        loginf("using 'totalrainin' for rain_total")
+
+                if not self._strikes_mapping_confirmed:
+                    if 'lightning_num' in data:
+                        self._strikes_mapping_confirmed = True
+                        loginf("using 'lightning_num' for lightning_strike_count")
+
+                # get all of the other parameters
+                for n in data:
+                    if n in self.LABEL_MAP:
+                        if n != 'model' and n != 'stationtype':
+                           pkt[self.LABEL_MAP[n]] = self.decode_float(data[n]) if data[n] != '' else 0
+                    elif n in self.IGNORED_LABELS:
+                        val = data[n]
+                        if n == 'PASSKEY':
+                            val = 'X' * len(data[n])
+                        logdbg("ignored parameter %s=%s" % (n, val))
+                    else:
+                        logerr("unrecognized parameter %s=%s" % (n, data[n]))
+
+                # get the rain this period from total
+                if 'rain_total' in pkt:
+                    newtot = pkt['rain_total']
+                    logdbg("Rain old tot: %s" % str(self._last_rain))
+                    logdbg("Rain new tot: %s" % str(newtot))
+                    new_delta = self._delta_rain(newtot, self._last_rain)
+                    pkt['rain'] = new_delta
+                    logdbg("Rain Delta: %s" % str(pkt['rain']))
+                    self._last_rain = newtot
+
+                #Fix lightnig distance unit
+                if 'lightning_distance' in pkt:
+                    #WH57 gives a value in kilometers, if we have us units we must convert it to miles
+                    lightdistkm = pkt['lightning_distance']
+                    #direct conversion km to mi
+                    pkt['wh57_lightning_distance'] = 0.62137119 * lightdistkm
+                    # WeeWX Corrections set lightning_distance = wh57_lightning_distance if lightning_strike_count > 0
+                    pkt['lightning_distance'] = None
+
+                # get the lightinig this period from total
+                if 'lightning_num' in pkt:
+                    new_strikes_total = pkt['lightning_num']
+                    logdbg("Lightning strikes old tot: %s" % str(self._last_strikes_total))
+                    logdbg("Lightning strikes new tot: %s" % str(new_strikes_total))
+                    new_delta = self._delta_strikes(new_strikes_total, self._last_strikes_total)
+                    pkt['lightning_strike_count'] = new_delta
+                    logdbg("Lightning strikes Delta: %s" % str(pkt['lightning_strike_count']))
+                    self._last_strikes_total = new_strikes_total
+
+            except ValueError as e:
+                logerr("parse failed for %s: %s" % (s, e))
+            return pkt
+
+        @staticmethod
+        def decode_float(x):
+            # these stations send a value of -9999 to indicate no value, so
+            # convert that to a proper None.
+            x = Consumer.Parser.decode_float(x)
+            return None if x == -9999 else x
+
+
 # capture data from hardware that sends using the weather underground protocol
 
 class WUClient(Consumer):
@@ -2255,334 +2584,6 @@ class GW1000U(Consumer):
                 v = (v << 4) + int(y, 16)
             return v
 
-
-"""
-Capture data from devices that transmit using ecowitt protocol, such as the
-Fine Offset GW1000 bridge.
-
-* the bridge attempts to upload to rtpdate.ecowitt.net using HTTP GET
-* the protocol is called 'ecowitt' - it is similar to but incompatible with WU
-
-The ecowitt.net server responds with HTTP 200.  However, the payload varies
-depending on the configuration.
-
-When the device is not registered, the ecowitt.net server replies with:
-
-{"errcode":"40001","errmsg":"invalid passkey"}
-
-When the device has been registered, the ecowitt.net server replies with:
-
-{"errcode":"0","errmsg":"ok","UTC_offset":"-18000"}
-
-The device is a bit chatty - every 2 seconds it does a UDP broadcast.  Every
-10 seconds it does an ARP broadcast.
-
-The UDP broadcast packet is 35 bytes.  It contains the MAC address, IP address,
-and SSID of the GW1000.  For example:
-
-FFFF120021807D5A3D537AC0A84C08AFC810475731303030422D5749464935333741B3
-
-which breaks down to:
-
-FFFF 120021 807D5A3D537A C0A84C08 AFC810 475731303030422D5749464935333741
-     ------ ------------ -------- ------ --------------------------------
-     ?      MAC          IPADDR   ?       G W 1 0 0 0 B - W I F I 5 3 7 A
-
-Here the IPADDR is 192.168.76.8, and the SSID uses the last 4 digits of the
-MAC address.
-"""
-class EcowittClient(Consumer):
-    """Use the ecowitt protocol (not WU protocol) to capture data"""
-
-    def __init__(self, **stn_dict):
-        super(EcowittClient, self).__init__(
-            EcowittClient.Parser(), handler=EcowittClient.Handler, **stn_dict)
-
-    class Handler(Consumer.Handler):
-
-        def get_response(self):
-            return '{"errcode":"0","errmsg":"ok","UTC_offset":"-18000"}'
-
-    class Parser(Consumer.Parser):
-
-        # map labels to observation names
-        LABEL_MAP = {
-            'baromabsin': 'pressure',
-            'baromrelin': 'barometer',
-            'batt1': 'battery_1',
-            'batt2': 'battery_2',
-            'batt3': 'battery_3',
-            'batt4': 'battery_4',
-            'batt5': 'battery_5',
-            'batt6': 'battery_6',
-            'batt7': 'battery_7',
-            'batt8': 'battery_8',
-            'brightness': 'luminosity',
-            'cloudf': 'foshk_cloudbase',
-            'co2': 'co2',
-            'co2_24h': 'co2_24h',
-            'co2_batt': 'co2_batt',
-            'dailyrainin': 'dailyrain',
-            'dewptf': 'foshk_dewpoint',
-            'eventrainin': 'eventrain',
-            'feelslikef': 'foshk_feelslike',
-            'heatindexf': 'foshk_heatindex',
-            'hourlyrainin': 'hourlyrain',
-            'humi_co2': 'humi_co2',
-            'humidity': 'humidity_out',
-            'humidity1': 'humidity_1',
-            'humidity2': 'humidity_2',
-            'humidity3': 'humidity_3',
-            'humidity4': 'humidity_4',
-            'humidity5': 'humidity_5',
-            'humidity6': 'humidity_6',
-            'humidity7': 'humidity_7',
-            'humidity8': 'humidity_8',
-            'humidityin': 'humidity_in',
-            'interval': 'station_interval',
-            'isintvl': 'foshk_interval',
-            'leaf_batt1': 'leaf_batt1',
-            'leaf_batt2': 'leaf_batt2',
-            'leaf_batt3': 'leaf_batt3',
-            'leaf_batt4': 'leaf_batt4',
-            'leaf_batt5': 'leaf_batt5',
-            'leaf_batt6': 'leaf_batt6',
-            'leaf_batt7': 'leaf_batt7',
-            'leaf_batt8': 'leaf_batt8',
-            'leafwetness_ch1': 'leafwetness_ch1',
-            'leafwetness_ch2': 'leafwetness_ch2',
-            'leafwetness_ch3': 'leafwetness_ch3',
-            'leafwetness_ch4': 'leafwetness_ch4',
-            'leafwetness_ch5': 'leafwetness_ch5',
-            'leafwetness_ch6': 'leafwetness_ch6',
-            'leafwetness_ch7': 'leafwetness_ch7',
-            'leafwetness_ch8': 'leafwetness_ch8',
-            'leak_ch1': 'leak_ch1',
-            'leak_ch2': 'leak_ch2',
-            'leak_ch3': 'leak_ch3',
-            'leak_ch4': 'leak_ch4',
-            'leakbatt1': 'leakbatt1',
-            'leakbatt2': 'leakbatt2',
-            'leakbatt3': 'leakbatt3',
-            'leakbatt4': 'leakbatt4',
-            'lightning': 'lightning_distance',
-            'lightning_num': 'lightning_num',
-            'lightning_time': 'lightning_time',
-            'maxdailygust': 'maxdailygust',
-            'model': 'model',
-            'monthlyrainin': 'monthlyrain',
-            'pm10_24h_co2': 'pm10_24h_co2',
-            'pm10_co2': 'pm10_co2',
-            'pm25_24h_co2': 'pm25_24h_co2',
-            'pm25_avg_24h_ch1': 'pm25_avg_24h_ch1',
-            'pm25_avg_24h_ch2': 'pm25_avg_24h_ch2',
-            'pm25_avg_24h_ch3': 'pm25_avg_24h_ch3',
-            'pm25_avg_24h_ch4': 'pm25_avg_24h_ch4',
-            'pm25_ch1': 'pm25_ch1',
-            'pm25_ch2': 'pm25_ch2',
-            'pm25_ch3': 'pm25_ch3',
-            'pm25_ch4': 'pm25_ch4',
-            'pm25_co2': 'pm25_co2',
-            'pm25batt1': 'pm25batt1',
-            'pm25batt2': 'pm25batt2',
-            'pm25batt3': 'pm25batt3',
-            'pm25batt4': 'pm25batt4',
-            'rainratein': 'rain_rate',
-            'rainyear': 'rainyear',
-            'soilbatt1': 'soilbatt1',
-            'soilbatt2': 'soilbatt2',
-            'soilbatt3': 'soilbatt3',
-            'soilbatt4': 'soilbatt4',
-            'soilbatt5': 'soilbatt5',
-            'soilbatt6': 'soilbatt6',
-            'soilbatt7': 'soilbatt7',
-            'soilbatt8': 'soilbatt8',
-            'soilmoisture1': 'soil_moisture_1',
-            'soilmoisture2': 'soil_moisture_2',
-            'soilmoisture3': 'soil_moisture_3',
-            'soilmoisture4': 'soil_moisture_4',
-            'soilmoisture5': 'soil_moisture_5',
-            'soilmoisture6': 'soil_moisture_6',
-            'soilmoisture7': 'soil_moisture_7',
-            'soilmoisture8': 'soil_moisture_8',
-            'solarradiation': 'solar_radiation',
-            'stationtype':  'stationtype',
-            'sunhours' : 'foshk_sunhours',
-            'sunshine': 'foshk_sunshine',
-            'temp1f': 'temperature_1',
-            'temp2f': 'temperature_2',
-            'temp3f': 'temperature_3',
-            'temp4f': 'temperature_4',
-            'temp5f': 'temperature_5',
-            'temp6f': 'temperature_6',
-            'temp7f': 'temperature_7',
-            'temp8f': 'temperature_8',
-            'tempf': 'temperature_out',
-            'tempinf': 'temperature_in',
-            'tf_batt1': 'tf_batt1',
-            'tf_batt2': 'tf_batt2',
-            'tf_batt3': 'tf_batt3',
-            'tf_batt4': 'tf_batt4',
-            'tf_batt5': 'tf_batt5',
-            'tf_batt6': 'tf_batt6',
-            'tf_batt7': 'tf_batt7',
-            'tf_batt8': 'tf_batt8',
-            'tf_ch1': 'tf_ch1',
-            'tf_ch2': 'tf_ch2',
-            'tf_ch3': 'tf_ch3',
-            'tf_ch4': 'tf_ch4',
-            'tf_ch5': 'tf_ch5',
-            'tf_ch6': 'tf_ch6',
-            'tf_ch7': 'tf_ch7',
-            'tf_ch8': 'tf_ch8',
-            'tf_co2': 'tf_co2',
-            'totalrainin': 'rain_total',
-            'uv': 'uv',
-            'weeklyrainin': 'weeklyrain',
-            'wh25batt': 'wh25batt',
-            'wh26batt': 'wh26batt',
-            'wh40batt': 'wh40batt',
-            'wh57batt': 'wh57batt',
-            'wh65batt': 'wh65batt',
-            'wh68batt': 'wh65batt',
-            'wh80batt': 'wh80batt',
-            'wh90batt': 'wh90batt',
-            'windchillf': 'foshk_windchill',
-            'winddir': 'wind_dir',
-            'winddir_avg10m': 'foshk_winddir_avg10m',
-            'windgustmph': 'wind_gust',
-            'windgustmph_max10m': 'foshk_windgust_max10m',
-            'windspdmph_avg10m': 'foshk_windspeed_avg10m',
-            'windspeedmph': 'wind_speed',
-            'yearlyrainin': 'yearlyrain'
-        }
-
-        IGNORED_LABELS = [
-            # Ecowitt
-            'PASSKEY', 'dateutc', 'freq'
-            # get it from weewx-gw1000
-            ,'batt1', 'batt2', 'batt3', 'soilbatt1', 'wh57batt', 'wh65batt', 'maxdailygust', 'brightness'
-            # FOSHKplugin
-            ,'ptrend1', 'pchange1', 'ptrend3', 'pchange3', 'runtime', 'isintvl10', 'osunhours', 'nsunhours'
-        ]
-
-        def __init__(self):
-            self._last_rain = None
-            self._rain_mapping_confirmed = False
-            self._last_strikes_total = None
-            self._strikes_mapping_confirmed = False
-            self._model = None
-            self._stationtype = None
-
-        @staticmethod
-        def _delta_strikes(strikes, last_strikes):
-            if strikes is None:
-                return None
-            if last_strikes is None:
-                loginf("skipping lightning strikes measurement of %s: no last strikes" % strikes)
-                return None
-            if strikes < last_strikes:
-                loginf("lightning strikes wraparound detected: new=%s last=%s" %
-                       (strikes, last_strikes))
-                return strikes
-            return strikes - last_strikes
-
-        def parse(self, s):
-            pkt = dict()
-            try:
-                data = _cgi_to_dict(s)
-                pkt['dateTime'] = self.decode_datetime(
-                    data.pop('dateutc', int(time.time() + 0.5)))
-                pkt['usUnits'] = weewx.US
-
-                # some devices (e.g., HP2551_V1.5.7) emit something that looks
-                # a lot like ecowitt protocol, but not quite.  one thing that
-                # they get wrong is the rain - that have no totalrainin.  so
-                # for those devices, substitute a different cumulative rain
-                # measurement.  do this only once, and do not be fooled by
-                # partial packets.
-                if 'stationtype' in data:
-                    pkt['stationtype'] = data['stationtype']
-                    if self._stationtype != data['stationtype']:
-                       self._stationtype = data['stationtype']
-                       loginf("Station_type: %s" % (data['stationtype']))
-
-                if 'model' in data:
-                    pkt['model'] = data['model']
-                    if self._model != data['model']:
-                       self._model = data['model']  
-                       loginf("Hardware_model: %s" % (data['model']))
-
-                if 'totalrainin' not in data and 'yearlyrainin' in data:
-                    pkt['rainyear'] = self.decode_float(data['yearlyrainin']) if data['yearlyrainin'] != '' else 0
-
-                if not self._rain_mapping_confirmed:
-                    if 'totalrainin' not in data and 'yearlyrainin' in data:
-                        self.LABEL_MAP.pop('totalrainin')
-                        self.LABEL_MAP['yearlyrainin'] = 'rain_total'
-                        self._rain_mapping_confirmed = True
-                        loginf("using 'yearlyrainin' for rain_total")
-                    elif 'totalrainin' in data:
-                        self._rain_mapping_confirmed = True
-                        loginf("using 'totalrainin' for rain_total")
-
-                if not self._strikes_mapping_confirmed:
-                    if 'lightning_num' in data:
-                        self._strikes_mapping_confirmed = True
-                        loginf("using 'lightning_num' for lightning_strike_count")
-
-                # get all of the other parameters
-                for n in data:
-                    if n in self.LABEL_MAP:
-                        if n != 'model' and n != 'stationtype':
-                           pkt[self.LABEL_MAP[n]] = self.decode_float(data[n]) if data[n] != '' else 0
-                    elif n in self.IGNORED_LABELS:
-                        val = data[n]
-                        if n == 'PASSKEY':
-                            val = 'X' * len(data[n])
-                        logdbg("ignored parameter %s=%s" % (n, val))
-                    else:
-                        logerr("unrecognized parameter %s=%s" % (n, data[n]))
-
-                # get the rain this period from total
-                if 'rain_total' in pkt:
-                    newtot = pkt['rain_total']
-                    logdbg("Rain old tot: %s" % str(self._last_rain))
-                    logdbg("Rain new tot: %s" % str(newtot))
-                    new_delta = self._delta_rain(newtot, self._last_rain)
-                    pkt['rain'] = new_delta
-                    logdbg("Rain Delta: %s" % str(pkt['rain']))
-                    self._last_rain = newtot
-
-                #Fix lightnig distance unit
-                if 'lightning_distance' in pkt:
-                    #WH57 gives a value in kilometers, if we have us units we must convert it to miles
-                    lightdistkm = pkt['lightning_distance']
-                    #direct conversion km to mi
-                    pkt['wh57_lightning_distance'] = 0.62137119 * lightdistkm
-                    # WeeWX Corrections set lightning_distance = wh57_lightning_distance if lightning_strike_count > 0
-                    pkt['lightning_distance'] = None
-
-                # get the lightinig this period from total
-                if 'lightning_num' in pkt:
-                    new_strikes_total = pkt['lightning_num']
-                    logdbg("Lightning strikes old tot: %s" % str(self._last_strikes_total))
-                    logdbg("Lightning strikes new tot: %s" % str(new_strikes_total))
-                    new_delta = self._delta_strikes(new_strikes_total, self._last_strikes_total)
-                    pkt['lightning_strike_count'] = new_delta
-                    logdbg("Lightning strikes Delta: %s" % str(pkt['lightning_strike_count']))
-                    self._last_strikes_total = new_strikes_total
-
-            except ValueError as e:
-                logerr("parse failed for %s: %s" % (s, e))
-            return pkt
-
-        @staticmethod
-        def decode_float(x):
-            # these stations send a value of -9999 to indicate no value, so
-            # convert that to a proper None.
-            x = Consumer.Parser.decode_float(x)
-            return None if x == -9999 else x
 
 
 class InterceptorConfigurationEditor(weewx.drivers.AbstractConfEditor):

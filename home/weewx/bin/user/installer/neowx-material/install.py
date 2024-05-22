@@ -142,6 +142,6 @@ class BasicInstaller(ExtensionInstaller):
                     'skins/neowx-material/weather-icons/font/weathericons-regular-webfont.woff',
                     'skins/neowx-material/weather-icons/font/weathericons-regular-webfont.woff2']),
                    ('bin/user',
-                    ['bin/user/historygenerator.py']),
+                    ['bin/user/historygenerator_neowx.py']),
             ]
             )

@@ -82,29 +82,6 @@ $gettext('no')
         </div>
         #end if
 
-        #if "indoor" in $station_observations_extras
-        <!-- Indoor Obbservations -->
-        <div class="row station-observations-extras-row station-observations-extras-row-right">
-            <div class="station-observations-extras-title">$gettext("indoor conditions")</div>
-            #if "obs" in $station_observations_extras.indoor
-            <div class="station-observations-extras-body">
-                <table class="station-observations-extras-table flexible-obs-indoor-table" cellpadding="0" cellspacing="0">
-                    <tbody>
-                        #for $x in $station_observations_extras.indoor.obs
-                        <tr>
-                            <td class="station-observations-extras-label">$obs.label[$x]</td>
-                            <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span></td><!-- AJAX -->
-                        </tr>
-                        #end for
-                    </tbody>
-                </table>
-            </div>
-            #end if
-        </div>
-        #end if
-    </div>
-
-    <div class="col-lg-6">
         #if "solar" in $station_observations_extras
         <!-- Solar Weather Station -->
         <div class="row station-observations-extras-row">
@@ -134,9 +111,12 @@ $gettext('no')
             #end if
         </div>
         #end if
+    </div>
+
+    <div class="col-lg-6">
 
         #if "airrohr" in $station_observations_extras
-        <!-- airRohr Temperatire/Humidity Observations -->
+        <!-- airRohr Temperatire/Humidity/Barometer Observations -->
         <div class="row station-observations-extras-row">
             <div class="station-observations-extras-title">$gettext("airrohr conditions")</div>
             #if "obs" in $station_observations_extras.airrohr
@@ -240,6 +220,28 @@ $gettext('no')
                         </tr>
                         #end if
                     #end for
+                    </tbody>
+                </table>
+            </div>
+            #end if
+        </div>
+        #end if
+
+
+        #if "indoor" in $station_observations_extras
+        <!-- Indoor Obbservations -->
+        <div class="row station-observations-extras-row station-observations-extras-row-right">
+            <div class="station-observations-extras-title">$gettext("indoor conditions")</div>
+            #if "obs" in $station_observations_extras.indoor
+            <div class="station-observations-extras-body">
+                <table class="station-observations-extras-table flexible-obs-indoor-table" cellpadding="0" cellspacing="0">
+                    <tbody>
+                        #for $x in $station_observations_extras.indoor.obs
+                        <tr>
+                            <td class="station-observations-extras-label">$obs.label[$x]</td>
+                            <td class="station-observations-extras-data"><span class="$x" rel="tooltip" title="">$getVar('current.%s' % $x)</span></td><!-- AJAX -->
+                        </tr>
+                        #end for
                     </tbody>
                 </table>
             </div>

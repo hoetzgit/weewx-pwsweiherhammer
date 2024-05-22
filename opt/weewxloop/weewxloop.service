@@ -1,0 +1,16 @@
+[Unit]
+Description=WeeWX Loop MQTT Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/weewxloop/weewxloop.py
+WorkingDirectory=/opt/weewxloop
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=weewxloop
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

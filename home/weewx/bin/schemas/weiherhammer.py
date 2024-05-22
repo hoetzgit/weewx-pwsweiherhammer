@@ -3,7 +3,7 @@
 #
 #    See the file LICENSE.txt for your rights.
 #
-"""The extended wview PWS Weiherhammer schema."""
+"""The extended PWS Weiherhammer schema."""
 
 # =============================================================================
 # This is a list containing the default schema of the archive database.  It is
@@ -197,8 +197,8 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('wh57_sig', 'REAL'),
 ('wh57_sig_percent', 'REAL'),
 ('wh57_lightning_time', 'REAL'),
-('wh57_lightning_distance', 'REAL'),
 #
+('wh57_lightning_distance', 'REAL'),
 # Solar Station (BME280)
 ('solar_altimeter', 'REAL'),
 ('solar_appTemp', 'REAL'),
@@ -218,21 +218,32 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('solar_wetBulb', 'REAL'),
 ('solar_windchill', 'REAL'),
 #
-# Nova PM Sensor SDS011
-('airrohr_outHumidity', 'REAL'),
-('airrohr_outTemp', 'REAL'),
+# airRohr Nova PM Sensor SDS011, DHT22(AM2302), BME280
+('airrohr_altimeter', 'REAL'),
+('airrohr_barometer', 'REAL'),
+('airrohr_bme280_dewpoint', 'REAL'),
+('airrohr_bme280_outHumidity', 'REAL'),
+('airrohr_bme280_outTemp', 'REAL'),
+('airrohr_dht22_dewpoint', 'REAL'),
+('airrohr_dht22_outHumidity', 'REAL'),
+('airrohr_dht22_outTemp', 'REAL'),
 ('airrohr_pm10_0', 'REAL'),
 ('airrohr_pm2_5', 'REAL'),
+('airrohr_pressure', 'REAL'),
 ('airrohr_sig', 'REAL'),
 ('airrohr_sig_percent', 'REAL'),
 #
 # Cloudwatcher Sensor MLX90614
 ('cloudwatcher_ambTemp', 'REAL'),
 ('cloudwatcher_skyTemp', 'REAL'),
+('cloudwatcher_corrSkyTemp', 'REAL'),
 ('cloudwatcher_cloudpercent', 'REAL'),
 ('cloudwatcher_weathercode', 'INTEGER'),
 ('cloudwatcher_sig', 'REAL'),
 ('cloudwatcher_sig_percent', 'REAL'),
+#
+# possibly snow
+('possibly_snow', 'INTEGER'),
 #
 # ****** API / Extensions ******
 #
@@ -248,6 +259,25 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('pws_aqi_pm2_5', 'REAL'),
 ('pws_aqi_pm2_5_category', 'REAL'),
 #
+# AerisWeatherMap Airquality API
+('aeris_aqi', 'REAL'),
+('aeris_co', 'REAL'),
+('aeris_no2', 'REAL'),
+('aeris_o3', 'REAL'),
+('aeris_pm10_0', 'REAL'),
+('aeris_pm2_5', 'REAL'),
+('aeris_so2', 'REAL'),
+#
+# Open-Meteo Air Pollution API
+('om_aqi', 'REAL'),
+('om_co', 'REAL'),
+('om_nh3', 'REAL'),
+('om_no2', 'REAL'),
+('om_o3', 'REAL'),
+('om_pm10_0', 'REAL'),
+('om_pm2_5', 'REAL'),
+('om_so2', 'REAL'),
+#
 # OpenWeatherMap Air Pollution API
 ('owm_aqi', 'REAL'),
 ('owm_co', 'REAL'),
@@ -258,15 +288,6 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('owm_pm10_0', 'REAL'),
 ('owm_pm2_5', 'REAL'),
 ('owm_so2', 'REAL'),
-#
-# AerisWeatherMap Airquality API
-('aeris_aqi', 'REAL'),
-('aeris_co', 'REAL'),
-('aeris_no2', 'REAL'),
-('aeris_o3', 'REAL'),
-('aeris_pm10_0', 'REAL'),
-('aeris_pm2_5', 'REAL'),
-('aeris_so2', 'REAL'),
 #
 # Umweltbundesamt API
 ('uba_aqi', 'REAL'),
@@ -290,14 +311,76 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
 ('bedroom_tqi', 'REAL'),
 ('bedroom_rqi', 'REAL'),
 #
-# additional Values 
-('outEquiTemp', 'REAL'),
-('outHumAbs', 'REAL'),
+# power plug
+('deviceTemp1', 'REAL'),
+('deviceTemp2', 'REAL'),
+('deviceTemp3', 'REAL'),
+('deviceTemp4', 'REAL'),
+('deviceTemp5', 'REAL'),
+('deviceTemp6', 'REAL'),
+('deviceTemp7', 'REAL'),
+('deviceTemp8', 'REAL'),
+('deviceTemp9', 'REAL'),
+('currentAmp1', 'REAL'),
+('currentAmp2', 'REAL'),
+('currentAmp3', 'REAL'),
+('currentAmp4', 'REAL'),
+('currentAmp5', 'REAL'),
+('currentAmp6', 'REAL'),
+('currentAmp7', 'REAL'),
+('currentAmp8', 'REAL'),
+('currentAmp9', 'REAL'),
+('currentPwr1', 'REAL'),
+('currentPwr2', 'REAL'),
+('currentPwr3', 'REAL'),
+('currentPwr4', 'REAL'),
+('currentPwr5', 'REAL'),
+('currentPwr6', 'REAL'),
+('currentPwr7', 'REAL'),
+('currentPwr8', 'REAL'),
+('currentPwr9', 'REAL'),
+('dayEnergy1', 'REAL'),
+('dayEnergy2', 'REAL'),
+('dayEnergy3', 'REAL'),
+('dayEnergy4', 'REAL'),
+('dayEnergy5', 'REAL'),
+('dayEnergy6', 'REAL'),
+('dayEnergy7', 'REAL'),
+('dayEnergy8', 'REAL'),
+('dayEnergy9', 'REAL'),
+('totalEnergy1', 'REAL'),
+('totalEnergy2', 'REAL'),
+('totalEnergy3', 'REAL'),
+('totalEnergy4', 'REAL'),
+('totalEnergy5', 'REAL'),
+('totalEnergy6', 'REAL'),
+('totalEnergy7', 'REAL'),
+('totalEnergy8', 'REAL'),
+('totalEnergy9', 'REAL'),
+#
+# other values 
 ('sunshine', 'REAL'),
 ('sunshineDur', 'REAL'),
 ('thswIndex', 'REAL'),
 ('thwIndex', 'REAL'),
 ('wetBulb', 'REAL'),
+('freezinglevelHeight', 'REAL'),
+('snowfallHeight', 'REAL'),
+#
+# GTS Extension
+('GTS', 'REAL'),
+('GTSdate', 'REAL'),
+('dayET', 'REAL'),
+('ET24', 'REAL'),
+('yearGDD', 'REAL'),
+('seasonGDD', 'REAL'),
+('outSVP', 'REAL'),
+('outVaporP', 'REAL'),
+('outMixingRatio', 'REAL'),
+('outHumAbs', 'REAL'),
+('outEquiTemp', 'REAL'),
+('outThetaE', 'REAL'),
+('boilingTemp', 'REAL'),
 ]
 
 day_summaries = [(e[0], 'scalar') for e in table

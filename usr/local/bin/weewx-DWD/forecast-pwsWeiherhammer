@@ -48,6 +48,7 @@ from email.utils import formatdate
 import html.parser
 import zipfile
 from dateutil import tz
+from datetime import timezone, timedelta
 
 # pyephem is used to determine night and day time for choosing the
 # appropriate weather icon
@@ -151,9 +152,9 @@ DWD_WEATHER_CODE_LIST = [
     (49,'Nebel mit Reifansatz, Himmel nicht erkennbar, unverändert','Ice Fog, sky not recognizable',24,'fog.png','48.png','fog','::IF'),
     (45,'Nebel, Himmel nicht erkennbar','Fog, sky not recognizable',25,'fog.png','40.png','fog','::F'),
     (4,'bedeckt','Overcast clouds',26,None,None,None,None),
-    (3,'stark bewölkt','Broken clouds',27,None,None,None,None),
+    (3,'bewölkt','Broken clouds',27,None,None,None,None),
     (2,'wolkig','scattered clouds',28,None,None,None,None),
-    (1,'leicht bewölkt','Few clouds',29,None,None,None,None),
+    (1,'heiter','Few clouds',29,None,None,None,None),
     (0,'wolkenlos','clear sky',30,None,None,None,None)]
 
 WEATHERBIT_WEATHER_CODE_LIST = [
@@ -190,9 +191,9 @@ WEATHERBIT_WEATHER_CODE_LIST = [
     (741,'Nebel','Fog',31,'fog.png','40.png','fog','::F'),
     (751,'gefrierender Nebel','Freezing Fog',32,'fog.png','48.png','drizzlef','::ZF'),
     (4,'bedeckt','Overcast clouds',33,None,None,None,None),     #804
-    (3,'stark bewölkt','Broken clouds',34,None,None,None,None), #803
+    (3,'bewölkt','Broken clouds',34,None,None,None,None), #803
     (2,'wolkig','Scattered clouds',35,None,None,None,None),    #802
-    (1,'leicht bewölkt','Few clouds',36,None,None,None,None),   #801
+    (1,'heiter','Few clouds',36,None,None,None,None),   #801
     (0,'wolkenlos','Clear sky',37,None,None,None,None),     #800
     (900,'unbekanntes Niederschlag','Unknown Precipitation',38,'unknown.png','9.png','rain','::R')
 ]
@@ -246,9 +247,9 @@ OWM_WEATHER_CODE_LIST = [
     (771,'Sturmböen','squalls',46,'wind.png','18.png','flurriesw','::BD'),
     (781,'Tornado','tornado',47,'tornado.png','18.png','flurriesw','::BD'),
     (4,'bedeckt','overcast clouds',52,None,None,None,None),     #804
-    (3,'stark bewölkt','broken clouds',51,None,None,None,None), #803
+    (3,'bewölkt','broken clouds',51,None,None,None,None), #803
     (2,'wolkig','scattered clouds',50,None,None,None,None),    #802
-    (1,'leicht bewölkt','few clouds',49,None,None,None,None),   #801
+    (1,'heiter','few clouds',49,None,None,None,None),   #801
     (0,'wolkenlos','clear sky',48,None,None,None,None),     #800
 ]
 
@@ -261,7 +262,7 @@ BRIGHTSKY_WEATHER_CODE_LIST = [
     (200,'Wind','wind',6,'wind.png','18.png','wind','::BD'),
     (100,'Nebel','fog',8,'fog.png','27.png','fog','::F'),
     (4,'bedeckt','Overcast clouds',8,None,None,None,None),
-    (2,'wolkig','Partly cloudy',9,None,None,None,None),
+    (2,'bewölkt','Partly cloudy',9,None,None,None,None),
     (0,'wolkenlos','Clear sky',10,None,None,None,None),
 ]
 
@@ -1533,18 +1534,27 @@ class ForecastPWS(object):
         # creation time
         forecast_dwd = {'timestamp':int(now)}
         #ho Test mit idxold, ob nicht der Wert der aktuellen Stunde für "current" besser ist, als der Wert der nächsten Stunde
-        idxold = None
+        # idxold = None
+        # for idx,ii in enumerate(timesteps):
+            # if now<=ii*0.001:
+                # if self.verbose:
+                    # loginf("current OLD: now %s timestep %s" % (time.strftime('%H:%M:%S',time.localtime(now)),time.strftime('%H:%M:%S',time.localtime(timesteps[idx]*0.001))))
+                # break
+            # idxold = idx
+        # #night = self.is_night(location,timesteps[idx]*0.001)
+        # if idxold is not None:
+            # idx = idxold
+        # if self.verbose:
+            # loginf("current NEW: now %s timestep %s" % (time.strftime('%H:%M:%S',time.localtime(now)),time.strftime('%H:%M:%S',time.localtime(timesteps[idx]*0.001))))
+
+        # wieder original
         for idx,ii in enumerate(timesteps):
             if now<=ii*0.001:
                 if self.verbose:
-                    loginf("current OLD: now %s timestep %s" % (time.strftime('%H:%M:%S',time.localtime(now)),time.strftime('%H:%M:%S',time.localtime(timesteps[idx]*0.001))))
+                    loginf("now %s timestep %s" % (time.strftime('%H:%M:%S',time.localtime(now)),time.strftime('%H:%M:%S',time.localtime(timesteps[idx]*0.001))))
                 break
-            idxold = idx
         #night = self.is_night(location,timesteps[idx]*0.001)
-        if idxold is not None:
-            idx = idxold
-        if self.verbose:
-            loginf("current NEW: now %s timestep %s" % (time.strftime('%H:%M:%S',time.localtime(now)),time.strftime('%H:%M:%S',time.localtime(timesteps[idx]*0.001))))
+ 
         night = daynights[idx]
         wwcode = weather_decode([placemark['Forecast']['ww'][idx]],placemark['Forecast']['Neff'][idx],night)
         forecast_dwd['current'] = [{
@@ -2613,8 +2623,8 @@ class ForecastPWS(object):
         if self.database_max_days is not None:
             actDate = datetime.datetime.now()
             endDate = actDate + datetime.timedelta(days=self.database_max_days)
-            actDate = int(actDate.strftime('%Y%m%d%H') + '00')
-            endDate = int(endDate.strftime('%Y%m%d') + '0000')
+            actDate = int(actDate.strftime('%Y%m%d%H00'))
+            endDate = int(endDate.strftime('%Y%m%d0000'))
         for idx,val in enumerate(timesteps):
             # the day of the actual timestep
             # The timestep marks the end of the interval. That's why
@@ -2623,16 +2633,16 @@ class ForecastPWS(object):
             # calculated out of a timestamp 1 second before the actual
             # timestep.
             #ho Test, xx Tage analog Belchertown, keine weiteren Checks, ob option belchertown ...
+            #original: day = time.strftime('%d.%m.',time.localtime(val*0.001-1))
+            day = time.strftime('%d.%m.',time.localtime(val*0.001))
             if self.database_max_days is not None:
-                checkDate = int(time.strftime('%Y%m%d%H%M',time.localtime(val*0.001)))
+                checkDate = int(time.strftime('%Y%m%d%H%M',time.localtime(val*0.001-1)))
                 if (checkDate < actDate) or (checkDate > endDate):
                     if self.verbose:
                         print('calculate_daily_forecast: >>> skip forecast %s' % time.strftime('%d.%m.%Y %H:%M',time.localtime(val*0.001)))
                     continue
                 if self.verbose:
                     print('calculate_daily_forecast: insert forecast %s' % time.strftime('%d.%m.%Y %H:%M',time.localtime(val*0.001)))
-            #day = time.strftime('%d.%m.',time.localtime(val*0.001-1))
-            day = time.strftime('%d.%m.',time.localtime(val*0.001))
             # get the values for the actual timestep
             vals = {ii:placemark['Forecast'][ii][idx] for ii in placemark['Forecast']}
             # check if first timestamp of a new day
@@ -2742,18 +2752,20 @@ class ForecastPWS(object):
             if self.database_max_days is not None:
                 actDate = datetime.datetime.now()
                 endDate = actDate + datetime.timedelta(days=self.database_max_days)
-                actDate = int(actDate.strftime('%Y%m%d%H') + '00')
-                endDate = int(endDate.strftime('%Y%m%d') + '0000')
+                actDate = int(actDate.strftime('%Y%m%d%H00'))
+                endDate = int(endDate.strftime('%Y%m%d0000'))
+                print("DEBUG actDate %s" % actDate)
+                print("DEBUG endDate %s" % endDate)
             for idx,ii in enumerate(timesteps):
                 #ho Test, xx Tage analog Belchertown, keine weiteren Checks, ob option belchertown ...
                 if self.database_max_days is not None:
-                    checkDate = int(time.strftime('%Y%m%d%H%M',time.localtime(ii*0.001)))
+                    checkDate = int(time.strftime('%Y%m%d%H%M',time.localtime(ii*0.001-1)))
                     if (checkDate < actDate) or (checkDate > endDate):
                         if self.verbose:
                             print('write_database: >>> skip forecast %s' % time.strftime('%d.%m.%Y %H:%M',time.localtime(ii*0.001)))
                         continue
-                    if self.verbose:
-                        print('write_database: insert forecast %s' % time.strftime('%d.%m.%Y %H:%M',time.localtime(ii*0.001)))
+                if self.verbose:
+                    print('write_database: insert forecast %s' % time.strftime('%d.%m.%Y %H:%M',time.localtime(ii*0.001)))
                 values = {'dateTime':int(ii*0.001),
                           'usUnits':0x10,  # METRIC
                           'interval':60,

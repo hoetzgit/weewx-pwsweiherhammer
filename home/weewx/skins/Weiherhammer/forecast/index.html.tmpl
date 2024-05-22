@@ -5,6 +5,19 @@
 #include "header.html.tmpl"
 
             <script type="text/javascript">
+                var forecast = getURLvar("forecast");
+                var forecast_pages = $Extras.dwd_forecast_pages; // All dwd forecast pages
+                if (forecast === undefined) {
+                    // If no URL VAR, default to the forecast in Extras
+                    forecast = "$Extras.dwd_forecast_page_default";
+                }
+                if (!jQuery.isArray(forecast_pages) && (jQuery.type(forecast_pages) === "string")) {
+                    forecast_pages = forecast_pages.split();
+                }
+                if (!forecast_pages.includes(forecast_pages)) {
+                    forecast_pages = "$Extras.dwd_forecast_page_default";
+                }
+
                 var moment_locale = "$system_locale_js";
                 moment.locale(moment_locale);
 
@@ -21,30 +34,26 @@
                     update_with_weewx_data(weewx_data, false); // Initial call to update (date, daily high, low, etc)
                     weiherhammer_debug(weewx_data); // Make weewx_data.json available in debugging console
                     #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
-                    // Load and update forecast
-                    ajaxforecast(["forecast"]);
-
-                    //  display the relevant forecast; a new session will display the default forecast, a reloaded session the currently displayed forecast
-                    var interval = sessionStorage.getItem('forecastInterval');
-                    if (interval === null) {
-                        interval = $forecast_interval_hours;
-                        sessionStorage.setItem('forecastInterval', interval);
-                    }
-                    forecast_select(interval, true);
-
+                    // Load forecast files
+                    ajaxforecast(["alerts"]);
                     #end if
+                    jQuery(document).ready(function() {
+                        try {
+                            // TODO
+                            page_inc = "./" + forecast + ".inc";
+                            jQuery("#forecast-page-inc").load(page_inc, function() {
+                                setupTooltips();
+                            });
+                        } catch(err) {
+                            console.error("Cannot add forecast page from [" + page_inc + "]. Error: " + err.message);
+                        }
+                    });
 
                     #if $Extras.has_key("webpage_autorefresh") and $Extras.webpage_autorefresh != '0'
                     // Reload the page on an interval for updated data.
                     setInterval('autoRefreshPage()', $Extras.webpage_autorefresh);
                     #end if
 
-                    jQuery(document).ready(function() {
-                        // Update the Last Updated timestamp with moment.js,
-                        updated = tzAdjustedMoment( $current.dateTime.raw ).format("$obs.label.time_last_updated");
-                        updated_text = "$obs.label.header_last_updated " + updated;
-                        jQuery(".updated").html( updated_text );
-                    });
                 }).catch(function(e) {
                     console.log(e);
                 });
@@ -53,25 +62,52 @@
             <div class="site-inner">
                 <main class="content">
                     <article class="weewx $page" itemscope itemtype="https://schema.org/CreativeWork">
-                        #set $file = $page + "/" + $page + "_dwd.inc"
-                        #include "page-header.inc"
 
-                        #if os.path.exists($file)
-                        <!-- Begin $file -->
+                        <!-- Header with MQTT TODO -> header.html.tmpl -->
+                        <div class="wx-stn-info-container">
+                            <div class="row">
+                                <div class="col-sm-1 wx-stn-info-current-obs">
+                                    <div class="obs-header-icon">
+                                        #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1' and $current_obs_icon != ""
+                                        <img id="wxicon" src="$relative_url/images/$current_obs_icon" alt="Wettersymbol $current_obs_icon">
+                                        #end if
+                                    </div>
+                                    <div class="obs-header-outtemp">
+                                        $current.outTemp
+                                    </div>
+                                </div>
+                                <div class="col-sm-8">
+                                    <div class="wx-stn-name">
+                                        <h1>$obs.label.page_header_forecast</h1>
+                                    </div>
+                                    <div class="clear"></div>
+                                    #if $Extras.has_key("alerts_enabled") and $Extras.alerts_enabled == '1'
+                                    <div class="wx-stn-alert"><span class="wx-stn-alert-text"></span></div><!-- AJAX -->
+                                    #end if
+                                </div>
+                                <div class="col-sm-3" style="float:right;">
+                                    <div class="wx-stn-info">
+                                        $obs.label.powered_by
+                                    </div>
+                                    #if $social_html != ""
+                                    <div class="col-sm-10 wx-stn-info-social" style="float:right;">
+                                        $social_html
+                                    </div>
+                                    #end if
+                                </div>
+                            </div>
+                        </div>
 
-                        #include $file
-
-                        <!-- End $file -->
-                        #end if
-
-                        #set $file = $page + "/warnings_dwd.inc"
-                        #if os.path.exists($file)
-                        <!-- Begin $file -->
-
-                        #include $file
-
-                        <!-- End $file -->
-                        #end if
+                        <div class="row">
+                            <div class="col-sm-12 stationmon-buttons"> ##TODO class
+                            #set $forecast_pages = $to_list($Extras.get('dwd_forecast_pages', ['$Extras.dwd_forecast_page_default']))
+                            #for $page in $forecast_pages
+                            #set $txt = 'button ' + $page
+                            <a href="./?forecast=$page"><button type="button" class="btn btn-primary wx-btn-year">$gettext($txt)</button></a> 
+                            #end for
+                            </div>
+                        </div>
+                        <div class="forecast-page" id="forecast-page-inc"></div><!-- JS populated -->
                     </article>
                 </main>
             </div>

@@ -19,7 +19,7 @@ The Ecowitt Gateway driver can be operated as a traditional WeeWX driver where
 it is the source of loop data or it can be operated as a WeeWX service where it
 is used to augment loop data produced by another driver.
 
-Copyright (C) 2020-2023 Gary Roderick                   gjroderick<at>gmail.com
+Copyright (C) 2020-2024 Gary Roderick                   gjroderick<at>gmail.com
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -33,22 +33,29 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see https://www.gnu.org/licenses/.
 
-Version: 0.6.0b1                                    Date: 16 April 2023
+Version: 0.6.2                                     Date: 23 February 2024
 
 Revision History
-    16 April 2023           v0.6.0
+    23 February 2024        v0.6.2
+        -   fixed bug that caused the driver to crash if IP address discovery
+            is used
+    21 February 2024        v0.6.1
+        -   fixed bug in construct_field_map() signature that resulted in field
+            map and field map extensions being ignored
+    7 February 2024         v0.6.0
         -   significant re-structuring of classes used to better delineate
             responsibilities and prepare for the implementation of the
             GatewayHttp class
         -   implement device HTTP requests to obtain additional device/sensor
             status data not available via API
+        -   fixed issue that prevented use of the driver as both a driver and a
+            service under a single WeeWX instance
         -   fixes error in multi-channel temperature calibration data decode
-        -   updated IAW Gateway API documentation v1.6.8
+        -   updated IAW Gateway API documentation v1.6.9
+        -   added support for free heap memory field
         -   rename a number of calibration/offset related command line options
             to better align with the labels/names now used in the WSView Plus
             app v2.0.32
-        -   implement --get-mulch-t-cal command line option to display WN34
-            temperature calibration data
         -   --firmware command line option now displays gateway device and
             (where available) sensor firmware versions along with a short
             message if a device firmware update is available
@@ -56,6 +63,15 @@ Revision History
         -   gateway device temperature compensation setting can be displayed
             using the --system-params command line option (for firmware
             versions GW2000 all, GW1100 > v2.1.2 and GW1000 > v1.6.9)
+        -   added wee_device/weectl device support
+        -   rationalised driver direct and wee_device/weectl device actions
+        -   the discarding of non-timestamped and stale packets is now logged
+            by the GatewayService when debug_loop is set or debug >= 2
+        -   unit groups are now assigned to all WeeWX fields in the default
+            field map that are not included in the default WeeWX wview_extended
+            schema
+        -   'kilobyte' and 'megabyte' are added to unit group 'group_data' on
+            driver/service startup
     13 June 2022            v0.5.0b5
         -   renamed as the Ecowitt Gateway driver/service rather than the
             former GW1000 or GW1000/GW1100 driver/service
@@ -71,7 +87,7 @@ Revision History
         -   refactored GatewayDriver, GatewayService and Gateway class
             initialisations to facilitate running the GatewayDriver and
             GatewayService simultaneously
-        -   GatewayService now defaults to using a [GatewayService] stanza but
+        -   GatewayService now defaults to using a [GW1000Service] stanza but
             if not found will drop back to the legacy [GW1000] stanza
         -   the source of GatewayDriver and GatewayService log output is now
             clearly identified
@@ -187,20 +203,20 @@ Revision History
         - initial release
 
 
-This driver has been based on the Ecowitt LAN/Wi-Fi Gateway API documentation
-v1.6.8. However, the following deviations from the Ecowitt LAN/Wi-Fi Gateway
-API documentation v1.6.8 have been made in this driver:
-# TODO. Review these deviations before release
+This driver is based on the Ecowitt LAN/Wi-Fi Gateway API documentation v1.6.9.
+However, the following deviations from the Ecowitt LAN/Wi-Fi Gateway API
+documentation v1.6.9 have been made in this driver:
+
 1.  CMD_READ_SSSS documentation states that 'UTC time' is part of the data
 returned by the CMD_READ_SSSS API command. The UTC time field is described as
 'UTC time' and is an unsigned long. No other details are provided in the API
-documentation. Rather than being a Unix epoch timestamp the UTC time data
+documentation. Rather than being a Unix epoch timestamp, the UTC time data
 appears to be a Unix epoch timestamp that is offset from UTC time by the
 gateway device timezone. In other words, two gateway devices in different
 timezones that have their system time correctly set will return different
-values for UTC time. The Ecowitt Gateway driver subtracts the system UTC
-offset in seconds from the UTC time returned by the CMD_READ_SSSS command in
-order to obtain the correct UTC time.
+values for UTC time via the CMD_READ_SSSS command. The Ecowitt Gateway driver
+subtracts the system UTC offset in seconds from the UTC time returned by the
+CMD_READ_SSSS command in order to obtain the correct UTC time.
 
 2.  WH40 battery state data contained in the CMD_READ_SENSOR_ID_NEW response is
 documented as a single byte representing 10x the battery voltage. However,
@@ -216,15 +232,17 @@ reported as None for these devices. Battery state data for later WH40 hardware
 that does report battery voltage is decoded and passed through to WeeWX.
 
 3.  Yet to released/named API command code 0x59 provides WN34 temperature
-calibration data. Calibration data is provided in standardised Ecowitt gateway
-device API response packet. Packet uses two bytes for packet size. Header,
-command code and checksum are standard values/formats. Data structure is two
-bytes per sensor, first byte is sensor address (0x63 to 0x6A) and second byte
-is tenths C calibration value. Calibration value may be from +10C to -10C. Data
-is included only for connected sensors. This support should be considered
-experimental.
+calibration data. This API command is referred to as 'CMD_GET_MulCH_T_OFFSET'
+within the driver and has been implemented as of v0.6.0. Calibration data is
+provided in standardised Ecowitt gateway device API response packet format.
+The API response uses two bytes for packet size. Header, command code and
+checksum are standard values/formats. Data structure is two bytes per sensor,
+first byte is sensor address (0x63 to 0x6A) and second byte is tenths C
+calibration value (or calibration value x 10). Calibration value may be from
++10C to -10C. Data is included only for connected sensors. This support should
+be considered experimental.
 
-4.  API documentation v1.6.8 lists field 7B as 'Radiation compensation', though
+4.  API documentation v1.6.9 lists field 7B as 'Radiation compensation', though
 in the WSView Plus app the field 7B data is displayed against a label
 'Temperature Compensation' for devices WH65/WH69/WS80/WS90. Field 7B is more
 correctly referred to as 'Temperature Compensation' as the setting controls
@@ -233,9 +251,9 @@ Ecowitt formula based on the radiation level (perhaps other fields as well).
 Field 7B is located amidst various rain related fields and bizarrely field 7B
 data is only available through the recent CMD_READ_RAIN API command. As the
 CMD_READ_RAIN command was only recently introduced, some gateway devices using
-old firmware cannot use the CM_READ_RAIN API command meaning field 7B cannot be
-read from some gateway devices using the API. Field 7B can be read once the
-gateway device firmware is updated to a version that support the CMD_READ_RAIN
+old firmware cannot use the CMD_READ_RAIN API command meaning field 7B cannot
+be read from some gateway devices using the API. Field 7B can be read once the
+gateway device firmware is updated to a version that supports the CMD_READ_RAIN
 command. The field 7B data/'Temperature Compensation' setting can be displayed
 via the --system-params command line option.
 
@@ -302,8 +320,6 @@ the Ecowitt Gateway driver wiki (https://github.com/gjr80/weewx-gw1000/wiki)
 for more in-depth installation and configuration information.
 """
 
-# Standing TODOs:
-# TODO. Review against latest
 # Outstanding TODOs:
 # TODO. Confirm WH26/WH32 sensor ID
 # TODO. Confirm WH26/WH32 battery status
@@ -312,8 +328,6 @@ for more in-depth installation and configuration information.
 # TODO. Confirm WH24 battery status
 # TODO. Confirm WH25 battery status
 # TODO. Need to know date-time data format for decode date_time()
-# TODO. Review queue dwell times
-# TODO. Should service aspects of running the driver directly use [GatewayService] then [GW1000]
 # TODO. Need to re-order sensor output for --sensors to better match app
 # TODO. windSpeed, windGust, lightning_distance have an excessive number of decimal places in --test-service
 # TODO. Revisit debug_wind and debug_rain to see what more debugging output is required
@@ -413,7 +427,7 @@ except ImportError:
         log_traceback(prefix=prefix, loglevel=syslog.LOG_DEBUG)
 
 DRIVER_NAME = 'GW1000'
-DRIVER_VERSION = '0.6.0b1'
+DRIVER_VERSION = '0.6.2'
 
 # various defaults used throughout
 # default port used by device
@@ -452,35 +466,199 @@ default_fw_check_interval = 86400
 
 # define the default groups to use for WeeWX fields in the default field map
 # but not in the (WeeWX default) wview_extended schema
-default_groups = {'extraTemp9': 'group_temperature',
-                  'extraTemp10': 'group_temperature',
-                  'extraTemp11': 'group_temperature',
-                  'extraTemp12': 'group_temperature',
-                  'extraTemp13': 'group_temperature',
-                  'extraTemp14': 'group_temperature',
-                  'extraTemp15': 'group_temperature',
-                  'extraTemp16': 'group_temperature',
-                  'extraTemp17': 'group_temperature',
-                  'stormRain': 'group_rain',
-                  'dayRain': 'group_rain',
-                  'weekRain': 'group_rain',
-                  'monthRain': 'group_rain',
-                  'yearRain': 'group_rain',
-                  'totalRain': 'group_rain',
-                  'p_rain': 'group_rain',
-                  'p_rainRate': 'group_rainrate',
-                  'p_stormRain': 'group_rain',
-                  'p_dayRain': 'group_rain',
-                  'p_weekRain': 'group_rain',
-                  'p_monthRain': 'group_rain',
-                  'p_yearRain': 'group_rain'}
-
-# merge the default unit groups into weewx.units.obs_group_dict, but so we
-# don't undo any user customisation elsewhere only merge those fields that do
-# not already exits in weewx.units.obs_group_dict
-for obs, group in six.iteritems(default_groups):
-    if obs not in weewx.units.obs_group_dict.keys():
-        weewx.units.obs_group_dict[obs] = group
+default_groups = {
+    'relbarometer': 'group_pressure',
+    'luminosity': 'group_illuminance',
+    'uvradiation': 'group_radiation',
+    'extraHumid17': 'group_percent',
+    'extraTemp9': 'group_temperature',
+    'extraTemp10': 'group_temperature',
+    'extraTemp11': 'group_temperature',
+    'extraTemp12': 'group_temperature',
+    'extraTemp13': 'group_temperature',
+    'extraTemp14': 'group_temperature',
+    'extraTemp15': 'group_temperature',
+    'extraTemp16': 'group_temperature',
+    'extraTemp17': 'group_temperature',
+    'pm2_52': 'group_concentration',
+    'pm2_53': 'group_concentration',
+    'pm2_54': 'group_concentration',
+    'pm2_55': 'group_concentration',
+    'pm10': 'group_concentration',
+    'soilTemp5': 'group_temperature',
+    'soilMoist5': 'group_percent',
+    'soilTemp6': 'group_temperature',
+    'soilMoist6': 'group_percent',
+    'soilTemp7': 'group_temperature',
+    'soilMoist7': 'group_percent',
+    'soilTemp8': 'group_temperature',
+    'soilMoist8': 'group_percent',
+    'soilTemp9': 'group_temperature',
+    'soilMoist9': 'group_percent',
+    'soilTemp10': 'group_temperature',
+    'soilMoist10': 'group_percent',
+    'soilTemp11': 'group_temperature',
+    'soilMoist11': 'group_percent',
+    'soilTemp12': 'group_temperature',
+    'soilMoist12': 'group_percent',
+    'soilTemp13': 'group_temperature',
+    'soilMoist13': 'group_percent',
+    'soilTemp14': 'group_temperature',
+    'soilMoist14': 'group_percent',
+    'soilTemp15': 'group_temperature',
+    'soilMoist15': 'group_percent',
+    'soilTemp16': 'group_temperature',
+    'soilMoist16': 'group_percent',
+    'pm2_51_24h_avg': 'group_concentration',
+    'pm2_52_24h_avg': 'group_concentration',
+    'pm2_53_24h_avg': 'group_concentration',
+    'pm2_54_24h_avg': 'group_concentration',
+    'pm2_55_24h_avg': 'group_concentration',
+    'pm10_24h_avg': 'group_concentration',
+    'co2_24h_avg': 'group_fraction',
+    'leak1': 'group_count',
+    'leak2': 'group_count',
+    'leak3': 'group_count',
+    'leak4': 'group_count',
+    'lightning_last_det_time': 'group_time',
+    'lightningcount': 'group_count',
+    't_raingain': 'group_rain',
+    'totalRain': 'group_rain',
+    'weekRain': 'group_rain',
+    'p_rain': 'group_rain',
+    'p_rainRate': 'group_rainrate',
+    'p_stormRain': 'group_rain',
+    'p_dayRain': 'group_rain',
+    'p_weekRain': 'group_rain',
+    'p_monthRain': 'group_rain',
+    'p_yearRain': 'group_rain',
+    'daymaxwind': 'group_speed',
+    'leafWet3': 'group_percent',
+    'leafWet4': 'group_percent',
+    'leafWet5': 'group_percent',
+    'leafWet6': 'group_percent',
+    'leafWet7': 'group_percent',
+    'leafWet8': 'group_percent',
+    'heap_free': 'group_data',
+    'wh40_batt': 'group_volt',
+    'wh26_batt': 'group_count',
+    'wh25_batt': 'group_count',
+    'wh24_batt': 'group_count',
+    'wh65_batt': 'group_count',
+    'wh32_batt': 'group_count',
+    'wh31_ch1_batt': 'group_count',
+    'wh31_ch2_batt': 'group_count',
+    'wh31_ch3_batt': 'group_count',
+    'wh31_ch4_batt': 'group_count',
+    'wh31_ch5_batt': 'group_count',
+    'wh31_ch6_batt': 'group_count',
+    'wh31_ch7_batt': 'group_count',
+    'wh31_ch8_batt': 'group_count',
+    'wn34_ch1_batt': 'group_volt',
+    'wn34_ch2_batt': 'group_volt',
+    'wn34_ch3_batt': 'group_volt',
+    'wn34_ch4_batt': 'group_volt',
+    'wn34_ch5_batt': 'group_volt',
+    'wn34_ch6_batt': 'group_volt',
+    'wn34_ch7_batt': 'group_volt',
+    'wn34_ch8_batt': 'group_volt',
+    'wn35_ch1_batt': 'group_volt',
+    'wn35_ch2_batt': 'group_volt',
+    'wn35_ch3_batt': 'group_volt',
+    'wn35_ch4_batt': 'group_volt',
+    'wn35_ch5_batt': 'group_volt',
+    'wn35_ch6_batt': 'group_volt',
+    'wn35_ch7_batt': 'group_volt',
+    'wn35_ch8_batt': 'group_volt',
+    'wh41_ch1_batt': 'group_count',
+    'wh41_ch2_batt': 'group_count',
+    'wh41_ch3_batt': 'group_count',
+    'wh41_ch4_batt': 'group_count',
+    'wh45_batt': 'group_count',
+    'wh51_ch1_batt': 'group_volt',
+    'wh51_ch2_batt': 'group_volt',
+    'wh51_ch3_batt': 'group_volt',
+    'wh51_ch4_batt': 'group_volt',
+    'wh51_ch5_batt': 'group_volt',
+    'wh51_ch6_batt': 'group_volt',
+    'wh51_ch7_batt': 'group_volt',
+    'wh51_ch8_batt': 'group_volt',
+    'wh51_ch9_batt': 'group_volt',
+    'wh51_ch10_batt': 'group_volt',
+    'wh51_ch11_batt': 'group_volt',
+    'wh51_ch12_batt': 'group_volt',
+    'wh51_ch13_batt': 'group_volt',
+    'wh51_ch14_batt': 'group_volt',
+    'wh51_ch15_batt': 'group_volt',
+    'wh51_ch16_batt': 'group_volt',
+    'wh55_ch1_batt': 'group_count',
+    'wh55_ch2_batt': 'group_count',
+    'wh55_ch3_batt': 'group_count',
+    'wh55_ch4_batt': 'group_count',
+    'wh57_batt': 'group_count',
+    'wh68_batt': 'group_volt',
+    'ws80_batt': 'group_volt',
+    'ws90_batt': 'group_volt',
+    'wh40_sig': 'group_count',
+    'wh26_sig': 'group_count',
+    'wh25_sig': 'group_count',
+    'wh24_sig': 'group_count',
+    'wh65_sig': 'group_count',
+    'wh32_sig': 'group_count',
+    'wh31_ch1_sig': 'group_count',
+    'wh31_ch2_sig': 'group_count',
+    'wh31_ch3_sig': 'group_count',
+    'wh31_ch4_sig': 'group_count',
+    'wh31_ch5_sig': 'group_count',
+    'wh31_ch6_sig': 'group_count',
+    'wh31_ch7_sig': 'group_count',
+    'wh31_ch8_sig': 'group_count',
+    'wn34_ch1_sig': 'group_count',
+    'wn34_ch2_sig': 'group_count',
+    'wn34_ch3_sig': 'group_count',
+    'wn34_ch4_sig': 'group_count',
+    'wn34_ch5_sig': 'group_count',
+    'wn34_ch6_sig': 'group_count',
+    'wn34_ch7_sig': 'group_count',
+    'wn34_ch8_sig': 'group_count',
+    'wn35_ch1_sig': 'group_count',
+    'wn35_ch2_sig': 'group_count',
+    'wn35_ch3_sig': 'group_count',
+    'wn35_ch4_sig': 'group_count',
+    'wn35_ch5_sig': 'group_count',
+    'wn35_ch6_sig': 'group_count',
+    'wn35_ch7_sig': 'group_count',
+    'wn35_ch8_sig': 'group_count',
+    'wh41_ch1_sig': 'group_count',
+    'wh41_ch2_sig': 'group_count',
+    'wh41_ch3_sig': 'group_count',
+    'wh41_ch4_sig': 'group_count',
+    'wh45_sig': 'group_count',
+    'wh51_ch1_sig': 'group_count',
+    'wh51_ch2_sig': 'group_count',
+    'wh51_ch3_sig': 'group_count',
+    'wh51_ch4_sig': 'group_count',
+    'wh51_ch5_sig': 'group_count',
+    'wh51_ch6_sig': 'group_count',
+    'wh51_ch7_sig': 'group_count',
+    'wh51_ch8_sig': 'group_count',
+    'wh51_ch9_sig': 'group_count',
+    'wh51_ch10_sig': 'group_count',
+    'wh51_ch11_sig': 'group_count',
+    'wh51_ch12_sig': 'group_count',
+    'wh51_ch13_sig': 'group_count',
+    'wh51_ch14_sig': 'group_count',
+    'wh51_ch15_sig': 'group_count',
+    'wh51_ch16_sig': 'group_count',
+    'wh55_ch1_sig': 'group_count',
+    'wh55_ch2_sig': 'group_count',
+    'wh55_ch3_sig': 'group_count',
+    'wh55_ch4_sig': 'group_count',
+    'wh57_sig': 'group_count',
+    'wh68_sig': 'group_count',
+    'ws80_sig': 'group_count',
+    'ws90_sig': 'group_count'
+}
 
 
 # ============================================================================
@@ -509,6 +687,8 @@ class GWIOError(Exception):
 class DebugOptions(object):
     """Class to simplify use and handling of device debug options."""
 
+    debug_groups = ('rain', 'wind', 'loop', 'sensors')
+
     def __init__(self, gw_config_dict):
         # get any specific debug settings
         # rain
@@ -526,19 +706,37 @@ class DebugOptions(object):
 
     @property
     def rain(self):
+        """Are we debugging rain data processing."""
+
         return self.debug_rain
 
     @property
     def wind(self):
+        """Are we debugging wind data processing."""
+
         return self.debug_wind
 
     @property
     def loop(self):
+        """Are we debugging loop data processing."""
+
         return self.debug_loop
 
     @property
     def sensors(self):
+        """Are we debugging sensor processing."""
+
         return self.debug_sensors
+
+    @property
+    def any(self):
+        """Are we performing any debugging."""
+
+        for debug_group in self.debug_groups:
+            if getattr(self, debug_group):
+                return True
+        else:
+            return False
 
 
 # ============================================================================
@@ -558,7 +756,7 @@ class Gateway(object):
     # correlation to the WeeWX wview_extended schema or
     # weewx.units.obs_group_dict. If there is a related but different field in
     # the wview_extended schema then a WeeWX field name with a similar format
-    # is used. Otherwise fields are passed through as is.
+    # is used. Otherwise, fields are passed through as is.
     # Field map format is:
     #   WeeWX field name: Gateway device field name
     default_field_map = {
@@ -671,7 +869,8 @@ class Gateway(object):
         # 'lightning_strike_count' is the WeeWX extended schema per period
         # lightning count field that is derived from the device cumulative
         # 'lightningcount' field
-        'lightning_strike_count': 'lightning_strike_count'
+        'lightning_strike_count': 'lightning_strike_count',
+        'heap_free': 'heap_free'
     }
     # Rain related fields default field map, merged into default_field_map to
     # give the overall default field map. Kept separate to make it easier to
@@ -832,48 +1031,8 @@ class Gateway(object):
     def __init__(self, **gw_config):
         """Initialise a Gateway object."""
 
-        # construct the field map, first obtain the field map from our config
-        field_map = gw_config.get('field_map')
-        # obtain any field map extensions from our config
-        extensions = gw_config.get('field_map_extensions', {})
-        # if we have no field map then use the default
-        if field_map is None:
-            # obtain the default field map
-            field_map = dict(Gateway.default_field_map)
-            # now add in the rain field map
-            field_map.update(Gateway.rain_field_map)
-            # now add in the wind field map
-            field_map.update(Gateway.wind_field_map)
-            # now add in the battery state field map
-            field_map.update(Gateway.battery_field_map)
-            # now add in the sensor signal field map
-            field_map.update(Gateway.sensor_signal_field_map)
-        # If a user wishes to map a device field differently to that in the
-        # default map they can include an entry in field_map_extensions, but if
-        # we just update the field map dict with the field map extensions that
-        # will leave two entries for that device field in the field map; the
-        # original field map entry as well as the entry from the extended map.
-        # So if we have field_map_extensions we need to first go through the
-        # field map and delete any entries that map device fields that are
-        # included in the field_map_extensions.
-        # we only need process the field_map_extensions if we have any
-        if len(extensions) > 0:
-            # first make a copy of the field map because we will be iterating
-            # over it and changing it
-            field_map_copy = dict(field_map)
-            # iterate over each key, value pair in the copy of the field map
-            for k, v in six.iteritems(field_map_copy):
-                # if the 'value' (ie the device field) is in the field map
-                # extensions we will be mapping that device field elsewhere so
-                # pop that field map entry out of the field map so we don't end
-                # up with multiple mappings for a device field
-                if v in extensions.values():
-                    # pop the field map entry
-                    _dummy = field_map.pop(k)
-            # now we can update the field map with the extensions
-            field_map.update(extensions)
-        # we now have our final field map
-        self.field_map = field_map
+        # obtain the field map to be used
+        self.field_map = self.construct_field_map(gw_config)
         # network broadcast address and port
         self.broadcast_address = str.encode(gw_config.get('broadcast_address',
                                                           default_broadcast_address))
@@ -930,7 +1089,7 @@ class Gateway(object):
         # Is a WH32 in use. WH32 TH sensor can override/provide outdoor TH data
         # to the gateway device. In terms of TH data the process is transparent
         # and we do not need to know if a WH32 or other sensor is providing
-        # outdoor TH data but in terms of battery state we need to know so the
+        # outdoor TH data. But in terms of battery state we need to know so the
         # battery state data can be reported against the correct sensor.
         use_wh32 = weeutil.weeutil.tobool(gw_config.get('wh32', True))
         # do we ignore battery state data from legacy WH40 sensors that do not
@@ -939,12 +1098,14 @@ class Gateway(object):
                                                                 True))
         # do we show all battery state data including nonsense data or do we
         # filter those sensors with signal state == 0
-        self.show_battery = weeutil.weeutil.tobool(gw_config.get('show_all_batt',
-                                                                 False))
+        show_battery = weeutil.weeutil.tobool(gw_config.get('show_all_batt',
+                                                            False))
         # whether to log unknown API fields, unknown fields are logged at the
         # debug level, this will log them at the info level
         log_unknown_fields = weeutil.weeutil.tobool(gw_config.get('log_unknown_fields',
                                                                   False))
+        # define unit labels, formats and assign unit groups
+        define_units()
         # how to handle firmware update checks
         # how often to check for a gateway device firmware update
         fw_update_check_interval = int(gw_config.get('firmware_update_check_interval',
@@ -952,8 +1113,46 @@ class Gateway(object):
         # whether to log an available firmware update
         log_fw_update_avail = weeutil.weeutil.tobool(gw_config.get('log_firmware_update_avail',
                                                                    False))
-        # get device specific debug settings
-        self.debug = DebugOptions(gw_config)
+
+        # log our config/settings that are not being pushed further down before
+        # we obtain a GatewayCollector object, obtaining a gatewayCollector
+        # object may fail due to connectivity issues, this way we at least log
+        # our config which may aid debugging
+
+        if self.ip_address is not None and self.port is not None:
+            loginf('     device address is %s:%d' % (self.ip_address, self.port))
+        elif self.ip_address is None and self.port is not None:
+            loginf('     device IP address not specified, IP address will be obtained by discovery')
+            loginf('     device port is %d' % self.port)
+        elif self.ip_address is not None and self.port is None:
+            loginf('     device IP address is %s' % self.ip_address)
+            loginf('     device port not specified, port will be obtained by discovery')
+        elif self.ip_address is None and self.port is None:
+            loginf('     device IP address and port not specified, address and port will be obtained by discovery')
+        loginf('     poll interval is %d seconds' % self.poll_interval)
+        if self.debug.any or weewx.debug > 0:
+            loginf('     max tries is %d, retry wait time is %d seconds' % (self.max_tries,
+                                                                            self.retry_wait))
+            loginf('     broadcast address is %s:%d, broadcast timeout is %d seconds' % (self.broadcast_address.decode(),
+                                                                                         self.broadcast_port,
+                                                                                         self.broadcast_timeout))
+            loginf('     socket timeout is %d seconds' % self.socket_timeout)
+            # The field map. Field map dict output will be in unsorted key order.
+            # It is easier to read if sorted alphanumerically, but we have keys
+            # such as xxxxx16 that do not sort well. Use a custom natural sort of
+            # the keys in a manually produced formatted dict representation.
+            loginf('     field map is %s' % natural_sort_dict(self.field_map))
+
+        # Log specific debug output but only if set ie. True
+        debug_list = []
+        if self.debug.rain:
+            debug_list.append("debug_rain is %s" % (self.debug.rain,))
+        if self.debug.wind:
+            debug_list.append("debug_wind is %s" % (self.debug.wind,))
+        if self.debug.loop:
+            debug_list.append("debug_loop is %s" % (self.debug.loop,))
+        if len(debug_list) > 0:
+            loginf(" ".join(debug_list))
 
         # create an GatewayCollector object to interact with the gateway device
         # API
@@ -968,7 +1167,7 @@ class Gateway(object):
                                           retry_wait=self.retry_wait,
                                           use_wh32=use_wh32,
                                           ignore_wh40_batt=ignore_wh40_batt,
-                                          show_battery=self.show_battery,
+                                          show_battery=show_battery,
                                           log_unknown_fields=log_unknown_fields,
                                           fw_update_check_interval=fw_update_check_interval,
                                           log_fw_update_avail=log_fw_update_avail,
@@ -981,17 +1180,70 @@ class Gateway(object):
         self.rain_total_field = None
         self.piezo_rain_mapping_confirmed = False
         self.piezo_rain_total_field = None
-        # Finally, log any config that is not being pushed any further down.
-        # Log specific debug output but only if set ie. True
-        debug_list = []
-        if self.debug.rain:
-            debug_list.append("debug_rain is %s" % (self.debug.rain,))
-        if self.debug.wind:
-            debug_list.append("debug_wind is %s" % (self.debug.wind,))
-        if self.debug.loop:
-            debug_list.append("debug_loop is %s" % (self.debug.loop,))
-        if len(debug_list) > 0:
-            loginf(" ".join(debug_list))
+
+    @staticmethod
+    def construct_field_map(gw_config):
+        """Given a gateway device config construct the field map."""
+
+        # first obtain the field map from our config
+        field_map = gw_config.get('field_map')
+        # obtain any field map extensions from our config
+        extensions = gw_config.get('field_map_extensions', {})
+        # if we have no field map then use the default
+        if field_map is None:
+            # obtain the default field map
+            field_map = dict(Gateway.default_field_map)
+            # now add in the rain field map
+            field_map.update(Gateway.rain_field_map)
+            # now add in the wind field map
+            field_map.update(Gateway.wind_field_map)
+            # now add in the battery state field map
+            field_map.update(Gateway.battery_field_map)
+            # now add in the sensor signal field map
+            field_map.update(Gateway.sensor_signal_field_map)
+        # If a user wishes to map a device field differently to that in the
+        # default map they can include an entry in field_map_extensions, but if
+        # we just update the field map dict with the field map extensions that
+        # will leave two entries for that device field in the field map; the
+        # original field map entry as well as the entry from the extended map.
+        # So if we have field_map_extensions we need to first go through the
+        # field map and delete any entries that map device fields that are
+        # included in the field_map_extensions.
+        # we only need process the field_map_extensions if we have any
+        if len(extensions) > 0:
+            # first make a copy of the field map because we will be iterating
+            # over it and changing it
+            field_map_copy = dict(field_map)
+            # iterate over each key, value pair in the copy of the field map
+            for k, v in six.iteritems(field_map_copy):
+                # if the 'value' (ie the device field) is in the field map
+                # extensions we will be mapping that device field elsewhere so
+                # pop that field map entry out of the field map so we don't end
+                # up with multiple mappings for a device field
+                if v in extensions.values():
+                    # pop the field map entry
+                    _dummy = field_map.pop(k)
+            # now we can update the field map with the extensions
+            field_map.update(extensions)
+        # We must have a mapping from gateway field 'datetime' to the WeeWX
+        # packet field 'dateTime', too many parts of the driver depend on this.
+        # So check to ensure this mapping is in place, the user could have
+        # removed or altered it. If the mapping is not there add it in.
+        # initialise the key that maps 'datetime'
+        d_key = None
+        # iterate over the field map entries
+        for k, v in six.iteritems(field_map):
+            # if the mapping is for 'datetime' save the key and break
+            if v == 'datetime':
+                d_key = k
+                break
+        # if we have a mapping for 'datetime' delete that field map entry
+        if d_key:
+            field_map.pop(d_key)
+        # add the required mapping
+        field_map['dateTime'] = 'datetime'
+        # we now have our final field map
+        return field_map
 
     def map_data(self, data):
         """Map parsed device data to a WeeWX loop packet.
@@ -1310,8 +1562,8 @@ class GatewayService(weewx.engine.StdService, Gateway):
     def __init__(self, engine, config_dict):
         """Initialise a GatewayService object."""
 
-        # extract the gateway service config dictionary
-        # first look for [Gw1000Service]
+        # first extract the gateway service config dictionary, try looking for
+        # [Gw1000Service]
         if 'GW1000Service' in config_dict:
             # we have a [GW1000Service] config stanza so use it
             gw_config_dict = config_dict['GW1000Service']
@@ -1319,10 +1571,14 @@ class GatewayService(weewx.engine.StdService, Gateway):
             # we don't have a [GW1000Service] stana so use [GW1000] if it
             # exists otherwise use an empty config
             gw_config_dict = config_dict.get('GW1000', {})
-        # initialize my superclasses
-        super(GatewayService, self).__init__(engine, config_dict)
-        super(weewx.engine.StdService, self).__init__(**gw_config_dict)
 
+        # Log our driver version first. Normally we would call our superclass
+        # initialisation method first; however, that involves establishing a
+        # network connection to the gateway device and it may fail. Doing our
+        # logging first will aid in remote debugging.
+
+        # log our version number
+        loginf('GatewayService: version is %s' % DRIVER_VERSION)
         # age (in seconds) before API data is considered too old to use, use a
         # default
         self.max_age = int(gw_config_dict.get('max_age', default_max_age))
@@ -1330,6 +1586,17 @@ class GatewayService(weewx.engine.StdService, Gateway):
         # an extended lost contact period
         self.lost_contact_log_period = int(gw_config_dict.get('lost_contact_log_period',
                                                               default_lost_contact_log_period))
+        # get device specific debug settings
+        self.debug = DebugOptions(gw_config_dict)
+
+        if self.debug.any or weewx.debug > 0:
+            loginf("     max age of API data to be used is %d seconds" % self.max_age)
+            loginf('     lost contact will be logged every %d seconds' % self.lost_contact_log_period)
+
+        # initialize my superclasses
+        super(GatewayService, self).__init__(engine, config_dict)
+        super(weewx.engine.StdService, self).__init__(**gw_config_dict)
+
         # set failure logging on
         self.log_failures = True
         # reset the lost contact timestamp
@@ -1337,50 +1604,6 @@ class GatewayService(weewx.engine.StdService, Gateway):
         # create a placeholder for our most recent, non-stale queued device
         # sensor data packet
         self.latest_sensor_data = None
-        # log our version number
-        loginf('GatewayService: version is %s' % DRIVER_VERSION)
-        # log the relevant settings/parameters we are using
-        if self.ip_address is None and self.port is None:
-            loginf('GatewayService: %s IP address and port not specified, '
-                   'attempting to discover %s...' % (self.collector.device.model,
-                                                     self.collector.device.model))
-        elif self.ip_address is None:
-            loginf('GatewayService: %s IP address not specified, attempting '
-                   'to discover %s...' % (self.collector.device.model,
-                                          self.collector.device.model))
-        elif self.port is None:
-            loginf('Gw1000Service: %s port not specified, attempting '
-                   'to discover %s...' % (self.collector.device.model,
-                                          self.collector.device.model))
-        loginf('GatewayService: %s address is %s:%d' % (self.collector.device.model,
-                                                        self.collector.device.ip_address.decode(),
-                                                        self.collector.device.port))
-        loginf('GatewayService: poll interval is %d seconds' % self.poll_interval)
-        logdbg('GatewayService: max tries is %d, retry wait time is %d seconds' % (self.max_tries,
-                                                                                   self.retry_wait))
-        logdbg('GatewayService: broadcast address %s:%d, '
-               'broadcast timeout is %d seconds' % (self.broadcast_address,
-                                                    self.broadcast_port,
-                                                    self.broadcast_timeout))
-        logdbg('GatewayService: socket timeout is %d seconds' % self.socket_timeout)
-        loginf("GatewayService: max age of API data to be used is %d seconds" % self.max_age)
-        # The field map. Field map dict output will be in unsorted key order.
-        # It is easier to read if sorted alphanumerically but we have keys such
-        # as xxxxx16 that do not sort well. Use a custom natural sort of the
-        # keys in a manually produced formatted dict representation.
-        logdbg('Gw1000Service: field map is %s' % natural_sort_dict(self.field_map))
-        loginf('Gw1000Service: lost contact will be logged every %d seconds' % self.lost_contact_log_period)
-        # log specific debug but only if set ie. True
-        debug_list = []
-        if self.debug.rain:
-            debug_list.append('debug_rain is %s' % (self.debug.rain,))
-        if self.debug.wind:
-            debug_list.append('debug_wind is %s' % (self.debug.wind,))
-        if self.debug.loop:
-            debug_list.append('debug_loop is %s' % (self.debug.loop,))
-        if len(debug_list) > 0:
-            loginf('%s: %s' % ('Gw1000Service', ' '.join(debug_list)))
-
         # start the Gw1000Collector in its own thread
         self.collector.startup()
         # bind our self to the relevant WeeWX events
@@ -1418,9 +1641,10 @@ class GatewayService(weewx.engine.StdService, Gateway):
                 # very long
                 queue_data = self.collector.queue.get(True, 0.5)
             except six.moves.queue.Empty:
-                # there was nothing in the queue so if required log this and
-                # then break out of the while loop
-                if self.debug.loop or self.debug.rain or self.debug.wind:
+                # the queue is now empty, but that may be because we have
+                # already processed any queued data, log if necessary and break
+                # out of the while loop
+                if self.latest_sensor_data is None and (self.debug.loop or self.debug.rain or self.debug.wind):
                     loginf('GatewayService: No queued items to process')
                 if self.lost_con_ts is not None and time.time() > self.lost_con_ts + self.lost_contact_log_period:
                     self.lost_con_ts = time.time()
@@ -1575,13 +1799,18 @@ class GatewayService(weewx.engine.StdService, Gateway):
             if sensor_data['datetime'] > date_time - self.max_age:
                 # the sensor data is not stale, but is it more recent than our
                 # current saved packet
-                if self.latest_sensor_data is None or sensor_data['datetime'] > self.latest_sensor_data['dateTime']:
+                if self.latest_sensor_data is None or sensor_data['datetime'] > self.latest_sensor_data['datetime']:
                     # this packet is newer, so keep it
                     self.latest_sensor_data = dict(sensor_data)
-                    # the latest packet will have the timestamp in the field
-                    # 'datetime', WeeWX requires 'dateTime'. Do the change here
-                    # rather than later.
-                    self.latest_sensor_data['dateTime'] = self.latest_sensor_data.pop('datetime')
+            elif self.debug.loop or weewx.debug >= 2:
+                # the sensor data is stale and we have debug settings that
+                # dictate we log the discard
+                loginf('GatewayService: Discarded packet with '
+                       'timestamp %s' % timestamp_to_string(sensor_data['datetime']))
+        elif self.debug.loop or weewx.debug >= 2:
+            # the sensor data is not timestamped so it will be discarded and we
+            # have debug settings that dictate we log the discard
+            loginf('GatewayService: Discarded non-timestamped packet')
 
     def process_queued_exception(self, e):
         """Process an exception received in the collector queue."""
@@ -1683,8 +1912,7 @@ def loader(config_dict, engine):
 
 def configurator_loader(config_dict):  # @UnusedVariable
 
-    pass
-    # return Gw1000Configurator()
+    return GatewayConfigurator()
 
 
 def confeditor_loader():
@@ -1757,6 +1985,8 @@ class Gw1000ConfEditor(weewx.drivers.AbstractConfEditor):
         [[pm10_24h_avg]]
             extractor = last
         [[co2_24h_avg]]
+            extractor = last
+        [[heap_free]]
             extractor = last
         [[wh40_batt]]
             extractor = last
@@ -2091,6 +2321,175 @@ attempt startup indefinitely."""
 
 
 # ============================================================================
+#                          GatewayConfigurator class
+# ============================================================================
+
+class GatewayConfigurator(weewx.drivers.AbstractConfigurator):
+    """Configures the Ecowitt gateway weather station.
+
+    This class is used by wee_device when interrogating a supported Ecowitt
+    gateway device.
+
+    The Ecowitt gateway device API supports both reading and setting various
+    gateway device parameters; however, at this time the Ecowitt gateway
+    device driver only supports the reading these parameters. The Ecowitt
+    gateway device driver does not support setting these parameters, rather
+    this should be done via the Ecowitt WSView Plus app.
+
+    When used with wee_device this configurator allows station hardware
+    parameters to be displayed. The Ecowitt gateway device driver may also be
+    run directly to test the Ecowitt gateway device driver operation as well as
+    display various driver configuration options (as distinct from gateway
+    device hardware parameters).
+    """
+
+    @property
+    def description(self):
+        """Description displayed as part of wee_device help information."""
+
+        return "Read data and configuration from an Ecowitt gateway weather station."
+
+    @property
+    def usage(self):
+        """wee_device usage information."""
+        return """%prog --help
+       %prog --live-data
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--units=us|metric|metricwx]
+            [--ip-address=IP_ADDRESS] [--port=PORT]
+            [--show-all-batt]
+            [--debug=0|1|2|3]
+       %prog --sensors
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--ip-address=IP_ADDRESS] [--port=PORT]
+            [--show-all-batt]
+            [--debug=0|1|2|3]
+       %prog --firmware-version|--mac-address|
+            --system-params|--get-rain-data|--get-all-rain_data
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--ip-address=IP_ADDRESS] [--port=PORT]
+            [--debug=0|1|2|3]
+       %prog --get-calibration|--get-mulch-th-cal|
+            --get-mulch-soil-cal|--get-pm25-cal|
+            --get-co2-cal
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--ip-address=IP_ADDRESS] [--port=PORT]
+            [--debug=0|1|2|3]
+       %prog --get-services
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--ip-address=IP_ADDRESS] [--port=PORT]
+            [--unmask] [--debug=0|1|2|3]"""
+
+    @property
+    def epilog(self):
+        """Epilog displayed as part of wee_device help information."""
+
+        return ""
+        # return "Mutating actions will request confirmation before proceeding.\n"
+
+    def add_options(self, parser):
+        """Define wee_device option parser options."""
+
+        parser.add_option('--live-data', dest='live', action='store_true',
+                          help='display device live sensor data')
+        parser.add_option('--sensors', dest='sensors', action='store_true',
+                          help='display device sensor information')
+        parser.add_option('--firmware', dest='firmware',
+                          action='store_true',
+                          help='display device firmware information')
+        parser.add_option('--mac-address', dest='mac', action='store_true',
+                          help='display device station MAC address')
+        parser.add_option('--system-params', dest='sys_params', action='store_true',
+                          help='display device system parameters')
+        parser.add_option('--get-rain-data', dest='get_rain', action='store_true',
+                          help='display device traditional rain data only')
+        parser.add_option('--get-all-rain-data', dest='get_all_rain', action='store_true',
+                          help='display device traditional, piezo and rain reset '
+                               'time data')
+        parser.add_option('--get-calibration', dest='get_calibration',
+                          action='store_true',
+                          help='display device calibration data')
+        parser.add_option('--get-mulch-th-cal', dest='get_mulch_offset',
+                          action='store_true',
+                          help='display device multi-channel temperature and '
+                               'humidity calibration data')
+        parser.add_option('--get-mulch-soil-cal', dest='get_soil_calibration',
+                          action='store_true',
+                          help='display device soil moisture calibration data')
+        parser.add_option('--get-mulch-t-cal', dest='get_temp_calibration',
+                          action='store_true',
+                          help='display device temperature (WN34) calibration data')
+        parser.add_option('--get-pm25-cal', dest='get_pm25_offset',
+                          action='store_true',
+                          help='display device PM2.5 calibration data')
+        parser.add_option('--get-co2-cal', dest='get_co2_offset',
+                          action='store_true',
+                          help='display device CO2 (WH45) calibration data')
+        parser.add_option('--get-services', dest='get_services',
+                          action='store_true',
+                          help='display device weather services configuration data')
+        parser.add_option('--ip-address', dest='ip_address',
+                          help='device IP address to use')
+        parser.add_option('--port', dest='port', type=int,
+                          help='device port to use')
+        parser.add_option('--max-tries', dest='max_tries', type=int,
+                          help='max number of attempts to contact the device')
+        parser.add_option('--retry-wait', dest='retry_wait', type=int,
+                          help='how long to wait between attempts to contact the device')
+        parser.add_option('--show-all-batt', dest='show_battery',
+                          action='store_true',
+                          help='show all available battery state data regardless of '
+                               'sensor state')
+        parser.add_option('--unmask', dest='unmask', action='store_true',
+                          help='unmask sensitive settings')
+        parser.add_option('--units', dest='units', metavar='UNITS', default='metric',
+                          help='unit system to use when displaying live data')
+        parser.add_option('--config', dest='config_path', metavar='CONFIG_FILE',
+                          help="use configuration file CONFIG_FILE.")
+        parser.add_option('--debug', dest='debug', type=int,
+                          help='how much status to display, 0-3')
+        parser.add_option('--yes', '-y', dest="noprompt", action="store_true",
+                          help="answer yes to every prompt")
+
+    def do_options(self, options, parser, config_dict, prompt):
+        """Process wee_device option parser options."""
+
+        # get station config dict to use
+        stn_dict = config_dict.get('GW1000', {})
+
+        # set weewx.debug as necessary
+        if options.debug is not None:
+            _debug = weeutil.weeutil.to_int(options.debug)
+        else:
+            _debug = weeutil.weeutil.to_int(config_dict.get('debug', 0))
+        weewx.debug = _debug
+        # inform the user if the debug level is 'higher' than 0
+        if _debug > 0:
+            print("debug level is '%d'" % _debug)
+
+        # Now we can set up the user customized logging, but we need to handle both
+        # v3 and v4 logging. V4 logging is very easy but v3 logging requires us to
+        # set up syslog and raise our log level based on weewx.debug
+        try:
+            # assume v 4 logging
+            weeutil.logger.setup('weewx', config_dict)
+        except AttributeError:
+            # must be v3 logging, so first set the defaults for the system logger
+            syslog.openlog('weewx', syslog.LOG_PID | syslog.LOG_CONS)
+            # now raise the log level if required
+            if weewx.debug > 0:
+                syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+
+        # define custom unit settings used by the gateway driver
+        define_units()
+
+        # get a DirectGateway object
+        direct_gw = DirectGateway(options, parser, stn_dict)
+        # now let the DirectGateway object process the options
+        direct_gw.process_options()
+
+
+# ============================================================================
 #                            GatewayDriver class
 # ============================================================================
 
@@ -2114,52 +2513,17 @@ class GatewayDriver(weewx.drivers.AbstractDevice, Gateway):
     def __init__(self, **stn_dict):
         """Initialise a gateway device driver object."""
 
-        # now initialize my superclasses
-        super(GatewayDriver, self).__init__(**stn_dict)
+        # Log our driver version first. Normally we would call our superclass
+        # initialisation method first; however, that involves establishing a
+        # network connection to the gateway device and it may fail. Doing our
+        # logging first will aid in remote debugging.
 
         # log our version number
         loginf('GatewayDriver: version is %s' % DRIVER_VERSION)
-        # log the relevant settings/parameters we are using
-        if self.ip_address is None and self.port is None:
-            loginf('GatewayDriver: %s IP address and port not specified, '
-                   'attempting to discover %s...' % (self.collector.device.model,
-                                                     self.collector.device.model))
-        elif self.ip_address is None:
-            loginf('GatewayDriver: %s IP address not specified, attempting '
-                   'to discover %s...' % (self.collector.device.model,
-                                          self.collector.device.model))
-        elif self.port is None:
-            loginf('GatewayDriver: %s port not specified, attempting '
-                   'to discover %s...' % (self.collector.device.model,
-                                          self.collector.device.model))
-        loginf('GatewayDriver: %s address is %s:%d' % (self.collector.device.model,
-                                                       self.collector.device.ip_address.decode(),
-                                                       self.collector.device.port))
-        loginf('GatewayDriver: poll interval is %d seconds' % self.poll_interval)
-        logdbg('GatewayDriver: max tries is %d, retry wait time '
-               'is %d seconds' % (self.max_tries,
-                                  self.retry_wait))
-        logdbg('GatewayDriver: broadcast address is %s:%d, broadcast '
-               'timeout is %d seconds' % (self.broadcast_address.decode(),
-                                          self.broadcast_port,
-                                          self.broadcast_timeout))
-        logdbg('GatewayDriver: socket timeout is %d seconds' % self.socket_timeout)
-        # The field map. Field map dict output will be in unsorted key order.
-        # It is easier to read if sorted alphanumerically, but we have keys
-        # such as xxxxx16 that do not sort well. Use a custom natural sort of
-        # the keys in a manually produced formatted dict representation.
-        logdbg('GatewayDriver: field map is %s' % natural_sort_dict(self.field_map))
-        # log specific debug but only if set ie. True
-        debug_list = []
-        if self.debug.rain:
-            debug_list.append('debug_rain is %s' % (self.debug.rain,))
-        if self.debug.wind:
-            debug_list.append('debug_wind is %s' % (self.debug.wind,))
-        if self.debug.loop:
-            debug_list.append('debug_loop is %s' % (self.debug.loop,))
-        if len(debug_list) > 0:
-            loginf('%s: %s' % ('GatewayDriver', ' '.join(debug_list)))
-
+        # get device specific debug settings
+        self.debug = DebugOptions(stn_dict)
+        # now initialize my superclasses
+        super(GatewayDriver, self).__init__(**stn_dict)
         # start the Gw1000Collector in its own thread
         self.collector.startup()
 
@@ -2374,11 +2738,9 @@ Gw1000Driver = GatewayDriver
 class Collector(object):
     """Base class for a client that polls an API."""
 
-    # a queue object for passing data back to the driver
-    queue = six.moves.queue.Queue()
-
     def __init__(self):
-        pass
+        # creat a queue object for passing data back to the driver/service
+        self.queue = six.moves.queue.Queue()
 
     def startup(self):
         pass
@@ -2431,6 +2793,30 @@ class GatewayCollector(Collector):
         self.fw_update_check_interval = fw_update_check_interval
         # whether to log when a firmware update is available
         self.log_fw_update_avail = log_fw_update_avail
+        # log our config options before obtaining a GatewayDevice object, this
+        # will help in remote debugging should the device be uncontactable
+        if self.log_fw_update_avail:
+            logdbg('     firmware update checks will occur and will be logged')
+            logdbg('     firmware update check interval is %d' % self.fw_update_check_interval)
+        else:
+            logdbg('     firmware update checks will not occur')
+        if use_wh32:
+            logdbg("     sensor ID decoding will use 'WH32'")
+        else:
+            logdbg("     sensor ID decoding will use 'WH26'")
+        if ignore_wh40_batt:
+            logdbg('     battery state data will be ignored for legacy WH40')
+        else:
+            logdbg('     battery state data will be reported for legacy WH40')
+        if show_battery:
+            logdbg("     battery state will be reported for all sensors")
+        else:
+            logdbg("     battery state will not be reported for sensors with no signal data")
+        if log_unknown_fields:
+            logdbg('     unknown fields will be reported')
+        else:
+            logdbg('     unknown fields will be ignored')
+
         # get a GatewayDevice to handle interaction with the gateway device
         self.device = GatewayDevice(ip_address=ip_address, port=port,
                                     broadcast_address=broadcast_address,
@@ -2509,6 +2895,11 @@ class GatewayCollector(Collector):
                         _msg = "    update at http://%s or via "\
                                "the WSView Plus app" % (self.device.ip_address.decode(), )
                         loginf(_msg)
+                        curr_msg = self.device.firmware_update_message
+                        if curr_msg is not None:
+                            loginf("    firmware update message: '%s'" % curr_msg)
+                        else:
+                            loginf("    no firmware update message found")
                     last_fw_check = now
             # sleep for a second and then see if it's time to poll again
             time.sleep(1)
@@ -2748,6 +3139,7 @@ class ApiParser(object):
         b'\x68': ('decode_wn34', 3, 'temp14'),
         b'\x69': ('decode_wn34', 3, 'temp15'),
         b'\x6A': ('decode_wn34', 3, 'temp16'),
+        b'\x6C': ('decode_memory', 4, 'heap_free'),
         # WH45 battery data is not obtained from live data rather it is
         # obtained from sensor ID data
         b'\x70': ('decode_wh45', 16, ('temp17', 'humid17', 'pm10',
@@ -2773,7 +3165,7 @@ class ApiParser(object):
         b'\x12': ('decode_big_rain', 4, 't_rainmonth'),
         b'\x13': ('decode_big_rain', 4, 't_rainyear'),
         b'\x7A': ('decode_int', 1, 'rain_priority'),
-        b'\x7B': ('decode_int', 1, 'temp_comp'),
+        b'\x7B': ('decode_int', 1, 'temperature_comp'),
         b'\x80': ('decode_rainrate', 2, 'p_rainrate'),
         b'\x81': ('decode_rain', 2, 'p_rainevent'),
         b'\x82': ('decode_reserved', 2, 'p_rainhour'),
@@ -3619,6 +4011,8 @@ class ApiParser(object):
         6+f     checksum        byte            LSB of the sum of the
                                                 command, size and data
                                                 bytes
+
+        Returns a unicode string
         """
 
         # create a format string so the firmware string can be unpacked into
@@ -3868,6 +4262,7 @@ class ApiParser(object):
     decode_co2 = decode_dir
     decode_wet = decode_humid
     decode_int = decode_humid
+    decode_memory = decode_count
 
     def decode_wn34(self, data, field=None):
         """Decode WN34 sensor data.
@@ -4575,6 +4970,10 @@ class GatewayApi(object):
         # it repeatedly later
         self.ip_address = ip_address.encode()
         self.port = port
+        # if we discovered our ip address or port log the device address being
+        # used
+        if self.ip_discovered or self.port_discovered:
+            loginf('     Using discovered address %s:%d' % (ip_address, port))
         self.max_tries = max_tries
         self.retry_wait = retry_wait
         # start off logging failures
@@ -5029,6 +5428,8 @@ class GatewayApi(object):
         been raised by send_cmd_with_retries() which will be passed through
         by get_firmware_version(). Any code calling get_firmware_version()
         should be prepared to handle this exception.
+
+        Returns a unicode string
         """
 
         # get the validated API response
@@ -5599,7 +6000,7 @@ class GatewayHttp(object):
                     resp = w.read().decode()
                 # we are finished with the raw response so close it
                 w.close()
-            except (URLError, socket.timeout) as e:
+            except (socket.timeout, URLError) as e:
                 # log the error and raise it
                 log.error("Failed to get device data")
                 log.error("   **** %s" % e)
@@ -5853,8 +6254,9 @@ class GatewayDevice(object):
                               log_unknown_fields=log_unknown_fields,
                               debug=debug)
 
-        # get a GatewayHttp object to handle any HTTP requests
-        self.http = GatewayHttp(ip_address=ip_address)
+        # get a GatewayHttp object to handle any HTTP requests, we need to use
+        # the same IP address as our GatewayApi object
+        self.http = GatewayHttp(ip_address=self.api.ip_address.decode())
 
         # start off logging failures
         self.log_failures = True
@@ -6016,12 +6418,41 @@ class GatewayDevice(object):
     def firmware_update_avail(self):
         """Whether a device firmware update is available or not.
 
-        Return True if a device firmware update is available or False otherwise."""
+        Return True if a device firmware update is available, False if there is
+        no available firmware update or None if firmware update availability
+        cannot be determined.
+        """
 
+        # get firmware version info
         version = self.http.get_version()
+        # do we have current firmware version info and availability of a new
+        # firmware version ?
         if version is not None and 'newVersion' in version:
+            # we can now determine with certainty whether there is a new
+            # firmware update or not
             return True if version['newVersion'] == '1' else False
-        return False
+        # We cannot determine the availability of a firmware update so return
+        # None
+        return None
+
+    @property
+    def firmware_update_message(self):
+        """The device firmware update message.
+
+        Returns the 'curr_msg' field in the 'get_device_info' response in the
+        device HTTP API. This field is usually used for firmware update release
+        notes.
+
+        Returns a string containing the 'curr_msg' field contents of the
+        'get_device_info' response. Return None if the 'get_device_info'
+        response could not be obtained or the 'curr_msg' field was not included
+        in the 'get_device_info' response.
+        """
+
+        # get device info
+        device_info = self.http.get_device_info()
+        # return the 'curr_msg' field contents or None
+        return device_info.get('curr_msg') if device_info is not None else None
 
     @property
     def calibration(self):
@@ -6045,15 +6476,98 @@ class GatewayDevice(object):
         """
 
         sensors = self.http.get_sensors_info()
-        for sensor in sensors:
-            if sensor.get('img') == 'wh90':
-                return sensor.get('version', 'not available')
+        if sensors is not None:
+            for sensor in sensors:
+                if sensor.get('img') == 'wh90':
+                    return sensor.get('version', 'not available')
         return None
 
 
 # ============================================================================
 #                             Utility functions
 # ============================================================================
+
+def define_units():
+    """Define formats and conversions used by the driver.
+
+    This could be done in user/extensions.py or the driver. The
+    user/extensions.py approach will make the conversions and formats available
+    for all drivers and services, but requires manual editing of the file by
+    the user. Inclusion in the driver removes the need for the user to edit
+    user/extensions.py, but means the conversions and formats are only defined
+    when the driver is being used. Given the specialised nature of the
+    conversions and formats the latter is an acceptable approach. In any case,
+    there is nothing preventing the user manually adding these entries to
+    user/extensions.py.
+
+    As of v5.0.0 WeeWX defines the unit group 'group_data' with member units
+    'byte' and 'bit'. We will define additional group_data member units of
+    'kilobyte' and 'megabyte'.
+
+    All additions to the core conversion, label and format dicts are done in a
+    way that do not overwrite and previous customisations the user may have
+    made through another driver or user/extensions.py.
+    """
+
+    # add kilobyte and megabyte conversions
+    if 'byte' not in weewx.units.conversionDict:
+        # 'byte' is not a key in the conversion dict, so we add all conversions
+        weewx.units.conversionDict['byte'] = {'bit': lambda x: x * 8,
+                                              'kilobyte': lambda x: x / 1024.0,
+                                              'megabyte': lambda x: x / 1024.0 ** 2}
+    else:
+        # byte already exists as a key in the conversion dict, so we add all
+        # conversions individually if they do not already exist
+        if 'bit' not in weewx.units.conversionDict['byte'].keys():
+            weewx.units.conversionDict['byte']['bit'] = lambda x: x * 8
+        if 'kilobyte' not in weewx.units.conversionDict['byte'].keys():
+            weewx.units.conversionDict['byte']['kilobyte'] = lambda x: x / 1024.0
+        if 'megabyte' not in weewx.units.conversionDict['byte'].keys():
+            weewx.units.conversionDict['byte']['megabyte'] = lambda x: x / 1024.0 ** 2
+    if 'kilobyte' not in weewx.units.conversionDict:
+        weewx.units.conversionDict['kilobyte'] = {'bit': lambda x: x * 8192,
+                                                  'byte': lambda x: x * 1024,
+                                                  'megabyte': lambda x: x / 1024.0}
+    else:
+        # kilobyte already exists as a key in the conversion dict, so we add
+        # all conversions individually if they do not already exist
+        if 'bit' not in weewx.units.conversionDict['kilobyte'].keys():
+            weewx.units.conversionDict['kilobyte']['bit'] = lambda x: x * 8192
+        if 'byte' not in weewx.units.conversionDict['kilobyte'].keys():
+            weewx.units.conversionDict['kilobyte']['byte'] = lambda x: x * 1024
+        if 'megabyte' not in weewx.units.conversionDict['kilobyte'].keys():
+            weewx.units.conversionDict['kilobyte']['megabyte'] = lambda x: x / 1024.0
+    if 'megabyte' not in weewx.units.conversionDict:
+        weewx.units.conversionDict['megabyte'] = {'bit': lambda x: x * 8 * 1024 ** 2,
+                                                  'byte': lambda x: x * 1024 ** 2,
+                                                  'kilobyte': lambda x: x * 1024}
+    else:
+        # megabyte already exists as a key in the conversion dict, so we add
+        # all conversions individually if they do not already exist
+        if 'bit' not in weewx.units.conversionDict['megabyte'].keys():
+            weewx.units.conversionDict['megabyte']['bit'] = lambda x: x * 8 * 1024 ** 2
+        if 'byte' not in weewx.units.conversionDict['megabyte'].keys():
+            weewx.units.conversionDict['megabyte']['byte'] = lambda x: x * 1024 ** 2
+        if 'kilobyte' not in weewx.units.conversionDict['megabyte'].keys():
+            weewx.units.conversionDict['megabyte']['kilobyte'] = lambda x: x * 1024
+
+    # set default formats and labels for byte, kilobyte and megabyte, but only
+    # if they do not already exist
+    weewx.units.default_unit_format_dict['byte'] = weewx.units.default_unit_format_dict.get('byte') or '%.d'
+    weewx.units.default_unit_label_dict['byte'] = weewx.units.default_unit_label_dict.get('byte') or u' B'
+    weewx.units.default_unit_format_dict['kilobyte'] = weewx.units.default_unit_format_dict.get('kilobyte') or '%.3f'
+    weewx.units.default_unit_label_dict['kilobyte'] = weewx.units.default_unit_label_dict.get('kilobyte') or u' kB'
+    weewx.units.default_unit_format_dict['megabyte'] = weewx.units.default_unit_format_dict.get('megabyte') or '%.3f'
+    weewx.units.default_unit_label_dict['megabyte'] = weewx.units.default_unit_label_dict.get('megabyte') or u' MB'
+
+    # merge the default unit groups into weewx.units.obs_group_dict, but so we
+    # don't undo any user customisation elsewhere only merge those fields that do
+    # not already exits in weewx.units.obs_group_dict
+    for obs, group in six.iteritems(default_groups):
+        if obs not in weewx.units.obs_group_dict.keys():
+            weewx.units.obs_group_dict[obs] = group
+
+
 
 def natural_sort_keys(source_dict):
     """Return a naturally sorted list of keys for a dict."""
@@ -6164,9 +6678,9 @@ class DirectGateway(object):
     options.
     """
 
-    # gateway observation group dict, this maps all device 'fields' to a WeeWX
-    # unit group
-    gateway_obs_group_dict = {
+    # gateway direct observation group dict, this maps all device 'fields' to a 
+    # WeeWX unit group
+    gw_direct_obs_group_dict = {
         'intemp': 'group_temperature',
         'outtemp': 'group_temperature',
         'dewpoint': 'group_temperature',
@@ -6263,7 +6777,6 @@ class DirectGateway(object):
         't_rain': 'group_rain',
         't_rainevent': 'group_rain',
         't_rainrate': 'group_rainrate',
-        't_raingain': 'group_rain',
         't_rainday': 'group_rain',
         't_rainweek': 'group_rain',
         't_rainmonth': 'group_rain',
@@ -6288,6 +6801,7 @@ class DirectGateway(object):
         'leafwet6': 'group_percent',
         'leafwet7': 'group_percent',
         'leafwet8': 'group_percent',
+        'heap_free': 'group_data',
         'wh40_batt': 'group_volt',
         'wh26_batt': 'group_count',
         'wh25_batt': 'group_count',
@@ -6410,11 +6924,12 @@ class DirectGateway(object):
     # list of sensors to be displayed in the sensor ID output
     sensors_list = []
 
-    def __init__(self, opts, stn_dict):
+    def __init__(self, opts, parser, stn_dict):
         """Initialise a DirectGateway object."""
 
         # save the optparse options and station dict
         self.opts = opts
+        self.parser = parser
         self.stn_dict = stn_dict
         # obtain the IP address and port number to use
         self.ip_address = self.ip_from_config_opts()
@@ -6530,65 +7045,68 @@ class DirectGateway(object):
                 # we could not get show_battery from the stn_dict so use the default
                 show_battery = default_show_battery
                 if weewx.debug >= 1:
-                    print("Battery state filtering ('%s') using the default" % show_battery)
+                    print("Battery state filtering is '%s' (using the default)" % show_battery)
             else:
                 if weewx.debug >= 1:
                     print("Port number obtained from station config")
-                    print("Battery state filtering ('%s') obtained from station config" % show_battery)
+                    print("Battery state filtering is '%s' (obtained from station config)" % show_battery)
         else:
             if weewx.debug >= 1:
-                print("Battery state filtering ('%s') obtained from command line options" % show_battery)
+                print("Battery state filtering is '%s' (obtained from command line options)" % show_battery)
         return show_battery
 
     def process_options(self):
         """Call the appropriate method based on the optparse options."""
 
         # run the driver
-        if self.opts.test_driver:
+        if hasattr(self.opts, 'test_driver') and self.opts.test_driver:
             self.test_driver()
         # run the service with simulator
-        elif self.opts.test_service:
+        elif hasattr(self.opts, 'test_service') and self.opts.test_service:
             self.test_service()
-        elif self.opts.sys_params:
+        elif hasattr(self.opts, 'sys_params') and self.opts.sys_params:
             self.system_params()
-        elif self.opts.get_rain:
+        elif hasattr(self.opts, 'get_rain') and self.opts.get_rain:
             self.get_rain_data()
-        elif self.opts.get_all_rain:
+        elif hasattr(self.opts, 'get_all_rain') and self.opts.get_all_rain:
             self.get_all_rain_data()
-        elif self.opts.get_mulch_offset:
+        elif hasattr(self.opts, 'get_mulch_offset') and self.opts.get_mulch_offset:
             self.get_mulch_offset()
-        elif self.opts.get_temp_calibration:
+        elif hasattr(self.opts, 'get_temp_calibration') and self.opts.get_temp_calibration:
             self.get_mulch_t_offset()
-        elif self.opts.get_pm25_offset:
+        elif hasattr(self.opts, 'get_pm25_offset') and self.opts.get_pm25_offset:
             self.get_pm25_offset()
-        elif self.opts.get_co2_offset:
+        elif hasattr(self.opts, 'get_co2_offset') and self.opts.get_co2_offset:
             self.get_co2_offset()
-        elif self.opts.get_calibration:
+        elif hasattr(self.opts, 'get_calibration') and self.opts.get_calibration:
             self.get_calibration()
-        elif self.opts.get_soil_calibration:
+        elif hasattr(self.opts, 'get_soil_calibration') and self.opts.get_soil_calibration:
             self.get_soil_calibration()
-        elif self.opts.get_services:
+        elif hasattr(self.opts, 'get_services') and self.opts.get_services:
             self.get_services()
-        elif self.opts.mac:
+        elif hasattr(self.opts, 'mac') and self.opts.mac:
             # TODO. Rename to remove 'station' ?
             self.station_mac()
-        elif self.opts.firmware:
+        elif hasattr(self.opts, 'firmware') and self.opts.firmware:
             self.firmware()
-        elif self.opts.sensors:
+        elif hasattr(self.opts, 'sensors') and self.opts.sensors:
             self.sensors()
-        elif self.opts.live:
+        elif hasattr(self.opts, 'live') and self.opts.live:
             self.live_data()
-        elif self.opts.discover:
+        elif hasattr(self.opts, 'discover') and self.opts.discover:
             self.discover()
-        elif self.opts.map:
+        elif hasattr(self.opts, 'map') and self.opts.map:
             self.field_map()
-        elif self.opts.driver_map:
+        elif hasattr(self.opts, 'driver_map') and self.opts.driver_map:
             self.driver_field_map()
-        elif self.opts.service_map:
+        elif hasattr(self.opts, 'sys_service_mapparams') and self.opts.service_map:
             self.service_field_map()
         else:
+            print()
+            print("No option selected, nothing done")
+            print()
+            self.parser.print_help()
             return
-        exit(0)
 
     def system_params(self):
         """Display system parameters.
@@ -6608,7 +7126,7 @@ class DirectGateway(object):
             2: '915MHz',
             3: '920MHz'
         }
-        temp_comp_decode = {
+        temperature_comp_decode = {
             0: 'off',
             1: 'on'
         }
@@ -6627,17 +7145,17 @@ class DirectGateway(object):
                                                  device.port))
             # get the device system_params property
             sys_params_dict = device.system_params
-            # we need the temperature compensation setting which according to
-            # the v1.6.8 API documentation resides in field 7B but bizarrely is
+            # we need the radiation compensation setting which according to the
+            # v1.6.9 API documentation resides in field 7B, but bizarrely is
             # only available via the CMD_READ_RAIN API command. CMD_READ_RAIN
             # is a relatively new command so wrap in a try..except just in
             # case.
             try:
                 _rain_data = device.rain
             except GWIOError:
-                temp_comp = None
+                temperature_comp = None
             else:
-                temp_comp = _rain_data.get('temp_comp')
+                temperature_comp = _rain_data.get('temperature_comp')
         except GWIOError as e:
             print()
             print("Unable to connect to device at %s: %s" % (self.ip_address, e))
@@ -6660,10 +7178,10 @@ class DirectGateway(object):
             print("%26s: %s (%s)" % ('frequency',
                                      sys_params_dict['frequency'],
                                      freq_str))
-            if temp_comp is not None:
+            if temperature_comp is not None:
                 print("%26s: %s (%s)" % ('Temperature Compensation',
-                                         temp_comp,
-                                         temp_comp_decode.get(temp_comp, 'unknown')))
+                                         temperature_comp,
+                                         temperature_comp_decode.get(temperature_comp, 'unknown')))
             else:
                 print("%26s: unavailable" % 'Temperature Compensation')
 
@@ -7377,17 +7895,51 @@ class DirectGateway(object):
             if ws90_fw is not None:
                 print("    installed WS90 firmware version is %s" % ws90_fw)
             print()
-            if device.firmware_update_avail:
-                print("    a %s firmware update is available," % model)
+            fw_update_avail = device.firmware_update_avail
+            if fw_update_avail:
+                # we have an available firmware update
+                # obtain the 'curr_msg' from the device HTTP API
+                # 'get_device_info' command, this field usually contains the
+                # firmware change details
+                curr_msg = device.firmware_update_message
+                # now print the firmware update details
+                print("    a firmware update is available for this %s," % model)
                 print("    update at http://%s or via the WSView Plus app" % (self.ip_address,))
+                # if we have firmware update details print them
+                if curr_msg is not None:
+                    print()
+                    # Ecowitt have not documented the HTTP API calls so we are
+                    # not exactly sure what the 'curr_msg' field is used for,
+                    # it might be for other things as well
+                    print("    likely firmware update message:")
+                    # multi-line messages seem to have \r\n at the end of each
+                    # line, split the string so we can format it a little better
+                    if '\r\n' in curr_msg:
+                        for line in curr_msg.split('\r\n'):
+                            # print each line
+                            print("      %s" % line)
+                    else:
+                        # print as a single line
+                        print("      %s" % curr_msg)
+                else:
+                    # we had no 'curr_msg' for one reason or another
+                    print("    no firmware update message found")
+            elif fw_update_avail is None:
+                # we don't know if we have an available firmware update
+                print("    could not determine if a firmware update is available for this %s" % model)
             else:
-                print("    the %s firmware is up to date" % model)
+                # there must be no available firmware update
+                print("    the firmware is up to date for this %s" % model)
         except GWIOError as e:
             print()
             print("Unable to connect to device at %s: %s" % (self.ip_address, e))
+            print()
+            self.device_connection_help()
         except socket.timeout:
             print()
             print("Timeout. Device at %s did not respond." % (self.ip_address,))
+            print()
+            self.device_connection_help()
 
     def sensors(self):
         """Display the device sensor ID information.
@@ -7419,9 +7971,13 @@ class DirectGateway(object):
         except GWIOError as e:
             print()
             print("Unable to connect to device at %s: %s" % (self.ip_address, e))
+            print()
+            self.device_connection_help()
         except socket.timeout:
             print()
             print("Timeout. Device at %s did not respond." % (self.ip_address,))
+            print()
+            self.device_connection_help()
         else:
             # now get the sensors property from the collector
             sensors = collector.device.api.sensors
@@ -7490,9 +8046,13 @@ class DirectGateway(object):
         except GWIOError as e:
             print()
             print("Unable to connect to device at %s: %s" % (self.ip_address, e))
+            print()
+            self.device_connection_help()
         except socket.timeout:
             print()
             print("Timeout. Device at %s did not respond." % (self.ip_address,))
+            print()
+            self.device_connection_help()
         else:
             # we have a data dict to work with, but we need to format the
             # values and may need to convert units
@@ -7511,7 +8071,7 @@ class DirectGateway(object):
             # ListOfDicts does not support .update and we want to use the
             # device entry should there already be an entry of the same name in
             # weewx.units.obs_group_dict (eg 'rain')
-            weewx.units.obs_group_dict.prepend(DirectGateway.gateway_obs_group_dict)
+            weewx.units.obs_group_dict.prepend(DirectGateway.gw_direct_obs_group_dict)
             # the live data is in MetricWX units, get a suitable converter
             # based on our output units
             if self.opts.units.lower() == 'us':
@@ -7656,6 +8216,8 @@ class DirectGateway(object):
             print("Unable to connect to device: %s" % e)
             print()
             print("Unable to display actual driver field map")
+            print()
+            self.device_connection_help()
         except KeyboardInterrupt:
             # we have a keyboard interrupt so shut down
             if driver:
@@ -7733,6 +8295,8 @@ class DirectGateway(object):
             print("Unable to connect to device: %s" % e)
             print()
             print("Unable to display actual driver field map")
+            print()
+            self.device_connection_help()
         except KeyboardInterrupt:
             if engine:
                 engine.shutDown()
@@ -7775,6 +8339,8 @@ class DirectGateway(object):
         except GWIOError as e:
             print()
             print("Unable to connect to device: %s" % e)
+            print()
+            self.device_connection_help()
         except KeyboardInterrupt:
             # we have a keyboard interrupt so shut down
             driver.closePort()
@@ -7861,9 +8427,19 @@ class DirectGateway(object):
         except GWIOError as e:
             print()
             print("Unable to connect to device: %s" % e)
+            print()
+            self.device_connection_help()
         except KeyboardInterrupt:
             engine.shutDown()
         loginf("Gateway service testing complete")
+
+    @staticmethod
+    def device_connection_help():
+        """Console output help message for device connection problems."""
+
+        print("    Things to check include that the correct device IP address is being used,")
+        print("    the device is powered on and the device is not otherwise disconnected from")
+        print("    the local network.")
 
 
 # To use this driver in standalone mode for testing or development, use one of
@@ -7897,32 +8473,12 @@ def main():
             [--retry-wait=RETRY_WAIT]
             [--show-all-batt]
             [--debug=0|1|2|3]
-       python -m user.gw1000 --sensors
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--ip-address=IP_ADDRESS] [--port=PORT]
-            [--show-all-batt]
-            [--debug=0|1|2|3]
        python -m user.gw1000 --live-data
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--units=us|metric|metricwx]
             [--ip-address=IP_ADDRESS] [--port=PORT]
             [--show-all-batt]
             [--debug=0|1|2|3]
-       python -m user.gw1000 --firmware-version|--mac-address|
-            --system-params|--get-rain-data|--get-all-rain_data
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--ip-address=IP_ADDRESS] [--port=PORT]
-            [--debug=0|1|2|3]
-       python -m user.gw1000 --get-calibration|--get-mulch-th-cal|
-            --get-mulch-soil-cal|--get-mulch-t-cal|
-            --get-pm25-cal|--get-co2-cal
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--ip-address=IP_ADDRESS] [--port=PORT]
-            [--debug=0|1|2|3]
-       python -m user.gw1000 --get-services
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--ip-address=IP_ADDRESS] [--port=PORT]
-            [--unmask] [--debug=0|1|2|3]
        python -m user.gw1000 --default-map|--driver-map|--service-map
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--debug=0|1|2|3]
@@ -7933,51 +8489,16 @@ def main():
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--version', dest='version', action='store_true',
                       help='display driver version number')
-    parser.add_option('--config', dest='config_path', metavar='CONFIG_FILE',
-                      help="Use configuration file CONFIG_FILE.")
-    parser.add_option('--debug', dest='debug', type=int,
-                      help='How much status to display, 0-3')
     parser.add_option('--discover', dest='discover', action='store_true',
                       help='discover devices and display device IP address '
                            'and port')
-    parser.add_option('--firmware', dest='firmware',
-                      action='store_true',
-                      help='display device firmware information')
-    parser.add_option('--mac-address', dest='mac', action='store_true',
-                      help='display device station MAC address')
-    parser.add_option('--system-params', dest='sys_params', action='store_true',
-                      help='display device system parameters')
-    parser.add_option('--sensors', dest='sensors', action='store_true',
-                      help='display device sensor information')
     parser.add_option('--live-data', dest='live', action='store_true',
                       help='display device live sensor data')
-    parser.add_option('--get-rain-data', dest='get_rain', action='store_true',
-                      help='display device traditional rain data only')
-    parser.add_option('--get-all-rain-data', dest='get_all_rain', action='store_true',
-                      help='display device traditional, piezo and rain reset '
-                           'time data')
-    parser.add_option('--get-calibration', dest='get_calibration',
-                      action='store_true',
-                      help='display device calibration data')
-    parser.add_option('--get-mulch-th-cal', dest='get_mulch_offset',
-                      action='store_true',
-                      help='display device multi-channel temperature and '
-                           'humidity calibration data')
-    parser.add_option('--get-mulch-soil-cal', dest='get_soil_calibration',
-                      action='store_true',
-                      help='display device soil moisture calibration data')
-    parser.add_option('--get-mulch-t-cal', dest='get_temp_calibration',
-                      action='store_true',
-                      help='display device temperature (WN34) calibration data')
-    parser.add_option('--get-pm25-cal', dest='get_pm25_offset',
-                      action='store_true',
-                      help='display device PM2.5 calibration data')
-    parser.add_option('--get-co2-cal', dest='get_co2_offset',
-                      action='store_true',
-                      help='display device CO2 (WH45) calibration data')
-    parser.add_option('--get-services', dest='get_services',
-                      action='store_true',
-                      help='display device weather services configuration data')
+    parser.add_option('--test-driver', dest='test_driver', action='store_true',
+                      metavar='TEST_DRIVER', help='exercise the gateway driver')
+    parser.add_option('--test-service', dest='test_service',
+                      action='store_true', metavar='TEST_SERVICE',
+                      help='exercise the gateway service')
     parser.add_option('--default-map', dest='map', action='store_true',
                       help='display the default field map')
     parser.add_option('--driver-map', dest='driver_map', action='store_true',
@@ -7986,11 +8507,6 @@ def main():
     parser.add_option('--service-map', dest='service_map', action='store_true',
                       help='display the field map that would be used by the gateway '
                            'service')
-    parser.add_option('--test-driver', dest='test_driver', action='store_true',
-                      metavar='TEST_DRIVER', help='exercise the gateway driver')
-    parser.add_option('--test-service', dest='test_service',
-                      action='store_true', metavar='TEST_SERVICE',
-                      help='exercise the gateway service')
     parser.add_option('--ip-address', dest='ip_address',
                       help='device IP address to use')
     parser.add_option('--port', dest='port', type=int,
@@ -8009,6 +8525,10 @@ def main():
                       help='unmask sensitive settings')
     parser.add_option('--units', dest='units', metavar='UNITS', default='metric',
                       help='unit system to use when displaying live data')
+    parser.add_option('--config', dest='config_path', metavar='CONFIG_FILE',
+                      help="Use configuration file CONFIG_FILE.")
+    parser.add_option('--debug', dest='debug', type=int,
+                      help='How much status to display, 0-3')
     (opts, args) = parser.parse_args()
 
     # display driver version number
@@ -8044,12 +8564,13 @@ def main():
         if weewx.debug > 0:
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
+    # define custom unit settings used by the gateway driver
+    define_units()
+
     # get a DirectGateway object
-    direct_gw = DirectGateway(opts, stn_dict)
+    direct_gw = DirectGateway(opts, parser, stn_dict)
     # now let the DirectGateway object process the options
     direct_gw.process_options()
-    # if we made it here no option was selected so display our help
-    parser.print_help()
 
 
 if __name__ == '__main__':

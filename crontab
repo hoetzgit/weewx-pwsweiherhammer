@@ -21,23 +21,26 @@
 # For more information see the manual pages of crontab(5) and cron(8)
 #
 # m h dom mon dow command
+#0 0 * * * /bin/bash /home/weewx/pwsWeiherhammer/scripts/db/resetEnergy.sh
+
 10      *   * * * /usr/sbin/ntpdate ptbtime1.ptb.de ptbtime2.ptb.de >/dev/null 2>&1
-0       */6 * * * /bin/bash /usr/local/bin/backup_host.sh >/var/log/weewx/backup_host.log 2>&1
-0,20,40 *   * * * /bin/bash /usr/local/bin/backup_db_weewx.sh >/var/log/weewx/backup_db_weewx.log 2>&1
+#0       */6 * * * /bin/bash /usr/local/bin/backup_host.sh >/var/log/weewx/backup_host.log 2>&1
+#0,20,40 *   * * * /bin/bash /usr/local/bin/backup_db_weewx.sh >/var/log/weewx/backup_db_weewx.log 2>&1
+#
 #
 # PWS Dashboard
-*/5 * * * * /usr/bin/php7.4 /var/www/html/pwsWD/PWS_cron_stationcron.php >/dev/null 2>&1
+*/5 * * * * /usr/bin/php8.1 /var/www/html/pwsWD/PWS_cron_stationcron.php >/dev/null 2>&1
 #
 # Webcam/AllSky to Website
-*/1 * * * * /bin/bash /usr/local/bin/create_allsky_weather_data.sh >/dev/null 2>&1
 */1 * * * * /bin/bash /usr/local/bin/copy_allsky_image_to_pws.sh >/var/log/weewx/copy_allsky_image_to_pws.log 2>&1
 */1 * * * * /bin/bash /usr/local/bin/copy_webcam_image_to_pws.sh >/var/log/weewx/copy_webcam_image_to_pws.log 2>&1
 #
-# WeeWX to AllSky
-*/1 * * * * /bin/bash copy_weewx_to_allsky.sh >/var/log/weewx/copy_weewx_to_allsky.log 2>&1
+# WeeWX loop packets to json files
+#*/1 * * * * /bin/bash subscribe_weewx_loop_to_json.sh >/var/log/weewx/subscribe_weewx_loop_to_json.log 2>&1
 #
 # loopdata.json from LoopData report to Celesial Report
 */1 * * * * /bin/bash cp -a /home/weewx/public_html/loopdata/loopdata.json  /home/weewx/public_html/celestial/loopdata.json >/var/log/weewx/copy_loopdata_to_celestial.log 2>&1
+#
 #
 # DWD Forecast Waldbrandgefahrenindex (Weiherhammer skin)
 20 6 * 3,4,5,6,7,8,9,10 * /bin/bash /usr/local/bin/weewx-DWD/wget-dwd-wbx >/var/log/weewx/wget-dwd-wbx.log 2>&1
@@ -54,25 +57,18 @@
 #
 # original dwd-mosmix (weewx-wdc skin)
 14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx-dwd-wdc.conf --verbose --json 10688 >/var/log/weewx/dwd-mosmix-wdc-json-10688.log 2>&1
-#14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx-dwd-wdc.conf --verbose --json --open-meteo=dwd-icon 49.632270,12.056186,394 >/var/log/weewx/dwd-mosmix-wdc-json-open-meteo.log 2>&1
 #
 # forecast-pwsWeiherhammer (Weiherhammer skin)
 14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --database --belchertown  10688 >/var/log/weewx/forecast-pwsWeiherhammer-belchertown-10688.log 2>&1
-#14,29,44,59 * * * * sleep 5; /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --html --daily --hide-placemark 10688 >/var/log/weewx/forecast-pwsWeiherhammer-html-daily-10688.log 2>&1
-#14,29,44,59 * * * * sleep 10; /usr/bin/python3 /usr/local/bin/weewx-DWD/forecast-pwsWeiherhammer --config=/home/weewx/weewx.conf --verbose --html --hourly --hide-placemark 10688 >/var/log/weewx/forecast-pwsWeiherhammer-html-hourly-10688.log 2>&1
-# original dwd-mosmix
-#14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx.conf --verbose --database --belchertown  10688 >/var/log/weewx/dwd-mosmix-belchertown-10688.log 2>&1
-#14,29,44,59 * * * * sleep 5; /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx.conf --verbose --html --daily --hide-placemark 10688 >/var/log/weewx/dwd-mosmix-html-daily-10688.log 2>&1
-#14,29,44,59 * * * * sleep 10; /usr/bin/python3 /usr/local/bin/weewx-DWD/dwd-mosmix --config=/home/weewx/weewx.conf --verbose --html --hourly --hide-placemark 10688 >/var/log/weewx/dwd-mosmix-html-hourly-10688.log 2>&1
 #
 # BBK warnings
 # Weiherhammer skin
 14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/bbk-warnings --config=/home/weewx/weewx.conf --verbose >/var/log/weewx/bbk-warnings.log 2>&1
 #
-# API to MQTT
-*/1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_aeris_airquality.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_aeris_airquality.log 2>&1
-*/1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_owm_airquality.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_owm_airquality.log 2>&1
-*/1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_uba_airquality.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_uba_airquality.log 2>&1
-*/1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_luftdaten_airquality.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_luftdaten_airquality.log 2>&1
-*/1 * * * * /usr/bin/python3 /usr/local/bin/weewx-API/api_luftdaten_airquality_local.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_luftdaten_airquality_local.log 2>&1
-*/1 * * * * sleep 30; /usr/bin/python3 /usr/local/bin/weewx-API/api_luftdaten_airquality_local.py --config=/home/weewx/weewx.conf --verbose --mqtt >/var/log/weewx/api_luftdaten_airquality_local.log 2>&1
+# dwd-mosmix.py (Weiherhammer skin)
+14,29,44,59 * * * * /usr/bin/python3 /usr/local/bin/weewx-DWD/test/dwd-mosmix.py --config=/usr/local/bin/weewx-DWD/test/mosmix.conf --verbose --belchertown --json 10688
+#
+# DWD MOSMIX S Weiden, kommen stündlich, ca nach 20 Minuten
+30 * * * * /usr/bin/python3 /home/weewx/bin/weiwx/scripts/parse_dwd_mosmix.py --in-file=MOSMIX_S --out-file=/home/weewx/public_html/data/json/weiden_mosmix_s.json --timezone --station=WEIDEN
+# DWD MOSMIX L Weiden, kommen ca. um 5, 11, 17, 23 Uhr
+15,45 * * * * /usr/bin/python3 /home/weewx/bin/weiwx/scripts/parse_dwd_mosmix.py --in-file=MOSMIX_L --out-file=/home/weewx/public_html/data/json/weiden_mosmix_l.json --timezone --station=WEIDEN

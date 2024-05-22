@@ -3,7 +3,7 @@ rtgd.py
 
 A WeeWX service to generate a loop based gauge-data.txt.
 
-Copyright (C) 2017-2023 Gary Roderick             gjroderick<at>gmail.com
+Copyright (C) 2017-2024 Gary Roderick             gjroderick<at>gmail.com
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -17,11 +17,22 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see https://www.gnu.org/licenses/.
 
-Version: 0.6.3                                          Date: 3 April 2023
+Version: 0.6.7                                          Date: 4 January 2024
 
   Revision History
+    4 January 2024      v0.6.7
+        - bump version only
+    2 January 2024      v0.6.6
+        - fix incorrect windrun unit conversion
+    1 January 2024      v0.6.5
+        - fix issue that caused loop based windrun to remain at 0.0
+    12 September 2023   v0.6.4
+        - fix issue that prevented Zambretti forecast from being used as a
+          scroller source in some instances
     3 April 2023        v0.6.3
         - fix issue with missing or sporadic windGust/windSpeed loop data
+        - fix issue with rain rate values being incorrectly converted in some
+          instances
     16 March 2023       v0.6.2
         - fix issue that resulted in incorrect formatting of some non-metric
           observations
@@ -210,8 +221,6 @@ Version: 0.6.3                                          Date: 3 April 2023
         - initial release
 
 
-A WeeWX service to generate a loop based gauge-data.txt.
-
 Used to update the SteelSeries Weather Gauges in near real time.
 
 Inspired by crt.py v0.5 by Matthew Wall, a WeeWX service to emit loop data to
@@ -224,13 +233,15 @@ Abbreviated instructions for use:
 
 1.  Install the Realtime gauge-data extension using the wee_extension utility:
 
-    - download the latest Realtime gauge-data extension package:
-
-        $ wget -P /var/tmp https://github.com/gjr80/weewx-realtime_gauge-data/releases/download/v0.6.2/rtgd-0.6.2.tar.gz
+    - download the latest Realtime gauge-data extension package from the
+      Realtime gauge-data extension releases page
+      (https://github.com/gjr80/weewx-realtime_gauge-data/releases)
 
     - install the Realtime gauge-data extension:
 
-        $ wee_extension --install=/var/tmp/rtgd-0.6.2.tar.gz
+        $ wee_extension --install=/var/tmp/rtgd-x.y.z.tar.gz
+
+        where x.y.z is the Realtime gauge-data extension package release number
 
         Note: Depending on your system/installation the above command may need
               to be prefixed with 'sudo'.
@@ -308,7 +319,7 @@ from weeutil.weeutil import to_bool, to_int
 log = logging.getLogger(__name__)
 
 # version number of this script
-RTGD_VERSION = '0.6.3'
+RTGD_VERSION = '0.6.7'
 # version number (format) of the generated gauge-data.txt
 GAUGE_DATA_VERSION = '14'
 
@@ -1226,6 +1237,12 @@ class RealtimeGaugeDataThread(threading.Thread):
         # user overrides from the [RealtimeGaugeData] [[Groups]] stanza.
         _group_map = copy.deepcopy(DEFAULT_GROUP_MAP)
         _group_map.update(rtgd_config_dict.get('Groups', {}))
+        # The rainRate unit group is derived from the rain unit group, make
+        # sure we have the correct rainRate unit group
+        if _group_map['group_rain'] == 'inch':
+            _group_map['group_rainrate'] = 'inch_per_hour'
+        else:
+            _group_map['group_rainrate'] = 'mm_per_hour'
         # The SteelSeries Gauges do not support rain in cm, but cm is a valid
         # WeeWX rain unit. So if we have rain or rainRate in cm/cm_per_hour
         # force change the unit to mm/mm_per_hour.
@@ -1233,6 +1250,12 @@ class RealtimeGaugeDataThread(threading.Thread):
             _group_map['group_rain'] = 'mm'
         if _group_map['group_rainrate'] == 'cm_per_hour':
             _group_map['group_rainrate'] = 'mm_per_hour'
+        # the distance unit group is derived from the speed unit group, make
+        # sure we have the correct distance unit group
+        if _group_map['group_speed'] == 'km_per_hour' or _group_map['group_speed'] == 'meter_per_second':
+            _group_map['group_distance'] = 'km'
+        else:
+            _group_map['group_distance'] = 'mile'
         self.group_map = _group_map
         # Construct the format map to be used. The format map maps string
         # formats to be used for each unit. It is based on the default format
@@ -2507,7 +2530,7 @@ class Buffer(dict):
 
         # if there is no windrun in the packet and if obs is windSpeed then we
         # can use windSpeed to update windrun
-        if 'windrun' not in packet and obs == 'windSpeed':
+        if 'windrun' not in packet or packet['windrun'] is None and obs == 'windSpeed':
             # has windrun been seen before, if not add it to the Buffer
             if 'windrun' not in self:
                 self['windrun'] = init_dict.get(obs, ScalarBuffer)(stats=None,
@@ -3460,7 +3483,7 @@ class ZambrettiSource(ThreadedSource):
         self.config_dict = config_dict
         # get the Zambretti config dict
         _rtgd_config_dict = config_dict.get("RealtimeGaugeData")
-        self.zambretti_config_dict = _rtgd_config_dict.get("Zambretti")
+        self.zambretti_config_dict = _rtgd_config_dict.get("Zambretti", {})
 
         self.zambretti = None
 

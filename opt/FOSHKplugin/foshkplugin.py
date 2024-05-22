@@ -15,8 +15,9 @@
 
 try:
   import sys
+  is36 = True if sys.version_info.major >= 3 and sys.version_info.minor > 5 else False
   import math
-  from math import sin,cos,pi,asin		##
+  from math import sin,cos,pi,asin,radians,degrees,atan2		##
   from http.server import HTTPServer, BaseHTTPRequestHandler
   import json
   import socket
@@ -37,7 +38,14 @@ try:
   import ftplib
   import io
   import paho.mqtt.publish as publish
-  from influxdb import InfluxDBClient
+  from influxdb import InfluxDBClient, exceptions
+  import glob
+  from PIL import Image, ImageDraw, ImageFont, ImageColor
+  import locale
+  if is36:                                       # Python 3.6 or later is required!
+    from influxdb_client import InfluxDBClient as InfluxDB2Client
+    from influxdb_client.client.write_api import SYNCHRONOUS
+    import influxdb_client.client.exceptions as InfluxDB2Error
 except ImportError as error:
   errstr = str(error).replace("'","")
   print("import failed: "+errstr+"\n")
@@ -48,12 +56,14 @@ CONFIG_FILE = ""
 #CONFIG_FILE = "/root/foshkplugin.conf"
 
 prgname = "FOSHKplugin"
-prgver = "v0.09"
-
+prgver = "v0.10"
+betaver = " Beta 240329"                         # +betaREPLACEver+
+prgbuild = prgver+betaver                        # complete version string
 myDebug = False                                  # set to True to enable Debug-messages
 
 defSID = "FOSHKweather"                          # default SensorID SID for outgoing UDP-datagrams
 maxfwd = 99                                      # max. Anzahl der zusaetzlichen Forwards
+POcustom_max = 99                                # max. count of possible custom PO notifications
 w4l_feldanzahl = 41                              # Anzahl der Felder in der current.dat von Weather4Loxone
 httpTimeOut = 8                                  # Timeout in Sekunden fuer sendendes GET/POST
 httpTries = 3                                    # count of tries for http-connect
@@ -61,6 +71,8 @@ httpSleepTime = 6                                # time between http send attemp
 udpTimeOut = 3                                   # Timeout in Sekunden fuer sockets
 execTimeOut = 15                                 # Timeout in seconds for executing external scripts
 LOG_LEVEL = "ALL"                                # specify the default log level (ERROR, WARNING, INFO, ALL)
+FWD_WARNINT = 10                                 # global default for threshold of unsuccessful forward attempts for FWD_WARNING
+DT_FORMAT = "%d.%m.%Y %H:%M:%S"                  # global default for date/time format
 
 cmd_discover     = "\xff\xff\x12\x00\x04\x16"
 cmd_reboot       = "\xff\xff\x40\x03\x43"
@@ -113,14 +125,33 @@ MQTTsendTime = 0                                 # last time MQTT was sent
 UDP_STATRESEND_time = 0                          # last time the status was sent by UDP
 # v0.08 WSWin-Forward: CSV-Header
 WSWinCSVHeader = ";;1;17;133;2;18;35;36;45;134;42;41;3;19;4;20;5;21;6;22;7;23;8;24;29;30;31;32;25;26;27;28;37;13;14;15;16\r\n"
+# v0.10 WeeWX CSV header
+WeeWXCSVHeader = "datetime;inTemp;inHumidity;barometer;outTemp;outHumidity;windSpeed;windDir;windGust;rain;radiation;UV;extraTemp1;extraHumid1;extraTemp2;extraHumid2;extraTemp3;extraHumid3;extraTemp4;extraHumid4;extraTemp5;extraHumid5;extraTemp6;extraHumid6;soilMoist1;soilMoist2;soilMoist3;soilMoist4;leafWet1;leafWet2;leafWet3;leafWet4;daySunshineDur;soilTemp1;soilTemp2;soilTemp3;soilTemp4;model;stationType\n"
+AwekasCSVHeaderA = "Datum;Zeit;Temperatur;Feuchte;Luftdruck;Niederschlag;Regenrate;Windgeschwindigkeit;Boeen;Windrichtung;Windverteilung;UV Index;Solarstrahlung;Helligkeit;Bodentemperatur"
+AwekasCSVHeaderB = "dd.mm.yyyy;hh:mm;°C;%;hPa;mm;mm/h;km/h;km/h;°;;Index;W/m²;Lux;°C"
+
 # v0.09: set some more defaults
-AUTH_PWD = ""                                    # default if config-file is missinf
-loglog = ""                                      # default if config-file is missinf
+AUTH_PWD = ""                                    # default if config-file is missing
+loglog = ""                                      # default if config-file is missing
 execOnly = "EXECONLY"                            # just exec the script but not send the data
 # v0.09: count real interval time
 lastData = 0                                     # save time of last incoming data transmission
 intervald = deque(maxlen=(10))                   # last n intervals
 inIntervalWarning = False                        # in warning state
+last_runtime = 0                                 # last knownruntime of the station
+dailyRebootCounter = 0                           # daily reboot counter - resetat midnight
+dailyInit = False                                # will be triggered to indicate a day change
+# v0.10 MIYO support
+last_miyo = {"temperature": "null", "wind": "null", "rain": "null"}
+
+# v0.10 for banner
+maxbanner = 100
+font_fallback = "DejaVuSansMono.ttf"
+what_arr = ["logo","header","line","footer","special","custom","custom1","custom2","custom3","custom4","custom5"]
+
+last_maxdailygust = "0"                                        # v0.10: save the last good maxdailygust
+inttime = 0
+START_TIME = ""
 
 def doNothing():
   return
@@ -140,12 +171,28 @@ def strToNum(s):
     except: pass
   return s
 
+def intFallback(string, fallback = "null"):                    # with fallback if fallback is a string
+  try: out = int(string)
+  except ValueError:
+    try: out = int(fallback)
+    except ValueError: out = fallback
+  return out
+
+def floatFallback(string, fallback = "null"):                  # with fallback if fallback is a string
+  try: out = float(string)
+  except ValueError:
+    try: out = float(fallback)
+    except ValueError: out = fallback
+  return out
+
 def readConfigFile(configname):
   # v0.08 ignore duplicate sections (will be ignored while starting and deleted on exit
   config = configparser.RawConfigParser(inline_comment_prefixes='#',strict=False)
   config.optionxform = str
   try:
-    config.read(configname, encoding='ISO-8859-1')
+    #config.read(configname, encoding='ISO-8859-1')
+    #08.02.
+    config.read(configname, encoding='UTF-8')
   except configparser.Error as err:
     #print(err)
     pass
@@ -163,7 +210,7 @@ def getLBLang():
 def FOSHKpluginGetStatus(url):
   isStatus = ""
   try:
-    r = requests.get(url)
+    r = requests.get(url,timeout=httpTimeOut)
     isStatus = r.text if r.status_code == 200 else ""
   except:
     pass
@@ -176,26 +223,39 @@ def allPrint(s):
   if sndlog: sndlogger.info(s)
   print(s)
 
+def colorPrint(s):
+  if COLOR_PRINT:
+    if len(s) >= 7 and s[:7] == "<ERROR>": s = '\033[91m'+s+'\033[0m'                              # red
+    elif len(s) >= 7 and s[:7] == "<DEBUG>": s = '\033[1m'+s+'\033[0m'                             # bold white
+    elif len(s) >= 9 and s[:9] == "<WARNING>": s = '\033[93m'+s+'\033[0m'                          # yellow
+    elif len(s) >= 10 and s[:10] == "<RESTORED>": s = '\033[92m'+s+'\033[0m'.replace("<RESTORED>","<OK>")                          # green
+  print(s)
+
+def tprint(s):
+  print("---> "+str(s))
+
+def debugPrint(s):
+  if myDebug: logPrint("<DEBUG> "+s)
+
 def logPrint(s):
   s = hidePASSKEY(s)
   sub_in_s = False if LOG_IGNORE == [""] else bool([ele for ele in LOG_IGNORE if (ele in s)])
   if loglog and not sub_in_s:
     s_len = len(s)
     if (s_len >= 7 and LOG_LEVEL == "ERROR" and (s[:4] == "<OK>" or s[:7] == "<ERROR>" or s[:7] == "<DEBUG>")) or (s_len >= 9 and LOG_LEVEL == "WARNING" and (s[:4] == "<OK>" or s[:7] == "<ERROR>" or s[:7] == "<DEBUG>" or s[:9] == "<WARNING>")) or (s_len >= 9 and LOG_LEVEL == "INFO" and (s[:4] == "<OK>" or s[:7] == "<ERROR>" or s[:7] == "<DEBUG>" or s[:9] == "<WARNING>" or s[:6] == "<INFO>")) or LOG_LEVEL == "ALL": logger.info(s)
-  if not sub_in_s or BUT_PRINT: print(s)                       # print always but don't log to file if filtered
+  if not sub_in_s or BUT_PRINT: colorPrint(s)                  # print always but don't log to file if filtered
 
 def sndPrint(s, echo = False):
   s = hidePASSKEY(s)
   if sndlog:
     s_len = len(s)
     if (s_len >= 7 and LOG_LEVEL == "ERROR" and (s[:4] == "<OK>" or s[:7] == "<ERROR>" or s[:7] == "<DEBUG>")) or (s_len >= 9 and LOG_LEVEL == "WARNING" and (s[:4] == "<OK>" or s[:7] == "<ERROR>" or s[:7] == "<DEBUG>" or s[:9] == "<WARNING>")) or (s_len >= 9 and LOG_LEVEL == "INFO" and (s[:4] == "<OK>" or s[:7] == "<ERROR>" or s[:7] == "<DEBUG>" or s[:9] == "<WARNING>" or s[:6] == "<INFO>")) or LOG_LEVEL == "ALL": sndlogger.info(s)
-  if echo: print(s)
+  if echo: colorPrint(s)
 
 def pushPrint(text):
   if PO_ENABLE:
-    myLB_IP = socket.gethostbyname(socket.gethostname()) if LB_IP == "" else LB_IP
-    myLink = "<a href=\"http://"+myLB_IP+":"+LBH_PORT+"/FOSHKplugin/help/\">"+myLB_IP+"</a> for ws@" if myLB_IP != "" and LBH_PORT != "" else ""
-    text += "\n* "+myLink+WS_IP+"; "+time.strftime('%d.%m.%Y %H:%M:%S', time.localtime())+" *"
+    myLink = "<a href=\"http://"+LINK_ADR+":"+LBH_PORT+"/FOSHKplugin/help/\">"+LINK_ADR+"</a> for ws@" if LINK_ADR != "" and LBH_PORT != "" else ""
+    text += "\n* "+myLink+WS_IP+"; "+time.strftime(DT_FORMAT, time.localtime())+" *"
     t = threading.Thread(target=pushSend, args=(PO_URL, PO_TOKEN, PO_USER, text))
     t.start()
 
@@ -210,9 +270,9 @@ def pushSend(url, token, user, message):
       #r = requests.post(url, data = {"token": token,"user": user,"message": message}, timeout=httpTimeOut)
       r = requests.post(url, data = {"token": token,"user": user,"message": message,"html": "1"}, timeout=httpTimeOut)
       ret = str(r.status_code)
-      ret_str = r.text
+      ret_str = r.text.replace("\r","").replace("\n"," ")
       if r.status_code in range(200,203): okstr = ""
-      elif r.status_code in range(400,500): v = 400
+      #elif r.status_code in range(400,500): v = 400           # prevent 429 error - just wait for the next trial
     except requests.exceptions.Timeout as err:
       ret = "TIMEOUT"
     except requests.exceptions.ConnectionError as err:
@@ -224,13 +284,21 @@ def pushSend(url, token, user, message):
   # done
   tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
   # only log if there were problems ...
-  if ret_str == "": ret_str = "problem while sending push notification via Pushover"
+  #debugPrint("pushSend message: "+message[:30]+" okstr: "+okstr+" ret_str: "+ret_str+" ret: "+ret+" tries: "+str(v))
+  if ret_str == "" or okstr != "": ret_str = "problem while sending push notification via Pushover"
+  # v0.10: why do I use logger.info instead of logPrint?
   if okstr != "": logger.info(okstr + ret_str + " : " + ret + tries)
   return
 
-def fr(s,l,c=" "):
-  while len(s) < l: s+=c
-  return s
+def fr(s,l,c=" "):                                       # fillRight
+  add = ""
+  for i in range(l-len(s)): add += c
+  return s+add
+
+def fl(s,l,c=" "):                                       # fillLeft
+  add = ""
+  for i in range(l-len(s)): add += c
+  return add+s
 
 def ftoc(f,n):                                           # convert Fahrenheit to Celsius
   out = "-9999"
@@ -287,10 +355,14 @@ def utcToLocal(utctime):
   return localtime
 
 def decHourToHMstr(sh):                                  # convert dec. hour to h:m
-  f_sh = float(sh)
-  sh_std = int(f_sh)
-  sh_min = round((f_sh-int(f_sh))*60)
-  return str(sh_std)+":"+str(sh_min)
+  try: 
+    f_sh = float(sh)
+    sh_std = int(f_sh)
+    sh_min = round((f_sh-int(f_sh))*60)
+    ret = str(sh_std)+":"+str(sh_min)
+  except ValueError:
+    ret = ""
+  return ret
 
 def leafTo15(value):
   #try: out = str(round(int(value)/(6.6)))                # 99/15 = 6.6 as int
@@ -298,18 +370,45 @@ def leafTo15(value):
   except ValueError: out = ""
   return out
 
-def loxTime(wert):
-  # Gateway sendet UTC-Zeit; hier Umrechnung in Lokalzeit und dann nach Loxone
+def HP1001convert(s):                                    # special handlig for old HP1001
   try:
-    wert=int(wert)
-  except ValueError:
-    return
+    d_in = stringToDict(s,"&")
+    d_out = {}
+    for key, value in d_in.items():
+      if key == "intemp": d_out.update({"indoortempf" : ctof(value,2)})
+      elif key == "outtemp": d_out.update({"tempf" : ctof(value,2)})
+      elif key == "dewpoint": d_out.update({"dewptf" : ctof(value,2)})
+      elif key == "windchill": d_out.update({"windchillf" : ctof(value,2)})
+      elif key == "inhumi": d_out.update({"indoorhumidity" : value})
+      elif key == "outhumi": d_out.update({"humidity" : value})
+      elif key == "windspeed": d_out.update({"windspeedmph" : kmhtomph(value,2)})
+      elif key == "windgust": d_out.update({"windgustmph" : kmhtomph(value,2)})
+      elif key == "absbaro": d_out.update({"absbaro" : hpatoin(value,1)})
+      elif key == "relbaro": d_out.update({"baromin" : hpatoin(value,1)})
+      elif key == "rainrate": d_out.update({"rainratein" : mmtoin(value,3)})
+      elif key == "dailyrain": d_out.update({"dailyrainin" : mmtoin(value,3)})
+      elif key == "weeklyrain": d_out.update({"weeklyrainin" : mmtoin(value,3)})
+      elif key == "monthlyrain": d_out.update({"monthlyrainin" : mmtoin(value,3)})
+      elif key == "yearlyrain": d_out.update({"yearlyrainin" : mmtoin(value,3)})
+      elif key == "light": d_out.update({"solarradiation" : value})
+      elif key == "dateutc": d_out.update({key:value.replace("%20","+")})
+      elif key == "softwaretype": d_out.update({key:value.replace("%20","_")})
+      else: d_out.update({key:value})
+    s = dictToString(d_out,"&")
+  except: pass
+  return s
+
+def loxTime(wert, mkO = True):
+  # Gateway sendet UTC-Zeit; hier Umrechnung in Lokalzeit und dann nach Loxone
+  try: wert=int(wert)
+  except ValueError: return
   if wert > 31536000:                                          # groesser als 1 Jahr?
-    offset = -time.timezone
-    if time.localtime(wert)[8]:
-      wert = wert + offset + 3600                              # 7200
-    else:
-      wert = wert + offset                                     # 3600
+    if mkO:                                                    # wert is UTC - recalculate
+      offset = -time.timezone
+      if time.localtime(wert)[8]:
+        wert = wert + offset + 3600                            # 7200
+      else:
+        wert = wert + offset                                   # 3600
   return wert-1230768000 if LOX_TIME and wert >= 1230768000 else wert
 
 def getSeparator(url, default = ""):
@@ -341,10 +440,14 @@ def getHeader(d,sep):
   s = s[:-1]
   return s
 
-def stringToDict(s,sep):
-  # Parameter: s = String; sep = Separator (UDPstring = " "; WSstring = "&")
+# v0.10 modified: strip()
+def stringToDict(s, sep, strip = False):
+  # Parameter: s = String; sep = Separator (UDPstring = " "; WSstring = "&"; Config: ",")
   # Output: d = dict
-  d = dict(x.split("=") for x in s.split(sep)) if s != "" else {}
+  try:
+    d = dict(x.strip().split("=") for x in s.split(sep)) if s != "" else {}
+    if strip: d = { k.strip():v.strip() for k, v in d.items() }
+  except: d = {}
   return d
 
 def getURLvalue(url,key):
@@ -361,11 +464,11 @@ def killMyself():
   sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
   try:
     outstr = "restart initiated via UDP"
-    if myDebug: logPrint("<DEBUG> "+outstr)
+    debugPrint(outstr)
     sock.sendto(bytes("SID=FOSHKplugin,Plugin.shutdown", OutEncoding), (LB_IP, int(LBU_PORT)))
   except:
     outstr = "unable to restart via UDP"
-    if myDebug: logPrint("<DEBUG> "+outstr)
+    debugPrint(outstr)
     pass
   return outstr
 
@@ -373,11 +476,11 @@ def checkAmbientWeather(d):
   # q&d check if input is coming from Ambient Weather station
   return True if "AMBWeather" in str(d) else False
 
-def checkBattery(d,FWver):
+def checkBattery(d,FWver,battex_arr):
   # check known sensors if battery is still ok; if not fill outstring with comma-separated list of sensor names
   # Ambient macht ausschliesslich 0/1 wobei 1 = ok und 0 = low - mit Ausnahme von WH55 und WH57!
   # threshold for ws1900batt not confirmed
-  if myDebug: logPrint("<DEBUG> checkBattery-FWver: " + FWver)
+  #debugPrint("checkBattery-FWver: " + FWver)
   isAmbientWeather = checkAmbientWeather(d)
   outstr = ""
   for key,value in d.items():
@@ -385,12 +488,13 @@ def checkBattery(d,FWver):
     # battery-reporting will be same for all weatherstations again after firmware-update of HP2551 v1.6.7
     #elif "EasyWeather" in FWver and "batt" in key and int(value) == 1 : outstr += key + " "
     else:
-      if ("wh65batt" in key or "lowbatt" in key or "wh26batt" in key or "wh25batt" in key) and int(value) == 1 : outstr += key + " "
-      elif "batt" in key and len(key) == 5 and int(value) == 1 and not isAmbientWeather: outstr += key + " "
-      elif ("wh57batt" in key or "pm25batt" in key or "leakbatt" in key or "co2_batt" in key) and int(value) < 2: outstr += key + " "
-      elif ("soilbatt" in key or "wh40batt" in key or "wh68batt" in key or "tf_batt" in key or "leaf_batt" in key) and float(value) <= 1.2: outstr += key + " "
-      elif ("wh80batt" in key or "wh90batt" in key) and float(value) < 2.3: outstr += key + " "
-      elif "ws1900batt" in key and float(value) < 2.5: outstr += key + " "
+      if ("wh65batt" in key or "lowbatt" in key or "wh26batt" in key or "wh25batt" in key) and key not in battex_arr and int(value) == 1 : outstr += key + " "
+      elif "batt" in key and len(key) == 5 and key not in battex_arr and int(value) == 1 and not isAmbientWeather: outstr += key + " "
+      elif ("wh57batt" in key or "pm25batt" in key or "leakbatt" in key or "co2_batt" in key) and key not in battex_arr and int(value) < 2: outstr += key + " "
+      elif ("soilbatt" in key or "wh40batt" in key or "wh68batt" in key or "tf_batt" in key or "leaf_batt" in key) and key not in battex_arr and float(value) <= 1.2: outstr += key + " "
+      elif ("wh80batt" in key or "wh90batt" in key) and key not in battex_arr and float(value) < 2.3: outstr += key + " "
+      elif "ws1900batt" in key and key not in battex_arr and float(value) < 2.7: outstr += key + " "
+      elif "console_batt" in key and key not in battex_arr and float(value) < 2.7: outstr += key + " "
   return outstr.strip()
 
 def trendSimple(d,start_pos,end_pos):
@@ -432,15 +536,19 @@ def trend(d,start_pos,end_pos):
     ret = 0
   #if myDebug:
   #  s3hstr = "3h" if is3h else "1h"
-  #  logPrint("<DEBUG> trendN: (" + s3hstr + ") from: " + str(start_pos) + " to: " + str(end_pos) + ":" + " groesser: " + str(groesser) + " kleiner: " + str(kleiner) + " gleich: " + str(gleich) + " diff: " + str(diff_wert) + "hPa ret: " + str(ret))
+  #  debugPrint("trendN: (" + s3hstr + ") from: " + str(start_pos) + " to: " + str(end_pos) + ":" + " groesser: " + str(groesser) + " kleiner: " + str(kleiner) + " gleich: " + str(gleich) + " diff: " + str(diff_wert) + "hPa ret: " + str(ret))
   return (ret,kleiner,gleich,groesser)
 
 def avgWind(d,w):                                              # get avg from deque d, field w
-  s = 0
+  s = sinSum = cosSum = 0;
   l = len(d)
   for i in range(l):
-    s = s + d[i][w]
-  a = round(s/l,1)
+    if w == 2:                                                 # for winddir only - average wind dir
+      sinSum += sin(radians(d[i][w]));
+      cosSum += cos(radians(d[i][w]));
+    else:                                                      # for windspeed and windgust - mean
+      s = s + d[i][w]
+  a = round((degrees(atan2(sinSum, cosSum)) + 360) % 360,1) if w == 2 else round(s/l,1)
   return a
 
 def maxWind(d,w):                                              # get max value from deque d, field w
@@ -463,7 +571,7 @@ def getGW1100FWinfo(ipaddr, port, cur_ver):
   mac = model = ver = ""
   try:
     for i in range(4,10):
-      if data[i] < 10: mac += "0"
+      if data[i] < 16: mac += "0"                              # was < 10 prior v0.10
       mac += str(hex(data[i]))+":"                             # perhaps "%3A" instead of ":"
     mac = mac.replace("0x","").upper()[:-1]                    # then [:-3] of course
     model,ver = cur_ver.split("_")                             # strip model & version
@@ -472,7 +580,7 @@ def getGW1100FWinfo(ipaddr, port, cur_ver):
   # sign is not MD5 but a special encryption that FO does not want to publish
   sign = "&sign="+hashlib.md5(data.encode('utf-8')).hexdigest().upper()
   urlstr = "http://ota.ecowitt.net/api/ota/v1/version/info?" + data + sign
-  #fw_info = requests.get(urlstr)
+  #fw_info = requests.get(urlstr,timeout=httpTimeOut)
   class fw_info:                                               # spoof requests-response
     text = "unknown"
     url = urlstr
@@ -488,13 +596,13 @@ def checkFWUpgrade():
   else:
     try:                                                       # firmware is unknown - so ask the weather station
       isFWver = sendToWS(WS_IP, WS_PORT, bytearray(cmd_get_FWver,'latin-1'))
-      if myDebug: logPrint("<DEBUG> isFWver: " + str(isFWver) + " len: " + str(len(isFWver)))
+      debugPrint("isFWver: " + str(isFWver) + " len: " + str(len(isFWver)))
       for i in range(5,5+isFWver[4]): cur_ver += chr(isFWver[i])
     except (ValueError, IndexError) as e:
-      if myDebug: logPrint("<ERROR> problem in checkFWUpgrade: " + str(e))           # probably WS is not reachable or is not a GW1000
+      debugPrint("<ERROR> problem in checkFWUpgrade: " + str(e))           # probably WS is not reachable or is not a GW1000
       cur_ver = ""
       pass
-  if myDebug: logPrint("<DEBUG> current version found as *" + cur_ver + "*")
+  debugPrint("current version found as *" + cur_ver + "*")
   if cur_ver != "":                                            # current version is known now
     if "GW1000" in cur_ver: model = "GW1000"
     elif "GW1100" in cur_ver: model = "GW1100"
@@ -508,10 +616,10 @@ def checkFWUpgrade():
     elif "WH6006" in cur_ver: model = "WH6006"
     elif "WL6006" in cur_ver: model = "WL6006"
     else: model = "unknown"
-    if myDebug: logPrint("<DEBUG> current model is identified as " + model)
+    debugPrint("current model is identified as " + model)
     try:                                                       # now get firmware information from server
-      fw_info = requests.get(UPD_URL)
-      if myDebug: logPrint("<DEBUG> getting updinfo from " + UPD_URL + " results in " + str(fw_info.status_code))
+      fw_info = requests.get(UPD_URL,timeout=httpTimeOut)
+      debugPrint("getting updinfo from " + UPD_URL + " results in " + str(fw_info.status_code))
       if fw_info.status_code == 200:
         config = configparser.ConfigParser(allow_no_value=True,strict=False)
         config.read_string(fw_info.text)
@@ -549,12 +657,12 @@ def checkFWUpgrade():
           else:
             sendUDP("SID=" + defSID + " updatewarning=0 time="  + str(loxTime(time.time())))
             updateWarning = False
-            if myDebug: logPrint("<DEBUG> no newer update for " + model + " found - current: " + cur_ver + " avail: " + rmt_ver)
+            debugPrint("no newer update for " + model + " found - current: " + cur_ver + " avail: " + rmt_ver)
         except ValueError:
-          if myDebug: logPrint("<DEBUG> except in inner try")
+          debugPrint("except in inner try")
           pass
     except:
-      if myDebug: logPrint("<DEBUG> except in outer try")
+      debugPrint("except in outer try")
       pass
   return
 
@@ -562,16 +670,17 @@ def checkFWUpgrade():
 def modExec(nr, script, outstr):
   # 2do: ggf. Parameter in script ermoeglichen
   try:
-    if myDebug: logPrint("<DEBUG> FWD-"+nr+": script " + script + " started")
+    debugPrint("FWD-"+nr+": script " + script + " started")
     cmd = subprocess.Popen([script, outstr], stdout=subprocess.PIPE, universal_newlines=True)
-    newstr = cmd.communicate(timeout=execTimeOut)[0].splitlines()[-1]
-    if myDebug: logPrint("<DEBUG> FWD-"+nr+": script " + script + " finished")
+    try: newstr = cmd.communicate(timeout=execTimeOut)[0].splitlines()[-1]
+    except IndexError: newstr = ""
+    debugPrint("FWD-"+nr+": script " + script + " finished")
     if len(newstr) > 0 and outstr != newstr:
       outstr = newstr
       if newstr == execOnly and sndlog: sndPrint("FWD-"+nr+": " + "script " + script + " startet - data not forwarded : "+str(cmd.returncode))
-      elif myDebug: logPrint("<DEBUG> FWD-"+nr+": script " + script + " altered the outgoing string")
+      else: debugPrint("FWD-"+nr+": script " + script + " altered the outgoing string")
     else:
-      if myDebug: logPrint("<DEBUG> FWD-"+nr+": script " + script + " outgoing string unchanged")
+      debugPrint("FWD-"+nr+": script " + script + " outgoing string unchanged")
   except OSError as e:
     sndPrint("<ERROR> FWD-"+nr+": Exec: " + e.strerror, True)    # something went wrong while calling script
     pass
@@ -596,7 +705,7 @@ def calcSunduration(sr, interval, currtime):                   ## Werner Krenn
   erg = 0.0
   latitude = float(COORD_LAT) if COORD_LAT !="" else None
   longitude = float(COORD_LON) if COORD_LON !="" else None
-  if sr is not None and latitude is not None and longitude is not None:
+  if sr is not None and latitude is not None and longitude is not None and interval > 0:
     utcdate = time.gmtime(currtime)
     dayofyear = time.localtime().tm_yday
     theta = 360 * dayofyear / 365
@@ -611,29 +720,63 @@ def calcSunduration(sr, interval, currtime):                   ## Werner Krenn
     angle_horaire = (tempsolaire - 12) * 15
     hauteur_soleil = asin(sin((pi / 180) * latitude) * sin((pi / 180) * declinaison) + cos(
                (pi / 180) * latitude) * cos((pi / 180) * declinaison) * cos((pi / 180) * angle_horaire)) * (180 / pi)
-    #print("hateur: ", str(hauteur_soleil), " sr: ", str(sr), " sun_min: ", str(SUN_MIN))
+    #debugPrint("hateur: "+str(hauteur_soleil)+" sr: "+str(sr)+" sun_min: "+str(SUN_MIN))
     if float(hauteur_soleil) > 3 and float(sr) > float(SUN_MIN):
       try:
-        seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) *1080 * pow(sin((pi / 180) * hauteur_soleil), 1.25) * float(SUN_COEF)
+        seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) * 1080 * pow((sin(pi / 180 * hauteur_soleil)), 1.25) * float(SUN_COEF)
       except:
         logPrint("<DEBUG> except in calcSunduration seuil")
         seuil = 0.0
       if float(sr) > seuil:                                    # groesser als Schwellwert - zaehlen
         erg = interval
-        #logPrint("<DEBUG> Interval: " + str(interval) + " sr:"+ str(sr) + " seuil:" + str(seuil) + " SUN_COEF:" + str(SUN_COEF))
+        debugPrint("calcSunduration currtime: "+str(currtime)+" erg/interval: " + str(interval) + " sr: "+ str(sr) + " seuil: " + str(seuil) + " SUN_COEF: " + str(SUN_COEF))
       else: erg = 0
     #if hauteur_soleil < 3: hauteur_soleil = 3
     #x1seuil = (0.73 + 0.06 * cos((pi / 180) * 360 * dayofyear / 365)) *1080
     #x2seuil = pow((sin(pi / 180) * hauteur_soleil), 1.25)
     #x3seuil = x1seuil * x2seuil * float(SUN_COEF) 
     #logPrint("<DEBUG> x1: "+ str(x1seuil) + " x2: " + str(x2seuil) + " x3: " + str(x3seuil))
+  #if myDebug and erg < 0: pushPrint("negative sunduration\n\ncurrtime: "+str(currtime)+"\nerg/interval: " + str(interval) + "\nsr: "+ str(sr) + "\nseuil: " + str(seuil) + "\nSUN_COEF: " + str(SUN_COEF))
   return erg
+
+def getfromFWDarr(nr, which):                                  # return the field specified by what from fwd_arr
+  found = False
+  for i in range(len(fwd_arr)):
+    if fwd_arr[i][11] == nr:
+      found = True
+      break
+  output = fwd_arr[i][which] if found else ""
+  return output
+
+def updateFWDstate(code, nr):                                  # update array fwd_arr (last ok, error, errorcount)
+  global fwd_arr
+  for i in range(len(fwd_arr)):
+    if fwd_arr[i][11] == nr:
+      if code == "OK" or code == execOnly:                     # ok - delete errorcount
+        fwd_arr[i][16] = time.time()                           # lastok = current time
+        fwd_arr[i][17] = 0                                     # reset errcount
+      else:                                                    # error - inc errorcount
+        fwd_arr[i][17] += 1                                    # inc errcount
+        # 0:url,1:interval,2:interval_num,3:last,4:ignore,5:type,6:fwd_sid,7:fwd_pwd,8:status,9:minmax,10:script,11:nr,12:mqttcycle,13:fwd_remap,14:fwd_option,15:fwd_cmt,16:lastok,17:errcount,18:code,19:warnint,20:queuetype,21:queuedir
+        cmt = " - "+fwd_arr[i][15] if fwd_arr[i][15] != "" else ""
+        since = "FOSHKplugin start" if fwd_arr[i][16] == 0 else time.strftime(DT_FORMAT,time.localtime(fwd_arr[i][16]))
+        # in case of longer outtage inform via push notification
+        if FWD_WARNING and fwd_arr[i][19] > 0 and fwd_arr[i][17] == fwd_arr[i][19]: # errcount = warnint
+          pushPrint("<WARNING> forward FWD-"+nr+" ("+fwd_arr[i][5]+cmt+") was unsuccessful "+str(fwd_arr[i][19])+" times since "+since+" (last result: "+str(code)+")")
+      fwd_arr[i][18] = str(code)
+      break
 
 def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
   # 2do: bei eingehenden Ambient-Nachrichten stimmen die Keys in UDP-Ausgabe zu Loxone (vermutlich ueberall) nicht!
+  debugPrint("convertDictToMetricDict start")
   global last_lightning_time
   global last_lightning
+  global last_runtime
   global updateWarning
+  global dailyRebootCounter
+  global dailyInit
+  global last_maxdailygust
+  rebootDetected = False
   ignoreValues=["-9999","None","null",""]
   d_m = {}
   for key,value in d_e.items():
@@ -662,7 +805,11 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
     elif "tempinf" in key: d_m.update({"tempinc" : ftoc(value,1)})
     elif "windchillf" in key: d_m.update({"windchillc" : ftoc(value,1)})
     elif "feelslikef" in key: d_m.update({"feelslikec" : ftoc(value,1)})
-    elif "dewptf" in key: d_m.update({"dewptc" : ftoc(value,1)})
+    # v0.10 additional dew points
+    elif key == "dewptf": d_m.update({"dewptc" : ftoc(value,1)})
+    elif "dewptinf" in key: d_m.update({"dewptinc" : ftoc(value,1)})
+    elif "dewptf_co2" in key: d_m.update({"dewptc_co2" : ftoc(value,1)})
+    elif "dewpt" in key and len(key) == 7 and key[6] == "f": d_m.update({key.replace("f","c") : ftoc(value,1)})
     elif "heatindexf" in key: d_m.update({"heatindexc" : ftoc(value,1)})
     elif "baromin" in key: d_m.update({"baromhpa" : intohpa(value,2)})
     elif "baromrelin" in key: d_m.update({"baromrelhpa" : intohpa(value,2)})
@@ -670,7 +817,10 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
     elif "baromabsin" in key: d_m.update({"baromabshpa" : intohpa(value,2)})
     elif "absbaro" in key: d_m.update({"baromabshpa" : intohpa(value,2)})
     elif "mph" in key: d_m.update({key.replace("mph","kmh") : mphtokmh(value,2)})
-    elif "maxdailygust" in key: d_m.update({"maxdailygust" : mphtokmh(value,2)})
+    elif "maxdailygust" in key:                                # v0.10: save as last good maxdailygust if lower than defined limit
+      last_maxdailygust = value
+      d_m.update({"maxdailygustkmh" : mphtokmh(value,2)})
+    elif key == "windrun": d_m.update({"windrunkm" : mphtokmh(value,2)})
     elif "rainin" in key: d_m.update({key.replace("rainin","rainmm") : intomm(value,2)})
     elif "rainratein" in key: d_m.update({key.replace("rainratein","rainratemm") : intomm(value,2)})
     elif "dateutc" in key:
@@ -711,16 +861,34 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
       d_m.update({key : value})
     # v0.09 WS90 compatibility - convert WS90 rain values to metric values
     elif "rain_piezo" in key: d_m.update({key.replace("rain_piezo","rain_piezomm") : intomm(value,2)})
+    elif key == "runtime":
+      d_m.update({key : value})
+      try: is_runtime = int(value)
+      except ValueError: is_runtime = 0                        # perhaps is_runtime = last_runtime would be better?
+      if REBOOT_WARNING and is_runtime <= last_runtime and last_runtime > 0:         # reboot detected - warn via log, push notification and UDP
+        dailyRebootCounter += 1                                # daily boot count increase
+        #dailyRebootCounter += 1 if thisDay(min_max["minmax_init"]) else 1          # daily boot count increase
+        rebootDetected = True
+        logPrint("<WARNING> reboot of weather station detected (" + str(dailyRebootCounter) + ") - last runtime: " + str(last_runtime) + " current runtime: " + value)
+        sendUDP("SID=" + defSID + " rebootwarning=1 dailyboot=" + str(dailyRebootCounter) + " time=" + str(loxTime(time.time())))
+        pushPrint("<WARNING> reboot of weather station detected (" + str(dailyRebootCounter) + ") - last runtime: " + str(last_runtime) + " current runtime: " + value)
+      if EVAL_VALUES: d_m.update({"dailyboot" : str(dailyRebootCounter)})
+      last_runtime = is_runtime
     else:
       d_m.update({key : value})
   # to save some states in Config-file later
   global CONFIG_FILE
   config = readConfigFile(CONFIG_FILE)
   saved_lightning_time = config.get('Status','last_lightning_time',fallback="")
-  try: saved_lightning_time = int(saved_lightning_time)
-  except ValueError: saved_lightning_time = 0
+  saved_lightning_time = intFallback(saved_lightning_time,0)
   if not config.has_section("Status"): config.add_section('Status')
   haveToSave = False
+
+  # v0.10 save the daily reboot counter to config file
+  if dailyInit or (REBOOT_WARNING and rebootDetected):
+    config.set("Status","dailyRebootCounter",str(dailyRebootCounter))
+    haveToSave = True
+    dailyInit = False                                          # init done - set to False until midnight
 
   if SENSOR_WARNING:
     global inSensorWarning
@@ -745,12 +913,12 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
         config.set("Status","SensorIsMissed",SensorIsMissed)
         haveToSave = True
       elif not preSensorWarning:
-        if myDebug: logPrint("<DEBUG> preWarning - mandatory sensor value " + SensorIsMissed + " missing; next time warn.")
+        debugPrint("preWarning - mandatory sensor value " + SensorIsMissed + " missing; next time warn.")
         preSensorWarning = True
     elif inSensorWarning:
-      logPrint("<OK> mandatory data for sensor " + SensorIsMissed + " is back again")
+      logPrint("<RESTORED> mandatory data for sensor " + SensorIsMissed + " is back again")
       sendUDP("SID=" + defSID + " sensorwarning=0 back=" + SensorIsMissed + " time=" + str(loxTime(time.time())))
-      pushPrint("<OK> mandatory data for sensor " + SensorIsMissed + " is back again")
+      pushPrint("<RESTORED> mandatory data for sensor " + SensorIsMissed + " is back again")
       config.remove_option("Status","inSensorWarning")
       config.remove_option("Status","SensorIsMissed")
       haveToSave = True
@@ -762,7 +930,7 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
   # new in v0.06 - battery-warning
   if BATTERY_WARNING:
     global inBatteryWarning
-    SENSOR = checkBattery(d_m,last_FWver)
+    SENSOR = checkBattery(d_m,last_FWver,battex_arr)
     if SENSOR != "":
       if not inBatteryWarning:
         logPrint("<WARNING> battery level for sensor(s) " + SENSOR + " is critical - please swap battery")
@@ -772,9 +940,9 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
         config.set("Status","inBatteryWarning",str(inBatteryWarning))
         haveToSave = True
     elif inBatteryWarning:
-      logPrint("<OK> battery level for all sensors is ok again")
+      logPrint("<RESTORED> battery level for all sensors is ok again")
       sendUDP("SID=" + defSID + " batterywarning=0 time=" + str(loxTime(time.time())))
-      pushPrint("<OK> battery level for all sensors is ok again")
+      pushPrint("<RESTORED> battery level for all sensors is ok again")
       config.remove_option("Status","inBatteryWarning")
       haveToSave = True
       inBatteryWarning = False
@@ -793,9 +961,9 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
         config.set("Status","inLeakageWarning",str(inLeakageWarning))
         haveToSave = True
     elif inLeakageWarning:
-      logPrint("<OK> leakage remedied - leakage warning for all sensors cancelled")
+      logPrint("<RESTORED> leakage remedied - leakage warning for all sensors cancelled")
       sendUDP("SID=" + defSID + " leakagewarning=0 time=" + str(loxTime(time.time())))
-      pushPrint("<OK> leakage remedied - leakage warning for all sensors cancelled")
+      pushPrint("<RESTORED> leakage remedied - leakage warning for all sensors cancelled")
       config.remove_option("Status","inLeakageWarning")
       haveToSave = True
       inLeakageWarning = False
@@ -818,9 +986,9 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
         config.set("Status","inCO2Warning",str(inCO2Warning))
         haveToSave = True
     elif inCO2Warning and co2 != "null" and co2_num <= co2_lvl-(co2_lvl/10):       # 10% hysteresis - value must be 10% below the limit value to cancel the warning
-      logPrint("<OK> CO2 value is ok now (" + co2 + "/" + CO2_WARNLEVEL + ") - CO2 warning cancelled")
+      logPrint("<RESTORED> CO2 value is ok now (" + co2 + "/" + CO2_WARNLEVEL + ") - CO2 warning cancelled")
       sendUDP("SID=" + defSID + " co2warning=0 co2current=" + co2 + " co2warnlevel=" + CO2_WARNLEVEL + " time=" + str(loxTime(time.time())))
-      pushPrint("<OK> CO2 value is ok now (" + co2 + "/" + CO2_WARNLEVEL + ") - CO2 warning cancelled")
+      pushPrint("<RESTORED> CO2 value is ok now (" + co2 + "/" + CO2_WARNLEVEL + ") - CO2 warning cancelled")
       inCO2Warning = False
       config.remove_option("Status","inCO2Warning")
       haveToSave = True
@@ -901,8 +1069,8 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
         last_hpaTrend3h = hpaTrend3h
       if myDebug:
         doNothing()
-        logPrint("<DEBUG> 1-old: " + str(ago1h_pos).rjust(3) + " " + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(ago1h_time)) + " " + str(ago1h_baromrelhpa) + "hPa now: " + str(cur_pos) + " " + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(now_time)) + " " + str(baromrelhpa) + "hPa diff1: " + str(time_diff1h).rjust(5) + "sec " + str(CurDiff1h) + "hPa" + " trend1: " + str(hpaTrend1h) + " <: " + str(t1h_kl) + " =: " + str(t1h_gl) + " >: " + str(t1h_gr))
-        logPrint("<DEBUG> 3-old: " + str(ago3h_pos).rjust(3) + " " + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(ago3h_time)) + " " + str(ago3h_baromrelhpa) + "hPa now: " + str(cur_pos) + " " + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(now_time)) + " " + str(baromrelhpa) + "hPa diff3: " + str(time_diff3h).rjust(5) + "sec " + str(CurDiff3h) + "hPa" + " trend3: " + str(hpaTrend3h) + " <: " + str(t3h_kl) + " =: " + str(t3h_gl) + " >: " + str(t3h_gr))
+        logPrint("<DEBUG> 1-old: " + str(ago1h_pos).rjust(3) + " " + time.strftime(DT_FORMAT,time.localtime(ago1h_time)) + " " + str(ago1h_baromrelhpa) + "hPa now: " + str(cur_pos) + " " + time.strftime(DT_FORMAT,time.localtime(now_time)) + " " + str(baromrelhpa) + "hPa diff1: " + str(time_diff1h).rjust(5) + "sec " + str(CurDiff1h) + "hPa" + " trend1: " + str(hpaTrend1h) + " <: " + str(t1h_kl) + " =: " + str(t1h_gl) + " >: " + str(t1h_gr))
+        logPrint("<DEBUG> 3-old: " + str(ago3h_pos).rjust(3) + " " + time.strftime(DT_FORMAT,time.localtime(ago3h_time)) + " " + str(ago3h_baromrelhpa) + "hPa now: " + str(cur_pos) + " " + time.strftime(DT_FORMAT,time.localtime(now_time)) + " " + str(baromrelhpa) + "hPa diff3: " + str(time_diff3h).rjust(5) + "sec " + str(CurDiff3h) + "hPa" + " trend3: " + str(hpaTrend3h) + " <: " + str(t3h_kl) + " =: " + str(t3h_gl) + " >: " + str(t3h_gr))
         logPrint("<DEBUG> inStormWarning: " + str(inStormWarning) + " 3h: " + str(inStorm3h) + " now: " + str(int(time.time())) + " inStormTime: " + str(inStormTime) + " expire: " + str(STORM_EXPIRE*60))
       # 2do: Unterscheidung zw. 1h und 3h einbauen!
       if abs(CurDiff1h) > STORM_WARNDIFF or abs(CurDiff3h) > STORM_WARNDIFF3H:
@@ -910,22 +1078,21 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
         if inStormWarnStart == 0: inStormWarnStart = inStormTime # save initial Warn-time
         # define reason for warning - instorm3h if CurDiff3h > STORM_WARNDIFF3H
         inStorm3h = True if abs(CurDiff3h) > STORM_WARNDIFF3H else False
-        if myDebug:
-          if inStorm3h:
-            logPrint("<DEBUG> stormWarning: " + str(inStormWarning) + " agotime3 " + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(ago3h_time)) +": " + str(ago3h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(round(abs(CurDiff3h),3)) + "hPa" + " (> " + str(STORM_WARNDIFF) + ") inStormTime: " + str(inStormTime) + " StartWarning: " + str(inStormWarnStart))
-          else:
-            logPrint("<DEBUG> stormWarning: " + str(inStormWarning) + " agotime1 " + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(ago1h_time)) +": " + str(ago1h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(round(abs(CurDiff1h),3)) + "hPa" + " (> " + str(STORM_WARNDIFF) + ") inStormTime: " + str(inStormTime) + " StartWarning: " + str(inStormWarnStart))
+        if inStorm3h:
+          debugPrint("stormWarning: " + str(inStormWarning) + " agotime3 " + time.strftime(DT_FORMAT,time.localtime(ago3h_time)) +": " + str(ago3h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(round(abs(CurDiff3h),3)) + "hPa" + " (> " + str(STORM_WARNDIFF) + ") inStormTime: " + str(inStormTime) + " StartWarning: " + str(inStormWarnStart))
+        else:
+          debugPrint("stormWarning: " + str(inStormWarning) + " agotime1 " + time.strftime(DT_FORMAT,time.localtime(ago1h_time)) +": " + str(ago1h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(round(abs(CurDiff1h),3)) + "hPa" + " (> " + str(STORM_WARNDIFF) + ") inStormTime: " + str(inStormTime) + " StartWarning: " + str(inStormWarnStart))
         if not inStormWarning:
           if inStorm3h:
             what = "dropped" if CurDiff3h < 0 else "risen"
-            logPrint("<WARNING> possible storm - air pressure has " + what + " more than " + str(STORM_WARNDIFF3H) + " hPa within three hours! (" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(ago3h_time)) +": " + str(ago3h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff3h) + "hPa"")")
+            logPrint("<WARNING> possible storm - air pressure has " + what + " more than " + str(STORM_WARNDIFF3H) + " hPa within three hours! (" + time.strftime(DT_FORMAT,time.localtime(ago3h_time)) +": " + str(ago3h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff3h) + "hPa"")")
             sendUDP("SID=" + defSID + " stormwarning=1 time=" + str(loxTime(ago3h_time)))
-            pushPrint("<WARNING> possible storm - air pressure has " + what + " more than " + str(STORM_WARNDIFF3H) + " hPa within three hours! (" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(ago3h_time)) +": " + str(ago3h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff3h) + "hPa"")")
+            pushPrint("<WARNING> possible storm - air pressure has " + what + " more than " + str(STORM_WARNDIFF3H) + " hPa within three hours! (" + time.strftime(DT_FORMAT,time.localtime(ago3h_time)) +": " + str(ago3h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff3h) + "hPa"")")
           else:
             what = "dropped" if CurDiff1h < 0 else "risen"
-            logPrint("<WARNING> possible storm - air pressure has " + what + " more than " + str(STORM_WARNDIFF) + " hPa within one hour! (" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(ago1h_time)) +": " + str(ago1h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff1h) + "hPa"")")
+            logPrint("<WARNING> possible storm - air pressure has " + what + " more than " + str(STORM_WARNDIFF) + " hPa within one hour! (" + time.strftime(DT_FORMAT,time.localtime(ago1h_time)) +": " + str(ago1h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff1h) + "hPa"")")
             sendUDP("SID=" + defSID + " stormwarning=1 time=" + str(loxTime(ago1h_time)))
-            pushPrint("<WARNING> possible storm - air pressure has " + what + " more than " + str(STORM_WARNDIFF) + " hPa within one hour! (" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(ago1h_time)) +": " + str(ago1h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff1h) + "hPa"")")
+            pushPrint("<WARNING> possible storm - air pressure has " + what + " more than " + str(STORM_WARNDIFF) + " hPa within one hour! (" + time.strftime(DT_FORMAT,time.localtime(ago1h_time)) +": " + str(ago1h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff1h) + "hPa"")")
           inStormWarning = True
           config.set("Status","inStormWarning",str(inStormWarning))
           config.set("Status","inStorm3h",str(inStorm3h))
@@ -936,13 +1103,13 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
         now = int(time.time())
         inStormDuration = int((now-inStormWarnStart)/60)         # now better?
         if inStorm3h:
-          logPrint("<OK> storm warning cancelled after " + str(inStormDuration) + " minutes (" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(ago3h_time)) +": " + str(ago3h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff3h) + "hPa"")")
+          logPrint("<RESTORED> storm warning cancelled after " + str(inStormDuration) + " minutes (" + time.strftime(DT_FORMAT,time.localtime(ago3h_time)) +": " + str(ago3h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff3h) + "hPa"")")
           sendUDP("SID=" + defSID + " stormwarning=0 time=" + str(loxTime(now)) + " start=" + str(loxTime(inStormWarnStart)) + " end=" + str(loxTime(now)) + " last=" + str(loxTime(ago3h_time)))
-          pushPrint("<OK> storm warning cancelled after " + str(inStormDuration) + " minutes (" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(ago3h_time)) +": " + str(ago3h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff3h) + "hPa"")")
+          pushPrint("<RESTORED> storm warning cancelled after " + str(inStormDuration) + " minutes (" + time.strftime(DT_FORMAT,time.localtime(ago3h_time)) +": " + str(ago3h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff3h) + "hPa"")")
         else:
-          logPrint("<OK> storm warning cancelled after " + str(inStormDuration) + " minutes (" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(ago1h_time)) +": " + str(ago1h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff1h) + "hPa"")")
+          logPrint("<RESTORED> storm warning cancelled after " + str(inStormDuration) + " minutes (" + time.strftime(DT_FORMAT,time.localtime(ago1h_time)) +": " + str(ago1h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff1h) + "hPa"")")
           sendUDP("SID=" + defSID + " stormwarning=0 time=" + str(loxTime(now)) + " start=" + str(loxTime(inStormWarnStart)) + " end=" + str(loxTime(now)) + " last=" + str(loxTime(ago1h_time)))
-          pushPrint("<OK> storm warning cancelled after " + str(inStormDuration) + " minutes (" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(ago1h_time)) +": " + str(ago1h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff1h) + "hPa"")")
+          pushPrint("<RESTORED> storm warning cancelled after " + str(inStormDuration) + " minutes (" + time.strftime(DT_FORMAT,time.localtime(ago1h_time)) +": " + str(ago1h_baromrelhpa) + " --> " + str(baromrelhpa) + " diff: " + str(CurDiff1h) + "hPa"")")
         inStormWarnStart = 0
         config.remove_option("Status","inStormWarning")
         config.remove_option("Status","inStorm3h")
@@ -961,20 +1128,11 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
     global ldsum
     global ldavg
     # get current values
-    try:
-      lightning_num = int(getfromDict(d_m,["lightning_num","lightning_day"]))        # lightning-count per day (automatically reset at 00:00)
-    except ValueError:
-      lightning_num = 0
-    try:
-      lightning = int(getfromDict(d_m,["lightning","lightning_distance"]))           # distance in km of last lightning-event
-    except ValueError:
-      lightning = 0
-    try:
-      lightning_time = int(getfromDict(d_m,["lightning_time"]))                      # time of last lightning-event - could be empty!
-    except ValueError:
-      lightning_time = 0
+    lightning_num = intFallback(getfromDict(d_m,["lightning_num","lightning_day"]),0)   # lightning-count per day (automatically reset at 00:00)
+    lightning = intFallback(getfromDict(d_m,["lightning","lightning_distance"]),0)   # distance in km of last lightning-event
+    lightning_time = intFallback(getfromDict(d_m,["lightning_time"]),0)              # time of last lightning-event - could be empty!
     if inTSWarning and lightning_num < inTS_lightning_num:                           # overnight thunderstorm - lightning_num was reset to 0 at midnight
-      if myDebug: logPrint("<DEBUG> lightning_num (" + str(lightning_num) + ") < inTS_lightning_num (" + str(inTS_lightning_num) + ") - overnight thunderstorm")
+      debugPrint("lightning_num (" + str(lightning_num) + ") < inTS_lightning_num (" + str(inTS_lightning_num) + ") - overnight thunderstorm")
       inTS_lightning_num += lightning_num
     elif inTSWarning:                                                                # while in warning state
       inTS_lightning_num = lightning_num
@@ -991,9 +1149,9 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
           ldmax = lightning
           ldsum = lightning
           inTSWarnStart = int(time.time())
-          logPrint("<WARNING> thunderstorm recognized (start=" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(inTSWarnStart)) +")")
+          logPrint("<WARNING> thunderstorm recognized (start=" + time.strftime(DT_FORMAT,time.localtime(inTSWarnStart)) +")")
           sendUDP("SID=" + defSID + " tswarning=1 time=" + str(loxTime(inTSWarnStart)))
-          pushPrint("<WARNING> thunderstorm recognized (start=" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(inTSWarnStart)) +")")
+          pushPrint("<WARNING> thunderstorm recognized (start=" + time.strftime(DT_FORMAT,time.localtime(inTSWarnStart)) +")")
           inTSWarning = True
           config.set("Status","inTSWarning",str(inTSWarning))
           config.set("Status","inTSWarnStart",str(inTSWarnStart))
@@ -1010,11 +1168,11 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
       last_lightning = lightning
     elif inTSWarning and now >= last_lightning_time + TSTORM_EXPIRE*60:              # there was no lightning and expire time is over
       inTSWarnDuration = int((now-inTSWarnStart)/60)    # now better?
-      logPrint("<OK> thunderstorm warning cancelled after " + str(inTSWarnDuration) + " minutes (start=" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(inTSWarnStart)) + " end=" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(now)) + " last=" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(last_lightning_time)) + " lcount=" + str(inTS_lightning_num) + " ldmin=" + str(ldmin) + " ldmax=" + str(ldmax) + ")")
+      logPrint("<RESTORED> thunderstorm warning cancelled after " + str(inTSWarnDuration) + " minutes (start=" + time.strftime(DT_FORMAT,time.localtime(inTSWarnStart)) + " end=" + time.strftime(DT_FORMAT,time.localtime(now)) + " last=" + time.strftime(DT_FORMAT,time.localtime(last_lightning_time)) + " lcount=" + str(inTS_lightning_num) + " ldmin=" + str(ldmin) + " ldmax=" + str(ldmax) + ")")
 #" ldavg=" + str(round(ldavg,1)) + ")")
       sendUDP("SID=" + defSID + " tswarning=0 time=" + str(loxTime(now)) + " start=" + str(loxTime(inTSWarnStart)) + " end=" + str(loxTime(now)) + " last=" + str(loxTime(last_lightning_time)) + " lcount=" + str(inTS_lightning_num) + " ldmin=" + str(ldmin) + " ldmax=" + str(ldmax))
 # + " ldavg=" + str(round(ldavg,1)))
-      pushPrint("<OK> thunderstorm warning cancelled after " + str(inTSWarnDuration) + " minutes (start=" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(inTSWarnStart)) + " end=" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(now)) + " last=" + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(last_lightning_time)) + " lcount=" + str(inTS_lightning_num) + " ldmin=" + str(ldmin) + " ldmax=" + str(ldmax) + ")")
+      pushPrint("<RESTORED> thunderstorm warning cancelled after " + str(inTSWarnDuration) + " minutes (start=" + time.strftime(DT_FORMAT,time.localtime(inTSWarnStart)) + " end=" + time.strftime(DT_FORMAT,time.localtime(now)) + " last=" + time.strftime(DT_FORMAT,time.localtime(last_lightning_time)) + " lcount=" + str(inTS_lightning_num) + " ldmin=" + str(ldmin) + " ldmax=" + str(ldmax) + ")")
 #" ldavg=" + str(round(ldavg,1)) + ")")
       config.remove_option("Status","inTSWarning")
       config.remove_option("Status","inTSWarnStart")
@@ -1028,14 +1186,14 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
       ldavg = float(ldsum / inTS_lightning_num)
     else:
       ldavg = 0
-    if myDebug: logPrint("<DEBUG> inTSWarning: " + str(inTSWarning) + " cnt: " + str(lightning_num) + " dist: " + str(lightning) + " time: " + time.strftime("%d.%m.%Y %H:%M:%S",time.localtime(lightning_time)) + " lcount=" + str(inTS_lightning_num) + " ldmin=" + str(ldmin) + " ldmax=" + str(ldmax) + " ldsum=" + str(ldsum) + " ldavg=" + str(round(ldavg,1)))
+    debugPrint("inTSWarning: " + str(inTSWarning) + " cnt: " + str(lightning_num) + " dist: " + str(lightning) + " time: " + time.strftime(DT_FORMAT,time.localtime(lightning_time)) + " lcount=" + str(inTS_lightning_num) + " ldmin=" + str(ldmin) + " ldmax=" + str(ldmax) + " ldsum=" + str(ldsum) + " ldavg=" + str(round(ldavg,1)))
 
     # Gewittervorhersage; wenn Taupunkt 21,1°C (70F) überschreitet
     # only if WH57 is not present:
     #if getfromDict(d_e,["wh57batt"]) == "null":
     #try:
     #  dp = float(getfromDict(d_m,["dewptc"]))
-    #  #if myDebug: logPrint("<DEBUG> dewpoint is currently: " + str(dp) + "°C")
+    #  #debugPrint("dewpoint is currently: " + str(dp) + "°C")
     #  if dp > 21.1: logPrint("<WARNING> possible thunderstorm - dewpoint > 21.1°C (" + str(dp) + ")")
     #except ValueError:
     #  pass
@@ -1050,17 +1208,19 @@ def convertDictToMetricDict(d_e,IGNORE_EMPTY=True,LOX_TIME=True):
         config.set("Status","last_lightning_time",str(lightning_time))
         config.set("Status","last_lightning",str(lightning))
         haveToSave = True
-        if myDebug: logPrint("<DEBUG> saved lightning data " + str(lightning_time) + "/" + str(lightning) + " to config-file")
+        debugPrint("saved lightning data " + str(lightning_time) + "/" + str(lightning) + " to config-file")
     except ValueError:
       pass
 
   # save status in Config-file
   if haveToSave:
     with open(CONFIG_FILE, "w") as configfile: config.write(configfile)
-  return d_m
+  debugPrint("convertDictToMetricDict stop")
+  return d_m                                                                   # convertDictToMetricDict
 
 def forwardDictToMeteoTemplate(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys):
   # convert incoming metric dict to MeteoTemplate
+  debugPrint("forwardDictToMeteoTemplate "+nr+" start")
   d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
   if not "PASS=" in url: url += "?PASS="+str(fwd_pwd) + "&"
   outstr = ""
@@ -1124,8 +1284,9 @@ def forwardDictToMeteoTemplate(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,rem
       outstr += "PP1=" + str(value) + "&"
     elif key == "co2":
       outstr += "CO2_1=" + str(value) + "&"
-    elif "leafwetness_ch" in key and len(key) == 15:
-      outstr += "LW" + str(key[14]) + "=" + str(leafTo15(value)) + "&"
+    elif ("leafwetness_ch" in key and len(key) == 15) or ("leafwetness" in key and len(key) == 12) or key == "leafwetness":
+      lwnr = "1" if key == "leafwetness" else str(key[-1])
+      outstr += "LW" + lwnr + "=" + str(leafTo15(value)) + "&"
     elif key == "sunhours":
       outstr += "SS=" + str(value) + "&"
     elif key == "lightning" or key == "lightning_dist":
@@ -1179,16 +1340,22 @@ def forwardDictToMeteoTemplate(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,rem
     elif "leaf_batt" in key and len(key) == 10:
       battval = "OK" if value == "0" else "LOW"
       outstr += "LW" + str(key[9]) + "BAT=" + battval + "&"
+    elif "batt_lw" in key and len(key) == 8:                   # Ambient Weather
+      battval = "OK" if value == "1" else "LOW"
+      outstr += "LW" + str(key[7]) + "BAT=" + battval + "&"
     elif key == "softwaretype":
       outstr += "SW=" + str(value) + "&"
     else:
-      if myDebug: logPrint("<DEBUG> forwardDictToMeteoTemplate: unknown field: " + str(key) + " with value: " + str(value))
+      #debugPrint("forwardDictToMeteoTemplate: unknown field: " + str(key) + " with value: " + str(value))
+      doNothing()
   if len(outstr) > 0 and outstr[-1] == "&": outstr = outstr[:-1]
   # add programname and version as SW (like weewx does)
   if "&SW=" not in outstr: outstr += "&SW="+prgname+"-"+prgver
   if script != "":
     outstr = modExec(nr, script, outstr)                       # modify outstr with external script before sending
-    if outstr == execOnly: return                              # just run the exec-script but do not forward the string
+    if outstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
   ret = ""
   okstr = "<ERROR> "
   # v0.08 multiple attempts httpTries (3)
@@ -1208,13 +1375,19 @@ def forwardDictToMeteoTemplate(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,rem
     v += 1                                                     # count of tries
     if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
   # done
+  # v0.10 queue data if service is unavailable
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
   tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
   if sndlog: sndPrint(okstr + "FWD-"+nr+": " + url + outstr + " : " + ret + tries)
-  return
+  debugPrint("forwardDictToMeteoTemplate "+nr+" stop")
+  return                                                       # forwardDictToMeteoTemplate
 
 def forwardDictToWC(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys):
   # convert incoming metric dict to WeatherCloud
   # wid, key, tempin, humin, bar, temp, hum, dew, chill, heat, solarrad, uvi, wspd, wspdavg, windgustmph, wspdhi, wdir, wdiravg, rainrate, rain, date, time, type, ver
+  debugPrint("forwardDictToWC "+nr+" start")
   d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
   if not "wid=" in url and not "key=" in url: url += "?wid="+str(fwd_sid)+"&key="+str(fwd_pwd) + "&"
   outstr = ""
@@ -1286,41 +1459,66 @@ def forwardDictToWC(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys):
       outstr += "humin=" + str(value) + "&"
     elif "temp" in key and len(key) == 6 and key[-1] == "c":                  
       val = round(float(value)*10)
-      outstr += "temp" + str(key[4]) + "=" + str(val) + "&"
-      # according API-doc v0.7 this should be:
-      #outstr += "temp" + "0" + str(int(key[4])+1) + "=" + str(val) + "&"
+      outstr += "temp" + "0" + str(int(key[4])+1) + "=" + str(val) + "&"
     elif "humidity" in key and len(key) == 9:
-      outstr += "hum" + str(key[8]) + "=" + str(value) + "&"
-      # according API-doc v0.7 this should be:
-      #outstr += "hum" + "0" + str(int(key[8])+1) + "=" + str(value) + "&"
+      outstr += "hum" + "0" + str(int(key[8])+1) + "=" + str(value) + "&"
     elif "soilmoisture" in key and len(key) == 13:
       if key[12] == "1":
         outstr += "soilmoist" + "=" + str(value) + "&"
       else:
         outstr += "soilmoist" + "0" + str(key[12]) + "=" + str(value) + "&"
-    # v0.07: for Ambient
+    # v0.07: for Ambient Weather
     elif "soilhum" in key and len(key) == 8:
       if key[7] == "1":
         outstr += "soilmoist" + "=" + str(value) + "&"
       else:
         outstr += "soilmoist" + "0" + str(key[7]) + "=" + str(value) + "&"
     # v0.07: WN35-compatibility
-    elif "leafwetness_ch" in key and len(key) == 15:
-      if key[14] == "1":
+    elif ("leafwetness_ch" in key and len(key) == 15) or ("leafwetness" in key and len(key) == 12) or key == "leafwetness":
+      if key[-1] == "1" or key == "leafwetness":
         outstr += "leafwet" + "=" + str(leafTo15(value)) + "&"
       else:
-        outstr += "leafwet" + "0" + str(key[14]) + "=" + str(leafTo15(value)) + "&"
+        outstr += "leafwet" + "0" + str(key[-1]) + "=" + str(leafTo15(value)) + "&"
     # v0.08: WH45 air quality sensor
     elif "pm25_co2" in key or "pm25_in_aqin" in key:
-      outstr += "pm25" + "=" + str(value) + "&"
+      outstr += "pm25" + "=" + str(round(float(value))) + "&"
     elif "pm10_co2" in key or "pm10_in_aqin" in key:
-      outstr += "pm10" + "=" + str(value) + "&"
+      outstr += "pm10" + "=" + str(round(float(value))) + "&"
     elif "pm25_AQI_co2" in key:
-      outstr += "aqi" + "=" + str(value) + "&"
+      outstr += "aqi" + "=" + str(round(float(value))) + "&"
     elif key == "co2" or key == "co2_in_aqin":
-      outstr += "co2" + "=" + str(value) + "&"
+      outstr += "co2" + "=" + str(round(float(value))) + "&"
+    # v0.10 use WH41/WH43 #1 if no WH45 present
+    elif key == "pm25_ch1" and not "pm25_co2" in d:
+      outstr += "pm25" + "=" + str(round(float(value))) + "&"
+    elif key == "pm25_AQI_ch1" and not "pm25_AQI_co2" in d:
+      outstr += "aqi" + "=" + str(round(float(value))) + "&"
+    # v0.10: not yet available on Ecowitt - just for FWD_REMAP
+    elif key == "co" or key == "co_in_aqin":
+      outstr += "co" + "=" + str(round(float(value))) + "&"
+    elif key == "no" or key == "no_in_aqin":
+      outstr += "no" + "=" + str(round(float(value))) + "&"
+    elif key == "no2" or key == "no2_in_aqin":
+      outstr += "no2" + "=" + str(round(float(value))) + "&"
+    elif key == "so2" or key == "so2_in_aqin":
+      outstr += "so2" + "=" + str(round(float(value))) + "&"
+    elif key == "o3" or key == "o3_in_aqin":
+      outstr += "o3" + "=" + str(round(float(value))) + "&"
+    elif key == "et":
+      val = round(float(value)*10)
+      outstr += "et=" + str(val) + "&"
+    elif key == "pwrsply":
+      val = round(float(value)*10)
+      outstr += "pwrsply=" + str(val) + "&"
+    elif key == "battery":
+      val = round(float(value)*10)
+      outstr += "battery=" + str(val) + "&"
+    elif key == "noise":
+      val = round(float(value)*10)
+      outstr += "noise=" + str(val) + "&"
     else:
-      if myDebug: logPrint("<DEBUG> forwardDictToWC: unknown field: " + str(key) + " with value: " + str(value))
+      #debugPrint("forwardDictToWC: unknown field: " + str(key) + " with value: " + str(value))
+      doNothing()
   if len(outstr) > 0 and outstr[-1] == "&": outstr = outstr[:-1]
   # calculate dew & heatindex for inside
   if EVAL_VALUES and tempinc != -9999 and humidityin != -9999:
@@ -1329,11 +1527,14 @@ def forwardDictToWC(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys):
       heatin = int(float(ftoc(getHeatIndex(float(ctof(tempinc,1)), float(humidityin)),1))*10)
       outstr += "&dewin=" + str(dewin) + "&heatin=" + str(heatin)
     except ValueError: pass
-  #if not ("&type=" in outstr and "&ver=" in outstr):
-  outstr += "&type=" + prgname + "&ver=" + prgver
+  #outstr += "&type=" + prgname + "&ver=" + prgver
+  # v0.10: acc. API doc 1.0 send software/softwareid instead
+  outstr += "&software="+ prgname + "_" + prgver + "&softwareid=0087a003eb8b"
   if script != "":
     outstr = modExec(nr, script, outstr)                       # modify outstr with external script before sending
-    if outstr == execOnly: return                              # just run the exec-script but do not forward the string
+    if outstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
   ret = ""
   okstr = "<ERROR> "
   # v0.08 multiple attempts httpTries (3)
@@ -1345,11 +1546,10 @@ def forwardDictToWC(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys):
       #r = requests.get(url+outstr,headers=headers,timeout=httpTimeOut)
       r = requests.get(url+outstr,timeout=httpTimeOut)
       # WC responds status_code 200 in any case - real return code is in text
-      ret = r.text.strip()
-      if ret != "200":
-        okstr = "<ERROR> "
-        v = 400
-      else: okstr = ""
+      # optimized
+      ret = str(r.status_code) if r.status_code != 200 else r.text.strip()  # use text on 200
+      okstr = "<ERROR> " if ret != "200" else ""               # connection ok only on 200 in text
+      if r.status_code == 200 and ret != "200": v = 400        # don't try again on WC error
     except requests.exceptions.Timeout as err:
       ret = "TIMEOUT"
     except requests.exceptions.ConnectionError as err:
@@ -1359,9 +1559,14 @@ def forwardDictToWC(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys):
     v += 1                                                     # count of tries
     if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
   # done
+  # v0.10 queue data if service is unavailable
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
   tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
   if sndlog: sndPrint(okstr + "FWD-"+nr+": " + url + outstr + " : " + ret + tries)
-  return
+  debugPrint("forwardDictToWC "+nr+" stop")
+  return                                                       # forwardDictToWC
 
 def dictToString(d,sep,klammern=False,ignoreKeys={},ignoreValues={},withkey=True,withvalue=True,hideSpace=False):
   s = ""
@@ -1414,7 +1619,7 @@ def lineToCSV(d, felder):
         if i < len(a)-1: s += sep
       else:
         if i < len(a)-1: s += ""+sep
-    s = time.strftime("%d.%m.%Y %H:%M:%S") + sep + s
+    s = time.strftime(DT_FORMAT) + sep + s
   return s
 
 def checkLBP_PATH(pname,pdir):
@@ -1457,6 +1662,7 @@ def replaceSpace(s):                                           # replace all " "
 
 def sendUDP(UDPstr):
   # Leerzeichen innerhalb von doppelten Anfuehrungszeichen muessen mit %20 ersetzt werden, damit nicht innerhalb eines values getrennt wird
+  debugPrint("sendUDP start")
   if UDP_ENABLE:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -1488,8 +1694,10 @@ def sendUDP(UDPstr):
       except:
         logPrint("<ERROR> sendUDP to "+LOX_IP+":"+LOX_PORT+" im except!")
     if sndlog: sndPrint("UDP: " + UDPstr)
+  debugPrint("sendUDP stop")
 
 def forwardDictToUDP(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys,sep=" "):
+  debugPrint("forwardDictToUDP "+nr+" start")
   d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
   #d = d_in.copy()                                              # create a separate dict to allow changes there
   outstr = "SID=" + defSID + sep
@@ -1520,7 +1728,9 @@ def forwardDictToUDP(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapK
     outstr += sep+"running=" + str(int(wsconnected)) + sep + "wswarning=" + str(int(inWStimeoutWarning)) + sep + "sensorwarning=" + str(int(inSensorWarning)) + sw_what + sep + "batterywarning=" + str(int(inBatteryWarning)) + sep + "stormwarning=" + str(int(inStormWarning)) + sep + "tswarning=" + str(int(inTSWarning)) + sep + "updatewarning=" + str(int(updateWarning)) + sep + "leakwarning=" + str(int(inLeakageWarning)) + sep + "co2warning=" + str(int(inCO2Warning)) + sep + "intvlwarning=" + str(int(inIntervalWarning))
   if script != "":
     outstr = modExec(nr, script, outstr)                       # modify outstr with external script before sending
-    if outstr == execOnly: return                              # just run the exec-script but do not forward the string
+    if outstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
   # addr und port trennen
   addr = url.split(":",1)
   sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
@@ -1533,13 +1743,21 @@ def forwardDictToUDP(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapK
     ret = str(err.args[0]) + " : " +err.args[1]
     okstr = "<ERROR> "
     pass
+  # done
+  # v0.10 queue data if service is unavailable - only ONE attempt
+  v = 1 if ret == "OK" else httpTries
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
   if sndlog: sndPrint(okstr + "FWD-"+nr+ ": " + url + " UDP: " + outstr + " : " + ret)
-  return
+  debugPrint("forwardDictToUDP "+nr+" stop")
+  return                                                       # forwardDictToUDP
 
 def forwardStringToUDP(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys):
   # sendet eingehenden String payload separiert mit sep per UDP an addr:port (url)
   # used by RAWUDP
   #d = stringToDict(payload,"&")
+  debugPrint("forwardStringToUDP "+nr+" start")
   d = remappedDict(stringToDict(payload,"&"),remapKeys,nr)     # remap keys in current dictionary
   if status: d.update(addStatusToDict(d, True))                # append status to the dict d if set
   outstr = ""
@@ -1553,7 +1771,9 @@ def forwardStringToUDP(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,r
   if len(outstr) > 0 and outstr[-1] == "&": outstr = outstr[:-1]
   if script != "":
     outstr = modExec(nr, script, outstr)                       # modify outstr with external script before sending
-    if outstr == execOnly: return                              # just run the exec-script but do not forward the string
+    if outstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
   # addr und port trennen
   addr = url.split(":",1)
   sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
@@ -1566,8 +1786,18 @@ def forwardStringToUDP(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,r
     ret = str(err.args[0]) + " : " +err.args[1]
     okstr = "<ERROR> "
     pass
+  # done
+  # v0.10 queue data if service is unavailable - there's only one attempt!
+  v = httpTries
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
   if sndlog: sndPrint(okstr + "FWD-"+nr+": " + url + " UDP: " + outstr + " : " + ret)
-  return
+  debugPrint("forwardStringToUDP "+nr+" stop")
+  return                                                       # forwardStringToUDP
+
+def isBlacklisted(key):                                        # blacklist for spread, signal
+  return bool((key == "spread" or key == "spreadin" or (key[:6] == "spread" and len(key) == 7) or key == "spread_co2") or (key[:2] == "wh" and key.find("sig") > 0))
 
 def forwardStringToWU(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys):
   # wandelt eingehenden String payload ins WU-Format und versendet url per get
@@ -1575,13 +1805,14 @@ def forwardStringToWU(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,re
   #if not "ID=" in url and not "PASSWORD=" in url: url += "?ID="+str(fwd_sid)+"&PASSWORD="+str(fwd_pwd) + "&"
   #if not "action=" in url: url += "action=updateraw" + "&"
   #d = stringToDict(payload,"&")
+  debugPrint("forwardStringToWU "+nr+" start")
   d = remappedDict(stringToDict(payload,"&"),remapKeys,nr)     # remap keys in current dictionary
   if status: d.update(addStatusToDict(d, True))                # append status to the dict d if set
   outstr = ""
   dontuse = ("PASSKEY","PASSWORD","ID","model","freq")
   ignoreValues=["-9999","None","null"]
   for key,value in d.items():
-    if key in ignoreKeys or key in dontuse or (IGNORE_EMPTY and value in ignoreValues):
+    if key in ignoreKeys or key in dontuse or (IGNORE_EMPTY and value in ignoreValues) or isBlacklisted(key):
       None
     elif key == "stationtype":
       outstr += "softwaretype=" + str(value) + "&"
@@ -1625,17 +1856,32 @@ def forwardStringToWU(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,re
     elif "soilhum" in key:
       outstr += key.replace("soilhum","soilmoisture") + "=" + str(value) + "&"
     # v0.07: WN35-compatibility
-    elif "leafwetness_ch" in key and len(key) == 15:
-      outstr += "leafwetness=" + str(value) + "&" if key[-1] == "1" else "leafwetness" + key[-1] + "=" + str(value) + "&"
+    elif ("leafwetness_ch" in key and len(key) == 15) or ("leafwetness" in key and len(key) == 12):
+      outstr += "leafwetness=" + str(value) + "&" if key[-1] == "1" or key == "leafwetness" else "leafwetness" + key[-1] + "=" + str(value) + "&"
     # v0.09: WN34-compatibility
     elif "tf_ch" in key and len(key) == 6:
       outstr += "soiltempf=" + str(value) + "&" if key[-1] == "1" else "soiltemp" + key[-1] + "f" + "=" + str(value) + "&"
+    # v0.10: WU compatibility - rename only if not already in WU format
+    elif "temp" in key and len(key) == 6 and key[-1] == "f" and "PASSKEY" in payload:
+      outstr += "temp" + str(int(key[-2])+1) + "f" + "=" + str(value) + "&"
+    # v0.10: not covered from WU standard - to be in sync with temp on WH31 - rename only if not already in WU format
+    elif "humidity" in key and len(key) == 9 and "PASSKEY" in payload:
+      outstr += "humidity" + str(int(key[-1])+1) + "=" + str(value) + "&"
+    # v0.10 use WH45 data only if no WH41/WH43 #1 present
+    elif (key == "pm25_co2" or key == "pm25_in_aqin") and not ("pm25_ch1" in d.keys() or "pm25" in d.keys()):
+      outstr += "AqPM2.5=" + str(value) + "&"
+    elif (key == "pm10_co2" or key == "pm10_in_aqin") and not ("pm25_ch1" in d.keys() or "pm25" in d.keys()):
+      outstr += "AqPM10=" + str(value) + "&"
+    elif (key == "co2" or key == "co2_in_aqin") and not ("pm25_ch1" in d.keys() or "pm25" in d.keys()):
+      outstr += "AqCO2=" + str(value) + "&"                    # no official WU key!
     else:                                                      # all other values will be sent as present
       outstr += key + "=" + str(value) + "&"
   if len(outstr) > 0 and outstr[-1] == "&": outstr = outstr[:-1]
   if script != "":
     outstr = modExec(nr, script, outstr)                       # modify outstr with external script before sending
-    if outstr == execOnly: return                              # just run the exec-script but do not forward the string
+    if outstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
   ret = ""
   okstr = "<ERROR> "
   # v0.08 multiple attempts httpTries (3)
@@ -1655,20 +1901,27 @@ def forwardStringToWU(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,re
     v += 1                                                     # count of tries
     if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
   # done
-  tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
+  # v0.10 queue data if service is unavailable
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
+  tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries"+qstr+")"
   if sndlog: sndPrint(okstr + "FWD-"+nr+": " + url + outstr + " : " + ret + tries)
-  return
+  debugPrint("forwardStringToWU "+nr+" stop")
+  return                                                       # forwardStringToWU
 
-def dictToEW(d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys):
+def dictToEW(d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys,fwd_options):
   d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
   #d = d_in.copy()
   isAmbientWeather = checkAmbientWeather(d)
   outstr = ""
+  o = stringToDict(fwd_options,",",strip=True)
+  useBlacklist = mkBoolean(getfromDict(o,["blacklist"],ignoreKeys,"True"))
   dontuse = ("ID","PASSWORD","action","realtime","rtfreq","MAC")
   ignoreValues=["-9999","None","null"]
   if status: d.update(addStatusToDict(d, True))                # append status to the dict d if set
   for key,value in d.items():
-    if key in ignoreKeys or key in dontuse or (IGNORE_EMPTY and value in ignoreValues):
+    if key in ignoreKeys or key in dontuse or (IGNORE_EMPTY and value in ignoreValues) or (useBlacklist and isBlacklisted(key)):
       None
     # 2do: possibility to exchange the PASSKEY
     elif key == "PASSKEY" and fwd_sid != "":
@@ -1779,6 +2032,9 @@ def dictToEW(d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys):
     elif "battsm" in key:
       battval = 1.2 if int(value) >= 1 else 1.3
       outstr += key.replace("battsm","soilbatt") + "=" + str(battval) + "&"
+    elif "batt_lw" in key:
+      battval = 1.2 if int(value) >= 1 else 1.3
+      outstr += key.replace("batt_lw","leaf_batt") + "=" + str(battval) + "&"
     elif "batt" in key and len(key) == 5:
       if isAmbientWeather:
         battval = 0 if int(value) >= 1 else 1
@@ -1793,14 +2049,9 @@ def dictToEW(d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys):
   if len(outstr) > 0 and outstr[-1] == "&": outstr = outstr[:-1]
   # exec script to modify the outgoing string
   if script != "": outstr = modExec(nr, script, outstr)        # modify outstr with external script before sending
-  return outstr
+  return outstr                                                # dictToEW
 
-def forwardStringToEW(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys):
-  # wandelt eingehenden String payload ins Ecowitt-Format und versendet url per post
-  # wenn kein PASSKEY vorhanden, setzen!
-  d = stringToDict(payload,"&")                                # remap will be done in dictToEW
-  outstr = dictToEW(d,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys)
-  if script != "" and outstr == execOnly: return               # just run the exec-script but do not forward the string
+def sendviaPost(url, outstr):
   ret = ""
   okstr = "<ERROR> "
   # v0.08 multiple attempts httpTries (3)
@@ -1808,8 +2059,6 @@ def forwardStringToEW(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,re
   while okstr[0:7] == "<ERROR>" and v < httpTries:
     try:
       headers = {'Content-Type': 'application/x-www-form-urlencoded', 'Connection': 'Close','User-Agent': None}
-      #headers = {'Content-Type': 'application/x-www-form-urlencoded', 'Connection': 'Close', 'User-Agent': None, 'Accept': None, 'Accept-Encoding': None}
-      #r = requests.put(url,data=outstr)
       r = requests.post(url,data=outstr,headers=headers,timeout=httpTimeOut)
       ret = str(r.status_code)
       okstr = "<ERROR> " if r.status_code not in range(200,203) else ""
@@ -1823,7 +2072,23 @@ def forwardStringToEW(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,re
     v += 1                                                     # count of tries
     if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
   # done
-  tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
+  return(okstr, ret, v)
+
+def forwardStringToEW(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys,fwd_options):
+  # wandelt eingehenden String payload ins Ecowitt-Format und versendet url per post
+  # wenn kein PASSKEY vorhanden, setzen!
+  d = stringToDict(payload,"&")                                # remap will be done in dictToEW
+  outstr = dictToEW(d,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys,fwd_options)
+  if script != "" and outstr == execOnly:                      # just run the exec-script but do not forward the string
+    updateFWDstate(execOnly, nr)
+    return
+  # v0.10 now as a separate function
+  okstr, ret, v = sendviaPost(url, outstr)                     # header to be added
+  # v0.10 queue data if service is unavailable
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
+  tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries"+qstr+")"
   if sndlog: sndPrint(okstr + "FWD-"+nr+": " + url + " post: " + outstr + " : " + ret + tries)
   return
 
@@ -1845,6 +2110,7 @@ def forwardStringToAMB(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,r
   # in contrast to the description, it is sent via GET; PASSKEY is the original PASSKEY from Ecowitt (when ordering VW-ANET, the original MAC address of the Ecowitt device must be given!)
   # https://www.ambientweather.com/amwevwamweac.html
   #d = stringToDict(payload,"&")
+  debugPrint("forwardStringToAMB "+nr+" start")
   d = remappedDict(stringToDict(payload,"&"),remapKeys,nr)     # remap keys in current dictionary
   if status: d.update(addStatusToDict(d, True))                # append status to the dict d if set
   isAmbientWeather = checkAmbientWeather(d)
@@ -1852,7 +2118,7 @@ def forwardStringToAMB(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,r
   ignoreValues=["-9999","None","null"]
   dontuse = ("ID","PASSWORD","action","realtime","rtfreq")
   for key,value in d.items():
-    if key in ignoreKeys or key in dontuse or (IGNORE_EMPTY and value in ignoreValues):
+    if key in ignoreKeys or key in dontuse or (IGNORE_EMPTY and value in ignoreValues) or isBlacklisted(key):
       None
     # 2do: possibility to exchange the MAC - seems to be PASSKEY instead of MAC
     #elif key == "MAC" and fwd_sid != "":
@@ -1930,6 +2196,11 @@ def forwardStringToAMB(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,r
     # v0.09: WN34 compatibility
     elif "tf_ch" in key:
       outstr += key.replace("tf_ch","soiltemp")  + "=" + str(value) + "&"
+    # v0.10 Ambient now supports also the leafwetness sensor WN35
+    elif key == "leafwetness":
+      outstr += "leafwetness1" + "=" + str(value) + "&"
+    elif "leafwetness_ch" in key:
+      outstr += key.replace("_ch","")  + "=" + str(value) + "&"
     # 2do exchange battery-values - values have to be interpreted
     # v0.09: added wh80batt
     elif key == "wh65batt" or key == "wh80batt" or key == "wh90batt":
@@ -1963,6 +2234,10 @@ def forwardStringToAMB(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,r
     elif "tf_batt" in key:
       amb_battkey = key
       outstr += amb_battkey.replace("tf_batt","batt_tf")  + "=" + convBattToAMB(key, value) + "&"
+    # v0.10 WN35 compatibility
+    elif "leaf_batt" in key:
+      amb_battkey = key
+      outstr += amb_battkey.replace("leaf_batt","batt_lw") + "=" + convBattToAMB(key, value) + "&"
     elif "co2_batt" in key:
       amb_battkey = key
       outstr += amb_battkey.replace("co2_batt","batt_co2")  + "=" + convBattToAMB(key, value) + "&"
@@ -1975,7 +2250,9 @@ def forwardStringToAMB(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,r
   if len(outstr) > 0 and outstr[-1] == "&": outstr = outstr[:-1]
   if script != "":
     outstr = modExec(nr, script, outstr)                       # modify outstr with external script before sending
-    if outstr == execOnly: return                              # just run the exec-script but do not forward the string
+    if outstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
   ret = ""
   okstr = "<ERROR> "
   # v0.08 multiple attempts httpTries (3)
@@ -1998,15 +2275,21 @@ def forwardStringToAMB(url,payload,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,r
     v += 1                                                     # count of tries
     if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
   # done
-  tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
+  # v0.10 queue data if service is unavailable
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
+  tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries"+qstr+")"
   if sndlog: sndPrint(okstr + "FWD-"+nr+": " + url + outstr + " : " + ret + tries)
-  return
+  debugPrint("forwardStringToAMB "+nr+" stop")
+  return                                                       # forwardStringToAMB
 
 def forwardDictToHTTP(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys,ecowitt=False,hideSpace=False,withSID=True,sep="&"):
   # uebergebenes dict d (metrisch oder imperial) als String zusammensetzen und an url per get oder put/post (Ecowitt) versenden
   # RAW, RAWCSV, CSV, unknown - POST oder GET je nach ecowitt=True/False
   d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
   #d = d_in.copy()                                              # create a separate dict to allow changes there
+  debugPrint("forwardDictToHTTP "+nr+" start")
   outstr = "SID=" + defSID + sep if withSID else ""
   dontuse = () if ecowitt else ("PASSKEY","PASSWORD","ID","model","freq")
   for key,value in d.items():
@@ -2017,14 +2300,16 @@ def forwardDictToHTTP(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remap
   if len(outstr) > 0 and outstr[-1] == sep: outstr = outstr[:-1]
   if script != "":
     outstr = modExec(nr, script, outstr)                       # modify outstr with external script before sending
-    if outstr == execOnly: return                              # just run the exec-script but do not forward the string
+    if outstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
   ret = ""
   okstr = "<ERROR> "
   # v0.08 multiple attempts httpTries (3)
   v = 0
   while okstr[0:7] == "<ERROR>" and v < httpTries:
     try:
-      #r = requests.put(url,data=outstr) if ecowitt else requests.get(url+outstr)
+      #r = requests.put(url,data=outstr) if ecowitt else requests.get(url+outstr,timeout=httpTimeOut)
       r = requests.post(url,data=outstr,timeout=httpTimeOut) if ecowitt else requests.get(url+outstr,timeout=httpTimeOut)
       ret = str(r.status_code)
       okstr = "<ERROR> " if r.status_code not in range(200,203) else ""
@@ -2038,12 +2323,17 @@ def forwardDictToHTTP(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remap
     v += 1                                                     # count of tries
     if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
   # done
+  # v0.10 queue data if service is unavailable
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
   tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
   if sndlog: sndPrint(okstr + "FWD-"+nr+": " + url + outstr + " : " + ret + tries)
-  return
+  debugPrint("forwardDictToHTTP "+nr+" stop")
+  return                                                       # forwardDictToHTTP
 
-def getfromDict(d, a, ignoreKeys = {}):
-  outstr = "null"
+# v0.10 modified: outstr
+def getfromDict(d, a, ignoreKeys = {}, outstr = "null"):
   for i in range(len(a)):
     if a[i] in d and a[i] not in ignoreKeys:
       outstr = d[a[i]]
@@ -2077,7 +2367,10 @@ def dictToWUServer(d, sep, metric):
     s += "\"obsTimeUtc\":\""+ utcWUTimeString(getfromDict(d,["dateutc","obsTimeUtc"]))+"\","
     s += "\"obsTimeLocal\":\""+ localWUTimeString(getfromDict(d,["obsTimeLocal"]))+"\","
     s += "\"neighborhood\":\""+ getfromDict(d,["neighborhood"])+"\","
-    s += "\"softwareType\":\""+ getfromDict(d,["softwareType","softwaretype"])+"\","
+    # v0.10
+    wert = getfromDict(d,["softwareType","softwaretype"])
+    if wert == "null": wert = prgname+" "+prgver
+    s += "\"softwareType\":\""+ wert +"\","
     s += "\"country\":\""+ getfromDict(d,["country"])+"\","
     s += "\"solarradiation\":"+ getfromDict(d,["solarradiation","solarRadiation"])+","
     lon = getfromDict(d,["lon"])
@@ -2113,9 +2406,11 @@ def dictToWUServer(d, sep, metric):
     # same for PM10
     wert = getfromDict(d,["pm10_ch1","AqPM10"])
     if wert != "null":
-      #s += "\"AqPM10\":"+ getfromDict(d,["pm10_ch1","AqPM10"]) + ","
       s += "\"AqPM10\":"+ wert + ","
-    s += "\"qcStatus\":"+ getfromDict(d,["qcStatus"])+","
+    # v0.10 correct qcStatus
+    wert = getfromDict(d,["qcStatus"])
+    if wert == "null": wert = "-1"
+    s += "\"qcStatus\":"+ wert + ","
     for i in range(1,9):
       try:
         i_s = str(i)
@@ -2131,7 +2426,7 @@ def dictToWUServer(d, sep, metric):
     for i in range(1,9):
       try:
         i_s = str(i)
-        leaf = getfromDict(d,["leafwetness_ch"+i_s])
+        leaf = getfromDict(d,["leafwetness_ch"+i_s,"leafwetness"+i_s])
         if leaf != "null":
           if i == 1:
             s += "\"leafwetness\":"+ leaf +","
@@ -2176,7 +2471,7 @@ def dictToWUServer(d, sep, metric):
     s += "\"elev\":"+ getfromDict(d,["elev"])+""
     s += "}"
     s += "}]}"
-  return s
+  return s                                                     # dictToWUServer
 
 def remappedDict(d_in,remapKeys,nr):
   d = d_in.copy()
@@ -2191,11 +2486,120 @@ def remappedDict(d_in,remapKeys,nr):
       pass
   return d
 
+def dictToWeeWX(d_in,nr,ignoreKeys,remapKeys):
+  # 2do: implement remapKeys
+  outstr = ""
+  d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
+  d.update(min_max)                                            # append min_max values
+  # remap keys here
+  value = getfromDict(d_in,["dateutc"],ignoreKeys)
+  try:
+    #now = time.localtime(time.mktime(time.strptime(value.replace("%20","+").replace("%3A",":"), "%Y-%m-%d+%H:%M:%S")))              # use UTC time
+    now = time.localtime(utcToLocal(time.mktime(time.strptime(value.replace("%20","+").replace("%3A",":"), "%Y-%m-%d+%H:%M:%S"))))   # use local time
+  except ValueError:
+    #now = time.gmtime()                                      # use UTC time
+    now = time.localtime()                                    # use local time
+  outstr += time.strftime('%Y-%m-%d+%H:%M:%S', now) + ";"                                                    # datetime
+  outstr += getfromDict(d,["tempinf"],ignoreKeys).replace(".",",") + ";"                                     # 1     idTempInnen
+  outstr += getfromDict(d,["humidityin","indoorhumidity"],ignoreKeys).replace(".",",") + ";"                 # 17    idFeuchteInnen
+  outstr += getfromDict(d,["baromrelin"],ignoreKeys).replace(".",",") + ";"                                  # 133   idLuftdruck
+  outstr += getfromDict(d,["tempf"],ignoreKeys).replace(".",",") + ";"                                       # 2     idTemp1
+  outstr += getfromDict(d,["humidity"],ignoreKeys).replace(".",",") + ";"                                    # 18    idFeuchte1
+  outstr += getfromDict(d,["windspeedmph"],ignoreKeys).replace(".",",") + ";"                                # 35    idWindgeschw
+  outstr += getfromDict(d,["winddir"],ignoreKeys).replace(".",",") + ";"                                     # 36    idWindrichtung
+  outstr += getfromDict(d,["windgustmph"],ignoreKeys).replace(".",",") + ";"                                 # 45    idWindböen
+  outstr += getfromDict(d,["dailyrainin"],ignoreKeys).replace(".",",") + ";"                                 # 134   idRegen24
+  outstr += getfromDict(d,["solarradiation","solarRadiation"],ignoreKeys).replace(".",",") + ";"             # 42    idSolar
+  outstr += getfromDict(d,["uv","UV"],ignoreKeys).replace(".",",") + ";"                                     # 41    idUV
+  outstr += getfromDict(d,["temp1f"],ignoreKeys).replace(".",",") + ";"                                      # 3     idTemp2
+  outstr += getfromDict(d,["humidity1"],ignoreKeys).replace(".",",") + ";"                                   # 19    idFeuchte2
+  outstr += getfromDict(d,["temp2f"],ignoreKeys).replace(".",",") + ";"                                      # 4     idTemp3
+  outstr += getfromDict(d,["humidity2"],ignoreKeys).replace(".",",") + ";"                                   # 20    idFeuchte3
+  outstr += getfromDict(d,["temp3f"],ignoreKeys).replace(".",",") + ";"                                      # 5     idTemp4
+  outstr += getfromDict(d,["humidity3"],ignoreKeys).replace(".",",") + ";"                                   # 21    idFeuchte4
+  outstr += getfromDict(d,["temp4f"],ignoreKeys).replace(".",",") + ";"                                      # 6     idTemp5
+  outstr += getfromDict(d,["humidity4"],ignoreKeys).replace(".",",") + ";"                                   # 22    idFeuchte5
+  outstr += getfromDict(d,["temp5f"],ignoreKeys).replace(".",",") + ";"                                      # 7     idTemp6
+  outstr += getfromDict(d,["humidity5"],ignoreKeys).replace(".",",") + ";"                                   # 23    idFeuchte6
+  outstr += getfromDict(d,["temp6f"],ignoreKeys).replace(".",",") + ";"                                      # 8     idTemp7
+  outstr += getfromDict(d,["humidity6"],ignoreKeys).replace(".",",") + ";"                                   # 24    idFeuchte7
+  outstr += getfromDict(d,["soilmoisture1","soilmoisture"],ignoreKeys).replace(".",",") + ";"                # 29    idMoisture1
+  outstr += getfromDict(d,["soilmoisture2"],ignoreKeys).replace(".",",") + ";"                               # 30    idMoisture2
+  outstr += getfromDict(d,["soilmoisture3"],ignoreKeys).replace(".",",") + ";"                               # 31    idMoisture3
+  outstr += getfromDict(d,["soilmoisture4"],ignoreKeys).replace(".",",") + ";"                               # 32    idMoisture4
+  outstr += leafTo15(getfromDict(d,["leafwetness_ch1","leafwetness1","leafwetness"],ignoreKeys).replace(".",",")) + ";"     # 25    idLeafWet1
+  outstr += leafTo15(getfromDict(d,["leafwetness_ch2","leafwetness2"],ignoreKeys).replace(".",",")) + ";"    # 26    idLeafWet2
+  outstr += leafTo15(getfromDict(d,["leafwetness_ch3","leafwetness3"],ignoreKeys).replace(".",",")) + ";"    # 27    idLeafWet3
+  outstr += leafTo15(getfromDict(d,["leafwetness_ch4","leafwetness4"],ignoreKeys).replace(".",",")) + ";"    # 28    idLeafWet4
+  outstr += str(getfromDict(d,["sunmins"],ignoreKeys)).replace(".",",") + ";"                                # 37    idSonnenZeit in minutes
+  outstr += getfromDict(d,["tf_ch1"],ignoreKeys).replace(".",",") + ";"                                      # 13    idTempSoil1 from WN34#1
+  outstr += getfromDict(d,["tf_ch2"],ignoreKeys).replace(".",",") + ";"                                      # 14    idTempSoil2 from WN34#2
+  outstr += getfromDict(d,["tf_ch3"],ignoreKeys).replace(".",",") + ";"                                      # 15    idTempSoil3 from WN34#3
+  outstr += getfromDict(d,["tf_ch4"],ignoreKeys).replace(".",",") + ";"                                      # 16    idTempSoil4 from WN34#4
+  outstr += getfromDict(d,["model"],ignoreKeys) + ";"                                                        # model
+  outstr += getfromDict(d,["stationtype"],ignoreKeys) + ";"                                                  # stationtype
+  if len(outstr) > 0 and outstr[-1] == ";":
+    outstr = outstr[:-1]                                       # delete last semicolon
+  outstr += "\n"                                               # line end for weewx
+  outstr = outstr.replace("null","")                           # perhaps "NULL"
+  return outstr                                                # dictToWeeWX
+
+def dictToAwekasImport(d_in, ignoreKeys):
+  ignoreValues=["-9999","None","null",""]
+  value = getfromDict(d_in,["dateutc"],ignoreKeys)
+  if not (IGNORE_EMPTY and value in ignoreValues):
+    try:
+      value = value.replace("%20","+").replace("%3A",":")
+      # time in UTC or local time? - now UTC:
+      #isdate = value[8:10] + "." + value[5:7] + "." + value[0:4]
+      #istime = value[11:13] + ":" + value[14:16]
+      # we have to convert the UTC time to localtime
+      ltime = time.localtime(utcToLocal(time.mktime(time.strptime(value, "%Y-%m-%d+%H:%M:%S"))))
+      isdate = time.strftime("%d.%m.%Y",ltime)
+      istime = time.strftime("%H:%M",ltime)
+    except ValueError:
+      isnow = time.localtime()                                 # Awekas needs localtime!
+      isdate = time.strftime('%d.%m.%Y', isnow)
+      istime = time.strftime('%H:%M', isnow)
+  else:
+    isnow = time.localtime()
+    isdate = time.strftime('%d.%m.%Y', isnow)
+    istime = time.strftime('%H:%M', isnow)
+  awstr = isdate+";"+istime+";"
+  value = getfromDict(d_in,["tempc"],ignoreKeys)
+  awstr += str(value).replace(".",",") + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
+  value = getfromDict(d_in,["humidity"],ignoreKeys)
+  awstr += str(value).replace(".",",") + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
+  value = getfromDict(d_in,["baromrelhpa","baromhpa"],ignoreKeys)
+  awstr += str(value).replace(".",",") + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
+  value = getfromDict(d_in,["dailyrainmm"],ignoreKeys)
+  awstr += str(value).replace(".",",") + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
+  value = getfromDict(d_in,["rainratemm"],ignoreKeys)
+  awstr += str(value).replace(".",",") + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
+  value = getfromDict(d_in,["windspeedkmh"],ignoreKeys)
+  awstr += str(value).replace(".",",") + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
+  value = getfromDict(d_in,["windgustkmh"],ignoreKeys)
+  awstr += str(value).replace(".",",") + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
+  value = getfromDict(d_in,["winddir"],ignoreKeys)
+  awstr += str(value).replace(".",",") + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
+  awstr += ";"                                                 # Windverteilung
+  value = getfromDict(d_in,["uv","UV"],ignoreKeys)
+  awstr += str(value).replace(".",",") + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
+  value = getfromDict(d_in,["solarradiation","solarRadiation"],ignoreKeys)
+  awstr += str(value).replace(".",",") + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
+  value = getfromDict(d_in,["brightness","luminosity"])
+  awstr += str(value).replace(".",",") + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
+  value = getfromDict(d_in,["tf_ch1c"],ignoreKeys)
+  awstr += str(value).replace(".",",") + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
+  awstr += "\r\n"
+  return awstr                                                 # dictToAwekasImport
+
 def forwardDictToAwekas(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys):
   # use API to upload data to Awekas
+  debugPrint("forwardDictToAwekas "+nr+" start")
   d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
   ignoreValues=["-9999","None","null",""]
-  outstr = ""
+  outstr = qstr = ""
   # Awekas only needs the MD5-hash of password
   fwd_pwd = hashlib.md5(fwd_pwd.encode('utf-8')).hexdigest()
   value = getfromDict(d,["tempinc"],ignoreKeys)
@@ -2212,13 +2616,13 @@ def forwardDictToAwekas(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys)
       if not (IGNORE_EMPTY and value in ignoreValues): outstr += "soiltemp"+i_s+"=" + str(value) + "&"
     except ValueError: pass
 
-  ## for all WH31 temp sensors (1..8) - not supported by Awekas yet
-  #for i in range(1,9):
-  #  try:
-  #    i_s = str(i)
-  #    value = getfromDict(d,["temp"+i_s+"c"],ignoreKeys)
-  #    if not (IGNORE_EMPTY and value in ignoreValues): outstr += "temp"+i_s+"=" + str(value) + "&"
-  #  except ValueError: pass
+  # for all WH31 temp sensors (1..8) - not supported by Awekas yet
+  for i in range(1,9):
+    try:
+      i_s = str(i)
+      value = getfromDict(d,["temp"+i_s+"c"],ignoreKeys)
+      if not (IGNORE_EMPTY and value in ignoreValues): outstr += "temp"+i_s+"=" + str(value) + "&"
+    except ValueError: pass
 
   # for all soil moisture sensors (1..8)
   for i in range(1,9):
@@ -2232,7 +2636,7 @@ def forwardDictToAwekas(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys)
   for i in range(1,9):
     try:
       i_s = str(i)
-      value = getfromDict(d,["leafwetness_ch"+i_s,"leafwet"+i_s],ignoreKeys)
+      value = getfromDict(d,["leafwetness_ch"+i_s,"leafwet"+i_s,"leafwetness"+i_s],ignoreKeys)
       if not (IGNORE_EMPTY and value in ignoreValues): outstr += "leafwetness"+i_s+"=" + str(leafTo15(value)) + "&"
     except ValueError: pass
 
@@ -2292,8 +2696,32 @@ def forwardDictToAwekas(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys)
   value = getfromDict(d,["winddir"],ignoreKeys)
   outstr += str(value) + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
 
-  # weather condition, warning condition, snow height, language, tendency
-  outstr += ";;;de;;"
+  # v0.10: Awekas Current weather report conditions - partly
+  ln_num = intFallback(getfromDict(d,["lightning_num"],ignoreKeys),0)
+  rr_num = floatFallback(getfromDict(d,["rainratemm"],ignoreKeys),0)
+  ws_num = floatFallback(getfromDict(d,["windspeedkmh"],ignoreKeys),0)
+  lv_num = intFallback(getfromDict(d,["wnowlvl"],ignoreKeys),-1)
+  sr_num = intFallback(getfromDict(d,["solarradiation"],ignoreKeys),-1)
+
+  if inTSWarning and ln_num > 0: condition = 19                # thunderstorm
+  elif rr_num > 0 and rr_num <= 1: condition = 23              # drizzle
+  elif rr_num > 0 and rr_num < 2.5: condition = 10             # light rain
+  elif rr_num > 0 and rr_num < 10: condition = 11              # rain
+  elif rr_num > 0 and rr_num >= 10: condition = 12             # heavy rain
+  elif ws_num >= 25: condition = 20                            # storm
+  #elif lv_num >= 0 and lv_num <= 1: condition = 4              # regnerisch --> cloudy
+  #elif lv_num == 2: condition = 3                              # wechselhaft --> partly cloudy
+  #elif lv_num >= 3 and sr_num > 120: condition = 2             # sonnig --> sunny sky
+  #elif lv_num >= 3 and sr_num < 120: condition = 1             # sonnig --> clear
+  else: condition = 0                                          # clear warning
+  outstr += str(condition)+";"
+  #print("condition: "+str(condition)+" rr: "+str(rr_num)+" lv: "+str(lv_num))
+
+  # warning condition, snow height, language
+  outstr += ";;de;"
+
+  value = getfromDict(d,["ptrend3"])                           # tendency
+  outstr += str(value) + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
 
   value = getfromDict(d,["windgustkmh"],ignoreKeys)
   outstr += str(value) + ";" if not (IGNORE_EMPTY and value in ignoreValues) else ";"
@@ -2339,7 +2767,9 @@ def forwardDictToAwekas(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys)
 
   if script != "":
     outstr = modExec(nr, script, outstr)                       # modify outstr with external script before sending
-    if outstr == execOnly: return                              # just run the exec-script but do not forward the string
+    if outstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
 
   ret = ""
   okstr = "<ERROR> "
@@ -2354,8 +2784,8 @@ def forwardDictToAwekas(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys)
       r = requests.post(url+outstr,headers=headers,timeout=httpTimeOut)
       # Awekas responds 200 in any case - so additionally we have to check for OK
       ret = str(r.text) if r.status_code in range(200,203) else str(r.status_code)
-      okstr = "<ERROR> " if r.status_code not in range(200,203) or ret != "OK" else ""
-      if ret != "OK": v = 400
+      okstr = "<ERROR> " if r.status_code not in range(200,203) or "OK" not in ret else ""
+      if "OK" not in ret: v = 400
     except requests.exceptions.Timeout as err:
       ret = "TIMEOUT"
     except requests.exceptions.ConnectionError as err:
@@ -2365,12 +2795,18 @@ def forwardDictToAwekas(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys)
     v += 1                                                     # count of tries
     if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
   # done
-  tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
+  # v0.10 queue data if service is unavailable
+  qstr = processQueue(v, nr, {}, {}, {}, dictToAwekasImport(d, ignoreKeys))
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
+  tries = qstr if v == 1 or v > httpTries else " ("+str(v)+" tries"+qstr+")"
   if sndlog: sndPrint(okstr + "FWD-"+nr+": " + url + " post: " + outstr + " : " + ret + tries)
-  return
+  debugPrint("forwardDictToAwekas "+nr+" stop")
+  return                                                       # forwardDictToAwekas
 
 def forwardDictToWetterSektor(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys):
   # convert incoming metric dict to WetterSektor-API via http/POST
+  debugPrint("forwardDictToWetterSektor "+nr+" start")
   d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
   outstr = "?val=" if "?val=" not in url else ""
   now = time.localtime()
@@ -2386,7 +2822,7 @@ def forwardDictToWetterSektor(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,rema
   outstr = outstr+getfromDict(d,["humidity"],ignoreKeys)+";"                             # Luftfeuchte
   outstr = outstr+getfromDict(d,["windspdkmh_avg10m"],ignoreKeys)+";"                    # Wind10min
   outstr = outstr+WindDirText(getfromDict(d,["winddir_avg10m"],ignoreKeys),"XX")+";"     # Windrichtung(10min)InTextform-z.B.N-NO - WSWin: N-NO
-  outstr = outstr+getfromDict(d,["maxdailygust"],ignoreKeys)+";"                         # WindspitzeTag
+  outstr = outstr+getfromDict(d,["maxdailygustkmh"],ignoreKeys)+";"                      # WindspitzeTag
   outstr = outstr+getfromDict(d,["rainratemm"],ignoreKeys)+";"                           # RegenAktuellerDatensatz
   outstr = outstr+getfromDict(d,["hourlyrainmm"],ignoreKeys)+";"                         # Regen1h
   outstr = outstr+getfromDict(d,["dailyrainmm"],ignoreKeys)+";"                          # Regen24h
@@ -2399,7 +2835,7 @@ def forwardDictToWetterSektor(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,rema
   outstr = outstr+getfromDict(d,["uv","UV"],ignoreKeys)+";"                              # UV-Index
   outstr = outstr+str(getfromDict(min_max,["tempc_min"],ignoreKeys))+";"                 # TempMinHeute
   outstr = outstr+str(getfromDict(min_max,["tempc_max"],ignoreKeys))+";"                 # TempMaxHeute
-  outstr = outstr+getfromDict(d,["maxdailygust"],ignoreKeys)+";"                         # WindspitzeTag
+  outstr = outstr+getfromDict(d,["maxdailygustkmh"],ignoreKeys)+";"                      # WindspitzeTag
   outstr = outstr+getfromDict(d,["dailyrainmm"],ignoreKeys)+";"                          # RegenHeute
   outstr += ";"                                                                          # TTemperaturdurchschnittAktuellerMonat
   outstr = outstr+getfromDict(d,["monthlyrainmm"],ignoreKeys)+";"                        # RegenAktuellerMonat
@@ -2416,7 +2852,9 @@ def forwardDictToWetterSektor(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,rema
   outstr = outstr.replace("null","")                                                     # perhaps "NULL" - clean!
   if script != "":
     outstr = modExec(nr, script, outstr)                                                 # modify outstr with external script before sending
-    if outstr == execOnly: return                                                        # just run the exec-script but do not forward the string
+    if outstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
   ret = ""
   okstr = "<ERROR> "
   # v0.08 multiple attempts httpTries (3)
@@ -2437,12 +2875,18 @@ def forwardDictToWetterSektor(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,rema
     v += 1                                                     # count of tries
     if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
   # done
+  # v0.10 queue data if service is unavailable
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
   tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
   if sndlog: sndPrint(okstr + "FWD-"+nr+": " + url + outstr + " : " + ret + tries)
-  return
+  debugPrint("forwardDictToWetterSektor "+nr+" stop")
+  return                                                       # forwardDictToWetterSektor
 
 def forwardDictToWetterCOM(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys):
   # convert incoming metric dict to wetter.com-API
+  debugPrint("forwardDictToWetterCOM "+nr+" start")
   d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
   if not "id=" in url and not "pwd=" in url: url += "?id="+str(fwd_sid)+"&pwd="+str(fwd_pwd)
   outstr = "&"
@@ -2501,7 +2945,7 @@ def forwardDictToWetterCOM(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKe
     #elif key == "softwaretype" or key == "softwareType":
       #outstr += "sid=" + str(value) + "&"
     else:
-      #if myDebug: logPrint("<DEBUG> forwardDictToWetterCOM: unknown field: " + str(key) + " with value: " + str(value))
+      #debugPrint("forwardDictToWetterCOM: unknown field: " + str(key) + " with value: " + str(value))
       doNothing()
   if len(outstr) > 0 and outstr[-1] == "&": outstr = outstr[:-1]
   # add programname and version as sid (like weewx does)
@@ -2509,7 +2953,9 @@ def forwardDictToWetterCOM(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKe
   if "&sid=" not in outstr: outstr += "&sid="+prgname+"&ver="+prgver
   if script != "":
     outstr = modExec(nr, script, outstr)                       # modify outstr with external script before sending
-    if outstr == execOnly: return                              # just run the exec-script but do not forward the string
+    if outstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
   ret = ""
   okstr = "<ERROR> "
   # v0.08 multiple attempts httpTries (3)
@@ -2529,14 +2975,20 @@ def forwardDictToWetterCOM(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKe
     v += 1                                                     # count of tries
     if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
   # done
+  # v0.10 queue data if service is unavailable
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
   tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
   if sndlog: sndPrint(okstr + "FWD-"+nr+": " + url + outstr + " : " + ret + tries)
-  return
+  debugPrint("forwardDictToWetterCOM "+nr+" stop")
+  return                                                       # forwardDictToWetterCOM
 
 def forwardDictToWeather365(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys):
   # convert incoming metric dict to Weather365-API acc. to https://www.weather365.net/wettersatelliten-und-wetterradar/wetter-aktuell/wetternetzwerk-mitmachen.html
   # fields et, windrun, humidex, rxsignal, txbattery are not filled yet
   # add stationid
+  debugPrint("forwardDictToWeather365 "+nr+" start")
   d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
   outstr = "stationid="+fwd_sid+"&"
   dontuse = ("PASSKEY","PASSWORD","ID","model","freq")
@@ -2585,7 +3037,7 @@ def forwardDictToWeather365(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapK
       outstr += "relhum=" + str(value) + "&"
     elif "soilmoisture" in key and len(key) == 13:             # sensor1=5cm, 2=10/15cm, 3=20-30cm, 4=40-50cm
       if key[12] == "1":
-        #try: value = str(200-int(value)*2)                     # convert to centibar - but is this really linear?
+        #try: value = str(100-int(value)*2)                     # convert to centibar - but is this really linear?
         #except: pass
         outstr += "soilmoisture=" + str(value) + "&"
       else:                                                    # all sensors are for different depth 5, 10, 20, 50 cm
@@ -2606,11 +3058,13 @@ def forwardDictToWeather365(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapK
       outstr += "cloudbase=" + str(value) + "&"
     elif key == "sunhours":
       outstr += "sunh=" + str(value) + "&"
-    elif "leafwetness_ch" in key and len(key) == 15:
-      if key[14] == "1":
+    elif key == "leafwetness":
+      outstr += "leafwetness=" + str(leafTo15(value)) + "&"
+    elif ("leafwetness_ch" in key and len(key) == 15) or ("leafwetness" in key and len(key) == 12):
+      if key[-1] == "1":
         outstr += "leafwetness=" + str(leafTo15(value)) + "&"
       else:
-        outstr += "leafwetness" + str(key[14]) + "=" + str(leafTo15(value)) + "&"
+        outstr += "leafwetness" + str(key[-1]) + "=" + str(leafTo15(value)) + "&"
     # v0.09: convert tf_chN to soiltempN
     elif "tf_ch" in key and len(key) == 7 and key[-1] == "c":  # sensor1=5cm, 2=10/15cm, 3=20-30cm, 4=40-50cm
       if key[5] == "1":
@@ -2628,7 +3082,8 @@ def forwardDictToWeather365(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapK
     elif key == "alt":
       alt = str(value)
     else:
-      if myDebug: logPrint("<DEBUG> forwardDictToWeather365: unknown field: " + str(key) + " with value: " + str(value))
+      #debugPrint("forwardDictToWeather365: unknown field: " + str(key) + " with value: " + str(value))
+      doNothing()
   # after loop
 
   # winddir
@@ -2647,7 +3102,9 @@ def forwardDictToWeather365(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapK
   if len(outstr) > 0 and outstr[-1] == "&": outstr = outstr[:-1]
   if script != "":
     outstr = modExec(nr, script, outstr)                       # modify outstr with external script before sending
-    if outstr == execOnly: return                              # just run the exec-script but do not forward the string
+    if outstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
   ret = ""
   okstr = "<ERROR> "
   # v0.08 multiple attempts httpTries (3)
@@ -2668,9 +3125,14 @@ def forwardDictToWeather365(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapK
     v += 1                                                     # count of tries
     if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
   # done
+  # v0.10 queue data if service is unavailable
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
   tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
   if sndlog: sndPrint(okstr + "FWD-"+nr+": " + url + " post: " + outstr + " : " + ret + tries)
-  return
+  debugPrint("forwardDictToWeather365 "+nr+" stop")
+  return                                                       # forwardDictToWeather365
 
 def dictToREALTIME(d_in,nr,ignoreKeys,remapKeys):
   # convert the dict d_in to structured REALTIME-string
@@ -2706,18 +3168,20 @@ def dictToREALTIME(d_in,nr,ignoreKeys,remapKeys):
   a[24] = getfromDict(d,["humidityin","indoorhumidity"],ignoreKeys)
   a[25] = getfromDict(d,["windchillc"],ignoreKeys)
   a[27] = getfromDict(min_max,["tempc_max"],ignoreKeys)
-  a[28] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["tempc_max_time"],ignoreKeys))))
   a[29] = getfromDict(min_max,["tempc_min"],ignoreKeys)
-  a[30] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["tempc_min_time"],ignoreKeys))))
   a[31] = getfromDict(min_max,["windspeedkmh_max"],ignoreKeys)
-  a[32] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["windspeedkmh_max_time"],ignoreKeys))))
-  #a[33] = getfromDict(d,["maxdailygust"],ignoreKeys)
+  #a[33] = getfromDict(d,["maxdailygustkmh"],ignoreKeys)
   a[33] = getfromDict(min_max,["windgustkmh_max"],ignoreKeys)
-  a[34] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["windgustkmh_max_time"],ignoreKeys))))
   a[35] = getfromDict(min_max,["baromrelhpa_max"],ignoreKeys)
-  a[36] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["baromrelhpa_max_time"],ignoreKeys))))
   a[37] = getfromDict(min_max,["baromrelhpa_min"],ignoreKeys)
-  a[38] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["baromrelhpa_min_time"],ignoreKeys))))
+  try:
+    a[28] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["tempc_max_time"],ignoreKeys))))
+    a[30] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["tempc_min_time"],ignoreKeys))))
+    a[32] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["windspeedkmh_max_time"],ignoreKeys))))
+    a[34] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["windgustkmh_max_time"],ignoreKeys))))
+    a[36] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["baromrelhpa_max_time"],ignoreKeys))))
+    a[38] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["baromrelhpa_min_time"],ignoreKeys))))
+  except: pass
   a[41] = getfromDict(d,["windgustkmh_max10m"],ignoreKeys)
   a[42] = getfromDict(d,["heatindexc"],ignoreKeys)
   a[44] = getfromDict(d,["uv","UV"],ignoreKeys)
@@ -2735,7 +3199,7 @@ def dictToREALTIME(d_in,nr,ignoreKeys,remapKeys):
   s = s[:-1]
   # clean string
   s = s.replace("null","--")                                   # perhaps "NULL"
-  return s
+  return s                                                     # dictToREALTIME
 
 def dictToCLIENTRAW(d_in,nr,ignoreKeys,remapKeys):
   # convert the dict d_in to structured CLIENTRAW-string
@@ -2780,7 +3244,7 @@ def dictToCLIENTRAW(d_in,nr,ignoreKeys,remapKeys):
   a[46]  = getfromDict(min_max,["tempc_max"],ignoreKeys)                 # daily max temp
   a[47]  = getfromDict(min_max,["tempc_min"],ignoreKeys)                 # daily min temp
   a[50]  = getfromDict(d,["pchange1"],ignoreKeys)                        # baro trend 1 hour
-  a[71]  = getfromDict(d,["maxdailygust"],ignoreKeys)                    # max gust
+  a[71]  = getfromDict(d,["maxdailygustkmh"],ignoreKeys)                 # max gust
   a[72]  = getfromDict(d,["dewptc"],ignoreKeys)                          # dew point
   try:
     a[73] = mtofeet(getfromDict(d,["cloudm"],ignoreKeys),2)              # cloud height in feet as string
@@ -2817,7 +3281,9 @@ def dictToCLIENTRAW(d_in,nr,ignoreKeys,remapKeys):
   a[131] = getfromDict(min_max,["baromrelhpa_max"],ignoreKeys)           # daily max pressure
   a[132] = getfromDict(min_max,["baromrelhpa_min"],ignoreKeys)           # daily min pressure
   #a[133] = kmhtokts(getfromDict(min_max,["windgustkmh_max"],ignoreKeys),1)                                         # max gust in last hour in kts
-  a[135] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["windgustkmh_max_time"],ignoreKeys))))    # daily max gust time hh:mm
+  try:
+    a[135] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["windgustkmh_max_time"],ignoreKeys))))    # daily max gust time hh:mm
+  except: pass
   a[136] = getfromDict(min_max,["feelslikec_max"],ignoreKeys)            # daily max apparent temp
   a[137] = getfromDict(min_max,["feelslikec_min"],ignoreKeys)            # daily min apparent temp
   a[138] = getfromDict(min_max,["dewptc_max"],ignoreKeys)                # daily max dewpoint
@@ -2831,18 +3297,20 @@ def dictToCLIENTRAW(d_in,nr,ignoreKeys,remapKeys):
   a[161] = lon if lon != "null" else COORD_LON                           # longitude (- for east of GMT)
   a[163] = getfromDict(min_max,["humidity_max"],ignoreKeys)              # daily max humidity
   a[164] = getfromDict(min_max,["humidity_min"],ignoreKeys)              # daily min humidity
-  a[166] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["windchillc_min_time"],ignoreKeys))))     # daily min windchill time hh:mm
   a[176] = getfromDict(d,["winddir_avg10m"],ignoreKeys)                  # wind dir avg (like 117?)
-  a[174] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["tempc_max_time"],ignoreKeys))))          # daily max temp time hh:mm
-  a[175] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["tempc_min_time"],ignoreKeys))))          # daily min temp time hh:mm
+  try:
+    a[166] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["windchillc_min_time"],ignoreKeys))))     # daily min windchill time hh:mm
+    a[174] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["tempc_max_time"],ignoreKeys))))          # daily max temp time hh:mm
+    a[175] = time.strftime("%H:%M",time.localtime(int(getfromDict(min_max,["tempc_min_time"],ignoreKeys))))          # daily min temp time hh:mm
+  except: pass
   a[177] = "!!"+prgname+prgver+"!!"                                      # wd version - end of file !!C10.37S111!! 2do!
   # create string
   for i in range(0,len(a)): s+=str(a[i])+" "
   # cut last space
   s = s[:-1]
   # clean string
-  s = s.replace("null","--")                                             # perhaps "NULL"
-  return s
+  s = s.replace("null","--")                                   # perhaps "NULL" - clear
+  return s                                                     # dictToCLIENTRAW
 
 def ddTodms(dd):                                               # genauer, aber auch sicher?
   neg = dd < 0
@@ -2924,11 +3392,14 @@ def dictToAPRS(d,fwd_sid,ignoreKeys,remapKeys):
   return outstr
 
 def forwardDictToAPRS(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys):
+  debugPrint("forwardDictToAPRS "+nr+" start")
   d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
   outstr = dictToAPRS(d,fwd_sid,ignoreKeys,remapKeys)
   if script != "":
     outstr = modExec(nr, script, outstr)                       # modify outstr with external script before sending
-    if outstr == execOnly: return                              # just run the exec-script but do not forward the string
+    if outstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
   # create socket
   addr = url.split(":",1)
   serverHost = addr[0]
@@ -2955,26 +3426,47 @@ def forwardDictToAPRS(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys):
     v += 1                                                     # count of tries
     if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
   # done
-  tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
+  # v0.10 queue data if service is unavailable
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
+  tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries"+qstr+")"
   if sndlog: sndPrint(okstr + "FWD-"+nr+": " + url + " APRS: " + outstr + " : " + ret + tries)
+  debugPrint("forwardDictToAPRS "+nr+" start")
   return
 
-def postFile(url, user, password, filename, append, content):
+def postFile(url, user, password, filename, append, fwd_type, content):
   text = ""
   ret = ""
   okstr = "<ERROR> "
+  binary = os.path.exists(content)                             # use binary mode if content is a file name
   # v0.08 multiple attempts httpTries (3)
   v = 0
   while okstr[0:7] == "<ERROR>" and v < httpTries:
     try:
-      r = requests.post(url, data=({
-          "user":user,
-          "password":password,
-          "filename":filename,
-          "append":append,
-          "content":content
-        }), timeout=httpTimeOut)
-      ret = str(r.status_code)
+      if binary:
+        r = requests.post(url, data=({
+            "user":user,
+            "password":password,
+            "filename":filename,
+            "append":append,
+            "fwd_type":fwd_type,
+            "prgname":prgname,
+            "prgver":prgver,
+          }), files={'image': open(content, 'rb')}, timeout=httpTimeOut) # , headers={'Content-Type': 'application/octet-stream'}
+      else:
+        r = requests.post(url, data=({
+            "user":user,
+            "password":password,
+            "filename":filename,
+            "append":append,
+            "fwd_type":fwd_type,
+            "prgname":prgname,
+            "prgver":prgver,
+            "content":content
+          }), timeout=httpTimeOut)
+      #ret = str(r.status_code)
+      ret = "OK" if r.status_code == 200 else str(r.status_code)
       okstr = "<ERROR> " if r.status_code not in range(200,203) else ""
       if r.status_code in range(400,500): v = 400
       text = r.text
@@ -3004,6 +3496,7 @@ def ftpFile(url, user, password, filename, appendFile, content):
   ftps = False
   ret = "FAILED"
   text = ""
+  binary = os.path.exists(content)                             # use binary mode if content is a file name
   # recreate url
   if "ftps://" in url:
     url = url[7:]
@@ -3013,22 +3506,30 @@ def ftpFile(url, user, password, filename, appendFile, content):
   srv,path = extractSRV(url)
   try:
     ftp = ftplib.FTP_TLS(srv) if ftps else ftplib.FTP(srv)
-  except: pass
-  #print("srv: "+srv+" path: "+path+" user: "+user+" pwd: "+password+" filename: "+filename)
+    v = 0
+  except Exception as e:
+    ret = str(e)
+    v = 999
+    pass
+  #tprint("srv: "+srv+" path: "+path+" user: "+user+" pwd: "+password+" filename: "+filename)
   okstr = "<ERROR> "
   # v0.08 multiple attempts httpTries (3)
-  v = 0
   while ret != "OK" and v < httpTries:
     try:
       ftp.login(user, password)
       if ftps: ftp.prot_p()
       ftp.cwd(path)
-      with io.BytesIO() as fp:
-        fp.write(bytearray(content,'latin-1'))
-        fp.seek(0)
-        #res = ftp.storlines("STOR " + filename, fp)
-        res = ftp.storlines("APPE " + filename, fp) if appendFile else ftp.storlines("STOR " + filename, fp)
-        if res.startswith('226 Transfer complete'): ret = "OK"
+      if binary:
+        res = ftp.storbinary("STOR "+filename, open(content, 'rb'))
+        if res.startswith('226 '): ret = "OK"
+        ftp.quit()
+      else:
+        with io.BytesIO() as fp:
+          fp.write(bytearray(content,'latin-1'))
+          fp.seek(0)
+          #res = ftp.storlines("STOR " + filename, fp)
+          res = ftp.storlines("APPE " + filename, fp) if appendFile else ftp.storlines("STOR " + filename, fp)
+          if res.startswith('226 Transfer complete'): ret = "OK"
     #except (OSError, ftplib.all_errors) as e:
     except Exception as e:
       ret = str(e)
@@ -3041,6 +3542,7 @@ def ftpFile(url, user, password, filename, appendFile, content):
 def forwardDictToFile(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys,fwd_type):
   # convert the given dict and export this file to url-dependend target (use default filename if not given in url)
   # used by REALTIMETXT, CLIENTRAWTXT, CSVFILE, TXTFILE, TEXTFILE, RAWTEXT, WSWIN
+  debugPrint("forwardDictToFile "+nr+" start")
   ret = ""
   appendFile = False
   if url[-1] == "/":                                           # path given but no name so use defaults
@@ -3070,13 +3572,17 @@ def forwardDictToFile(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remap
     outstr = dictToString(d_in,"\n",False,ignoreKeys,[],True,True,False)   # just a textfile; separated with "\n"
   if script != "":
     outstr = modExec(nr, script, outstr)                       # modify outstr with external script before sending
-    if outstr == execOnly: return                              # just run the exec-script but do not forward the string
+    if outstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
   if "http://" in url or "https://" in url:                    # send via http/POST
     typ = "post"
-    text,ret = postFile(url, fwd_sid, fwd_pwd, filename, appendFile, outstr)
+    text,ret = postFile(url, fwd_sid, fwd_pwd, filename, appendFile, fwd_type, outstr)
+    #print("FWD-"+nr+" fwd_type: "+fwd_type+" typ: "+typ+" ret: "+ret)
   elif "ftp://" in url or "ftps://" in url:                    # save to FTP(S) server
     typ = "ftp"
     text,ret = ftpFile(path, fwd_sid, fwd_pwd, filename, appendFile, outstr)
+    #print("FWD-"+nr+" fwd_type: "+fwd_type+" typ: "+typ+" ret: "+ret)
   else:                                                        # save as local file
     typ = "save"
     try:
@@ -3091,19 +3597,24 @@ def forwardDictToFile(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remap
       ret = "ERROR"
       pass
   okstr = "<ERROR> " if ret[:2] != "OK" and ret[:3] != "200" else ""
+  # v0.10 queue data if service is unavailable - there's no v
+  #qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  qstr = ""
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
   if sndlog: sndPrint(okstr + "FWD-"+nr+": " + typ + " " + path + filename + " : " + ret)
-  return
+  debugPrint("forwardDictToFile "+nr+" stop")
+  return                                                       # forwardDictToFile
 
 def dictToWSWin(d_in,nr,ignoreKeys,remapKeys):
   # 2do: implement remapKeys
   outstr = ""
   d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
-  #d = d_in.copy()
   d.update(min_max)                                            # append min_max values
   # remap keys here
   now = time.localtime()                                       # 2do: better to use original date/time
-  outstr += time.strftime('%d.%m.%Y', now) + ";"                                                             # date (TT.MM.JJJJ)
-  outstr += time.strftime('%H:%M', now) + ";"                                                                # time (hh:mm)
+  outstr += time.strftime('%d.%m.%Y', now) + ";"                                                             # date  (TT.MM.JJJJ)
+  outstr += time.strftime('%H:%M', now) + ";"                                                                # time  (hh:mm)
   outstr += getfromDict(d,["tempinc"],ignoreKeys).replace(".",",") + ";"                                     # 1     idTempInnen
   outstr += getfromDict(d,["humidityin","indoorhumidity"],ignoreKeys).replace(".",",") + ";"                 # 17    idFeuchteInnen
   outstr += getfromDict(d,["baromrelhpa"],ignoreKeys).replace(".",",") + ";"                                 # 133   idLuftdruck
@@ -3131,7 +3642,7 @@ def dictToWSWin(d_in,nr,ignoreKeys,remapKeys):
   outstr += getfromDict(d,["soilmoisture2"],ignoreKeys).replace(".",",") + ";"                               # 30    idMoisture2
   outstr += getfromDict(d,["soilmoisture3"],ignoreKeys).replace(".",",") + ";"                               # 31    idMoisture3
   outstr += getfromDict(d,["soilmoisture4"],ignoreKeys).replace(".",",") + ";"                               # 32    idMoisture4
-  outstr += leafTo15(getfromDict(d,["leafwetness_ch1","leafwetness"],ignoreKeys).replace(".",",")) + ";"     # 25    idLeafWet1
+  outstr += leafTo15(getfromDict(d,["leafwetness_ch1","leafwetness1","leafwetness"],ignoreKeys).replace(".",",")) + ";"     # 25    idLeafWet1
   outstr += leafTo15(getfromDict(d,["leafwetness_ch2","leafwetness2"],ignoreKeys).replace(".",",")) + ";"    # 26    idLeafWet2
   outstr += leafTo15(getfromDict(d,["leafwetness_ch3","leafwetness3"],ignoreKeys).replace(".",",")) + ";"    # 27    idLeafWet3
   outstr += leafTo15(getfromDict(d,["leafwetness_ch4","leafwetness4"],ignoreKeys).replace(".",",")) + ";"    # 28    idLeafWet4
@@ -3144,21 +3655,34 @@ def dictToWSWin(d_in,nr,ignoreKeys,remapKeys):
   outstr += getfromDict(d,["stationtype"],ignoreKeys) + ";"                                                  # stationtype
   if len(outstr) > 0 and outstr[-1] == ";":
     outstr = outstr[:-1]                                       # delete last semicolon
-  outstr += "\r\n"                                             # line end
+  outstr += "\r\n"                                             # line end for WSWin
   outstr = outstr.replace("null","")                           # perhaps "NULL"
-  return outstr
+  return outstr                                                # dictToWSWin
 
-def forwardDictToMQTT(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys,MQTTsendMin,metric):
+def forwardDictToMQTT(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys,MQTTsendMin,fwd_options,metric):
   # 2do: convert minmax to imperial, add missing elements from metric dict
   # used by MQTTMET and MQTTIMP
+  debugPrint("forwardDictToMQTT "+nr+" start")
   global last_mqtt
   global MQTTsendTime
   MQTTsendAll = False
+  # v0.10 - gather options from FWD_OPTION
+  o = stringToDict(fwd_options.replace("\,","[Komma]"),",",strip=True)
+  MQTTCYCLE = getfromDict(o,["MQTTCYCLE","mqttcycle"],ignoreKeys,"")       # override FWD_MQTT_CYCLE (old setting)
+  MQTTsendMin = intFallback(MQTTCYCLE,0) if MQTTsendMin == 0 else MQTTsendMin
   if MQTTsendMin > 0:                                          # only transfer changed values but every given minutes the complete set
     MQTTonChangeOnly = True                                    # send only changed values via MQTT - set to False for any value every time
   else: MQTTonChangeOnly = False                               # send all data every time
+  # write HA dicovery topics
+  HAdiscovery = mkBoolean(getfromDict(o,["hass"],ignoreKeys,""))
+  hass_dev_name = getfromDict(o,["devname"],ignoreKeys,"FOSHKplugin")
+  withminmax = mkBoolean(getfromDict(o,["minmax"],ignoreKeys,"True"))
+  withstatus = mkBoolean(getfromDict(o,["status"],ignoreKeys,"")) if not status else status
+
   d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
-  #d = d_in.copy()
+
+  url = url.replace(" ","")                                    # remove " "
+
   prefix = level = ""
   port = 1883                                                  # default MQTT port
   ignoreValues=["-9999","None","null"]                         # ignoreKeys = blacklist keys; ignoreValues = empty values
@@ -3175,27 +3699,208 @@ def forwardDictToMQTT(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remap
   else: level = SID
   i = url.find(":")
   if i > 0:
-    port = url[i+1:]
-    try:
-      port = int(port)
-    except ValueError:
-      port = 1883
+    port = intFallback(url[i+1:],1883)
     url = url[:i]
   srv = url
-  if metric: d.update(min_max)                                 # append min_max values
-  else: d.update(metricToImpDict(min_max,[],ignoreValues))     # append min_max values (convert from imperial)
-  if status: d.update(addStatusToDict(d, True))                # append status to the dict d if set
+
+  if withminmax:
+    if metric: d.update(min_max)                               # append min_max values
+    else: d.update(metricToImpDict(min_max,[],ignoreValues))   # append min_max values (convert from imperial)
+  if withstatus: d.update(addStatusToDict(d, True))            # append status to the dict d if set
+
+#  d.update(addMoreToDict(d,myLanguage))                        # add some more topics
+
   # check if complete send is necessary
   if time.time() >= MQTTsendTime + (MQTTsendMin * 60): MQTTsendAll = True
+
   # create output list
+  hw_version = getfromDict(d,["model"],{},"FOSHKplugin")
+  sw_version = getfromDict(d,["stationtype"],{},prgbuild)
+  uniqid = getfromDict(d,["PASSKEY"],{},"FOSHKplugin") if hass_dev_name == "FOSHKplugin" else hass_dev_name
+  uniqid = uniqid.encode('ascii',errors='ignore').decode()     # no umlauts allowed!
+
   for key,value in d.items():
     if key in ignoreKeys or (IGNORE_EMPTY and value in ignoreValues):
       None
     elif not MQTTonChangeOnly or MQTTsendAll or (MQTTonChangeOnly and (key not in last_mqtt or value != last_mqtt[key])):
+    #else:
+      # append general data topic
       d_out.append({'topic':level + "/"+prefix+key,'payload': strToNum(value)})
-      #if myDebug: logPrint("<DEBUG> "+level+"/"+prefix+key+": "+str(strToNum(value)))
+
+      # v0.10 create mqtt discovery items for home assistant
+      hass_icon = "mdi:circle-outline"                         # default
+      hass_dev_cla = None                                      # default
+      hass_unit_of_meas = None                                 # default
+      hass_val_tpl = None                                      # default
+      if ("temp" in key or "tc_co2" in key or "tf_ch" in key or "dewpt" in key or "windchillc" in key or "feelslike" in key or "heatindex" in key) and not "time" in key:
+        hass_icon = "mdi:thermometer"
+        hass_dev_cla = "temperature"
+        hass_unit_of_meas = "°C" if metric else "°F"
+      elif "spread" in key and not "time" in key:
+        hass_icon = "mdi:delta"
+        hass_unit_of_meas = "K"
+      elif ("humi" in key or "soilmoisture" in key or "soilad" in key) and not "time" in key:
+        hass_icon = "mdi:watering-can" if "soil" in key else "mdi:water-percent"
+        hass_dev_cla = "humidity"
+        hass_unit_of_meas = "%" if not "soilad" in key else None
+      elif "barom" in key and not "time" in key:
+        hass_icon = "mdi:gauge"
+        hass_dev_cla = "pressure"
+        hass_unit_of_meas = "hPa" if metric else "inHg"
+      elif ("wind" in key or "gust" in key) and ("kmh" in key or "mph" in key) and not "time" in key:
+        hass_icon = "mdi:weather-windy"
+        hass_dev_cla = "speed"
+        hass_unit_of_meas = "km/h" if metric else "mph"
+      elif "winddir" in key:
+        hass_icon = "mdi:compass-rose"
+        hass_unit_of_meas = "°"
+      elif "windrun" in key:                                   # windrun = mi, windrunkm = km - have to check why both are present
+        hass_icon = "mdi:turbine"
+        hass_unit_of_meas = "km" if "km" in key else "mi"
+        hass_dev_cla = "distance" 
+      elif "time" in key or "dateutc" in key or "suncheck" in key or "minmax_init" in key:
+        hass_icon = "mdi:clock"
+        if key == "runtime":
+          #hass_dev_cla = "duration"                            # does not work as expected
+          hass_unit_of_meas = "s"
+        elif key != "dateutc":
+          #hass_dev_cla = "timestamp",                          # does not work - topic will be ignored if present
+          hass_val_tpl = "{{ as_local(as_datetime(value)) }}"  # show as local time
+      elif "lightning" in key:
+        hass_icon = "mdi:flash"
+        if key == "lightning":
+          hass_dev_cla = "distance"
+          hass_unit_of_meas = "km"
+      elif ("batt" in key and not "warning" in key) or "ws90cap_volt" in key:
+        if "." in value:
+          hass_icon = "mdi:sine-wave"
+          hass_dev_cla = "voltage"
+          hass_unit_of_meas = "V"
+        elif (("wh65batt" in key or "lowbatt" in key or "wh26batt" in key or "wh25batt" in key) or ("batt" in key and len(key) == 5)):
+          hass_icon = "mdi:battery" if value == "0" else "mdi:battery-alert-variant-outline"
+        elif value == "6": hass_icon = "mdi:battery-charging"
+        elif value == "5": hass_icon = "mdi:battery"
+        elif value == "4": hass_icon = "mdi:battery-80"
+        elif value == "3": hass_icon = "mdi:battery-50"
+        elif value == "2": hass_icon = "mdi:battery-alert-variant-outline"
+        elif value == "1": hass_icon = "mdi:battery-alert-variant-outline"
+        else:
+          hass_icon = "mdi:battery"
+      elif "rain" in key:
+        hass_icon = "mdi:weather-rainy"
+        if "rainrate" in key or "rrain" in key:
+          hass_dev_cla = "precipitation_intensity"
+          hass_unit_of_meas = "mm/h" if metric else "in/h"
+        else:
+          hass_dev_cla = "precipitation"
+          hass_unit_of_meas = "mm" if metric else "in"
+      elif "leak" in key:
+        hass_icon = "mdi:water-off"
+      elif ("pm1_co2" in key or "pm1_24h_co2" in key or "pm4_co2" in key or "pm4_24h_co2" in key or "pm10_co2" in key or "pm10_24h_co2" in key or "pm25_co2" in key or "pm25_24h_co2" in key or "pm25_ch" in key or "pm25_avg_24h_ch" in key or "AQI" in key) and not "time" in key:
+        hass_icon = "mdi:molecule"
+        if "AQI" in key:
+          hass_dev_cla = "aqi"
+        else:
+          hass_unit_of_meas = "µg/m³"
+      elif key == "co2" or key == "co2_24h" or "co2in" in key:
+        hass_icon = "mdi:molecule-co2"
+        hass_dev_cla = "carbon_dioxide"                        # see https://www.home-assistant.io/integrations/sensor/#device-class
+        hass_unit_of_meas = "ppm"
+      elif "leafwetness" in key and not "time" in key:
+        hass_icon = "mdi:leaf"
+        hass_unit_of_meas = "%"
+      elif "sig" in key and not "time" in key:
+        if value == "4": hass_icon = "mdi:signal-cellular-3"
+        elif value == "3": hass_icon = "mdi:signal-cellular-2"
+        elif value == "2": hass_icon = "mdi:signal-cellular-1"
+        elif value == "1": hass_icon = "mdi:signal-cellular-outline"
+        else: hass_icon = "mdi:signal-off"
+      elif ("uv" in key or "brightness" in key or "solarradiation" in key or "srsum" in key) and not "time" in key:
+        hass_icon = "mdi:sun-wireless"
+        if key == "uv":
+          hass_unit_of_meas = "Index"
+        elif "brightness" in key:
+          hass_dev_cla = "illuminance"
+          hass_unit_of_meas = "lx"
+        elif "solarradiation" in key or key == "srsum":
+          hass_dev_cla = "irradiance"
+          hass_unit_of_meas = "W/m²"
+      elif "sunhours" in key or "sunmins" in key:
+        #hass_dev_cla = "duration"                              # does not work as expected
+        hass_icon = "mdi:clock-time-nine-outline"
+        hass_unit_of_meas = "h" if "sunhours" in key else "min"
+      elif "warning" in key and not "time" in key:
+        hass_icon = "mdi:alert"
+      elif "lvl" in key and not "time" in key:
+        hass_icon = "mdi:numeric-"+value
+      elif "cloud" in key:
+        hass_icon = "mdi:cloud-arrow-up-outline"
+        hass_dev_cla = "distance"
+        hass_unit_of_meas = "m" if metric else "ft"
+      elif key == "dailyboot":
+        hass_icon = "mdi:sigma"
+      elif "ptrend" in key or "pchange" in key:
+        pt = floatFallback(value)
+        if pt <= -2: hass_icon = "mdi:trending-down"
+        elif pt < 0: hass_icon = "mdi:triangle-small-down"
+        elif pt == 0: hass_icon = "mdi:trending-neutral"
+        elif pt >= 2: hass_icon = "mdi:trending-up"
+        elif pt > 0: hass_icon = "mdi:triangle-small-up"
+        if "pchange" in key:
+          hass_dev_cla = "pressure"
+          hass_unit_of_meas = "hPa" if metric else "inHg"
+      # 28.03.24 - new
+      elif "intvl" in key or key == "interval" and not "warning" in key:
+        hass_icon = "mdi:clock-check-outline"
+        #hass_dev_cla = "duration"                              # does not work as expected
+        hass_unit_of_meas = "s"
+      elif ("heap" in key) and not "time" in key:
+        hass_icon = "mdi:memory"
+        hass_dev_cla = "data_size"
+        hass_unit_of_meas = "B"
+      elif key == "wprogtxt" or key == "wnowtxt" or key == "stationtype" or key == "model" or key == "freq" or key == "PASSKEY" or key == "ws90_ver":
+        hass_icon = "mdi:information-slab-box-outline"
+      elif key == "sunshine":
+        hass_icon = "mdi:weather-sunny"
+      elif key == "running":
+        hass_icon = "mdi:run"
+
+      # create the payload
+      payload = {
+        "name":key,
+        "uniq_id":uniqid+"-"+key,
+        "icon":hass_icon, 
+        "stat_t":level + "/" + prefix+key,
+        "unit_of_meas":hass_unit_of_meas,
+        "frc_upd":"True",
+        "dev":{
+          "identifiers": [ uniqid ],
+          "name": hass_dev_name,
+          "mf": "Phantasoft",
+          "mdl": prgname+" "+prgbuild,
+          "serial_number": uniqid,
+          "hw_version": hw_version,
+          "sw_version": sw_version,
+#         "support_url": "https://foshkplugin.phantasoft.de/generic#hass"
+          "configuration_url": "https://foshkplugin.phantasoft.de/generic#hass"
+        }
+      }
+
+      # "patch" the payload - defaults None don't work
+      if hass_dev_cla != None: payload.update({"dev_cla":hass_dev_cla})
+      if hass_val_tpl != None: payload.update({"val_tpl":hass_val_tpl})
+
+      # append the discovery topic
+      d_out.append({'topic':'homeassistant/sensor/'+uniqid+'/'+key+'/config','payload': json.dumps(payload)})
+
+      #tprint("config: "+'homeassistant/sensor/'+uniqid+'/'+key+'/config')
+      #tprint("level:  "+level + "/" + prefix+key)
+
+  # internal debug only
+  #tprint("nr: "+str(nr)+" onChange: "+str(MQTTonChangeOnly)+" mqttcycle: "+MQTTCYCLE+" discovery: "+str(HAdiscovery)+" devname: "+hass_dev_name+" withminmax: "+str(withminmax)+" withstatus: "+str(withstatus)+" level: "+level+" prefix: "+prefix+" uniqid: "+uniqid)
+
   # modify the list before sending with external script (list->str->script->list)
-  try:  
+  try:
     if script != "":
       d_out = json.loads(modExec(nr, script, json.dumps(d_out))) # modify outstr with external script before sending
       if json.dumps(d_out) == execOnly: return                   # just run the exec-script but do not forward the string
@@ -3221,9 +3926,15 @@ def forwardDictToMQTT(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remap
     v += 1                                                     # count of tries
     if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
   # done
+  outstr = json.dumps(d_out)                                   # dict to string
+  # v0.10 queue data if service is unavailable
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
   tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
   if sndlog: sndPrint(okstr + "FWD-"+nr+": MQTT sending of " + str(d_out_len) + " topics with level " + level + "/" + prefix + " to " + srv + ":" + str(port) + ": " + ret + tries)
-  return
+  debugPrint("forwardDictToMQTT "+nr+" stop")
+  return                                                       # forwardDictToMQTT
 
 def quoteString(s):
   noquote = ("True","False","None")
@@ -3237,12 +3948,131 @@ def quoteString(s):
       s = "\"" + s.replace(",","\,") + "\""
   return s
 
-def forwardDictToInfluxDB(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys,metric):
-  # used by INFLUXMET and INFLUXIMP
+def timeStampNS():
+  try:
+    ts = str(time.time_ns())
+  except AttributeError:                                       # function not available (Python before v3.7)
+    ts = str(time.time()).replace(".","")+"000"
+  return ts
+
+def writeQueueFile(nr, qdir, outstr, typ=""):                  # use YYYYMMDDHHMMSS as default extension, but even allow csv
+  qstr = ""
+  if typ == "AWEKAS" or typ == "WSWIN" or typ == "WEEWX": ext = "csv"
+  elif typ == "REALTIME" or typ == "CMX": ext = "txt"
+  else: ext = time.strftime('%y%m%d%H%M%S', time.localtime())
+  qfile = qdir+prgname+"-queued-data-"+nr+"."+ext
+  try:
+    os.makedirs(qdir,exist_ok = True)
+  except:
+    debugPrint("FWD-"+nr+": unable to create queue directory "+qdir)
+  try:
+    # v0.10: write AWEKAS, WSWIN or WEEWX CSV header
+    if not os.path.exists(qfile):
+      if typ == "WSWIN":
+        with open(qfile, 'w') as write_file: write_file.write(WSWinCSVHeader)
+      elif typ == "AWEKAS":
+        with open(qfile, 'w') as write_file: write_file.write(AwekasCSVHeaderA+"\n"+AwekasCSVHeaderB+"\n")
+      elif typ == "WEEWX":
+        with open(qfile, 'w') as write_file: write_file.write(WeeWXCSVHeader)
+      # write the mapping conf file here - not complete yet
+      #with open(qdir+prgname+"-queued-data-"+nr+".conf", 'w') as write_file: write_file.write("[CSV]\nfile="+qfile+"\ndelimeter=;\ninterval = derive\nqc = True\ncalc_missing = True\nignore_invalid_data = True\ntranche = 250\nUV_sensor = True\nsolar_sensor = True\nraw_datetime_format=%Y-%m-%d %H:%M:%S\nrain = discrete\nwind_direction = 1,360\n")
+    # One individual file per set for easier further processing
+    with open(qfile, 'a+') as write_file: qres = write_file.write(outstr)
+    qstr = ", queued"                                          # note queuing state
+    debugPrint("FWD-"+nr+": queuing to "+qfile)
+  except Exception as err:
+    debugPrint("FWD-"+nr+": unable to write to queue: "+str(err))
+    qstr = ", queuing failed"                                  # note queuing failure
+    pass
+  return qstr
+
+def processQueue(v, nr, d_in = {}, ignoreKeys = {}, remapKeys = {}, outstr = "", client = None, fwd_sid = ""):
+  qstr = ""                                                    # if data was queued instead of sent
+  ismetric = True if "kmh" in d_in or "rainmm" in d_in or "tempc" in d_in or "tempinc" in d_in else False
+  outstr = outstr.strip()
+  fwd_type = getfromFWDarr(nr,5)                               # FWD_TYPE
+  qtype = getfromFWDarr(nr,20)                                 # gather type for queued file
+  qdir = getfromFWDarr(nr,21)                                  # where to save queued files
+  if qdir == "": qdir = CONFIG_DIR+"/"+prgname+"-queue/FWD-"+nr+"/"
+  if v >= httpTries:                                           # save to file for later resend
+    # only queue if activated manually or per default for INFLUX targets (if not deactivated)
+    if qtype != "FALSE" and qtype != "" or (qtype == "" and "INFLUX" in fwd_type) or (qtype == "" and fwd_type == "AWEKAS"):
+      # problem: d_in may be metric but imperial needed vice versa - AWEKAS, CMX, WSWIN: metric; WEEWX: imperial
+      if (qtype == "AWEKAS" or qtype == "TRUE") and fwd_type == "AWEKAS": qstr = writeQueueFile(nr, qdir, outstr+"\n", qtype)
+      elif qtype == "CMX" or qtype == "REALTIMETXT" and ismetric: qstr = writeQueueFile(nr, qdir, dictToREALTIME(d_in,nr,ignoreKeys,remapKeys)+"\n", qtype)
+      elif qtype == "WSWIN" and ismetric: qstr = writeQueueFile(nr, qdir, dictToWSWin(d_in,nr,ignoreKeys,remapKeys), qtype)
+      elif qtype == "WEEWX" and not ismetric: qstr = writeQueueFile(nr, qdir, dictToWeeWX(d_in,nr,ignoreKeys,remapKeys), qtype)
+      elif "INFLUX" in qtype or ((qtype == "" or qtype == "TRUE") and "INFLUX" in fwd_type): qstr = writeQueueFile(nr, qdir, outstr+" "+timeStampNS()+"\n")
+      # v0.10: Baustelle: weitere Queue-Formate
+      else: qstr = writeQueueFile(nr, qdir, outstr)
+  else:                                                        # sending was ok - check queued data and resend if present
+    if "INFLUX" in qtype or ((qtype == "" or qtype == "TRUE") and "INFLUX" in fwd_type):
+      srv, port, dbname, ssl = urlParse4Influx(getfromFWDarr(nr,0)) # get the necessary information from the URL
+      ver = 2 if "INFLUX2" in fwd_type else 1
+      list_of_files = sorted( filter( os.path.isfile, glob.glob(qdir + prgname+"-queued-data-"+nr+".*") ) )
+      if len(list_of_files) > 0:
+        debugPrint("FWD-" + nr + ": process queued data for " + dbname + "@" + srv + ":" + str(port))
+        for file_path in list_of_files:
+          try:                                                 # qnd: prevent FileNotFoundError: [Errno 2] No such file or directory:
+            with open(file_path) as f:
+              outstr = f.read()                                # read file
+              if sendToInfluxDB(client, outstr, ver, dbname, fwd_sid):
+                sndPrint("<OK> FWD-"+nr+": wrote queued data of "+file_path+" to "+dbname + "@" + srv + ":" + str(port))
+                try: os.remove(file_path)                      # remove file afterwards
+                except:
+                  sndPrint("<WARNING> FWD-"+nr+" unable to remove queue file "+file_path)
+                  pass
+              else:
+                sndPrint("<WARNING> FWD-" + nr + ": unable to send queued data of " + file_path + " to "+ dbname + "@" + srv + ":" + str(port))
+                break
+          except Exception as err:
+            debugPrint("FWD-" + nr + ": error while processing queued files: " + str(err))
+            pass
+  # done
+  return qstr
+
+def urlParse4Influx(url):                                      # parse url, output srv, port, dbname, ssl
+  port = 8086
+  i = url.find("://")
+  if i > 0:
+    ssl = True if i == 5 else False                            # SSL or unsecured
+    url = url[i+3:]
+  i = url.find("@")                                            # find database name dbname
+  if i > 0:
+    dbname = url[i+1:]                                         # dbname = bucket
+    url = url[:i]
+  else: dbname = SID
+  i = url.find(":")
+  if i > 0:
+    port = url[i+1:]
+    try:
+      port = int(port)                                         # port to send data to
+    except ValueError: pass
+    url = url[:i]
+  srv = url
+  return(srv, port, dbname, ssl)
+
+def sendToInfluxDB(client, iflstr, ver = 1, dbname = "", fwd_sid = ""):
+  DBwritten = False
+  try:
+    if ver == 1:                                               # for InfluxDB v1
+      DBwritten = client.write_points(iflstr, protocol='line') # store data to database
+    else:
+      client.write(bucket=dbname, org=fwd_sid, record=iflstr)  # store data to database
+      DBwritten = True
+  except exceptions.InfluxDBClientError as err:
+    debugPrint("sendtoInfluxDB InfluxDBClientError for InfluxDB v" + str(ver) + ": " + str(err.code) + ": " + err.content)
+    DBwritten = True
+    pass
+  except Exception as err:
+    debugPrint("sendtoInfluxDB Error for InfluxDB v" + str(ver) + ": " + str(err))
+    pass
+  return DBwritten
+
+def forwardDictToInfluxDB(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,remapKeys,metric,ver=1):
   # initialize vars
+  debugPrint("forwardDictToInfluxDB "+nr+" start")
   d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
-  #d = d_in.copy()
-  port = 8086                                                  # default InfluxDB port
   ignoreValues=["-9999","None","null","",None]                 # ignoreKeys = blacklist keys; ignoreValues = empty values
 
   # prepare string for InfluxDB line protocol
@@ -3253,7 +4083,6 @@ def forwardDictToInfluxDB(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,r
     if tagarr[i] not in ignoreKeys and tmp not in ignoreValues: iflstr += tagarr[i] + "=" + tmp + ","
   msystem = "metric" if metric else "imperial"
   iflstr += "Forward" + "=" + nr + "," + "SID" + "=" + defSID + "," + "msystem" + "=" + msystem + " " # end of tag field
-
   for key, value in d.items():
     if key not in ignoreKeys and value not in ignoreValues: iflstr += key + "=" + quoteString(value) + ","
 
@@ -3271,58 +4100,42 @@ def forwardDictToInfluxDB(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,r
       except:
         value = "null"
       if key not in ignoreKeys and value not in ignoreValues: iflstr += key + "=" + quoteString(value) + ","
-
   mm = metricToImpDict(min_max,[],ignoreValues) if not metric else min_max
   for key, value in mm.items():
     if key not in ignoreKeys and value not in ignoreValues: iflstr += key + "=" + quoteString(value) + ","
-
   if status: iflstr += getStatusString(",",True)               # append status to line if status set
-
   if len(iflstr) > 0 and iflstr[-1] == ",": iflstr = iflstr[:-1]
-  #print(iflstr)
 
   # parse url
-  i = url.find("://")
-  if i > 0:
-    ssl = True if i == 5 else False                            # SSL or unsecured
-    url = url[i+3:]
-  i = url.find("@")                                            # find database name dbname
-  if i > 0:
-    dbname = url[i+1:]
-    url = url[:i]
-  else: dbname = SID
-  i = url.find(":")
-  if i > 0:
-    port = url[i+1:]
-    try:
-      port = int(port)                                         # port to send data to
-    except ValueError:
-      port = 8086
-    url = url[:i]
-  srv = url
-
+  srv, port, dbname, ssl = urlParse4Influx(url)                # get the necessary information from the URL
+  
   # modify the list before sending with external script (list->str->script->list)
   try:
     if script != "":
-      iflstr = modExec(nr, script, iflstr)                       # modify outstr with external script before sending
-      if iflstr == execOnly: return                              # just run the exec-script but do not forward the string
+      iflstr = modExec(nr, script, iflstr)                     # modify outstr with external script before sending
+      if iflstr == execOnly:                                   # just run the exec-script but do not forward the string
+        updateFWDstate(execOnly, nr)
+        return
   except: pass
 
-  # everything should now be clear: server, port, database, user, password and data to send (iflstr) - transfer now
-  if myDebug: sndPrint("<DEBUG> toINFLUXDB: srv: "+srv+" port: "+str(port)+" db: "+dbname+" usr: "+fwd_sid+" pwd: "+fwd_pwd+" ssl: "+str(ssl)+" url: "+url+" *"+iflstr+"*")
-
-  ret = ""
+  # send to InfluxDB server
+  ret = qstr = ""
   okstr = "<ERROR> "
   v = 0
   while okstr[0:7] == "<ERROR>" and v < httpTries:
     try:
       d_out_len = iflstr.count(",")
-      client = InfluxDBClient(host=srv, port=port, username=fwd_sid, password=fwd_pwd, ssl=ssl, verify_ssl=False)
-      client.create_database(dbname)                           # generate the database prophylactically
-      client.switch_database(dbname)                           # connect to database
-      if client.write_points(iflstr, protocol='line'):         # store data to database
+      if ver == 1:
+        write_api = InfluxDBClient(host=srv, port=port, username=fwd_sid, password=fwd_pwd, ssl=ssl, verify_ssl=False)
+        write_api.create_database(dbname)                      # generate the database prophylactically
+        write_api.switch_database(dbname)                      # connect to database
+      else:
+        client = InfluxDB2Client(url=srv+":"+str(port), token=fwd_pwd, org=fwd_sid, debug=False)
+        write_api = client.write_api(write_options=SYNCHRONOUS)
+      if sendToInfluxDB(write_api, iflstr, ver, dbname, fwd_sid):    # dbname = bucket - store data to database
         ret = "OK"
         okstr = ""
+      else: ret = "InfluxSendError"
     except Exception as err:
       ret = str(err)
       if len(ret) >= 3 and ret[:3] == "400": v = 400           # don't try again on local error
@@ -3330,8 +4143,96 @@ def forwardDictToInfluxDB(url,d_in,fwd_sid,fwd_pwd,status,script,nr,ignoreKeys,r
     v += 1                                                     # count of tries
     if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
   # done
-  tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
-  if sndlog: sndPrint(okstr + "FWD-"+nr+": InfluxDB sending of " + str(d_out_len) + " values to " + dbname + "@" + srv + ":" + str(port) + ": " + ret + tries)
+  # v0.10: save data locally if server is unreachable (later resend)
+  qstr = processQueue(v, nr, {}, {}, {}, iflstr, write_api, fwd_sid)
+  # close the socket
+  try:
+    write_api.close()
+    if ver == 2: client.close()
+  except:
+    debugPrint("FWD-"+nr+": error while closing InfluxDB client")
+    pass
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
+  tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries"+qstr+")"
+  if sndlog: sndPrint(okstr + "FWD-"+nr+": InfluxDB v"+str(ver)+" sending of " + str(d_out_len) + " values to " + dbname + "@" + srv + ":" + str(port) + ": " + ret + tries)
+  debugPrint("forwardDictToInfluxDB "+nr+" stop")
+  return
+
+# v0.10 MIYO support
+def sendToMIYO(url):
+  ret = ""
+  okstr = "<ERROR> "
+  v = 0
+  while okstr[0:7] == "<ERROR>" and v < httpTries:
+    try:
+      r = requests.get(url,timeout=httpTimeOut)
+      ret = str(r.status_code)
+      okstr = "<ERROR> " if r.status_code not in range(200,203) else ""
+      if r.status_code in range(400,500): v = 400
+    except requests.exceptions.Timeout as err:
+      ret = "TIMEOUT"
+    except requests.exceptions.ConnectionError as err:
+      ret = "CONNERR"
+    except requests.exceptions.RequestException as err:
+      ret = "REQERR"
+    v += 1                                                     # count of tries
+    if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
+  # done
+  tries = "0" if v == 1 or v > httpTries else str(v)
+  return (ret,tries)
+
+def forwardDictToMIYO(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys):
+  # send temperature, wind and rain state to MIYO via http-API
+  debugPrint("forwardDictToMIYO "+nr+" start")
+  d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
+  ignoreValues=["-9999","None","null",""]
+  if fwd_sid == "": fwd_sid = fwd_pwd                          # if pwd is given instead of sid
+  ret = tries = outstr = okstr = ""
+  global last_miyo
+  try:
+    temp = str(round(float(getfromDict(d,["tempc"],ignoreKeys))))   # get value from dict
+    if last_miyo["temperature"] != temp:                       # compare with last value sent to MIYO
+      ret,tries = sendToMIYO("http://"+url+"/api/extern/temperature?"+"apiKey="+fwd_sid+"&temperature="+temp)
+      outstr += " T:"+temp+"/"+ret+"/"+tries
+      last_miyo["temperature"] = temp                          # save value as last sent
+  except (ValueError, TypeError):
+    outstr += " T:Err/"+ret+"/"+tries
+    okstr = "<ERROR> "
+    pass
+  try:
+    wind = str(round(float(getfromDict(d,["windspdkmh_avg10m","windspeedkmh"],ignoreKeys))))    # get value from dict
+    if last_miyo["wind"] != wind:                              # compare with last value sent to MIYO
+      ret,tries = sendToMIYO("http://"+url+"/api/extern/wind?"+"apiKey="+fwd_sid+"&wind="+wind)
+      outstr += " W:"+wind+"/"+ret+"/"+tries
+      last_miyo["wind"] = wind                                 # save value as last sent
+  except (ValueError, TypeError):
+    outstr += " W:Err/"+ret+"/"+tries
+    okstr = "<ERROR> "
+    pass
+  try:
+    rr = float(getfromDict(d,["rainratemm"],ignoreKeys))       # get rainrate
+    hr = float(getfromDict(d,["hourlyrainmm"],ignoreKeys))     # get hourlyrainmm
+    dr = float(getfromDict(d,["dailyrainmm"],ignoreKeys))      # get dailyrainmm
+    # set rain state
+    rain = "true" if (rr != "null" and rr > 0) or (hr != "null" and hr > 1) or (dr != "null" and dr > 1) else "false"
+    if last_miyo["rain"] != rain:                              # compare with last value sent to MIYO
+      ret,tries = sendToMIYO("http://"+url+"/api/extern/rain?"+"apiKey="+fwd_sid+"&rain="+rain)
+      outstr += " R:"+rain+"/"+ret+"/"+tries
+      last_miyo["rain"] = rain                                 # save value as last sent
+  except (ValueError, TypeError):
+    outstr += " R:Err/"+ret+"/"+tries
+    okstr = "<ERROR> "
+    pass
+  if outstr == "": outstr = "no changes - not sent"
+  # v0.10 queue data if service is unavailable - untested!
+  v = int(tries) if tries != "" else 0
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  # 2do: OK wird ausgegeben obwohl INFO
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
+  if sndlog: sndPrint(okstr + "FWD-"+nr+": " + url + " : " + outstr)
+  debugPrint("forwardDictToMIYO "+nr+" stop")
   return
 
 def getTimeZone():
@@ -3605,6 +4506,25 @@ def getFeelsLikeF(temp, hum, wspeed):
     FEELS_LIKE = temp
   return FEELS_LIKE
 
+def addSignalValues(adr):
+  out = ""
+  debugPrint("addSignalValues "+adr+" start")
+  try:
+    for i in range(1,3):
+      r = requests.get("http://"+adr+"/get_sensors_info?page="+str(i),timeout=2)        # timeout = httpTimeOut
+      if r.status_code == 200:
+        j = r.json()
+        debugPrint("addSignalValues: "+str(j))
+        for item in j:
+          if item["id"] != "FFFFFFFF" and item["id"] != "FFFFFFFE": 
+            ch = item["name"][-1] if item["name"][-3:-1] == "CH" and isNumeric(item["name"][-1]) else ""
+            debugPrint(item["img"]+"sig"+ch+"="+item["signal"])
+            out += "&"+item["img"]+"sig"+ch+"="+item["signal"]
+      else: debugPrint("addSignalValues - status_code: "+str(r.status_code))
+  except: pass
+  debugPrint("addSignalValues "+adr+" stop")
+  return out
+
 def addDataToLine(line, what, newvalue, overwrite):
   # sucht what in line und ersetzt mit newvalue oder haengt an line an
   d = stringToDict(line,"&")
@@ -3622,11 +4542,60 @@ def addDataToLine(line, what, newvalue, overwrite):
       except (ValueError, KeyError): pass
     elif what == "dewptf":
       try:
-        temp = float(getfromDict(d,["tempf"]))
-        hum = float(getfromDict(d,["humidity"]))
+        temp = floatFallback(getfromDict(d,["tempf"]))
+        hum = floatFallback(getfromDict(d,["humidity"]))
         newvalue = getDewPointF(temp, hum)
-        #if myDebug: logPrint("<DEBUG> temp: " + str(temp) + "°F (" + str(ftoc(temp,1)) + "°C) hum: " + str(hum) + " dp: " + str(newvalue) + "°F (" + str(ftoc(newvalue,1)) + "°C)")
+        #debugPrint(str(temp) + "°F (" + str(ftoc(temp,1)) + "°C) hum: " + str(hum) + " dp: " + str(newvalue) + "°F (" + str(ftoc(newvalue,1)) + "°C)")
         outstr += "&" + what + "=" + str(newvalue)
+        # v0.10 additional dewpoints dewptinf, dewptNf, dewptf_co2 and dewptinc, dewptNc, dewptc_co2
+        if ADD_DEWPT:
+          temp = floatFallback(getfromDict(d,["tempinf"]))
+          hum = floatFallback(getfromDict(d,["humidityin"]))
+          if isNumeric(temp) and isNumeric(hum):
+            newvalue = getDewPointF(temp, hum)
+            outstr += "&" + "dewptinf" + "=" + str(newvalue)
+          temp = float(getfromDict(d,["tf_co2"]))
+          hum = float(getfromDict(d,["humi_co2"]))
+          if isNumeric(temp) and isNumeric(hum):
+            newvalue = getDewPointF(temp, hum)
+            outstr += "&" + "dewptf_co2" + "=" + str(newvalue)
+          for i in range(1,9):
+            temp = floatFallback(getfromDict(d,["temp"+str(i)+"f"]))
+            hum = floatFallback(getfromDict(d,["humidity"+str(i)]))
+            if isNumeric(temp) and isNumeric(hum):
+              newvalue = getDewPointF(temp, hum)
+              outstr += "&" + "dewpt"+str(i)+"f" + "=" + str(newvalue)
+        # v0.10 additional spread values spread, spreadin, spreadN, spread_co2 (same as metric)
+        if ADD_SPREAD:
+          temp = floatFallback(getfromDict(d,["tempf"]))
+          hum = floatFallback(getfromDict(d,["humidity"]))
+          if isNumeric(temp) and isNumeric(hum):
+            dewpoint = getDewPointF(temp, hum)
+            spread = round((temp-dewpoint)*5/9,1)
+            outstr += "&" + "spread" + "=" + str(spread)
+          temp = floatFallback(getfromDict(d,["tempinf"]))
+          hum = floatFallback(getfromDict(d,["humidityin"]))
+          if isNumeric(temp) and isNumeric(hum):
+            dewpoint = getDewPointF(temp, hum)
+            spread = round((temp-dewpoint)*5/9,1)
+            outstr += "&" + "spreadin" + "=" + str(spread)
+          for i in range(1,9):
+            temp = floatFallback(getfromDict(d,["temp"+str(i)+"f"]))
+            hum = floatFallback(getfromDict(d,["humidity"+str(i)]))
+            if isNumeric(temp) and isNumeric(hum):
+              dewpoint = getDewPointF(temp, hum)
+              spread = round((temp-dewpoint)*5/9,1)
+              outstr += "&" + "spread"+str(i) + "=" + str(spread)
+          temp = float(getfromDict(d,["tf_co2"]))
+          hum = float(getfromDict(d,["humi_co2"]))
+          if isNumeric(temp) and isNumeric(hum):
+            dewpoint = getDewPointF(temp, hum)
+            spread = round((temp-dewpoint)*5/9,1)
+            outstr += "&" + "spread_co2" + "=" + str(spread)
+        # v0.10 - get signal quality from supported console
+        if ADD_SIGNAL:
+          sig = addSignalValues(WS_IP)
+          outstr += sig
       except (ValueError, KeyError): pass
     elif what == "feelslikef":
       try:
@@ -3726,12 +4695,17 @@ def addDataToLine(line, what, newvalue, overwrite):
         winddir = float(getfromDict(d,["winddir"]))
         windgustmph = float(getfromDict(d,["windgustmph"]))
         wind_avg10m.append([int(time.time()),windspeedmph,winddir,windgustmph])
+        try: min_max["windrun"] += round(float(windspeedmph) * inttime / 3600,2)
+        except ValueError: pass
+        min_max["windrun"] = round(min_max["windrun"],2)           # make 2 digits sure
         if "windspdmph_avg10m" not in d.keys():
           outstr += "&windspdmph_avg10m=" + str(avgWind(wind_avg10m,1))
         if "winddir_avg10m" not in d.keys():
           outstr += "&winddir_avg10m=" + str(int(avgWind(wind_avg10m,2)))
         if "windgustmph_max10m" not in d.keys():
           outstr += "&windgustmph_max10m=" + str(maxWind(wind_avg10m,3))
+        if "windrun" not in d.keys():                          # v0.10: windrun in miles
+          outstr += "&windrun=" + str(round(min_max["windrun"],2))
       except (ValueError, KeyError): pass
     elif what == "brightness":
       try:
@@ -3756,7 +4730,12 @@ def addDataToLine(line, what, newvalue, overwrite):
       try:
         interval = 0
         sunseconds = 0
-        sunshine = 0                                           # bool field for sun is shining
+        # bool field for sun is shining respecting hold time given in Config file
+        # last_suntime is "" at start of the day (initMinMax)
+        try:
+          sunshine = 1 if int(min_max["last_suntime"]) + int(SUNSHINE_HOLD) >= int(time.time()) else 0
+        except ValueError:
+          sunshine = 0
         sr = getfromDict(d,["solarradiation","solarRadiation"])
         sunths = float(SUN_MIN) if useSunCalc and COORD_LAT != "" and COORD_LON != "" else 120     # set threshold
         if sr != "null" and float(sr) >= sunths:
@@ -3765,15 +4744,21 @@ def addDataToLine(line, what, newvalue, overwrite):
             currtime = int(time.mktime(time.localtime(int(utcToLocal(time.mktime(time.strptime(value.replace("%20","+").replace("%3A",":"), "%Y-%m-%d+%H:%M:%S")))))))
           except (ValueError, KeyError):
             currtime = time.time()                             # 2do: check if UTC or local
+            value = "none"
           try:
             lasttime = int(getfromDict(min_max,["last_suncheck"])) # last save time in min_max
           except (ValueError, KeyError):
             lasttime = 0
           min_max["last_suncheck"] = currtime if currtime > 0 else ""
-          interval = currtime - lasttime
+          interval = currtime - lasttime                       # Anzahl der Sekunden seit letzter Meldung
+          # v0.10 debug - prevent negative intervals - why are they occuring?
+          if interval < 0:
+            if HIDDEN_FEATURES: pushPrint("<font color=\"#ff0000\"><WARNING> sunhours: negative interval!\n\ncurrtime: "+str(currtime)+"\nlasttime: "+str(lasttime)+"\ninterval: " + str(interval) + "\nsr: "+ str(sr)+"\ndateutc: "+value+"\n</font>")
+            else: logPrint("<WARNING> sunhours: negative interval! - currtime: "+str(currtime)+" lasttime: "+str(lasttime)+" interval: " + str(interval) + " sr: "+ str(sr)+" dateutc: "+value)
           if useSunCalc:
             if interval < 365: sunseconds = calcSunduration(sr, interval, currtime)  # gibt Sekunden mit Sonne aus; keine Ahnung, was die 365 soll
             min_max["sunmins"] += sunseconds/60
+            min_max["sunmins"] = round(min_max["sunmins"],3)
             if sunseconds > 0:
               min_max["last_suntime"] = currtime if currtime > 0 else ""
               sunshine = 1
@@ -3783,9 +4768,10 @@ def addDataToLine(line, what, newvalue, overwrite):
             sunshine = 1
         # 2do: output sunhours everytime or just if there's a value > 0?
         # if min_max["sunmins"] > 0:
-        sunhours = str(round(min_max["sunmins"]/60,2))         # Werner hatte 5 Nachkommastellen? Wieso?
-        outstr += "&" + what + "=" + sunhours
-        if HIDDEN_FEATURES: outstr += "&" + "sunshine=" + str(sunshine)
+        sunhours = str(round(min_max["sunmins"]/60,2))
+        if sr != "null":
+          outstr += "&" + what + "=" + sunhours
+          outstr += "&" + "sunshine=" + str(sunshine)
       except (ValueError, KeyError): pass
     elif what == "osunhours" and int(WS_INTERVAL) <= 60:       # "old" way - fix threshold of 120W/m² - calculate only if data is available every minute
       try:
@@ -3796,6 +4782,7 @@ def addDataToLine(line, what, newvalue, overwrite):
           currtime = int(time.mktime(time.localtime(int(utcToLocal(time.mktime(time.strptime(value.replace("%20","+").replace("%3A",":"), "%Y-%m-%d+%H:%M:%S")))))))
         except (ValueError, KeyError):
           currtime = time.time()                             # 2do: check if UTC or local
+          value = "none"
         min_max["last_osuncheck"] = currtime if currtime > 0 else ""
         if sr != "null" and float(sr) >= 120:
           try:
@@ -3803,13 +4790,17 @@ def addDataToLine(line, what, newvalue, overwrite):
           except (ValueError, KeyError):
             lasttime = 0
           interval = currtime - lasttime
+          # v0.10 debug - prevent negative intervals - why are they occuring?
+          if interval < 0:
+            logPrint("<WARNING> osunhours: negative interval! - currtime: "+str(currtime)+" lasttime: "+str(lasttime)+" interval: " + str(interval) + " sr: "+ str(sr)+" dateutc: "+value)
           if interval >= 60 and float(sr) >= 120:              # only trigger if a minute before
             min_max["osunmins"] += 1
             min_max["last_osuntime"] = currtime
         # 2do: output sunhours everytime or just if there's a value > 0?
         #if min_max["osunmins"] > 0:
         sunhours = str(round(min_max["osunmins"]/60,2))
-        outstr += "&" + what + "=" + sunhours
+        if sr != "null":
+          outstr += "&" + what + "=" + sunhours
       except (ValueError, KeyError): pass
     elif what == "nsunhours":                                  # "new" way - dynamic threshold - calculate sunhours
       try:
@@ -3823,20 +4814,28 @@ def addDataToLine(line, what, newvalue, overwrite):
               currtime = int(time.mktime(time.localtime(int(utcToLocal(time.mktime(time.strptime(value.replace("%20","+").replace("%3A",":"), "%Y-%m-%d+%H:%M:%S")))))))
             except (ValueError, KeyError):
               currtime = time.time()                           # 2do: check if UTC or local
+              value = "none"
             try:
               lasttime = int(getfromDict(min_max,["last_nsuncheck"])) # last save time in min_max
             except (ValueError, KeyError):
               lasttime = 0
             interval = currtime - lasttime
+            # v0.10 debug - prevent negative intervals - why are they occuring?
+            if interval < 0:
+              logPrint("<WARNING> nsunhours: negative interval! - currtime: "+str(currtime)+" lasttime: "+str(lasttime)+" interval: " + str(interval) + " sr: "+ str(sr)+" dateutc: "+value)
             if interval < 365: sunseconds = calcSunduration(sr, interval, currtime)  # gibt Sekunden mit Sonne aus; keine Ahnung, was die 365 soll
             min_max["nsunmins"] += sunseconds/60
+            min_max["nsunmins"] = round(min_max["nsunmins"],3)
+            if sunseconds > 0:
+              min_max["last_nsuntime"] = currtime if currtime > 0 else ""
             min_max["last_nsuncheck"] = currtime if currtime > 0 else ""
             if sunseconds > 0:
               min_max["last_nsuntime"] = currtime if currtime > 0 else ""
         # 2do: output sunhours everytime or just if there's a value > 0?
         #if min_max["nsunmins"] > 0:
         sunhours = str(round(min_max["nsunmins"]/60,2))        # Werner hatte 5 Nachkommastellen? Wieso?
-        outstr += "&" + what + "=" + sunhours
+        if sr != "null":
+          outstr += "&" + what + "=" + sunhours
       except (ValueError, KeyError): pass
     elif what == "ptrend":                                     # add pressure items ptrendN & pchangeN
       try:
@@ -3855,6 +4854,13 @@ def addDataToLine(line, what, newvalue, overwrite):
           outstr += "&pchange3="+str(vnum)
         except ValueError: pass
       except (ValueError, KeyError): pass
+    elif what == "srsum":                                      # v0.10 sr daily total - WS_INTERVAL is not the real interval (30 --> 31) - so use inttime
+      sr = getfromDict(d,["solarradiation"])
+      try: min_max[what] += round(float(sr) * inttime / 3600,2)
+      except ValueError: pass
+      min_max[what] = round(min_max[what],2)                   # make 2 digits sure
+      if sr != "null":
+        outstr += "&" + what + "=" + str(min_max[what])
     else:
       outstr += "&" + what + "=" + str(newvalue)
     newline = line + outstr
@@ -3874,6 +4880,7 @@ def addDataToLine(line, what, newvalue, overwrite):
 
 def forwardDictToLuftdaten(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys):
   # 2do: Script-Integration
+  debugPrint("forwardDictToLuftdaten "+nr+" start")
   d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
   pm10value = getfromDict(d,["pm10_ch1","AqPM10","pm10"],ignoreKeys)
   # if there's no such value set to 1 to show at least the pm25-value on map
@@ -3922,9 +4929,15 @@ def forwardDictToLuftdaten(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKe
     v += 1                                                     # count of tries
     if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
   # done
+  # v0.10 queue data if service is unavailable
+  outstr = str(json)
+  qstr = processQueue(v, nr, d, ignoreKeys, remapKeys, outstr)
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
   tries = "" if v == 1 or v > httpTries else " ("+str(v)+" tries)"
   if sndlog: sndPrint(okstr + "FWD-"+nr+": " + url + " sensorID:" + fwd_sid + "=" + str(pm10value) + ", " + str(pm25value) + ", " + str(temperature) + ", " + str(humidity) + ", " + str(pressure) + ", " + str(pressure_sealevel) + " : " + ret + tries)
-  return
+  debugPrint("forwardDictToLuftdaten "+nr+" stop")
+  return                                                       # forwardDictToLuftdaten
 
 def convertTemplate(s: str):
   global MSselectlist, enabled, FOSHKrunning, logdir, FWD_URL, FWD_IGNORE, FWD_INTERVAL, FWD_TYPE, fwdtypelist, linkvorlage
@@ -3964,13 +4977,13 @@ def EWpostOKstr():
     okstr = "OK\n"
   return okstr
 
-def getKeyFromURL(instr):
+def getKeyFromURL(what, instr):                                # search for the parameter what in given URL and return its value
   sub = ""
   try:
-    start = instr.index("key=")+4
+    start = instr.index(what+"=")+len(what)+1
     stop = start
     slen = len(instr)
-    while instr[stop] != "?" and instr[stop] != "&":
+    while stop < slen and instr[stop] != "?" and instr[stop] != "&":
       stop += 1
       if stop == slen: break
     sub = instr[start:stop]
@@ -4021,6 +5034,9 @@ def metricToImpDict(d_in, ignoreKeys, ignoreValues):           # convert given m
       elif "tc_co2" in key:
         newkey = key.replace("tc_co2","tf_co2")
         if newval is not None and "time" not in newkey: newval = ctof(float(newval),1)
+      elif key.startswith("tf_ch") and key[6] == "c":
+        newkey = key[:6]+key[7:]
+        if newval is not None and "time" not in newkey: newval = ctof(float(newval),1)
       elif "kmh" in key:
         newkey = key.replace("kmh","mph")
         if newval is not None and "time" not in newkey: newval = kmhtomph(float(newval),2)
@@ -4045,7 +5061,7 @@ def addStatusToDict(d, makeBool=False):                        # add Status to d
   d.update({"leakwarning" : func(int(inLeakageWarning))})
   d.update({"co2warning" : func(int(inCO2Warning))})
   d.update({"intvlwarning" : func(int(inIntervalWarning))})
-  d.update({"time" : strToNum(loxTime(time.time()))})
+  d.update({"time" : strToNum(loxTime(time.time(),False))})    # v0.10 adjusted: False
   return d
 
 def getStatusString(sep, makeBool=False):                       # output status string
@@ -4053,7 +5069,7 @@ def getStatusString(sep, makeBool=False):                       # output status 
   if makeBool:
     s = "running=" + str(wsconnected) + sep + "wswarning=" + str(inWStimeoutWarning) + sep + "sensorwarning=" + str(inSensorWarning) + sw_what + sep + "batterywarning=" + str(inBatteryWarning) + sep + "stormwarning=" + str(inStormWarning) + sep + "tswarning=" + str(inTSWarning) + sep + "updatewarning=" + str(updateWarning) + sep + "leakwarning=" + str(inLeakageWarning) + sep + "co2warning=" + str(inCO2Warning) + sep + "intvlwarning=" + str(inIntervalWarning) + sep + "time=" + str(loxTime(time.time()))
   else:
-    s = "running=" + str(int(wsconnected)) + sep + "wswarning=" + str(int(inWStimeoutWarning)) + sep + "sensorwarning=" + str(int(inSensorWarning)) + sw_what + sep + "batterywarning=" + str(int(inBatteryWarning)) + sep + "stormwarning=" + str(int(inStormWarning)) + sep + "tswarning=" + str(int(inTSWarning)) + sep + "updatewarning=" + str(int(updateWarning)) + sep + "leakwarning=" + str(int(inLeakageWarning)) + sep + "co2warning=" + str(int(inCO2Warning)) + sep + "intvlwarning=" + str(inIntervalWarning) + sep + "time=" + str(loxTime(time.time()))
+    s = "running=" + str(int(wsconnected)) + sep + "wswarning=" + str(int(inWStimeoutWarning)) + sep + "sensorwarning=" + str(int(inSensorWarning)) + sw_what + sep + "batterywarning=" + str(int(inBatteryWarning)) + sep + "stormwarning=" + str(int(inStormWarning)) + sep + "tswarning=" + str(int(inTSWarning)) + sep + "updatewarning=" + str(int(updateWarning)) + sep + "leakwarning=" + str(int(inLeakageWarning)) + sep + "co2warning=" + str(int(inCO2Warning)) + sep + "intvlwarning=" + str(int(inIntervalWarning)) + sep + "time=" + str(loxTime(time.time()))
   return s
 
 def tableRow(what, options, comment, myIP, myPort):
@@ -4065,14 +5081,28 @@ def tableRow(what, options, comment, myIP, myPort):
 def instrReplace(s):
   # convert the new rain key names of a WS90 to the "old" ones - only applies if the WS90 is the only sensor ("old" names not present already)
   # configurable with Weatherstation\WS90_AUTO = True/False (True: convert these keys; False: keep untouched)
-  if WS90_CONVERT and "rainratein" not in s: s.replace("rrain_piezo","rainratein")
-  if WS90_CONVERT and "eventrainin" not in s: s.replace("erain_piezo","eventrainin")
-  if WS90_CONVERT and "hourlyrainin" not in s: s.replace("hrain_piezo","hourlyrainin")
-  if WS90_CONVERT and "dailyrainin" not in s: s.replace("drain_piezo","dailyrainin")
-  if WS90_CONVERT and "weeklyrainin" not in s: s.replace("wrain_piezo","weeklyrainin")
-  if WS90_CONVERT and "monthlyrainin" not in s: s.replace("mrain_piezo","monthlyrainin")
-  if WS90_CONVERT and "yearlyrainin" not in s: s.replace("yrain_piezo","yearlyrainin")
-  return s
+  if WS90_CONVERT and "rainratein" not in s: s = s.replace("rrain_piezo","rainratein")
+  if WS90_CONVERT and "eventrainin" not in s: s = s.replace("erain_piezo","eventrainin")
+  if WS90_CONVERT and "hourlyrainin" not in s: s = s.replace("hrain_piezo","hourlyrainin")
+  if WS90_CONVERT and "dailyrainin" not in s: s = s.replace("drain_piezo","dailyrainin")
+  if WS90_CONVERT and "weeklyrainin" not in s: s = s.replace("wrain_piezo","weeklyrainin")
+  if WS90_CONVERT and "monthlyrainin" not in s: s = s.replace("mrain_piezo","monthlyrainin")
+  if WS90_CONVERT and "yearlyrainin" not in s: s = s.replace("yrain_piezo","yearlyrainin")
+  return s                                                     # instrReplace
+
+def dictToPrometheusMetric(d, withStatus = False):
+  my_d = d.copy()
+  if withStatus: my_d = addStatusToDict(my_d, False)
+  counter = []
+  s = ""
+  #s += '<pre style="word-wrap: break-word; white-space: pre-wrap;">'
+  for key, value in sorted(my_d.items()):
+    if isNumeric(value):
+      typ = "counter" if key in counter or "time" in key else "gauge"
+      s += "# TYPE " + key + " " + typ + "\n"
+      s += key + " " + str(value) + "\n"
+      #s += '</pre>'
+  return s                                                     # dictToPrometheusMetric (Prometheus)
 
 class RequestHandler(BaseHTTPRequestHandler):
   # probably the correct position for timeout
@@ -4082,11 +5112,15 @@ class RequestHandler(BaseHTTPRequestHandler):
   protocol_version = 'HTTP/1.1'
 
   def do_GET(self):
-    request_path = self.path
+    #request_path = self.path
+    request_path = requests.utils.unquote(self.path)           # v0.10 now URL decode all incoming http/GET
+    request_path_u = request_path.upper()
     request_addr = self.client_address[0]
+    request_port = self.client_address[1]
     instr = request_path
-    global myDebug                                           # global to change for all
-    global LEAK_WARNING, CO2_WARNING, INTVL_WARNING, BUT_PRINT          # it does not work without
+    # all vars we set via http/GET have to be global:
+    global myDebug, LEAKAGE_WARNING, CO2_WARNING, INTVL_WARNING, REBOOT_WARNING, FWD_WARNING, BATTERY_WARNING, BUT_PRINT, LOG_LEVEL, PO_ENABLE, POcustomWarning, inttime
+
     # check authentication
     if AUTH_PWD != "" and AUTH_PWD not in request_path and request_path != "/FOSHKplugin/state":
       logPrint("<INFO> unauthorized get-request from " + str(request_addr) + ": " + str(request_path))
@@ -4103,6 +5137,9 @@ class RequestHandler(BaseHTTPRequestHandler):
       instr = instr[payload_start:]
       global last_RAWstr
       last_RAWstr = instr
+
+      # v0.10 special handling of old weather station HP1001
+      if "intemp=" in instr and "softwaretype=" in instr: instr = HP1001convert(instr)
 
       # v0.09: count real interval time
       global lastData
@@ -4123,9 +5160,9 @@ class RequestHandler(BaseHTTPRequestHandler):
             pushPrint("<WARNING> real sending interval ("+str(isinterval)+") mismatches the interval set to the weather station ("+str(WS_INTERVAL)+")")
             inIntervalWarning = True
           elif isinterval <= INTVL_LIMIT and inIntervalWarning:        # cancel warning if value is below the warning threshold
-            logPrint("<OK> real sending interval ("+str(isinterval)+") matches the interval set to the weather station ("+str(WS_INTERVAL)+") again")
+            logPrint("<RESTORED> real sending interval ("+str(isinterval)+") matches the interval set to the weather station ("+str(WS_INTERVAL)+") again")
             sendUDP("SID=" + defSID + " intvlwarning=0 time=" + str(loxTime(time.time())))
-            pushPrint("<OK> real sending interval ("+str(isinterval)+") matches the interval set to the weather station ("+str(WS_INTERVAL)+") agaim")
+            pushPrint("<RESTORED> real sending interval ("+str(isinterval)+") matches the interval set to the weather station ("+str(WS_INTERVAL)+") agaim")
             inIntervalWarning = False
       lastData = now
 
@@ -4134,9 +5171,12 @@ class RequestHandler(BaseHTTPRequestHandler):
       if fakeOUT_HUM != "": instr = instr.replace("&"+fakeOUT_HUM+"=","&humidity=")
 
       # v0.07: if configure via Export\OUT_TIME (exchangeTime) replace incoming time string with time string of receipt
-      if exchangeTime:
-        instr = exchangeTimeString(instr)
+      if exchangeTime: instr = exchangeTimeString(instr)
 
+      # v0.10 replace key windgustmph with _windgustmph in case value >= LIMIT_WINDGUST & use last good value for maxdailygust
+      instr = ignoreOnValue(instr, "windgustmph", LIMIT_WINDGUST)
+      instr = ignoreOnValue(instr, "maxdailygust", LIMIT_WINDGUST, last_maxdailygust)
+      
       # hier ggf. um weitere Felder ergaenzen - etwa dewpt, windchill und feelslike
       #global EVAL_VALUES
       if EVAL_VALUES:
@@ -4150,6 +5190,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         instr = addDataToLine(instr,"brightness",None,False)
         instr = addDataToLine(instr,"cloudf",None,False)
         instr = addDataToLine(instr,"sunhours",None,False)     # combined procedure - dependend on SUN_CALC and existence of lat/lon
+        instr = addDataToLine(instr,"srsum",None,False)        # v0.10: daily sr sum
         if HIDDEN_FEATURES:                                    # for testing: should be removed in next release
           instr = addDataToLine(instr,"osunhours",None,False)  # old procedure with fixes threshold of 120W/m²
           instr = addDataToLine(instr,"nsunhours",None,False)  # new procedure with dynamic threshold
@@ -4176,6 +5217,12 @@ class RequestHandler(BaseHTTPRequestHandler):
       # v0.09 also exchange the keys in last_RAWstr
       last_RAWstr = instrReplace(last_RAWstr)
 
+      # v0.10 ADD_SCRIPT - execute script for incoming data
+      if ADD_SCRIPT != "":
+        debugPrint("before: "+instr)
+        instr = modExec("ADD_SCRIPT", ADD_SCRIPT, instr)
+        debugPrint("after:  "+instr)
+
       # create dictionaries E = Imperial; M = Metric; R = RAW
       d_e = stringToDict(instr,"&")
       d_r = stringToDict(last_RAWstr,"&")
@@ -4196,6 +5243,10 @@ class RequestHandler(BaseHTTPRequestHandler):
       last_d_all.update(last_d_m)
       last_d_all.update(min_max)
       last_d_all.update(metricToImpDict(min_max,[],["null"]))
+      # v0.10 add some more keys to the "all" dict ******
+      last_d_all.update(addMoreToDict(last_d_all,myLanguage))
+      #with open('e.arr.txt', 'w') as file: file.write(json.dumps(last_d_e))
+      #with open('m.arr.txt', 'w') as file: file.write(json.dumps(last_d_m))
 
       # v0.08 add ptrend1, pchange1, ptrend3 & pchange3 - needs d_m and is for instr only
       if EVAL_VALUES:
@@ -4206,6 +5257,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
       # jetzt UDPstr versenden
       sendUDP(UDPstr)
+
+      # v0.10 custom Pushover notifications - 08.02.
+      if POcustomWarning: POcustomNotification()
 
       # fuer weitere Anfragen merken
       global last_csv_time
@@ -4222,18 +5276,19 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header('Connection','Close')
         self.end_headers()
       except:
-        if myDebug: logPrint("<DEBUG> except in header-response in do_GET")
+        debugPrint("except in header-response in do_GET")
         pass
       # v0.07 always reply OK for Ambient-compatibility
       try:
         self.wfile.write(bytearray(OKanswer,OutEncoding))
       except:
-        if myDebug: logPrint("<DEBUG> except in wfile.write 1 in do_GET")
+        debugPrint("except in wfile.write 1 in do_GET")
         pass
       # String nach WU-String umwandeln und an alle FWD_URL im gesetzen Intervall versenden
       if forwardMode:
-        for i in range(len(fwd_arr)):                          # 0:url,1:interval,2:interval_num,3:last,4:ignore,5:type,6:fwd_sid,7:fwd_pwd,8:status,9:minmax,10:script,11:nr,12:mqttcycle,13:fwd_remap
+        for i in range(len(fwd_arr)):                          # 0:url,1:interval,2:interval_num,3:last,4:ignore,5:type,6:fwd_sid,7:fwd_pwd,8:status,9:minmax,10:script,11:nr,12:mqttcycle,13:fwd_remap,14:fwd_option,15:fwd_cmt,16:lastok,17:errcount,18:code,19:warnint,20:queuetype,21:queuedir
           if time.time() >= fwd_arr[i][3]+fwd_arr[i][2]:
+            fwd_arr[i][3] = time.time()                        # save time of last attempt
             if fwd_arr[i][5] == "WU":                          # String nach WU wandeln und per get versenden
               t = threading.Thread(target=forwardStringToWU, args=(fwd_arr[i][0],instr,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13]))
               t.start()
@@ -4241,10 +5296,10 @@ class RequestHandler(BaseHTTPRequestHandler):
               t = threading.Thread(target=forwardDictToHTTP, args=(fwd_arr[i][0],d_r,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],False,True,False,"&"))
               t.start()
             elif fwd_arr[i][5] == "EW":                        # eingehenden, erweiterten String nach Ecowitt wandeln und per post versenden
-              t = threading.Thread(target=forwardStringToEW, args=(fwd_arr[i][0],instr,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13]))
+              t = threading.Thread(target=forwardStringToEW, args=(fwd_arr[i][0],instr,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][14]))
               t.start()
             elif fwd_arr[i][5] in ("RAWEW","EWRAW"):           # eingehenden RAW-String nach Ecowitt wandeln und per post versenden
-              t = threading.Thread(target=forwardStringToEW, args=(fwd_arr[i][0],last_RAWstr,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13]))
+              t = threading.Thread(target=forwardStringToEW, args=(fwd_arr[i][0],last_RAWstr,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][14]))
               t.start()
             elif fwd_arr[i][5] == "LD":                        # forward pm25 value only to luftdaten.info; args: url, fwd_sid, wert
               t = threading.Thread(target=forwardDictToLuftdaten, args=(fwd_arr[i][0],d_m,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],))
@@ -4291,16 +5346,22 @@ class RequestHandler(BaseHTTPRequestHandler):
               t = threading.Thread(target=forwardDictToWetterSektor, args=(fwd_arr[i][0],d_m,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13]))
               t.start()
             elif fwd_arr[i][5] == "MQTTMET":                   # send metric dict to MQTT server
-              t = threading.Thread(target=forwardDictToMQTT, args=(fwd_arr[i][0],d_m,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][12],True))
+              t = threading.Thread(target=forwardDictToMQTT, args=(fwd_arr[i][0],d_m,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][12],fwd_arr[i][14],True))
               t.start()
             elif fwd_arr[i][5] == "MQTTIMP":                   # send imperial dict to MQTT server
-              t = threading.Thread(target=forwardDictToMQTT, args=(fwd_arr[i][0],d_e,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][12],False))
+              t = threading.Thread(target=forwardDictToMQTT, args=(fwd_arr[i][0],d_e,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][12],fwd_arr[i][14],False))
               t.start()
             elif fwd_arr[i][5] == "INFLUXMET":                 # send metric dict to InfluxDB server
-              t = threading.Thread(target=forwardDictToInfluxDB, args=(fwd_arr[i][0],d_m,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],True))
+              t = threading.Thread(target=forwardDictToInfluxDB, args=(fwd_arr[i][0],d_m,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],True,1))
               t.start()
             elif fwd_arr[i][5] == "INFLUXIMP":                 # send imperial dict to InfluxDB server
-              t = threading.Thread(target=forwardDictToInfluxDB, args=(fwd_arr[i][0],d_e,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],False))
+              t = threading.Thread(target=forwardDictToInfluxDB, args=(fwd_arr[i][0],d_e,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],False,1))
+              t.start()
+            elif fwd_arr[i][5] == "INFLUX2MET":                # send metric dict to InfluxDB2 server
+              t = threading.Thread(target=forwardDictToInfluxDB, args=(fwd_arr[i][0],d_m,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],True,2))
+              t.start()
+            elif fwd_arr[i][5] == "INFLUX2IMP":                # send imperial dict to InfluxDB2 server
+              t = threading.Thread(target=forwardDictToInfluxDB, args=(fwd_arr[i][0],d_e,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],False,2))
               t.start()
             elif fwd_arr[i][5] in ("REALTIMETXT","CLIENTRAWTXT","CSVFILE","TXTFILE","TEXTFILE","RAWTEXT","WSWIN"):      # convert dict to file
               d_fwd = d_e if fwd_arr[i][5] == "RAWTEXT" else d_m                                                        # use imperial dict for RAWTEXT only
@@ -4309,11 +5370,20 @@ class RequestHandler(BaseHTTPRequestHandler):
             elif fwd_arr[i][5] == "APRS":                      # convert imperial dict to APRS and send via TCP/IP
               t = threading.Thread(target=forwardDictToAPRS, args=(fwd_arr[i][0],d_e,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13]))
               t.start()
+            elif fwd_arr[i][5] == "MIYO":                      # convert metric dict to MIYO-API and send via GET
+              d_fwd = d_m if USE_METRIC else d_e
+              t = threading.Thread(target=forwardDictToMIYO, args=(fwd_arr[i][0],d_fwd,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13]))
+              t.start()
+            elif fwd_arr[i][5] == "BANNER":                    # convert complete dict and export as banner image
+              t = threading.Thread(target=forwardDictToBanner, args=(fwd_arr[i][0],last_d_all,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][5],fwd_arr[i][14]))
+              t.start()
+            elif fwd_arr[i][5] == "TAGFILE":                   # convert complete dict and replace alle tags with values
+              t = threading.Thread(target=forwardDictToTagfile, args=(fwd_arr[i][0],last_d_all,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][5],fwd_arr[i][14]))
+              t.start()
             else:                                              # metr. oder imperiales dict wie UDP-String per get versenden
               d_fwd = d_m if USE_METRIC else d_e
               t = threading.Thread(target=forwardDictToHTTP, args=(fwd_arr[i][0],d_fwd,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],False,True,True,"&"))
               t.start()
-            fwd_arr[i][3] = time.time()
       if CSVsave and time.time() >= last_csv_time + CSV_INTERVAL_num:
         if last_csv_time == 0:
           hname = "/tmp/"+prgname+"-"+LBH_PORT+".csvheader"
@@ -4343,7 +5413,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header('Connection','Close')
         self.end_headers()
       except:
-        if myDebug: logPrint("<DEBUG> except in header-response etc. in do_GET")
+        debugPrint("except in header-response etc. in do_GET")
         pass
       ignoreValues=["-9999","None","null"]
       # v0.09: allow http auto refresh via refresh=refreshtime
@@ -4352,7 +5422,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         try:
           refreshtime = int(refreshtime)
           htmlout = "<!DOCTYPE html>\n"
-          htmlout += "<html>\n<head>\n<title>"+prgname+" "+prgver+"</title>\n"
+          htmlout += "<html>\n<head>\n<title>"+prgname+" "+prgbuild+"</title>\n"
           htmlout += "<meta name=\"viewport\" content=\"width=device-width, initial-scale\=1.0\">\n"
           htmlout += "<link rel=\"icon\" type=\"image/png\" href=\"data:image/png;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAMMOAADDDgAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAFAAAABgAAAAYAAAADAAAAA0CbUw9QxGoJUMNpBVDDaRpQw2kOUMNpAlDDaQBQw2kAAAAAAAAAAAUAAAA7AAAAQwAAAFMAAABiAAAAVAAAAF0wdT9YUcZrYlDDaVlQw2lwUMNpZlDDaUZQw2kHUMNpAAAAAAAAAAADAAAAPAAAADwECgVDCRYMTwwdEEQZPiFrK2o5OFLHazlQw2kuUMNpJVDDaTBQw2kkUMNpA1DDaQAAAAAABQUFAE3zcQBRqGQDUcVqZVHFaoJRxmt3UcVqrlDDaYZQw2mXUMNpm1DDaTtQw2kQUMNpAFDDaQAAAAAAAAAAAFDDaQBQw2kAUMNpXVDDab5Qw2mZUMNpIVDDaXlQw2lzUMNpiFDDaX1Qw2lzUMNpfVDDaQ5Qw2kAAAAAAAAAAABQw2kAUMNpAFDDaYBQw2nVUMNpuVDDaRlQw2lxUMNpe1DDaSlQw2kAUMNpAlDDaXJQw2kbUMNpAAAAAAAAAAAAUMNpAFDDaQBQw2l/UMNp1FDDabhQw2kZUMNpclDDaZBQw2mEUMNpaFDDaWxQw2miUMNpH1DDaQAAAAAAAAAAAFDDaQBQw2kAUMNpfVDDadNQw2m1UMNpGFDDaXFQw2liUMNpqFDDaaVQw2moUMNpiVDDaQxQw2kAAAAAAAAAAABQw2kAUMNpAFDDaSlQw2lYUMNpRFDDaQpQw2l1UMNpFlDDaQ5Qw2kPUMNpD1DDaQZQw2kAUMNpAAAAAAAAAAAAAAAAAAAAAABQw2kAUMNpF1DDaX5Qw2lfUMNppVDDaVdQw2mCUMNpKlDDaQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQw2kAUMNpAFDDaStQw2mzUMNpolDDabFQw2mUUMNpuFDDaUJQw2kAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUMNpAFDDaSlQw2mIUMNpV1DDaR5Qw2mLUMNpJFDDaUJQw2kzUMNpA1DDaQAAAAAAAAAAAAAAAAAAAAAAAAAAAFDDaQBQw2k4UMNpgFDDaZhQw2mCUMNpl1DDaXpQw2mWUMNpxlDDaSpQw2kAAAAAAAAAAAAAAAAAAAAAAAAAAABQw2kAUMNpN1DDaZ5Qw2lpUMNpElDDaQxQw2kMUMNpIlDDaTRQw2kGUMNpAAAAAAAAAAAAAAAAAAAAAAAAAAAAUMNpAFDDaTBQw2mIUMNpD1DDaQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFDDaQBQw2kGUMNpClDDaQBQw2kAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAEAAIABAACAAQAA4AcAAOADAADgIwAA4AMAAOADAADgBwAA8B8AAPAfAADgDwAA4A8AAOAPAADj/wAA5/8AAA==\">\n"
           htmlout += "<meta http-equiv=\"Expires\" content=\"-1\" />\n"
@@ -4372,7 +5442,11 @@ class RequestHandler(BaseHTTPRequestHandler):
         sep = getSeparator(request_path)                       # separator from url or CSV_FIELDS
         htmlout += "time"+sep+CSV_FIELDS.replace(";",sep)
       elif "UDP" in request_path:
-        if "units=" in request_path: d_out = last_d_m if "units=m" in request_path else last_d_e
+        if "units=" in request_path:
+          if "units=m" in request_path: d_out = last_d_m
+          elif "units=e" in request_path: d_out = last_d_e
+          elif "units=a" in request_path: d_out = last_d_all
+          else: d_out = last_d_m if USE_METRIC else last_d_e
         else: d_out = last_d_m if USE_METRIC else last_d_e
         sep = getSeparator(request_path," ")                   # separator from url or CSV_FIELDS
         htmlout += dictToString(d_out,sep,True)
@@ -4392,7 +5466,11 @@ class RequestHandler(BaseHTTPRequestHandler):
             htmlout += "running=" + str(int(wsconnected)) + sep + "wswarning=" + str(int(inWStimeoutWarning)) + sep + "sensorwarning=" + str(int(inSensorWarning)) + sw_what + sep + "batterywarning=" + str(int(inBatteryWarning)) + sep + "stormwarning=" + str(int(inStormWarning)) + sep + "tswarning=" + str(int(inTSWarning)) + sep + "updatewarning=" + str(int(updateWarning)) + sep + "leakwarning=" + str(int(inLeakageWarning)) + sep + "co2warning=" + str(int(inCO2Warning)) + sep + "intvlwarning=" + str(int(inIntervalWarning)) + sep + "time=" + str(loxTime(time.time()))
       elif "JSON" in request_path:                             # as JSON with options boolstatus
         sep = getSeparator(request_path)
-        if "units=" in request_path: d_in = last_d_m if "units=m" in request_path else last_d_e
+        if "units=" in request_path:
+          if "units=m" in request_path: d_in = last_d_m
+          elif "units=e" in request_path: d_in = last_d_e
+          elif "units=a" in request_path: d_in = last_d_all
+          else: d_in = last_d_m if USE_METRIC else last_d_e
         else: d_in = last_d_m if USE_METRIC else last_d_e
         d_out = {}
         for key, value in d_in.items():
@@ -4410,7 +5488,11 @@ class RequestHandler(BaseHTTPRequestHandler):
         htmlout += json.dumps(d_out)
       elif "STRING" in request_path:
         sep = getSeparator(request_path, ";")
-        if "units=" in request_path: d_out = last_d_m if "units=m" in request_path else last_d_e
+        if "units=" in request_path:
+          if "units=m" in request_path: d_out = last_d_m
+          elif "units=e" in request_path: d_out = last_d_e
+          elif "units=a" in request_path: d_out = last_d_all
+          else: d_out = last_d_m if USE_METRIC else last_d_e
         else: d_out = last_d_m if USE_METRIC else last_d_e
         htmlout += dictToString(d_out,sep,True)
         if "minmax" in request_path:
@@ -4430,6 +5512,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         htmlout += dictToCLIENTRAW(last_d_m,"",{},{})
       elif "WSWIN" in request_path:
         htmlout += dictToWSWin(last_d_m,"",{},{})
+      elif "WEEWX" in request_path:
+        htmlout += dictToWeeWX(last_d_e,"",{},{})
       elif "CSVFILE" in request_path or "FOSHKplugin.csv" in request_path or "foshkplugin.csv" in request_path or "TXTFILE" in request_path or "TEXTFILE" in request_path or "FOSHKplugin.txt" in request_path or "foshkplugin.txt" in request_path:
         if "units=" in request_path: d_out = last_d_m if "units=m" in request_path else last_d_e
         else: d_out = last_d_m if USE_METRIC else last_d_e
@@ -4464,21 +5548,29 @@ class RequestHandler(BaseHTTPRequestHandler):
         fwd_sid = "DUMMY" if fwd_sid == "" else fwd_sid
         htmlout += dictToAPRS(last_d_e,fwd_sid,[],[])
       # v0.07 Einzelabfrage von Werten
-      elif "getvalue" in request_path:
-        if "units=e" in request_path:
-          d = last_d_e.copy()
-          imperial = True
-        else:
-          d = last_d_m.copy()
-          imperial = False
+      elif "getvalue" in request_path:                         # v0.10 ******
+        d = last_d_all
         d = addStatusToDict(d, "bool" in request_path)         # append status to the dict d if set
-        d.update(min_max)                                      # add minmax values
-        d.update(metricToImpDict(min_max,[],ignoreValues))     # min_max as imperial values & names
         # parsen key=
-        key = getKeyFromURL(request_path)
-        val = str(getfromDict(d,[getKeyFromURL(request_path)]))
-        # auto
-        if val == "null": val = str(getfromDict(last_d_m,[getKeyFromURL(request_path)])) if imperial else str(getfromDict(last_d_e,[getKeyFromURL(request_path)]))
+        key = getKeyFromURL("key",request_path)
+        val = str(getfromDict(d,[getKeyFromURL("key",request_path)]))
+        if "HUMAN" in request_path_u:                          # v0.10: make timestamp readable
+          try:
+            utc_time = time.gmtime(int(val))
+            local_time = time.localtime(int(val))
+            fmt = tidyString(getKeyFromURL("format",request_path))
+            fmt = DT_FORMAT if fmt == "" else fmt              # fallback to global format
+            loc = tidyString(getKeyFromURL("locale",request_path))
+            loc = LANGUAGE.lower()+"_"+LANGUAGE.upper()+".UTF-8" if loc == "" else loc
+            loc = loc.replace("en_EN","en_US")                 # qnd - not save!
+            is_locale = locale.getlocale(locale.LC_TIME)
+            try: locale.setlocale(locale.LC_TIME, loc)
+            except: pass
+            val = time.strftime(fmt, utc_time) if "HUMAN=U" in request_path_u else time.strftime(fmt, local_time)
+            locale.setlocale(locale.LC_TIME, is_locale)
+          except: pass
+        # replace "." with "," on argument comma
+        if "comma" in request_path and isNumeric(val): val = val.replace(".",",")
         htmlout += "" if val == "null" else val
       elif "observations" in request_path and "current" in request_path and "json" in request_path and "units=e" in request_path:
         htmlout += dictToWUServer(last_d_e,"&",False)
@@ -4508,7 +5600,15 @@ class RequestHandler(BaseHTTPRequestHandler):
         sep = getSeparator(request_path, " ")
         htmlout += getStatusString(sep, "bool" in request_path)
       elif "/FOSHKplugin/minmax" in request_path:
-        htmlout += dictToString(min_max," ",True)
+        #htmlout += dictToString(min_max," ",True)
+        sep = getSeparator(request_path, " ")
+        my_d = dict(sorted(min_max.items())) if "sorted" in request_path else min_max.copy()
+        if "json" in request_path:
+          srt = True if "sorted" in request_path else False
+          htmlout = json.dumps(my_d, indent=2, sort_keys=srt)
+          if sep != " ": htmlout = htmlout.replace("\n",sep+"\n")
+        else:
+          htmlout = dictToString(my_d,sep,True,{},{},True,True,False).replace("\"","\\\"")
       elif "/FOSHKplugin/LBU_PORT" in request_path:
         htmlout = LBU_PORT
       elif "/FOSHKplugin/patchW4L" in request_path:
@@ -4519,10 +5619,12 @@ class RequestHandler(BaseHTTPRequestHandler):
         htmlout = str(os.popen(foshkdatadir+"/foshkplugin.py -recoverW4L").read()).replace("\n","<br/>")
       elif "/FOSHKplugin/debug=enable" in request_path:
         myDebug = True
+        setdebugStateFile("enable")
         logPrint("<INFO> debug mode via http/get enabled from " + request_addr)
         htmlout = "debug mode enabled"
       elif "/FOSHKplugin/debug=disable" in request_path:
         myDebug = False
+        setdebugStateFile("disable")
         logPrint("<INFO> debug mode via http/get disabled from " + request_addr)
         htmlout = "debug mode disabled"
       elif "/FOSHKplugin/leakwarning=enable" in request_path:
@@ -4549,6 +5651,31 @@ class RequestHandler(BaseHTTPRequestHandler):
         INTVL_WARNING = False
         logPrint("<INFO> intvlwarning via http/get disabled from " + request_addr)
         htmlout = "intvlwarning disabled"
+      elif "/FOSHKplugin/rebootwarning=enable" in request_path:
+        REBOOT_WARNING = True
+        logPrint("<INFO> rebootwarning via http/get enabled from " + request_addr)
+        htmlout = "rebootwarning enabled"
+      elif "/FOSHKplugin/rebootwarning=disable" in request_path:
+        REBOOT_WARNING = False
+        logPrint("<INFO> rebootwarning via http/get disabled from " + request_addr)
+        htmlout = "rebootwarning disabled"
+      elif "/FOSHKplugin/fwdwarning=enable" in request_path:
+        FWD_WARNING = True
+        logPrint("<INFO> FWD warning via http/get enabled from " + request_addr)
+        htmlout = "FWD warning enabled"
+      elif "/FOSHKplugin/fwdwarning=disable" in request_path:
+        FWD_WARNING = False
+        logPrint("<INFO> FWD warning via http/get disabled from " + request_addr)
+        htmlout = "FWD warning disabled"
+      # v0.10: enable/disable battwarning - BATTERY_WARNING
+      elif "/FOSHKplugin/battwarning=enable" in request_path:
+        BATTERY_WARNING = True
+        logPrint("<INFO> battery warning via http/get enabled from " + request_addr)
+        htmlout = "battery warning enabled"
+      elif "/FOSHKplugin/battwarning=disable" in request_path:
+        BATTERY_WARNING = False
+        logPrint("<INFO> battery warning via http/get disabled from " + request_addr)
+        htmlout = "battery warning disabled"
       elif "/FOSHKplugin/printignored=enable" in request_path:
         BUT_PRINT = True
         logPrint("<INFO> print ignored log entries via http/get enabled from " + request_addr)
@@ -4560,7 +5687,6 @@ class RequestHandler(BaseHTTPRequestHandler):
       elif "/FOSHKplugin/loglevel=" in request_path:
         lvl = request_path[22:].upper()
         if lvl in [ "ERROR", "WARNING", "INFO", "ALL" ]:
-          global LOG_LEVEL
           LOG_LEVEL = lvl
           logPrint("<INFO> log level set to " + lvl + " via http/get from " + request_addr)
           htmlout = "log level " + lvl + " set"
@@ -4576,6 +5702,15 @@ class RequestHandler(BaseHTTPRequestHandler):
         PO_ENABLE = False
         logPrint("<INFO> pushover warning via http/get disabled from " + request_addr)
         htmlout = "pushover warning disabled"
+      # v0.10 enable/disable custom Pushover notifications
+      elif "/FOSHKplugin/customwarning=enable" in request_path:
+        POcustomWarning = True
+        logPrint("<INFO> pushover custom warning via http/get enabled from " + request_addr)
+        htmlout = "pushover custom warning enabled"
+      elif "/FOSHKplugin/customwarning=disable" in request_path:
+        POcustomWarning = False
+        logPrint("<INFO> pushover custom warning via http/get disabled from " + request_addr)
+        htmlout = "pushover custom warning disabled"
       # v0.07 - possibility to enable/disable firmware update check via http
       elif "/FOSHKplugin/updatewarning=enable" in request_path:
         if UPD_CHECK:
@@ -4602,12 +5737,27 @@ class RequestHandler(BaseHTTPRequestHandler):
         restartmsg = killMyself() if RESTART_ENABLE else "refused"
         logPrint("<INFO> FOSHKplugin-restart request via http/get from " + request_addr + " " + restartmsg)
         htmlout = "restarting FOSHKplugin " + restartmsg
+      # v0.10 - Prometheus support - metrics: all data; impmetrics: imperial data only; metmetrics: metric data only
+      elif request_path == "/metrics" or request_path == "/metrics/":
+        htmlout += dictToPrometheusMetric(last_d_all,True)
+      elif request_path == "/impmetrics" or request_path == "/impmetrics/":
+        htmlout += dictToPrometheusMetric(last_d_e,True)
+      elif request_path == "/metmetrics" or request_path == "/metmetrics/":
+        htmlout += dictToPrometheusMetric(last_d_m,True)
       else:                                                    # does not contain fwd-type nor /FOSHKplugin - so just view with body, table aso
         htmlout = "<!DOCTYPE html>\n"
-        htmlout += "<html lang=\"en\">\n<head>\n<title>"+prgname+" "+prgver+"</title>\n"
+        htmlout += "<html lang=\"en\">\n<head>\n<title>"+prgname+" "+prgbuild+"</title>\n"
         htmlout += "<meta name=\"viewport\" content=\"width=device-width, initial-scale\=1.0\">\n"
         htmlout += "<link rel=\"icon\" type=\"image/png\" href=\"data:image/png;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAMMOAADDDgAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAFAAAABgAAAAYAAAADAAAAA0CbUw9QxGoJUMNpBVDDaRpQw2kOUMNpAlDDaQBQw2kAAAAAAAAAAAUAAAA7AAAAQwAAAFMAAABiAAAAVAAAAF0wdT9YUcZrYlDDaVlQw2lwUMNpZlDDaUZQw2kHUMNpAAAAAAAAAAADAAAAPAAAADwECgVDCRYMTwwdEEQZPiFrK2o5OFLHazlQw2kuUMNpJVDDaTBQw2kkUMNpA1DDaQAAAAAABQUFAE3zcQBRqGQDUcVqZVHFaoJRxmt3UcVqrlDDaYZQw2mXUMNpm1DDaTtQw2kQUMNpAFDDaQAAAAAAAAAAAFDDaQBQw2kAUMNpXVDDab5Qw2mZUMNpIVDDaXlQw2lzUMNpiFDDaX1Qw2lzUMNpfVDDaQ5Qw2kAAAAAAAAAAABQw2kAUMNpAFDDaYBQw2nVUMNpuVDDaRlQw2lxUMNpe1DDaSlQw2kAUMNpAlDDaXJQw2kbUMNpAAAAAAAAAAAAUMNpAFDDaQBQw2l/UMNp1FDDabhQw2kZUMNpclDDaZBQw2mEUMNpaFDDaWxQw2miUMNpH1DDaQAAAAAAAAAAAFDDaQBQw2kAUMNpfVDDadNQw2m1UMNpGFDDaXFQw2liUMNpqFDDaaVQw2moUMNpiVDDaQxQw2kAAAAAAAAAAABQw2kAUMNpAFDDaSlQw2lYUMNpRFDDaQpQw2l1UMNpFlDDaQ5Qw2kPUMNpD1DDaQZQw2kAUMNpAAAAAAAAAAAAAAAAAAAAAABQw2kAUMNpF1DDaX5Qw2lfUMNppVDDaVdQw2mCUMNpKlDDaQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQw2kAUMNpAFDDaStQw2mzUMNpolDDabFQw2mUUMNpuFDDaUJQw2kAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUMNpAFDDaSlQw2mIUMNpV1DDaR5Qw2mLUMNpJFDDaUJQw2kzUMNpA1DDaQAAAAAAAAAAAAAAAAAAAAAAAAAAAFDDaQBQw2k4UMNpgFDDaZhQw2mCUMNpl1DDaXpQw2mWUMNpxlDDaSpQw2kAAAAAAAAAAAAAAAAAAAAAAAAAAABQw2kAUMNpN1DDaZ5Qw2lpUMNpElDDaQxQw2kMUMNpIlDDaTRQw2kGUMNpAAAAAAAAAAAAAAAAAAAAAAAAAAAAUMNpAFDDaTBQw2mIUMNpD1DDaQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFDDaQBQw2kGUMNpClDDaQBQw2kAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAEAAIABAACAAQAA4AcAAOADAADgIwAA4AMAAOADAADgBwAA8B8AAPAfAADgDwAA4A8AAOAPAADj/wAA5/8AAA==\">\n"
-        htmlout += "<style>table, td, th { vertical-align: top; } table { text-align: left; width: 100%; } button {width:132px;} input {width:290px;}</style>"
+        if "/FOSHKplugin/fwdstat" in request_path:
+          #htmlout += "<style>td, th { max-width:1px; vertical-align: top; text-align:left; word-wrap:break-word; } table { text-align: left; width: 100%; } button {width:132px;} input {width:290px;}</style>"
+          htmlout += "<style>\n"
+          htmlout += "  #fwdstats td, th { max-width:1px; vertical-align: top; text-align:left; word-wrap:break-word; } table { text-align: left; width: 100%; } button {width:132px;} input {width:290px;}\n"
+          htmlout += "  #fwdstats tr:hover {background-color: #ddd;}\n"
+          htmlout += "  #fwdstats th {background-color: #f2f2f2;}\n"
+          htmlout += "</style>\n"
+        else:
+          htmlout += "<style>table, td, th { vertical-align: top; } table { text-align: left; width: 100%; } button {width:132px;} input {width:290px;}</style>"
         # v0.09: allow http auto refresh via refresh=n
         refreshtime = getURLvalue(request_path,"REFRESH")
         if refreshtime != "":
@@ -4616,8 +5766,38 @@ class RequestHandler(BaseHTTPRequestHandler):
             htmlout += "<meta http-equiv=\"Expires\" content=\"-1\" />\n"
             htmlout += "<meta http-equiv=\"refresh\" content=\""+str(refreshtime)+"\" />\n"
           except: pass
-        htmlout += "</head>\n<body>\n"
-        if "/FOSHKplugin/getWSconfig" in request_path:
+        background = getURLvalue(request_path,"BACKGROUND").replace("$","#")
+        htmlout += "</head>\n<body>\n" if background == "" else "</head>\n<body style=\"background-color:"+background+";\">\n"
+        if "/FOSHKplugin/fwdstat" in request_path:
+          # v0.10: statistics for all or dedicated forward specified by FWD-nn
+          # 0:url,1:interval,2:interval_num,3:last,4:ignore,5:type,6:fwd_sid,7:fwd_pwd,8:status,9:minmax,10:script,11:nr,12:mqttcycle,13:fwd_remap,14:fwd_option,15:fwd_cmt,16:lastok,17:errcount,18:code,19:warnint,20:queuetype,21:queuedir
+          htmlout += "<div style=\"overflow-x:auto;\">"
+          htmlout += "<h2>"+prgname+" "+prgbuild+" fwdstat</h2>"
+          htmlout += "  <h4>forward statistics at "+time.strftime(DT_FORMAT,time.localtime(time.time()))+" (warn threshold globally set to "+str(FWD_WARNINT)+" or forward specific attempts - see (int) in errcount row):</h4>\n"
+          htmlout += "  <table id=\"fwdstats\">\n"
+          #htmlout += "    <tr><th style=\"width:8%;\">forward</th><th style=\"width:12%;\">type</th><th style=\"width:48%;\">url</th><th style=\"width:8%;\">last attempt</th><th style=\"width:8%;\">last ok</th><th style=\"width:8%;\">last state</th><th style=\"width:8%;\">err count</th></tr>\n"
+          #htmlout += "    <tr><th style=\"width:8%;\">forward</th><th style=\"width:12%;\">type</th><th style=\"width:38%;\">url</th><th style=\"width:12%;\">last attempt</th><th style=\"width:13%;\">last ok</th><th style=\"width:8%;\">last state</th><th style=\"width:8%;\">err count</th></tr>\n"
+          htmlout += "    <tr><th style=\"width:10%;\">forward</th><th style=\"width:12%;\">type</th><th style=\"width:25%;\">url</th><th style=\"width:14%;\">last attempt</th><th style=\"width:14%;\">last ok</th><th style=\"width:15%;\">last state</th><th style=\"width:10%;\">err count (int)</th></tr>\n"
+          for i in range(len(fwd_arr)):
+            last = time.strftime(DT_FORMAT,time.localtime(fwd_arr[i][3])) if fwd_arr[i][3] > 0 else ""
+            lastok = time.strftime(DT_FORMAT,time.localtime(fwd_arr[i][16])) if fwd_arr[i][16] > 0 else ""
+            url = fwd_arr[i][0]
+            if url == "": url = "script: "+fwd_arr[i][10]
+            errcount = str(fwd_arr[i][17])
+            lasterr = str(fwd_arr[i][18])
+            warnint = str(fwd_arr[i][19])
+            cmt = str(fwd_arr[i][15])
+            linestyle = ""
+            try:
+              if fwd_arr[i][3] > fwd_arr[i][16] and lasterr != "OK": linestyle = " style=\"color: orange;\"" if int(errcount) < int(warnint) else " style=\"color: red;\""
+            except: pass
+            #htmlout += "    <tr"+linestyle+">"+"<td>"+"FWD-"+fwd_arr[i][11]+"</td><td>"+fwd_arr[i][5]+"</td><td>"+url+"</td><td>"+last+"</td><td>"+lastok+"</td><td>"+lasterr+"</td><td>"+errcount+" ("+warnint+")</td></tr>\n"
+            htmlout += "    <tr"+linestyle+" title=\""+cmt+"\"><td>"+"FWD-"+fwd_arr[i][11]+"</td><td>"+fwd_arr[i][5]+"</td><td>"+url+"</td><td>"+last+"</td><td>"+lastok+"</td><td>"+lasterr+"</td><td>"+errcount+" ("+warnint+")</td></tr>\n"
+          htmlout += "  </table>\n"
+          htmlout += "<p>&nbsp;</p>"
+          htmlout += "</div>"
+          htmlout += "</body></html>"
+        elif "/FOSHKplugin/getWSconfig" in request_path:
           htmlout += "<table style=\"width:unset;\"><tr><td>ip address:</td><td><input name=\"WS_IP\" id=\"WS_IP\" type=\"text\" value=\"" + WS_IP + "\"/></td><td><button type=\"button\" id=\"getWSIP\">discover</button></td></tr>"
           htmlout += "<tr><td>config port:</td><td><input name=\"WS_PORT\" id=\"WS_PORT\" type=\"text\" value=\"" + WS_PORT + "\"/></td><td><button type=\"button\" id=\"checkPort\">check</button></td></tr>"
           htmlout += "<tr><td>current interval:</td><td><input name=\"WS_INTERVAL\" id=\"WS_INTERVAL\" type=\"text\" value=\"" + WS_INTERVAL + "\"/></td><td><button type=\"button\" id=\"getInterval\">get from ws</button></td></tr>"
@@ -4625,20 +5805,28 @@ class RequestHandler(BaseHTTPRequestHandler):
           htmlout += "<table style=\"width:unset;\"><tr><td><button type=\"button\" id=\"saveConfig\">save</button></td><td><button type=\"button\" id=\"saveWS\">save to WS</button></td><td><button type=\"button\" id=\"shutdown\">shutdown</button></td><td><button type=\"button\" id=\"restartWS\">restart ws</button></td></tr></table>"
           htmlout += "</body></html>"
         elif "/FOSHKplugin/help" in request_path:
-          myIP = socket.gethostbyname(socket.gethostname()) if LB_IP == "" else LB_IP
+          myIP = LINK_ADR
           myPort = str(LBH_PORT)
           htmlout += "<div style=\"overflow-x:auto;\">"
-          htmlout += "<h2>"+prgname+" "+prgver+" help</h2>"
+          htmlout += "<h2>"+prgname+" "+prgbuild+" help</h2>"
           htmlout += "<h3>Supported URLs and their function:</h3>"
           htmlout += "<h4>program related:</h4>"
           htmlout += "<table><tr><th style=\"width:40%;\">url</th><th style=\"width:20%;\">options</th><th style=\"width:40%;\">comment</th></tr>"
           htmlout += tableRow("/FOSHKplugin/help","","this help screen", myIP, myPort)
-          htmlout += tableRow("/FOSHKplugin/keyhelp","","shows all available keys known to FOSHKplugin", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/banner","background, config, image, refresh","shows all banner images (you may specify the image or set the background)", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/fwdstat","refresh","shows statistics for all forwards", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/keyhelp","refresh","shows all available keys known to FOSHKplugin", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/scanWS","timeout","scan for all Ecowitt weather stations in the local network (discovery- default timeout: 11 sec)", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/LBU_PORT","","show current UDP command port", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/battwarning=disable","","disable battery warning", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/battwarning=enable","","enable battery warning", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/co2warning=disable","","disable CO2 warning", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/co2warning=enable","","enable CO2 warning", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/customwarning=disable","","disable custom pushover notifications (requires PO_ENABLE = True)", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/customwarning=enable","","enable custom pushover notifications (requires PO_ENABLE = True)", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/debug=disable","","disable debug", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/debug=enable","","enable debug", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/getFullDict","separator, sorted, json","get full (sorted) data dictionary as string", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/intvlwarning=disable","","disable interval warning", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/intvlwarning=enable","","enable interval warning", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/leakwarning=disable","","disable leak warning", myIP, myPort)
@@ -4647,17 +5835,21 @@ class RequestHandler(BaseHTTPRequestHandler):
           htmlout += tableRow("/FOSHKplugin/loglevel=ERROR","","change logging behaviour, only lines with ERROR and OK are output", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/loglevel=INFO","","change logging behaviour, all lines except ERROR, WARNING, INFO and OK are hidden (recommended)", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/loglevel=WARNING","","change logging behaviour, all lines except ERROR and WARNING and OK are hidden", myIP, myPort)
-          htmlout += tableRow("/FOSHKplugin/minmax","","show min/max values", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/minmax","refresh, separator, sorted, json","show min/max values", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/patchW4L","","patch W4L (Loxone only)", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/printignored=disable","","disable console output of ignored log-entries", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/printignored=enable","","enable console output of ignored log-entries", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/pushover=disable","","disable pushover notifications (requires PO_ENABLE = True)", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/pushover=enable","","enable pushover notifications (requires PO_ENABLE = True)", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/rebootwarning=disable","","disable reboot warning", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/rebootwarning=enable","","enable reboot warning", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/fwdwarning=disable","","disable FWD (forward) warning", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/fwdwarning=enable","","enable FWD (forward) warning", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/rebootWS","","reboot weatherstation (requires REBOOT_ENABLE = True)", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/recoverW4L","","unpatch W4L (Loxone only)", myIP, myPort)
-          htmlout += tableRow("/FOSHKplugin/restartPlugin","","restart FOSHKplugin (requires RESTART_ENABLE = True", myIP, myPort)
-          htmlout += tableRow("/FOSHKplugin/state","","get running state of FOSHKplugin", myIP, myPort)
-          htmlout += tableRow("/FOSHKplugin/status","bool","show all statuses", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/restartPlugin","","restart FOSHKplugin (requires RESTART_ENABLE = True)", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/state","refresh","get running state of FOSHKplugin", myIP, myPort)
+          htmlout += tableRow("/FOSHKplugin/status","refresh, bool","show all statuses", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/updatewarning=disable","","disable firmware update warning", myIP, myPort)
           htmlout += tableRow("/FOSHKplugin/updatewarning=enable","","enable firmware update warning", myIP, myPort)
           htmlout += "</table>"
@@ -4665,50 +5857,66 @@ class RequestHandler(BaseHTTPRequestHandler):
           htmlout += "<table><tr><th style=\"width:40%;\">url</th><th style=\"width:20%;\">options</th><th style=\"width:40%;\">comment</th></tr>"
           htmlout += tableRow("/","separator, units, minmax, status, bool","general overview as webpage", myIP, myPort)
           htmlout += tableRow("/CSVFILE","separator, units, minmax, status, bool","output with key=value as CSV", myIP, myPort)
-          htmlout += tableRow("/DATA","separator, units, minmax, status, bool","get data as text", myIP, myPort)
-          htmlout += tableRow("/JSON","units, minmax, status, bool","output as as JSON", myIP, myPort)
-          htmlout += tableRow("/STRING","separator, units, minmax, status, bool","output as string", myIP, myPort)
-          htmlout += tableRow("/UDP","separator, units, minmax, status, bool","last UDP string is output via http", myIP, myPort)
-          htmlout += tableRow("/getvalue?key=keyname","bool","output the value only for given keyname; any keyname is allowed", myIP, myPort)
+          htmlout += tableRow("/DATA","refresh, separator, units, minmax, status, bool","get data as text", myIP, myPort)
+          htmlout += tableRow("/JSON","refresh, units, minmax, status, bool","output as as JSON", myIP, myPort)
+          htmlout += tableRow("/STRING","refresh, separator, units, minmax, status, bool","output as string", myIP, myPort)
+          htmlout += tableRow("/UDP","refresh, separator, units, minmax, status, bool","last UDP string is output via http", myIP, myPort)
+          htmlout += tableRow("/getvalue?key=keyname","refresh, bool, comma, human, format, locale","output the value only for given keyname; any keyname is allowed", myIP, myPort)
           htmlout += "</table>"
           htmlout += "<h4>output related:</h4>"
           htmlout += "<table><tr><th style=\"width:40%;\">url</th><th style=\"width:20%;\">options</th><th style=\"width:40%;\">comment</th></tr>"
-          htmlout += tableRow("/APRS","user","output APRS string; use user=CALLSIGN to exchange DUMMY", myIP, myPort)
-          htmlout += tableRow("/CLIENTRAWTXT","","output a clientraw.txt (Weather Display) file", myIP, myPort)
-          htmlout += tableRow("/CSV","units","output the values of the last data record as CSV", myIP, myPort)
+          htmlout += tableRow("/APRS","refresh, user","output APRS string; use user=CALLSIGN to exchange DUMMY", myIP, myPort)
+          htmlout += tableRow("/CLIENTRAWTXT","refresh","output a clientraw.txt (Weather Display) file", myIP, myPort)
+          htmlout += tableRow("/CSV","refresh, units","output the values of the last data record as CSV", myIP, myPort)
           htmlout += tableRow("/CSVHDR","separator","output the field names (the header) of the last data record", myIP, myPort)
-          htmlout += tableRow("/RAW","separator","output weather station data unchanged via http", myIP, myPort)
-          htmlout += tableRow("/REALTIMETXT","","output a realtime.txt (Cumulus) file", myIP, myPort)
+          htmlout += tableRow("/RAW","refresh, separator","output weather station data unchanged via http", myIP, myPort)
+          htmlout += tableRow("/REALTIMETXT","refresh","output a realtime.txt (Cumulus) file", myIP, myPort)
           htmlout += tableRow("/SSV","separator, units","output with fixed asignment based on CSV\CSV_FIELDS", myIP, myPort)
           htmlout += tableRow("/SSVHDR","separator","output the field names (the header) as configured in CSV\CSV_FIELDS", myIP, myPort)
-          htmlout += tableRow("/WSWIN","","output a WSWin-compatible CSV", myIP, myPort)
-          htmlout += tableRow("/observations/current/json/units=e","","WU-compatible data record with imperial values (&deg;F, mph, in, inHg)", myIP, myPort)
-          htmlout += tableRow("/observations/current/json/units=m","","WU-compatible data record with metric values (&deg;C, kmh, mm, hPa)", myIP, myPort)
-          htmlout += tableRow("/w4l/current.dat","","", myIP, myPort)
+          htmlout += tableRow("/WEEWX","refresh","output a WeeWX-compatible CSV", myIP, myPort)
+          htmlout += tableRow("/WSWIN","refresh","output a WSWin-compatible CSV", myIP, myPort)
+          htmlout += tableRow("/observations/current/json/units=e","refresh","WU-compatible data record with imperial values (&deg;F, mph, in, inHg)", myIP, myPort)
+          htmlout += tableRow("/observations/current/json/units=m","refresh","WU-compatible data record with metric values (&deg;C, kmh, mm, hPa)", myIP, myPort)
+          htmlout += tableRow("/w4l/current.dat","refresh","output the W4L current.dat", myIP, myPort)
           htmlout += "</table>"
-          htmlout += "<h4>use options with \"&\" - define separator and units (m for metric and e for imperial) with \"=\"</h4>"
-          htmlout += "<table style=\"width:unset;\"><tr><td>&separator=</td><td>&nbsp;</td><td>use to separate fields; any char or string</td></tr>"
-          htmlout += "<tr><td>&units=</td><td>&nbsp;</td><td>use m for metric or e for imperial units</td></tr>"
-          htmlout += "<tr><td>&minmax</td><td>&nbsp;</td><td>show also the minmax values</td></tr>"
-          htmlout += "<tr><td>&status</td><td>&nbsp;</td><td>show also all statuses</td></tr>"
-          htmlout += "<tr><td>&bool</td><td>&nbsp;</td><td>show bool-values with true/false instead of 1/0</td></tr></table>"
-          htmlout += "<p>example: <a href=\"http://"+myIP+":"+myPort+"/FOSHKplugin/data&separator=%3Cbr%3E&units=m&minmax&status&bool\" target=\"_blank\">http://"+myIP+":"+myPort+"/FOSHKplugin/data&separator=&lt;br&gt;&units=m&minmax&status&bool</a></p>"
+          htmlout += "<h4>use options with \"&\" - define separator and units (m for metric and e for imperial) and refresh with \"=\"</h4>"
+          htmlout += "<table><tr><td>&background=</td><td>sets the background color; can be the name of the color (red, blue, ...) or the http color code (replace # with $)</td></tr>"
+          htmlout += "<tr><td>&refresh=</td><td>automatically refresh the page every n seconds</td></tr>"
+          htmlout += "<tr><td style=\"width:10%;\">&separator=</td><td style=\"width:90%;\">use to separate fields; any char or string</td></tr>"
+          htmlout += "<tr><td>&units=</td><td>use m for metric or e for imperial units</td></tr>"
+          htmlout += "<tr><td>&minmax</td><td>show also the minmax values</td></tr>"
+          htmlout += "<tr><td>&status</td><td>show also all statuses</td></tr>"
+          htmlout += "<tr><td>&bool</td><td>show bool-values with true/false instead of 1/0</td></tr>"
+          htmlout += "<tr><td>&comma</td><td>replace \".\" with \",\" in numeric values</td></tr>"
+          htmlout += "<tr><td>&human</td><td>output human readable time (e.g. dd.mm.yyy hh:mm:ss) instead of the timestamp (getvalue only)</td></tr>"
+          htmlout += "<tr><td>&format=</td><td>define the time output format according to Python time.strftime definition (getvalue only)</td></tr>"
+          htmlout += "<tr><td>&locale=</td><td>define locale for for month and weekday names in selected language e.g. de_DE.UTF-8 (getvalue only)</td></tr></table>"
+          htmlout += "<p>example: <a href=\"http://"+myIP+":"+myPort+"/FOSHKplugin/data&separator=%3Cbr%3E&units=m&minmax&status&bool&refresh=10&background=white\" target=\"_blank\">http://"+myIP+":"+myPort+"/FOSHKplugin/data&separator=&lt;br&gt;&units=m&minmax&status&bool&refresh=10&background=white</a></p>"
           htmlout += "<p>&nbsp;</p>"
           htmlout += "</div>"
           htmlout += "</body></html>"
         elif "/FOSHKplugin/keyhelp" in request_path:
-          myLB_IP = socket.gethostbyname(socket.gethostname()) if LB_IP == "" else LB_IP
           htmlout += "<div style=\"overflow-x:auto;\">"
-          htmlout += "<h2>"+prgname+" "+prgver+" help</h2>"
+          htmlout += "<h2>"+prgname+" "+prgbuild+" keyhelp</h2>"
           htmlout += "<h3>All known (available) keys:</h3>\n"
-          for key in sorted(last_d_all.keys()): htmlout += key+"&nbsp;<a href=\"http://"+myLB_IP+":"+LBH_PORT+"/FOSHKplugin/getvalue?key="+key+"\" target=\"_blank\">(getvalue)</a><br>\n"
+          for key in sorted(last_d_all.keys()): htmlout += key+"&nbsp;<a href=\"http://"+LINK_ADR+":"+LBH_PORT+"/FOSHKplugin/getvalue?key="+key+"\" target=\"_blank\">(getvalue)</a><br>\n"
           htmlout += "<h3>Statuses:</h3>\n"
           my_d = {}
           my_d = addStatusToDict(my_d, False)
-          for key in sorted(my_d.keys()): htmlout += key+"&nbsp;<a href=\"http://"+myLB_IP+":"+LBH_PORT+"/FOSHKplugin/getvalue?key="+key+"\" target=\"_blank\">(getvalue)</a><br>\n"
+          for key in sorted(my_d.keys()): htmlout += key+"&nbsp;<a href=\"http://"+LINK_ADR+":"+LBH_PORT+"/FOSHKplugin/getvalue?key="+key+"\" target=\"_blank\">(getvalue)</a><br>\n"
           htmlout += "<p>&nbsp;</p>"
           htmlout += "</div>"
           htmlout += "</body>\n</html>"
+        elif "/FOSHKplugin/getFullDict" in request_path:
+          sep = getSeparator(request_path, ";")
+          my_d = dict(sorted(last_d_all.items())) if "sorted" in request_path else last_d_all.copy()
+          my_d = addStatusToDict(my_d, False)
+          if "json" in request_path:
+            srt = True if "sorted" in request_path else False
+            htmlout = json.dumps(my_d, indent=2, sort_keys=srt)
+            if sep != ";": htmlout = htmlout.replace("\n",sep+"\n")
+          else:
+            htmlout = dictToString(my_d,sep,True,{},{},True,True,False).replace("\"","\\\"")
         elif "/FOSHKplugin/showPage" in request_path:
           # 2do - Baustelle
           try:
@@ -4721,9 +5929,64 @@ class RequestHandler(BaseHTTPRequestHandler):
                 htmlout += "Error while injecting variable " + str(err)
                 pass
           except: pass
+        elif "/FOSHKplugin/scanWS" in request_path:
+          scantime = getURLvalue(request_path,"TIMEOUT")
+          scantime = intFallback(getURLvalue(request_path,"TIMEOUT"),11)
+          htmlout += "<div style=\"overflow-x:auto;\">\n"
+          htmlout += "<h2>"+prgname+" "+prgbuild+" scanWS</h2>\n"
+          htmlout += "<h3>Discovery of all weather stations in the local network:</h3>\n"
+          devices = scanWS(timeout=scantime, output=False)
+          htmlout += "<table style=\"width:unset;border-spacing:16px 0;\"\n"
+          htmlout += "<tr><th>#</th><th>ipaddress</th><th>name</th><th>port</th><th>mac address</th></tr>\n"
+          for i in range(0,len(devices)):
+            htmlout += "<tr><td>"+str(i+1)+"</td><td><a href=\"http://"+devices[i][1]+"\" target=\"_blank\">"+devices[i][1]+"</td><td>"+devices[i][3]+"</td><td>"+devices[i][2]+"</td><td>"+devices[i][0]+"</td></tr>\n"
+          htmlout += "</table>\n"
+          #htmlout += "<p>&nbsp;</p>\n"
+          htmlout += "<p>created at "+time.strftime(DT_FORMAT,time.localtime(time.time()))+"</p>\n"
+          htmlout += "</div>\n"
+          htmlout += "</body>\n</html>"
+        elif "/FOSHKplugin/banner" in request_path:            # v0.10 - banner watch ******
+          htmlout += "<div style=\"overflow-x:auto;\">\n"
+          htmlout += "<h2>"+prgname+" "+prgbuild+" Banner</h2>\n"
+          bannerconfig = getURLvalue(request_path,"CONFIG")
+          image_name = getURLvalue(request_path,"IMAGE")
+          if bannerconfig != "":
+            try:
+              forwardDictToBanner("",last_d_all,"","","","99",{},{},"BANNER","bannerconfig="+bannerconfig)
+              bannercfg = readConfigFile(bannerconfig)
+              image_name = bannercfg.get('Banner','image_name',fallback='')
+            except: pass
+          if image_name == "":
+            # alle Config-Files nach [Banner] durchsuchen und die jeweiligen Bilder anzeigen
+            myIP = LINK_ADR
+            colors = ["white","lightgrey","lightblue"]
+            clink = ""
+            for color in colors: clink += "<a href=\"http://"+myIP+":"+LBH_PORT+"/FOSHKplugin/banner?background="+color+"\">"+color+"</a> "
+            clink = clink[:-1]
+            htmlout += "<h3>Show all configured banner images: ("+clink+")</h3>\n"
+            list_of_files = sorted( filter( os.path.isfile, glob.glob("*.conf") ) )
+            for i in range(len(list_of_files)):
+              bannerconfig = list_of_files[i]
+              forwardDictToBanner("",last_d_all,"","","","99",{},{},"BANNER","bannerconfig="+bannerconfig)
+              bannercfg = readConfigFile(bannerconfig)
+              image_name = bannercfg.get('Banner','image_name',fallback='')
+              if image_name != "":                             # only show if a banner config
+                c = "?" if "?" not in request_path else "&"
+                image_link = "<a href=\"http://"+myIP+":"+LBH_PORT+request_path+c+"image="+image_name+"&refresh=10\" target=\"_blank\">"
+                config_link = "<a href=\"http://"+myIP+":"+LBH_PORT+request_path+c+"config="+bannerconfig+"&refresh=10\" target=\"_blank\">"
+                htmlout += "image "+image_link+image_name+"</a> is created according to the config file "+config_link+bannerconfig+"</a>:<br/><br/>\n"+config_link+bannerTohtml(image_name)+"</a><br/><br/><hr>\n"
+          else:                                                # show specified image
+            htmlout += "<h3>Show banner: "+image_name+"</h3>\n"
+            htmlout += bannerTohtml(image_name)
+          htmlout += "\n</body>\n</html>"
         else:
           htmlout += "<table style=\"width:unset;\">\n<tr><td>"
-          last_d_h = last_d_e if "units=e" in request_path else last_d_m
+          if "units=" in request_path:
+            if "units=m" in request_path: last_d_h = last_d_m
+            elif "units=e" in request_path: last_d_h = last_d_e
+            elif "units=a" in request_path: last_d_h = last_d_all
+            else: last_d_h = last_d_m if USE_METRIC else last_d_e
+          else: last_d_h = last_d_m if USE_METRIC else last_d_e
           htmlout += dictToString(last_d_h," ",False,[],[],True,True,True).replace(" ","</td></tr>\n<tr><td>").replace("=","</td><td>")
           htmlout += "</td></tr>\n"
           if "minmax" in request_path:
@@ -4739,7 +6002,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         if refreshtime != "": htmlout += "\n</body>\n"
         self.wfile.write(bytearray(htmlout,OutEncoding))
       except:
-        if myDebug: logPrint("<DEBUG> except in wfile.write 2 in do_GET")
+        debugPrint("except in wfile.write 2 in do_GET")
         pass
       if str(request_path) != "/favicon.ico":
         logPrint("get-request from " + str(request_addr) + ": " + str(request_path))
@@ -4747,7 +6010,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     try:
       self.connection.close()
     except:
-      if myDebug: logPrint("<DEBUG> except in close do_GET")
+      debugPrint("except in close do_GET")
       pass
 
   def do_POST(self):
@@ -4765,7 +6028,7 @@ class RequestHandler(BaseHTTPRequestHandler):
       # v0.09: fix GW2000 v2.1.0 firmware bug with ", "
       instr = instr.replace(", runtime=","&runtime=")
 
-      global last_RAWstr
+      global last_RAWstr, inttime
       last_RAWstr = instr
 
       # v0.09: count real interval time
@@ -4787,9 +6050,9 @@ class RequestHandler(BaseHTTPRequestHandler):
             pushPrint("<WARNING> real sending interval ("+str(isinterval)+") mismatches the interval set to the weather station ("+str(WS_INTERVAL)+")")
             inIntervalWarning = True
           elif isinterval <= INTVL_LIMIT and inIntervalWarning:        # cancel warning if value is below the warning threshold
-            logPrint("<OK> real sending interval ("+str(isinterval)+") matches the interval set to the weather station ("+str(WS_INTERVAL)+") again")
+            logPrint("<RESTORED> real sending interval ("+str(isinterval)+") matches the interval set to the weather station ("+str(WS_INTERVAL)+") again")
             sendUDP("SID=" + defSID + " intvlwarning=0 time=" + str(loxTime(time.time())))
-            pushPrint("<OK> real sending interval ("+str(isinterval)+") matches the interval set to the weather station ("+str(WS_INTERVAL)+") agaim")
+            pushPrint("<RESTORED> real sending interval ("+str(isinterval)+") matches the interval set to the weather station ("+str(WS_INTERVAL)+") agaim")
             inIntervalWarning = False
       lastData = now
 
@@ -4798,8 +6061,11 @@ class RequestHandler(BaseHTTPRequestHandler):
       if fakeOUT_HUM != "": instr = instr.replace("&"+fakeOUT_HUM+"=","&humidity=")
 
       # v0.07: if configure via Export\OUT_TIME (exchangeTime) replace incoming time string with time of receipt
-      if exchangeTime:
-        instr = exchangeTimeString(instr)
+      if exchangeTime: instr = exchangeTimeString(instr)
+
+      # v0.10 replace key windgustmph with _windgustmph in case value >= LIMIT_WINDGUST & use last good value for maxdailygust
+      instr = ignoreOnValue(instr, "windgustmph", LIMIT_WINDGUST)
+      instr = ignoreOnValue(instr, "maxdailygust", LIMIT_WINDGUST, last_maxdailygust)
 
       # hier ggf. um weitere Felder ergaenzen - etwa dewpt, windchill und feelslike
       #global EVAL_VALUES
@@ -4814,6 +6080,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         instr = addDataToLine(instr,"brightness",None,False)
         instr = addDataToLine(instr,"cloudf",None,False)
         instr = addDataToLine(instr,"sunhours",None,False)     # combined procedure - dependend on SUN_CALC and existence of lat/lon
+        instr = addDataToLine(instr,"srsum",None,False)        # v0.10: daily sr sum
         if HIDDEN_FEATURES:                                    # for testing: should be removed in next release
           instr = addDataToLine(instr,"osunhours",None,False)  # old procedure with fixes threshold of 120W/m²
           instr = addDataToLine(instr,"nsunhours",None,False)  # new procedure with dynamic threshold
@@ -4836,6 +6103,12 @@ class RequestHandler(BaseHTTPRequestHandler):
       # v0.09 also exchange the keys in last_RAWstr
       last_RAWstr = instrReplace(last_RAWstr)
 
+      # v0.10 ADD_SCRIPT - execute script for incoming data
+      if ADD_SCRIPT != "":
+        debugPrint("before: "+instr)
+        instr = modExec("ADD_SCRIPT", ADD_SCRIPT, instr)
+        debugPrint("after:  "+instr)
+
       # create dictionaries E = Imperial; M = Metric; R = RAW
       d_e = stringToDict(instr,"&")
       d_r = stringToDict(last_RAWstr,"&")
@@ -4856,6 +6129,12 @@ class RequestHandler(BaseHTTPRequestHandler):
       last_d_all.update(last_d_m)
       last_d_all.update(min_max)
       last_d_all.update(metricToImpDict(min_max,[],["null"]))
+      # v0.10 why not integrate also the status? - unnecessary because own notifications
+      #last_d_all.update(addStatusToDict(last_d_all, True))
+      # v0.10 add some more keys to the "all" dict ******
+      last_d_all.update(addMoreToDict(last_d_all,myLanguage))
+      #with open('e.arr.txt', 'w') as file: file.write(json.dumps(last_d_e))
+      #with open('m.arr.txt', 'w') as file: file.write(json.dumps(last_d_m))
 
       # v0.08 add ptrend1, pchange1, ptrend3 & pchange3 - needs d_m and is for instr only
       if EVAL_VALUES:
@@ -4867,6 +6146,9 @@ class RequestHandler(BaseHTTPRequestHandler):
       # jetzt UDPstr versenden
       sendUDP(UDPstr)
 
+      # v0.10 custom Pushover notifications - 08.02.
+      if POcustomWarning: POcustomNotification()
+
       # for GW1000/DP1500 no response needed; but in forward-mode (myself) this is a must
       #OKanswer = "OK\n"
       OKanswer = EWpostOKstr()+"\n"
@@ -4877,13 +6159,13 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header('Connection','Close')
         self.end_headers()
       except:
-        if myDebug: logPrint("<DEBUG> except in header-response in do_POST")
+        debugPrint("except in header-response in do_POST")
         pass
       # 2do: v0.07 always reply OK to satisfy the Ecowitt-watchdog - but perhaps they need just 0x0A or anything
       try:
         self.wfile.write(bytearray(OKanswer,OutEncoding))
       except:
-        if myDebug: logPrint("<DEBUG> except in wfile.write in do_POST")
+        debugPrint("except in wfile.write in do_POST")
         pass
       global last_csv_time
       # letzte Meldung der Wetterstation merken
@@ -4891,8 +6173,9 @@ class RequestHandler(BaseHTTPRequestHandler):
       last_ws_time = int(time.time())
       # String nach WU-String umwandeln und an alle FWD_URL im gesetzen Intervall versenden
       if forwardMode:
-        for i in range(len(fwd_arr)):                          # 0:url,1:interval,2:interval_num,3:last,4:ignore,5:type,6:fwd_sid,7:fwd_pwd,8:status,9:minmax,10:script,11:nr,12:mqttcycle,13:fwd_remap
+        for i in range(len(fwd_arr)):                          # 0:url,1:interval,2:interval_num,3:last,4:ignore,5:type,6:fwd_sid,7:fwd_pwd,8:status,9:minmax,10:script,11:nr,12:mqttcycle,13:fwd_remap,14:fwd_option,15:fwd_cmt,16:lastok,17:errcount,18:code,19:warnint,20:queuetype,21:queuedir
           if time.time() >= fwd_arr[i][3]+fwd_arr[i][2]:
+            fwd_arr[i][3] = time.time()                        # save time of last attempt
             if fwd_arr[i][5] == "WU":                          # String nach WU wandeln und per get versenden
               t = threading.Thread(target=forwardStringToWU, args=(fwd_arr[i][0],instr,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13]))
               t.start()
@@ -4900,10 +6183,10 @@ class RequestHandler(BaseHTTPRequestHandler):
               t = threading.Thread(target=forwardDictToHTTP, args=(fwd_arr[i][0],d_r,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],True,True,False,"&"))
               t.start()
             elif fwd_arr[i][5] == "EW":                        # eingehenden, erweiterten RAW-String nach Ecowitt wandeln und per post versenden
-              t = threading.Thread(target=forwardStringToEW, args=(fwd_arr[i][0],instr,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13]))
+              t = threading.Thread(target=forwardStringToEW, args=(fwd_arr[i][0],instr,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][14]))
               t.start()
             elif fwd_arr[i][5] in ("RAWEW","EWRAW"):           # eingehenden RAW-String nach Ecowitt wandeln und per post versenden
-              t = threading.Thread(target=forwardStringToEW, args=(fwd_arr[i][0],last_RAWstr,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13]))
+              t = threading.Thread(target=forwardStringToEW, args=(fwd_arr[i][0],last_RAWstr,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][14]))
               t.start()
             elif fwd_arr[i][5] == "LD":                        # forward pm25 value only to luftdaten.info; args: url, fwd_sid, wert
               t = threading.Thread(target=forwardDictToLuftdaten, args=(fwd_arr[i][0],d_m,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],))
@@ -4950,16 +6233,22 @@ class RequestHandler(BaseHTTPRequestHandler):
               t = threading.Thread(target=forwardDictToWetterSektor, args=(fwd_arr[i][0],d_m,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13]))
               t.start()
             elif fwd_arr[i][5] == "MQTTMET":                   # send metric dict to MQTT server
-              t = threading.Thread(target=forwardDictToMQTT, args=(fwd_arr[i][0],d_m,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][12],True))
+              t = threading.Thread(target=forwardDictToMQTT, args=(fwd_arr[i][0],d_m,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][12],fwd_arr[i][14],True))
               t.start()
             elif fwd_arr[i][5] == "MQTTIMP":                   # send imperial dict to MQTT server
-              t = threading.Thread(target=forwardDictToMQTT, args=(fwd_arr[i][0],d_e,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][12],False))
+              t = threading.Thread(target=forwardDictToMQTT, args=(fwd_arr[i][0],d_e,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][12],fwd_arr[i][14],False))
               t.start()
             elif fwd_arr[i][5] == "INFLUXMET":                 # send metric dict to InfluxDB server
-              t = threading.Thread(target=forwardDictToInfluxDB, args=(fwd_arr[i][0],d_m,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],True))
+              t = threading.Thread(target=forwardDictToInfluxDB, args=(fwd_arr[i][0],d_m,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],True,1))
               t.start()
             elif fwd_arr[i][5] == "INFLUXIMP":                 # send imperial dict to InfluxDB server
-              t = threading.Thread(target=forwardDictToInfluxDB, args=(fwd_arr[i][0],d_e,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],False))
+              t = threading.Thread(target=forwardDictToInfluxDB, args=(fwd_arr[i][0],d_e,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],False,1))
+              t.start()
+            elif fwd_arr[i][5] == "INFLUX2MET":                # send metric dict to InfluxDB2 server
+              t = threading.Thread(target=forwardDictToInfluxDB, args=(fwd_arr[i][0],d_m,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],True,2))
+              t.start()
+            elif fwd_arr[i][5] == "INFLUX2IMP":                # send imperial dict to InfluxDB2 server
+              t = threading.Thread(target=forwardDictToInfluxDB, args=(fwd_arr[i][0],d_e,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],False,2))
               t.start()
             elif fwd_arr[i][5] in ("REALTIMETXT","CLIENTRAWTXT","CSVFILE","TXTFILE","TEXTFILE","RAWTEXT","WSWIN"):      # convert dict to file
               d_fwd = d_e if fwd_arr[i][5] == "RAWTEXT" else d_m                                                        # use imperial dict for RAWTEXT only
@@ -4968,11 +6257,20 @@ class RequestHandler(BaseHTTPRequestHandler):
             elif fwd_arr[i][5] == "APRS":                      # convert imperial dict to APRS and send via TCP/IP
               t = threading.Thread(target=forwardDictToAPRS, args=(fwd_arr[i][0],d_e,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13]))
               t.start()
+            elif fwd_arr[i][5] == "MIYO":                      # convert metric dict to MIYO-API and send via GET
+              d_fwd = d_m if USE_METRIC else d_e
+              t = threading.Thread(target=forwardDictToMIYO, args=(fwd_arr[i][0],d_fwd,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13]))
+              t.start()
+            elif fwd_arr[i][5] == "BANNER":                    # convert complete dict and export as banner image
+              t = threading.Thread(target=forwardDictToBanner, args=(fwd_arr[i][0],last_d_all,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][5],fwd_arr[i][14]))
+              t.start()
+            elif fwd_arr[i][5] == "TAGFILE":                   # convert complete dict and replace alle tags with values
+              t = threading.Thread(target=forwardDictToTagfile, args=(fwd_arr[i][0],last_d_all,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],fwd_arr[i][5],fwd_arr[i][14]))
+              t.start()
             else:                                              # metr. oder imperiales dict wie UDP-String per get versenden
               d_fwd = d_m if USE_METRIC else d_e
               t = threading.Thread(target=forwardDictToHTTP, args=(fwd_arr[i][0],d_fwd,fwd_arr[i][6],fwd_arr[i][7],fwd_arr[i][8],fwd_arr[i][10],fwd_arr[i][11],fwd_arr[i][4],fwd_arr[i][13],False,True,True,"&"))
               t.start()
-            fwd_arr[i][3] = time.time()
       if CSVsave and time.time() >= last_csv_time + CSV_INTERVAL_num:
         if last_csv_time == 0:
           hname = "/tmp/"+prgname+"-"+LBH_PORT+".csvheader"
@@ -5000,7 +6298,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     try:
       self.connection.close()
     except:
-      if myDebug: logPrint("<DEBUG> except in close do_POST")
+      debugPrint("except in close do_POST")
       pass
 
   def log_message(self, format, *args):
@@ -5009,12 +6307,12 @@ class RequestHandler(BaseHTTPRequestHandler):
   try:
     do_PUT = do_POST
   except:
-    if myDebug: logPrint("<DEBUG> except in outer do_POST")
+    debugPrint("except in outer do_POST")
     pass
   try:
     do_DELETE = do_GET
   except:
-    if myDebug: logPrint("<DEBUG> except in outer do_GET")
+    debugPrint("except in outer do_GET")
     pass
 
 def getWSconfig(what = "") :
@@ -5047,44 +6345,58 @@ def getWSconfig(what = "") :
   #print(wsCONFIG + " Versuche: " + str(v))
   return wsCONFIG
 
-def scanWS() :
-  devices = []
-  # Set up UDP socket
+def discover():                                                # broadcast Ecowitt discovery message
   s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
   s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
   s.settimeout(udpTimeOut)  # was 2
   s.sendto(bytearray(cmd_discover,'latin-1'), ('255.255.255.255', 46000) )
+  s.close()
+
+def scanWS(timeout = 11, output = True) :
+  devices = []
+  rcvPort = 59387
+  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)         # set up UDP socket
+  s.settimeout(timeout)                                        # set timeout - was 2
+  try: s.bind(("", rcvPort))                                   # bind port - ip must be ""
+  except Exception as err:
+    logPrint("<ERROR> can not open UDP-socket " +str(rcvPort) + " on ip address " + myLB_IP + " - "+str(err))
+    pass
+  discover()                                                   # start discover routine
+  start = last = time.time()
   try:
-    while True:
+    if output: print("discovery will take "+str(timeout)+" seconds: ",end = "",flush=True)
+    while start+timeout > time.time():
       data, addr = s.recvfrom(11200)
       if len(data) > 14:
-        mac = ""
-        for i in range(5,11):
-          if data[i] < 10: mac += "0"
-          mac += str(hex(data[i]))+":"
+        mac = name = ""
+        for i in range(5,11): mac += "0"+str(hex(data[i]))+":" if data[i] < 16 else str(hex(data[i]))+":"
         mac = mac.replace("0x","").upper()[:-1]
         ip = str(data[11]) + "." + str(data[12]) + "." + str(data[13]) + "." + str(data[14])
         port = data[15]*0x100 + data[16]
-        name = ""
-        for i in range(18,18+data[17]):
-          name += chr(data[i])
-        devices.append([mac,ip,str(port),name])
+        for i in range(18,18+data[17]): name += chr(data[i])
+        device = [mac,ip,str(port),name]
+        if device not in devices:
+          devices.append(device)
+      now = int(time.time())
+      if output and now > last: print("*",end='',flush=True)  # show progress
+      last = now
   except socket.timeout:
     pass
-  s.close()
-  l = len(devices)
-  print()
-  if l == 0:
-    print("no device found!")
-  elif l == 1:
-    print("1 device found:")
-  elif l > 1:
-    print("more than 1 device found:")
-  if l > 0:
-    for i in range(0,len(devices)):
-      # 0=mac 1=ip 2=port 3=name
-      print("ip"+str(i)+": " + devices[i][1]+" name: "+devices[i][3]+" port: "+devices[i][2]+" mac: "+devices[i][0])
-  print()
+  s.close()                                                    # close socket
+  devices.sort(key=lambda x: x[3])                             # sort on name (3. field)
+  if not output:
+    return devices
+  else:
+    print()
+    l = len(devices)                                             # device count
+    if l == 0: print("no device found!")
+    elif l == 1: print("1 device found:")
+    elif l > 1: print(str(l)+" devices found:")
+    if l > 0:
+      for i in range(0,len(devices)):
+        i_str = " "+str(i+1) if i < 9 else str(i+1)
+        print(i_str+": ip: " + devices[i][1]+" name: "+devices[i][3]+" port: "+devices[i][2]+" mac: "+devices[i][0])
+    print()
 
 def sendToWS(ws_ipaddr, ws_port, cmd):           # oeffnet jeweils einen neuen Socket und verschickt cmd; Rueckmeldung = Rueckmeldung der WS
   tries = 5                                      # Anzahl der Versuche
@@ -5118,13 +6430,6 @@ def crcsum(data):
 def byteTohex(b):
   z = str(hex(b))
   s = z[:2]+"0"+z[2:] + " " if len(z)<4 else z + " "
-  return s
-
-def arrTohexOrig(a):
-  s = ""
-  for i in range(len(a)):
-    z = str(hex(a[i]))
-    s += z[:2]+"0"+z[2:] + " " if len(z)<4 else z + " "
   return s
 
 def arrTohex(a):
@@ -5202,10 +6507,10 @@ def setWSconfig(ws_ipaddr, ws_port, custom_host, custom_port, custom_interval):
 
     # Rueckgabewerte pruefen - bei Misserfolg Daten ins Log
     if cdata == bytearray(ok_set_customC,'latin-1') and edata == bytearray(ok_set_customE,'latin-1') :
-      outstr = "<OK> enable custom server on WS " + str(ws_ipaddr) + ":" + str(ws_port) + "; sending to " + str(custom_host) + ":" + str(custom_port) + " in Ecowitt every " + str(custom_interval) + "sec: ok"
+      outstr = "<OK> enable custom server on WS " + str(ws_ipaddr) + ":" + str(ws_port) + "; sending to " + str(custom_host) + ":" + str(custom_port) + " in Ecowitt format every " + str(custom_interval) + "sec: ok"
       didNotWork = False
     else:
-      outstr = "<ERROR> enable custom server on WS " + str(ws_ipaddr) + ":" + str(ws_port) + "; sending to " + str(custom_host) + ":" + str(custom_port) + " in Ecowitt every " + str(custom_interval) + "sec: failed"
+      outstr = "<ERROR> enable custom server on WS " + str(ws_ipaddr) + ":" + str(ws_port) + "; sending to " + str(custom_host) + ":" + str(custom_port) + " in Ecowitt format every " + str(custom_interval) + "sec: failed"
   else:
     outstr = "<ERROR> error while reading current configuration of weather station " + ws_ipaddr + " on port " + ws_port
   if didNotWork:
@@ -5240,8 +6545,8 @@ def getWSINTERVAL(ws_ipaddr, ws_port) :
   #print("edata: " + str(arrTohex(edata)))
   return wsINTERVAL
 
-#formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(message)s',datefmt="%d.%m.%Y %H:%M:%S")
-formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(message)s',datefmt="%d.%m.%Y %H:%M:%S")
+#formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(message)s',datefmt=DT_FORMAT)
+formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(message)s',datefmt=DT_FORMAT)
 
 def setup_logger(name, log_file, level=logging.INFO, format=formatter):
   handler = logging.handlers.WatchedFileHandler(log_file)
@@ -5277,16 +6582,16 @@ def savePickle(CONFIG_FILE, fname):
     stoptime = str(int(time.time()))
     config.set("Status","StopTime",stoptime)
     with open(CONFIG_FILE, "w") as configfile: config.write(configfile)
-    if myDebug: logPrint("<DEBUG> savePickle: StopTime set to " + stoptime + " in " + CONFIG_FILE)
+    debugPrint("savePickle: StopTime set to " + stoptime + " in " + CONFIG_FILE)
   except:
-    if myDebug: logPrint("<ERROR> savePickle: can not write StopTime " + stoptime + " to " + CONFIG_FILE)
+    debugPrint("<ERROR> savePickle: can not write StopTime " + stoptime + " to " + CONFIG_FILE)
     pass
   # save pickle
   anz_stundenwerte = len(stundenwerte)
   #logPrint("<DEBUG> anz_stundenwerte: "+str(anz_stundenwerte))
   # v0.08 write only when necessary
   if anz_stundenwerte > 0:
-    if myDebug: logPrint("<DEBUG> savePickle: write stundenwerte to " + fname)
+    debugPrint("savePickle: write stundenwerte to " + fname)
     try:
       with open(fname, "wb") as output:
         try:
@@ -5303,7 +6608,7 @@ def terminateProcess(signalNumber, frame):
   #if STORM_WARNING: savePickle(CONFIG_FILE, CONFIG_DIR+"/"+prgname+"-"+LBH_PORT+"-stundenwerte.pkl")
   #sendUDP("SID=" + defSID + " running=0")
   #allPrint("<OK> "+prgname+" "+prgver+" stopped")
-  if myDebug: logPrint("<DEBUG> terminateProcess through signal " + str(signalNumber))
+  debugPrint("terminateProcess through signal " + str(signalNumber))
   # vielleicht reicht auch schon da Setzen von wsconnected = False?
   # nein - aus unerfindlichen Gruenden muss sys.exit() erfolgen!
   global wsconnected
@@ -5354,7 +6659,7 @@ def checkWS_report():
       if not inWStimeoutWarning:
         logPrint("<WARNING> weather station has not reported data for more than " + str(WSDOG_INTERVAL*int(WS_INTERVAL)) + " seconds (" + str(WSDOG_INTERVAL) + " send-intervals)")
         sendUDP("SID=" + defSID + " wswarning=1 last=" + str(loxTime(last_ws_time)) + " time="  + str(loxTime(time.time())))
-        pushPrint("<WARNING> weather station has not reported data for more than " + str(WSDOG_INTERVAL*int(WS_INTERVAL)) + " seconds (" + str(WSDOG_INTERVAL) + " send-intervals)")
+        pushPrint("<font color=\"#ff0000\"><WARNING> weather station has not reported data for more than " + str(WSDOG_INTERVAL*int(WS_INTERVAL)) + " seconds (" + str(WSDOG_INTERVAL) + " send-intervals)</font>")
         inWStimeoutWarning = True
         # save status in Config-file
         config = readConfigFile(CONFIG_FILE)
@@ -5363,15 +6668,15 @@ def checkWS_report():
         with open(CONFIG_FILE, "w") as configfile: config.write(configfile)
       elif WSDOG_RESTART > 0 and time.time() > last_ws_time + WSDOG_RESTART * int(WS_INTERVAL):
         logPrint("<WARNING> weather station has not reported data for more than " + str(WSDOG_RESTART*int(WS_INTERVAL)) + " seconds (" + str(WSDOG_RESTART) + " send-intervals) - restarting " + prgname)
-        pushPrint("<WARNING> weather station has not reported data for more than " + str(WSDOG_RESTART*int(WS_INTERVAL)) + " seconds (" + str(WSDOG_RESTART) + " send-intervals) - restarting " + prgname)
+        pushPrint("<font color=\"#ff0000\"><WARNING> weather station has not reported data for more than " + str(WSDOG_RESTART*int(WS_INTERVAL)) + " seconds (" + str(WSDOG_RESTART) + " send-intervals) - restarting " + prgname + "</font>")
         global wsconnected
         wsconnected = False
         killMyself()
-        if myDebug: logPrint("<DEBUG> restart via UDP done")
+        debugPrint("restart via UDP done")
     elif inWStimeoutWarning:
-      logPrint("<OK> weather station has reported data again")
+      logPrint("<RESTORED> weather station has reported data again")
       sendUDP("SID=" + defSID + " wswarning=0 last=" + str(loxTime(last_ws_time)) + " time="  + str(loxTime(time.time())))
-      pushPrint("<OK> weather station has reported data again")
+      pushPrint("<RESTORED> weather station has reported data again")
       # clean up status in Config-file
       config = readConfigFile(CONFIG_FILE)
       config.remove_option("Status","inWStimeoutWarning")
@@ -5411,11 +6716,13 @@ def initMinMax():                                              # create and init
     min_max.update({"tf_ch"+str(i)+"c_min" : "null", "tf_ch"+str(i)+"c_min_time" : "null", "tf_ch"+str(i)+"c_max" : "null", "tf_ch"+str(i)+"c_max_time" : "null"})
   min_max.update({"windspeedkmh_max" : "null", "windspeedkmh_max_time" : "null"})
   min_max.update({"windgustkmh_max" : "null", "windgustkmh_max_time" : "null"})
+  min_max.update({"windrun" : 0})                              # daily wind run
   min_max.update({"solarradiation_min" : "null", "solarradiation_min_time" : "null", "solarradiation_max" : "null", "solarradiation_max_time" : "null"})
   min_max.update({"uv_min" : "null", "uv_min_time" : "null", "uv_max" : "null", "uv_max_time" : "null"})
   min_max.update({"sunmins" : 0})                              # combined: count of minutes with SR >= 120 or dynamic threshold
   min_max.update({"last_suntime" : ""})                        # combined: time of last sun data reception
   min_max.update({"last_suncheck" : ""})                       # combined: time of last check of sun data reception
+  min_max.update({"srsum" : 0})                                # v0.10: daily solar radiation sum
   if HIDDEN_FEATURES:
     min_max.update({"osunmins" : 0})                           # old: count of minutes with SR >= 120
     min_max.update({"last_osuntime" : ""})                     # old: time of last sun data reception
@@ -5430,6 +6737,13 @@ def initMinMax():                                              # create and init
     min_max.update({what+str(i)+"_min" : "null", what+str(i)+"_min_time" : "null", what+str(i)+"_max" : "null", what+str(i)+"_max_time" : "null"})
   for i in range(1,9):
     min_max.update({"leafwetness_ch"+str(i)+"_min" : "null", "leafwetness_ch"+str(i)+"_min_time" : "null", "leafwetness_ch"+str(i)+"_max" : "null", "leafwetness_ch"+str(i)+"_max_time" : "null"})
+  # v0.10 spread
+  if ADD_SPREAD:
+    min_max.update({"spread_min" : "null", "spread_min_time" : "null", "spread_max" : "null", "spread_max_time" : "null"})
+    min_max.update({"spreadin_min" : "null", "spreadin_min_time" : "null", "spreadin_max" : "null", "spreadin_max_time" : "null"})
+    for i in range(1,9):
+      min_max.update({"spread"+str(i)+"_min" : "null", "spread"+str(i)+"_min_time" : "null", "spread"+str(i)+"_max" : "null", "spread"+str(i)+"_max_time" : "null"})
+    min_max.update({"spread_co2_min" : "null", "spread_co2_min_time" : "null", "spread_co2_max" : "null", "spread_co2_max_time" : "null"})
   #min_max.update({"humidex_min" : "null", "humidex_min_time" : "null", "humidex_max" : "null", "humidex_max_time" : "null"})
 
 def calcMinMax(value, what, is_time):                          # set min/max for given keys as string
@@ -5468,17 +6782,24 @@ def saveMinMax(fname):                                         # save the curren
 
 def loadMinMax(fname):                                         # load the min/max array from file
   global min_max
+  modified = False
   if os.path.exists(fname):
     with open(fname, 'rb') as input:
       try:
-        min_max = pickle.load(input)
-        logPrint("<OK> loaded min/max values from " + fname + " (" + str(len(min_max)) + ")")
+        restored_min_max = pickle.load(input)                  # import saved values
+        restored_min_max_size = len(restored_min_max)
+        min_max.update(restored_min_max)                       # merge with initial values
+        min_max_size = len(min_max)
+        if restored_min_max_size != min_max_size: modified = True
+        mod_str = " --> "+str(min_max_size) if modified else ""
+        logPrint("<OK> loaded min/max values from " + fname + " (" + str(len(restored_min_max)) + mod_str + ")")
       except:
         initMinMax()
         logPrint("<WARNING> unable to load min/max values from " + fname)
         pass
   else:
     initMinMax()
+  return modified                                              # returns True if structure changed
 
 def tstampstrToZeit(where, localtime=True):                    # convert timestamp to time str
   outstr = ""
@@ -5492,12 +6813,14 @@ def minmaxCSVline():                                           # create CSV line
   for key, value in min_max.items():
     if "minmax_init" in key or "time" in key:
       mmstr += tstampstrToZeit(getfromDict(min_max,[key])) + ";"
+    elif key == "windrun":                                     # v0.10 add windrun to daily CSV
+      mmstr += mphtokmh(getfromDict(min_max,[key]),2).replace(".",",") + ";"
     elif value == "null":
       mmstr += ";"
     else:
       mmstr += str(value).replace(".",",") + ";"
   if len(mmstr) > 0 and mmstr[-1] == ";": mmstr = mmstr[:-1]
-  mmstr = time.strftime("%d.%m.%Y %H:%M:%S", time.localtime(time.time())) + ";" + mmstr
+  mmstr = time.strftime(DT_FORMAT, time.localtime(time.time())) + ";" + mmstr
   return mmstr
 
 def moreFields(hdr_arr,src_arr,sep=";",header=False):
@@ -5514,7 +6837,9 @@ def moreFields(hdr_arr,src_arr,sep=";",header=False):
   return outstr
 
 def generateMinMax(d):                                         # fill the min/max array with current values and send via UDP
+  #manualCreate = True
   if not thisDay(min_max["minmax_init"]):
+  #if manualCreate or not thisDay(min_max["minmax_init"]):
     #logPrint("<DEBUG> new day - reinitialize")
     if CSV_DAYFILE != "":
       more_daily = ["lightning_num","pm25_24h_co2","pm25_AQI_24h_co2","pm25_AQIlvl_24h_co2","pm10_24h_co2","pm10_AQI_24h_co2","pm10_AQIlvl_24h_co2","co2_24h"]
@@ -5523,23 +6848,38 @@ def generateMinMax(d):                                         # fill the min/ma
         more_daily.append("pm25_AQI_avg_24h_ch"+str(i))
         more_daily.append("pm25_AQIlvl_avg_24h_ch"+str(i))
       more_daily.append("dateutc")
-      try:
-        # check if CSV-dayfile exists and create the file with header
-        if not os.path.exists(CSV_DAYFILE):
-          mmhdr = "daytime;"+dictToString(min_max,";",False,[],[""],True,False,True) + ";"+moreFields(more_daily,last_d_m,";",True)
-          if myDebug: sndPrint("<INFO> "+mmhdr)
+      more_daily.append("dailyboot")                           # v0.10 add daily reboot count as last field to daily CSV
+      # check if CSV-dayfile exists and current structure is the same - create a new file with header
+      mmhdr = "daytime;"+dictToString(min_max,";",False,[],[],True,False,True) + ";"+moreFields(more_daily,last_d_m,";",True)
+      if not sameCSVheader(CSV_DAYFILE,mmhdr):
+        if os.path.exists(CSV_DAYFILE):                        # file present but wrong structure
+          try: extpos = CSV_DAYFILE.rfind(".")
+          except ValueError: pass
+          if extpos < 0: extpos = len(CSV_DAYFILE)
+          new_CSV_DAYFILE = CSV_DAYFILE[:extpos]+"-"+time.strftime("%y%m%d%H%M%S",time.localtime())+CSV_DAYFILE[extpos:]
+          try:
+            os.rename(CSV_DAYFILE,new_CSV_DAYFILE)
+            logPrint("<WARNING> current CSV dayfile " + CSV_DAYFILE + " renamed to " + new_CSV_DAYFILE)
+          except: pass
+        # write header to new file
+        debugPrint("<INFO> generateMinMax header: "+mmhdr)
+        try:
           with open(CSV_DAYFILE, 'w') as csvdayfile: csvdayfile.write(mmhdr+"\n")
-      except:
-        logPrint("<ERROR> error while writing header to CSV-dayfile "+CSV_DAYFILE)
+        except: logPrint("<ERROR> error while writing header to CSV-dayfile "+CSV_DAYFILE)
+      # daily CSV is available, let's write data ******
       try:
         # write values to the CSV-dayfile
         mmstr = minmaxCSVline() + ";"+moreFields(more_daily,last_d_m,";",False)
-        if myDebug: sndPrint("<INFO> "+mmstr)
+        debugPrint("<INFO>  generateMinMax data: "+mmstr)
         with open(CSV_DAYFILE, "a+") as csvdayfile: csvdayfile.write(mmstr+"\n")
       except:
         logPrint("<ERROR> error while writing data to CSV-dayfile "+CSV_DAYFILE)
     # possibility to send the day-data via UDP or do anything else before resetting the min/max values
-    # 
+    # reset other daily values
+    #if not manualCreate:
+    global dailyRebootCounter, dailyInit
+    dailyRebootCounter = 0                                     # reset daily reboot counter
+    dailyInit = True                                           # yes, dailyInit took place
     initMinMax()
   # finally create UDPstr and send min/max data via UDP
   is_time = str(int(time.time()))
@@ -5569,8 +6909,23 @@ def generateMinMax(d):                                         # fill the min/ma
   UDPstr += calcMinMax(getfromDict(d,["dailyrainmm"]),"dailyrainmm",is_time)
   for i in range(1,9):
     UDPstr += calcMinMax(getfromDict(d,["soilmoisture"+str(i)]),"soilmoisture"+str(i),is_time)
+  for i in range(1,9):
+    UDPstr += calcMinMax(getfromDict(d,["leafwetness_ch"+str(i),"leafwetness"+str(i)]),"leafwetness_ch"+str(i),is_time)
+  # v0.10 spread
+  if ADD_SPREAD:
+    UDPstr += calcMinMax(getfromDict(d,["spread"]),"spread",is_time)
+    UDPstr += calcMinMax(getfromDict(d,["spreadin"]),"spreadin",is_time)
+    for i in range(1,9):
+      UDPstr += calcMinMax(getfromDict(d,["spread"+str(i)]),"spread"+str(i),is_time)
+    UDPstr += calcMinMax(getfromDict(d,["spread_co2"]),"spread_co2",is_time)
   if len(UDPstr) > 0 and UDPstr[-1] == " ": UDPstr = UDPstr[:-1]
   if UDP_MINMAX and UDPstr != "": sendUDP("SID=" + defSID + " " + UDPstr)
+
+def sameCSVheader(fname, line):                                # v0.10: check CSV compatibility
+ try:
+   with open(fname) as f: isline = f.readline().strip('\n')
+   return True if isline == line else False
+ except: return False
 
 def checkConfigFile(configname):
   errstr = ""
@@ -5602,6 +6957,808 @@ def checkConfigFile(configname):
     if nextNr == freeNr: freeNr = 0
   else: errstr += "<ERROR> file "+configname+" not found!"
   return(errstr, str(nextNr), str(freeNr))
+
+def POcustomLine(s):                                          # 08.02.
+  # output: 0:nr, 1:condition, 2:text, 3:enabled, 4:holdtime 5:field, 6:operator, 7:value, 8:triggered, 9:triggertime, 10:broken
+  #"@tempc < 0,Current temperature @value °C is below 0°C\, warning triggered!,True,3600"
+  known_op = ["<","<=","==",">=",">","=","<>","!="]
+  if s[:2] == "@[":                                            # function detected - escape commas in function
+    cmd_end = s.index("]")
+    #tprint("s1:   *"+s+"*")
+    cmd = s[:cmd_end].replace(",","%%")
+    s = s.replace(s[:cmd_end],cmd)
+    #tprint("s2:   *"+s+"*")
+    """
+    ---> s1:   *@[eval(@keyname,operator,@keyname)],Test für function (value: @value, comp: @comp),True*
+    ---> s2:   *@[eval(@keyname%%operator%%@keyname)],Test für function (value: @value, comp: @comp),True*
+    ---> *@[eval(@keyname%%operator%%@keyname)]*
+    ---> command found: @[eval(@keyname%%operator%%@keyname)]
+   """
+  s = s.replace("\,","%%").replace("$","#")                    # escape , and convert #
+  cond = text = ""
+  ena = True
+  hold = 3600
+  i = s.find(",")                                              # condition
+  if i > 0:
+    cond = s[:i]
+    s = s[i+1:]
+    i = s.find(",")                                            # text
+    if i > 0:
+      text = s[:i]
+      s = s[i+1:]
+      i = s.find(",")
+      if i > 0:
+        ena = mkBoolean(s[:i])                                 # enabled
+        try:
+          hold = int(s[i+1:])
+        except: pass
+      else:
+        ena = mkBoolean(s)
+    else:
+      text = s
+  else:                                                        # only condition given - e.g. @tempc <= -2.0
+    cond = s
+    text = "condition \""+cond+"\" is given!" if cond != "" else ""
+  text = text.replace("%%",",")
+  # cond enthaelt den Vergleichsbefehl - etwa @tempc <= -2.0 oder @tempc <= @dewptc
+  field = operator = val = ""
+
+  #tprint("*"+cond+"*")
+  if cond[:2] == "@[" and cond[-1] == "]":
+    #tprint("command found: "+cond)
+    None
+  else:
+    words = cond.split()
+    if len(words) > 0: field = words[0]
+    if len(words) > 1: operator = words[1]
+    if len(words) > 2: val = words[2]
+
+  if cond == "" or field == "" or operator not in known_op or val == "":
+    ena = False
+    broken = True
+  else: broken = False
+  #tprint("cond: "+str(cond)+" text: "+str(text)+" ena: "+str(ena)+" hold: "+str(hold)+" field: "+str(field)+" operator: "+str(operator)+" val: "+str(val)+" broken:"+str(broken))
+  return (cond,text,ena,hold,field,operator,val,broken)
+
+def POcustomNotification():                                    # 08.02.
+  try:
+    # 0:nr, 1:condition, 2:text, 3:enabled, 4:holdtime 5:field, 6:operator, 7:value, 8:triggered, 9:triggertime, 10:broken
+    for i in range(0,len(POcustom_arr)):
+      ist_isString = val_isString = False
+      if POcustom_arr[i][3]:                                   # only if enabled (3)
+        nr = POcustom_arr[i][0]
+        ist = str(getfromDict(last_d_all,[POcustom_arr[i][5][1:]])) if POcustom_arr[i][5][0] == "@" else POcustom_arr[i][5]
+        hold = int(POcustom_arr[i][4])
+        operator = POcustom_arr[i][6]
+        val = str(getfromDict(last_d_all,[POcustom_arr[i][7][1:]])) if POcustom_arr[i][7][0] == "@" else POcustom_arr[i][7]
+        #tprint("ist: "+ist+" val: "+val+" array: "+POcustom_arr[i][2])
+        text = POcustom_arr[i][2].replace("@value",str(ist)).replace("@comp",str(val))
+        #tprint("ist: "+ist+" val: "+val+" text2: "+text)
+        active = POcustom_arr[i][8]
+        last = int(POcustom_arr[i][9])
+        try: ist_num = int(ist)
+        except: ist_isString = True
+        try: val_num = int(val)
+        except: val_isString = True
+
+        # debug
+        #if str(nr) == "50":
+        #  tprint("i: "+str(i)+" nr: "+str(nr)+" ist: "+str(ist)+" op: "+str(operator)+" val: "+str(val)+" text: "+str(text)+" hold: "+str(hold)+" active: "+str(active)+" last: "+str(last))
+        #tprint("cond: "+POcustom_arr[i][1])
+
+        if operator == "<":
+          if float(ist) < float(val):
+            if time.time() > last+hold:
+              pushPrint(text)
+              POcustom_arr[i][8] = True
+              POcustom_arr[i][9] = int(time.time())
+          else: POcustom_arr[i][8] = False
+        elif operator == "<=":
+          if float(ist) <= float(val):
+            if time.time() > last+hold:
+              pushPrint(text)
+              POcustom_arr[i][8] = True
+              POcustom_arr[i][9] = int(time.time())
+          else: POcustom_arr[i][8] = False
+        elif operator == "==" or operator == "=":
+          #print("OLI:"+" ist: "+ist+" val: "+val+" last: "+str(last)+" hold: "+str(hold))
+          left = ist_num if ist_isString == False else ist
+          right = val_num if val_isString == False else val
+          if left == right:
+            if time.time() > last+hold:
+              pushPrint(text)
+              POcustom_arr[i][8] = True
+              POcustom_arr[i][9] = int(time.time())
+          else: POcustom_arr[i][8] = False
+        elif operator == ">=":
+          if float(ist) >= float(val):
+            if time.time() > last+hold:
+              pushPrint(text)
+              POcustom_arr[i][8] = True
+              POcustom_arr[i][9] = int(time.time())
+          else: POcustom_arr[i][8] = False
+        elif operator == ">":
+          #print("OLI:"+" ist: "+ist+" val: "+val+" last: "+str(last)+" hold: "+str(hold))
+          if float(ist) > float(val):
+            if time.time() > last+hold:
+              pushPrint(text)
+              POcustom_arr[i][8] = True
+              POcustom_arr[i][9] = int(time.time())
+          else: POcustom_arr[i][8] = False
+        elif operator == "<>" or operator == "!=":
+          #print("OLI:"+" ist: "+ist+" val: "+val+" last: "+str(last)+" hold: "+str(hold))
+          left = ist_num if ist_isString == False else ist
+          right = val_num if val_isString == False else val
+          if left != right:
+            if time.time() > last+hold:
+              pushPrint(text)
+              POcustom_arr[i][8] = True
+              POcustom_arr[i][9] = int(time.time())
+          else: POcustom_arr[i][8] = False
+        else:
+          istr = "" if i == 0 else str(i)
+          logPrint("<ERROR> wrong operator: "+operator+" in rule PO_CUSTOM"+istr)
+        #print("OLI: "+POcustom_arr[i][1]+" "+text+" "+str(hold)+" "+ist+" "+val+" "+str(active)+" "+str(last))
+  except:
+    nr = POcustom_arr[i][0]
+    nrstr = "" if nr == 0 else str(nr)
+    logPrint("<ERROR> processing problem with rule PO_CUSTOM"+nrstr+": "+POcustom_arr[i][1]+"!")
+    pass
+  return
+
+# v0.10 new function
+def sendviaHTTP(url, typ, outstr):
+  ret = ""
+  okstr = "<ERROR> "
+  v = 0
+  while okstr[0:7] == "<ERROR>" and v < httpTries:
+    try:
+      headers = {'Content-Type': 'application/x-www-form-urlencoded', 'Connection': 'Close','User-Agent': None}
+      r = requests.post(url,data=outstr,headers=headers,timeout=httpTimeOut) if typ == "POST" else requests.get(url+outstr,timeout=httpTimeOut)
+      ret = str(r.status_code)
+      okstr = "<ERROR> " if r.status_code not in range(200,203) else ""
+      if r.status_code in range(400,500): v = 400
+    except requests.exceptions.Timeout as err:
+      ret = "TIMEOUT"
+    except requests.exceptions.ConnectionError as err:
+      ret = "CONNERR"
+    except requests.exceptions.RequestException as err:
+      ret = "REQERR"
+    v += 1                                                     # count of tries
+    if v < httpTries and okstr != "": time.sleep(httpSleepTime*v)
+  # done
+  return(okstr, ret, v)
+
+# v0.10 new function
+def isNumeric(s):                                              # accepts also negative floats
+  try: float(s)
+  except (TypeError, ValueError): return False
+  return True
+
+# v0.10 new function
+def localToutc(wert):                                          # local time to utc timestamp
+  try:
+    wert = int(wert)
+    wert = wert - -time.timezone - time.localtime(wert)[8] * 3600
+  except: pass
+  return str(wert)
+
+def readBannerLineDefs(nr, image_name, bannerconfig, source, dtime_format, locale_format, pre = ""):
+  target = []
+  errMsgDone = False
+  # replace any comma to be able to read the line
+  for i in range(0, maxbanner+1):
+    i_str = str(i)
+    what = bannerconfig.get('Banner',source+'_'+i_str,fallback='')  # check presence only
+    if what != "":
+      is_locale = locale.getlocale(locale.LC_TIME)
+      try: locale.setlocale(locale.LC_TIME, locale_format)       # set locale for correct date output
+      except:
+        if not errMsgDone and sndlog:
+          sndPrint("<WARNING> FWD-" + nr + ": problem while generating " + image_name + ": locale " +str(locale_format)+" requested but is not available!")
+          errMsgDone = True
+        pass
+      what = bannerconfig.get('Banner',source+'_'+i_str,fallback='').replace("\,","[Komma]").replace("$datetime",fmt(time.strftime(dtime_format,time.localtime()),pre,"",dtime_format,locale_format)) if bannerconfig.has_option('Banner',source+'_'+i_str) else ""
+      locale.setlocale(locale.LC_TIME, is_locale)                # reset locale setting
+      what = source+"_"+i_str+","+what
+      target.append(what.split(","))
+  # afterwards bring commas back
+  for i in range(len(target)):
+    for j in range(len(target[i])): target[i][j] = target[i][j].replace("[Komma]",",")
+  return target         # readBannerLineDefs
+
+def tidyString(s):
+  s = str(s)
+  if len(s) >=2 and s[0] == "\"" and s[-1] == "\"": s = s[1:-1]
+  elif len(s) >= 6 and s[:3] == "%22" and s[-3:] == "%22": s = s[3:-3]
+  return s
+
+def fmt(s, pre, dec, dtfmt, locale_format, dec_separator = "", pre_fill = " "):
+  s = str(s)
+  if len(s) == 10 and s.isnumeric():                           # guess if this is a time stamp
+    is_locale = locale.getlocale(locale.LC_TIME)
+    try: locale.setlocale(locale.LC_TIME, locale_format)       # set locale for correct date output
+    except: pass
+    if dtfmt == "utctimestamp": s = localToutc(s)
+    elif dtfmt != "timestamp":                                 # keep s
+      try: s = time.strftime(dtfmt.replace("[Komma]",","), time.localtime(int(s)))
+      except: pass
+    locale.setlocale(locale.LC_TIME, is_locale)                # reset locale setting
+  else:
+    try:
+      dec = int(dec)
+      s = str(format(round(float(str(s)),int(dec)),"."+str(dec)+"f"))
+    except ValueError: pass
+    if dec_separator == "," and isNumeric(s): s = s.replace(".",",")            # replace dot with comma
+  try:                                                         # pad string
+    pre = int(pre) + s.count("[Komma]") * 6
+    s = format(str(s)," >"+str(pre))
+    if pre_fill != " ": s = s.replace(" ",pre_fill)
+  except ValueError: pass
+  return s        # fmt
+
+def embedBannerLines(arr, d, ignoreKeys, imgDraw, font_name, font_size, font_color, dt_format, locale_format, pre_count, dec_count):
+  out = ""
+  try: font = ImageFont.truetype(font_name, size=font_size)
+  except (OSError, NameError):
+    font = ImageFont.truetype(font_fallback, size=font_size)
+    out = "font "+font_name+" not found; using "+font_fallback+" instead" + ", "
+  if font_color == "none" or font_color == "transparent":
+    font_color = tuple((255, 255, 255, 255))
+  else:
+    try: ImageColor.getrgb(font_color)
+    except ValueError: font_color="black"
+  for j in range(len(arr)):
+    b = arr[j]
+    ele = len(b)
+    #  line, y,   keypos,key,valpos,val,unit,   keypos,key,valpos,val,unit,   keypos,key,valpos,val,unit
+    #  0     1    2      3   4      5   6       7      8   9      10  11      12     13  14     15  16
+    for i in range(0,ele,5):
+      try:
+        y = intFallback(b[1],-999)                             # set to -999 to realise wrong Y
+        if i+5 < ele and b[i + 3] != "": imgDraw.text((int(b[i + 2]),y), b[i + 3], font=font, fill=font_color)
+        if i+5 < ele and b[i + 5] != "": imgDraw.text((int(b[i + 4]),y), fmt(getfromDict(d,[b[i + 5]],ignoreKeys,""),pre_count,dec_count,dt_format,locale_format)+b[i + 6], font=font, fill=font_color)
+      except ValueError:
+        if y == -999: out = str(b[0])+": wrong Y-coordinate, "
+        else: out += str(b[0])+"/column "+ str(int(i/5)+1) +", "
+        pass
+  out = out[:-2]
+  return out
+
+def CondCompare(elements, d_in):
+  left, operator, right = elements                             # strings
+  if left != "" and left[0] == "@": left = str(getfromDict(d_in,[left[1:]],{},"null"))
+  if right != "" and right[0] == "@": right = str(getfromDict(d_in,[right[1:]],{},"null"))
+  left_float = floatFallback(left,"null")
+  right_float = floatFallback(right,"null")
+  left = left_float if left_float != "null" and right_float != "null" else left
+  right = right_float if left_float != "null" and right_float != "null" else right
+  if operator == "<" and left < right: cond = True
+  elif operator == "<=" and left <= right: cond = True
+  elif operator == "==" and left == right: cond = True
+  elif operator == ">" and left > right: cond = True
+  elif operator == ">=" and left >= right: cond = True
+  elif (operator == "!=" or operator == "<>") and left != right: cond = True
+  elif operator == "=" and left == right: cond = True
+  else: cond = False
+  return cond
+
+def splitCondition(s):
+  cond = list(filter(None,s.strip().split(" ")))               # remove useless spaces
+  while len(cond) < 3: cond.append("")
+  return str(cond[0]), str(cond[1]), str(cond[2])
+
+def addCorners(im, rad=50, bgCol='white', bgPix=5):
+  bg = True if bgPix > 0 else False
+  w, h = im.size
+  if bgPix > h/2: bgPix = int(h/2)
+  if bgPix > w/2: bgPix = int(w/2)
+  im = im.crop((bgPix, bgPix, w-bgPix, h-bgPix))
+  bg_im = Image.new('RGB', tuple(x+(bgPix*2) for x in im.size), bgCol)
+  ims = [im if not bg else im, bg_im]
+  circle = Image.new('L', (rad * 2, rad * 2), 0)
+  draw = ImageDraw.Draw(circle)
+  draw.ellipse((0, 0, rad * 2, rad * 2), fill=255)
+  for i in ims:
+    alpha = Image.new('L', i.size, 'white')
+    w, h = i.size
+    alpha.paste(circle.crop((0, 0, rad, rad)), (0, 0))
+    alpha.paste(circle.crop((0, rad, rad, rad * 2)), (0, h - rad))
+    alpha.paste(circle.crop((rad, 0, rad * 2, rad)), (w - rad, 0))
+    alpha.paste(circle.crop((rad, rad, rad * 2, rad * 2)), (w - rad, h - rad))
+    i.putalpha(alpha)
+  bg_im.paste(im, (bgPix, bgPix), im)
+  return im if not bg else bg_im
+
+def forwardDictToBanner(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys,fwd_type,fwd_options):
+  # convert the given dict to a banner file (sticker) and export the created image to url-dependend target (use default filename if not given in url)
+  debugPrint("forwardDictToBanner "+nr+" start")
+  d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
+  ret = ""
+  d.update(addStatusToDict(d, False))
+
+  # gather banner config file name from FWD_OPTION
+  o = stringToDict(fwd_options,",",strip=True)
+  configfile = getfromDict(o,["bannerconfig"])
+  if not os.path.exists(configfile):
+    if sndlog: sndPrint("<ERROR> FWD-"+nr+": banner config file " + configfile + " not found!")
+    return
+
+  # read config file
+  bannerconfig = readConfigFile(configfile)
+  image_name = bannerconfig.get('Banner','image_name',fallback='demobanner.png')
+  image_width = intFallback(bannerconfig.get('Banner','image_width',fallback=''),800)
+  image_height = intFallback(bannerconfig.get('Banner','image_height',fallback=''),100)
+  image_background = bannerconfig.get('Banner','image_background',fallback='transparent').replace("$","#")
+  dtime_format = bannerconfig.get('Banner','dtime_format',fallback='%d.%m.%Y %H:%M:%S').replace("\"","").replace("\,","[Komma]").replace(",","[Komma]")
+  locale_format = bannerconfig.get('Banner','locale_format',fallback='').replace("\"","")
+  rounding = bannerconfig.get('Banner','rounded_corners',fallback='False').replace("\"","")
+  border_width = bannerconfig.get('Banner','border_width',fallback='0').replace("\"","")
+  border_color = bannerconfig.get('Banner','border_color',fallback='black').replace("\"","").replace("$","#")
+
+  border_width = abs(intFallback(border_width,0))              # default is 0 - no border
+  rad = 10                                                     # default value for rounded corners
+  if rounding.upper() in ["TRUE","YES","ENABLE","ON","1"]: roundedCorners = True
+  elif rounding.isnumeric():
+    roundedCorners = True
+    rad = intFallback(rounding,10)
+  else: roundedCorners = False
+
+  # set lang for date & winddir output
+  if locale_format == "":                                      # not set by config file
+    locale_format = "en_US.UTF-8"
+    if myLanguage == "DE":   locale_format = "de_DE.UTF-8"     # is gathered from LoxBerry or set in config file (LANGUAGE) - may be ""
+    elif myLanguage == "NL": locale_format = "nl_NL.UTF-8"
+    elif myLanguage == "FR": locale_format = "fr_FR.UTF-8"
+    elif myLanguage == "ES": locale_format = "es_ES.UTF-8"
+    elif myLanguage == "SK": locale_format = "sk_SK.UTF-8"
+    #else: print("****** locale unknown!")
+
+  # create background (image)
+  try:                                                         # try filename first
+    image_background = Image.open(image_background)
+    image_width, image_height = image_background.size
+  except:
+    try:                                                       # make sure given color exists
+      image_background = Image.new('RGBA', (image_width, image_height), (255, 255, 255, 0)) if image_background == "transparent" else Image.new('RGBA', (image_width, image_height), color=image_background)
+    except ValueError:                                         # create transparent background as fallback
+      image_background = Image.new('RGBA', (image_width, image_height), (255, 255, 255, 0))
+
+  # rounded corners
+  path, ext = os.path.splitext(image_name)
+  if roundedCorners:
+    if ext.upper() in [".PNG", ".GIF"]: image_background = addCorners(image_background, rad, border_color, border_width)
+    elif sndlog: sndPrint("<WARNING> FWD-" + nr + ": rounded corners are only allowed in PNG and GIF format - given in " + image_name + " is " + ext.upper())
+
+  # prepare for embed text
+  imgDraw = ImageDraw.Draw(image_background)
+
+  # borders
+  if not roundedCorners:
+    try: imgDraw.rectangle((0,0,image_width-1, image_height-1), outline=border_color, width=border_width)
+    except ValueError: pass                                    # warn?
+
+  # script position - export dict as string and import it afterwards - allows modifications
+  if script != "":
+    outstr = dictToString(d," ",klammern=False,ignoreKeys={},ignoreValues={},withkey=True,withvalue=True,hideSpace=True)
+    newstr = modExec(nr, script, outstr)                       # modify outstr with external script before processing
+    if newstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
+    elif outstr != newstr:                                     # script changed the string --> get back as dict
+      d = stringToDict(newstr," ")
+      for key, value in d.items(): d.update({key:str(value).replace("%20"," ")})
+
+  # read & draw lines
+  for what in what_arr:
+    font_name  = bannerconfig.get('Banner',what+'_font_name',fallback=font_fallback)
+    font_color = bannerconfig.get('Banner',what+'_font_color',fallback='black').replace("$","#")
+    font_size  = bannerconfig.get('Banner',what+'_font_size',fallback='14')
+    pre_count  = bannerconfig.get('Banner',what+'_pre_count',fallback='')
+    dec_count  = bannerconfig.get('Banner',what+'_dec_count',fallback='')
+    dt_format  = bannerconfig.get('Banner',what+'_dtime_format',fallback=dtime_format).replace("\"","")
+    if dt_format == "": dt_format = dtime_format               # fallback
+
+    # read line definitions
+    arr = readBannerLineDefs(nr, image_name, bannerconfig, what, dt_format, locale_format, pre_count)
+    font_size = intFallback(font_size,14)
+    # embed logos
+    if what == "logo":
+      for i in range(0,len(arr)):
+        arr_len = len(arr[i])
+        if arr_len == 4 or (arr_len > 4 and CondCompare(splitCondition(arr[i][4]),d)):
+          try:
+            logo = Image.open(arr[i][3])
+            image_background.paste(logo,(int(arr[i][2]),int(arr[i][1])),mask=logo)
+          except (FileNotFoundError, NameError, AttributeError) as err:
+            if sndlog: sndPrint("<WARNING> FWD-" + nr + ": problem while generating " + image_name + ": " + str(err))
+            pass
+    else:
+      erg = embedBannerLines(arr, d, ignoreKeys, imgDraw, font_name, font_size, font_color, dt_format, locale_format, pre_count, dec_count)
+      if erg != "":
+        if sndlog: sndPrint("<WARNING> FWD-" + nr + ": problem while generating " + image_name + ": " + erg)
+
+  # save image and further processing
+  try:
+    image_background.save(image_name)
+    ret = "OK"
+  except (ValueError, FileNotFoundError) as e: ret = str(e)    # unknown output format
+  except: ret = "problem while saving"                         # general error while saving
+  # further processing
+  typ = "save"
+  path, filename = os.path.split(image_name)
+  path = os.getcwd() if path == "" else path
+  if "http://" in url or "https://" in url:                    # send via http/POST
+    typ = "save (http)"
+    path = url
+    text, ret = postFile(url, fwd_sid, fwd_pwd, filename, False, fwd_type, image_name)
+  elif "ftp://" in url or "ftps://" in url:                    # save to FTP(S) server
+    typ = "save (ftp)"
+    path = url
+    text, ret = ftpFile(url, fwd_sid, fwd_pwd, filename, False, image_name)
+  okstr = "<ERROR> " if ret[:2] != "OK" and ret[:3] != "200" else ""
+  qstr = ""
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
+  if sndlog: sndPrint(okstr + "FWD-"+nr+": " + typ + " banner image " + image_name + " to " + path + " : " + ret)
+  debugPrint("forwardDictToBanner "+nr+" stop")
+  return                                                       # forwardDictToBanner
+
+def bannerTohtml(image):
+  import base64
+  try:
+    data_uri = base64.b64encode(open(image, 'rb').read()).decode('utf-8')
+    img_tag = '<img src="data:image/png;base64,{0}">'.format(data_uri)
+  except FileNotFoundError: img_tag = "File "+image+" not found!<br>"
+  return img_tag
+
+def addMoreToDict(d_in, lang):                                 # add some more fields to the given array ******
+  ignoreKeys = {}
+  d_out = {}
+  try: lang = lang.upper()[:2]
+  except TypeError: lang = "EN"
+  try:
+    fields_to_add = ["prgname", "prgver", "prgbuild", "winddir_text", "pchange1", "pchange3", "lightningmi", "aqtime", "starttime"]
+    for field in fields_to_add:
+      if field == "winddir_text": d_out.update({field : WindDirText(getfromDict(d_in,["winddir_avg10m","winddir"],ignoreKeys,""),"XX" if lang == "DE" else "ZZ")})
+      elif "pchange" in field:
+        try: d_out.update({field+"in" : hpatoin(getfromDict(d_in,[field],ignoreKeys),4)})
+        except ValueError: pass
+      elif field == "lightningmi":
+        try: d_out.update({field: kmhtomph(getfromDict(d_in,["lightning"],ignoreKeys,""),4)})
+        except ValueError: pass
+      elif field == "aqtime": d_out.update({field: int(time.time())})
+      elif field == "starttime": d_out.update({field: START_TIME})
+      else: d_out.update({field : eval(field)})
+  except: pass
+  return d_out                                                 # addMoreToDict
+
+def diffTime(val, dtime_format, locale_format):               # guess if this is a time stamp
+  try:
+    if isNumeric(val):
+      val = int(float(val))
+      mm, ss = divmod(int(val), 60)
+      hh, mm = divmod(mm, 60)
+      dd, hh = divmod(hh, 24)
+      val = dtime_format.replace("%H",fl(str(hh),2,"0")).replace("%M",fl(str(mm),2,"0")).replace("%S",fl(str(ss),2,"0")).replace("%j",str(dd))
+  except: pass
+  return val
+
+def guessTime(val, dtime_format, locale_format):               # guess if this is a time stamp
+  if len(val) == 10 and val.isnumeric():
+    try:
+      is_locale = locale.getlocale(locale.LC_TIME)
+      locale.setlocale(locale.LC_TIME, locale_format)          # set locale for correct date output
+      if dtime_format == "utctimestamp": val = localToutc(val)
+      elif dtime_format != "timestamp":                        # keep val
+        val = time.strftime(dtime_format, time.localtime(int(val)))
+      locale.setlocale(locale.LC_TIME, is_locale)              # reset locale setting
+    except: pass
+  return val
+
+def execCMD(s, d, ignoreKeys, dtime_format, locale_format):    # needs d & ignoreKeys for getfronDict
+  # cmd alles vor "(" - danach mehrere Parameter - erster Parameter ist key, wenn erstes Zeichen "@"
+  cmd = s[:s.find("(")].upper()
+  pcount = s.count(",")                                        # Anzahl der Komma + 1 = Anzahl der Parameter
+  addstr = ""
+  par = s[s.find("(")+1:s.find(")")].split(",")
+  par.insert(0,pcount+1)                                       # fill to have access to par[N] as parN
+
+  val = guessTime(str(getfromDict(d,[par[1][1:]],ignoreKeys,"")),dtime_format,locale_format) if len(par[1]) > 0 and par[1][0] == "@" else par[1]
+
+  if cmd == "SUBSTR" or cmd == "COPY":                         # keyname,from,to
+    try:
+      von = int(par[2])-1
+      bis = int(par[3])+von if par[0] >= 3 else len(val)
+      val = val[von:bis]
+    except: pass
+  elif cmd == "ROUND":                                         # keyname,deccount
+    try: val = str(int(round(float(val),int(par[2])))) if int(par[2]) == 0 else str(round(float(val),int(par[2])))
+    except: pass
+  elif cmd == "REPLACE":                                       # keyname,what,with
+    try:
+      par2 = tidyString(par[2].strip())
+      par3 = tidyString(par[3].strip())
+      val = val.replace(str(par2),str(par3))
+    except: pass
+  elif cmd == "FILLLEFT":                                      # keyname,with,len - fuegt hinten so viele Zeichen "with" ein, bis "keyname" der Laenge "len" entspricht
+    try: val = fl(val,int(par[3]),tidyString(par[2]))
+    except: pass
+  elif cmd == "FILLRIGHT":                                     # keyname,with,len - fuegt vorn so viele Zeichen "with" ein, bis "keyname" der Laenge "len" entspricht
+    try: val = fr(val,int(par[3]),tidyString(par[2]))
+    except: pass
+  elif cmd == "ADDLEFT":                                       # keyname,with,count - fuegt links das Zeichen "with" count mal ein
+    try:
+      par3 = int(par[3])
+      for i in range(par3): addstr += tidyString(par[2])
+      val = addstr+val
+    except: pass
+  elif cmd == "ADDRIGHT":                                      # keyname,with,count - fuegt rechts das Zeichen "with" count mal ein
+    try:
+      par3 = int(par[3])
+      for i in range(par3): addstr += tidyString(par[2])
+      val = val+addstr
+    except: pass
+  elif cmd == "STRIP":                                         # remove spaces on both ends of string
+    val = val.strip()
+  elif cmd == "CONCAT":                                        # str1,str2,strN - concat all given strings
+    val = ""
+    for i in range(1,par[0]+1):
+      if len(par[i]) > 0 and par[i][0] == "@": val += guessTime(str(getfromDict(d,[par[i][1:]],ignoreKeys,"")),dtime_format,locale_format)
+      else: val += tidyString(par[i])
+  elif cmd == "DTIME":                                         # keyname, format - convert a timestamp to human date/time
+    dfmt = par[2] if par[0] >= 2 else dtime_format
+    val = guessTime(str(getfromDict(d,[par[1][1:]],ignoreKeys,"")),dfmt,locale_format) if len(par[1]) >= 1 and par[1][0] == "@" else guessTime(str(par[1]),dfmt,locale_format)
+  elif cmd == "TDIFF":
+    dfmt = par[2] if par[0] >= 2 else dtime_format
+    val = diffTime(str(getfromDict(d,[par[1][1:]],ignoreKeys,"")),dfmt,locale_format) if len(par[1]) >= 1 and par[1][0] == "@" else diffTime(str(par[1]),dfmt,locale_format)
+  elif cmd == "ONEMPTY":                                       # keyname, instead - use "instead" instead of an empty value
+    val = tidyString(par[2]) if par[0] >= 2 and val == "" else val
+  elif cmd == "ONVALUE":                                       # keyname, what - append "what" if value of keyname is not empty
+    val = val + tidyString(par[2]) if par[0] >= 2 and val != "" else val
+  elif cmd == "DEWPTF":                                        # expects tempF and hum; outputs in °F
+    try:
+      temp = float(getfromDict(d,[par[1][1:]],ignoreKeys,""))
+      hum =  float(getfromDict(d,[par[2][1:]],ignoreKeys,""))
+      val = str(float(getDewPointF(temp, hum)))
+      #print("F: temp: " + str(temp) + " hum: "+str(hum) + " dew: " + val)
+    except: val = ""
+  elif cmd == "DEWPTC":                                        # expects tempC and hum; outputs in °C
+    try:
+      temp = float(getfromDict(d,[par[1][1:]],ignoreKeys,""))
+      hum =  float(getfromDict(d,[par[2][1:]],ignoreKeys,""))
+      val = str(float(ftoc(getDewPointF(float(ctof(temp,1)), float(hum)),1)))
+      #print("C: temp: " + str(temp) + " hum: "+str(hum) + " dew: " + val)
+    except: val = ""
+  elif cmd == "IF":
+    try:
+      in1 = getfromDict(d,[par[1][1:]],ignoreKeys,"") if len(par[1]) > 0 and par[1][0] == "@" else par[1]
+      op  = tidyString(par[2].strip())
+      in2 = getfromDict(d,[par[3][1:]],ignoreKeys,"") if len(par[3]) > 0 and par[3][0] == "@" else par[3]
+      isT = tidyString(par[4].strip()) if par[0] >= 4 else ""
+      isF = tidyString(par[5].strip()) if par[0] >= 5 else ""
+      if isNumeric(in1) and isNumeric(in2):                    # numeric compare (tries float(in))
+        in1 = float(in1)
+        in2 = float(in2)
+      if op == "<" or op == "lt": val = isT if in1 < in2 else isF
+      elif op == "<=" or op == "le": val = isT if in1 <= in2 else isF
+      elif op == "==" or op == "=" or op == "eq": val = isT if in1 == in2 else isF
+      elif op == ">=" or op == "ge": val = isT if in1 >= in2 else isF
+      elif op == ">" or op == "gt": val = isT if in1 > in2 else isF
+      elif op == "<>" or op == "!=" or op == "ne": val = isT if in1 != in2 else isF
+      else: val = "unknown operator"
+    except: val = ""
+  elif cmd == "EVAL" or cmd == "CALC":
+    try:
+      in1 = getfromDict(d,[par[1][1:]],ignoreKeys,"") if len(par[1]) > 0 and par[1][0] == "@" else par[1]
+      op  = tidyString(par[2].strip())
+      in2 = getfromDict(d,[par[3][1:]],ignoreKeys,"") if len(par[3]) > 0 and par[3][0] == "@" else par[3]
+      if isNumeric(in1) and isNumeric(in2):                    # numeric calculation (tries float(in))
+        in1 = float(in1)
+        in2 = float(in2)
+        if op == "+" : val = in1 + in2
+        elif op == "-": val = in1 - in2
+        elif op == "*": val = in1 * in2
+        elif op == "/": val = in1 / in2
+        else: val = "unknown operator"
+        val = str(int(val)) if val-int(val) == 0 else str(val) # cut decimals
+      else: val = ""
+    except: val = ""
+  else: val = "unsupported command: "+cmd
+  return val                                                   # execCMD
+
+def findCMD(where,pos):                                        # find the command to execute (first occurance of "(" in where from pos reverse (!)
+  lastAUF = where[:pos].rfind("(")
+  lastKOMMA = where[:pos].rfind(",")                           # check if there's a comma nearer - e.g. in concat function
+  if lastKOMMA > lastAUF: lastAUF = lastKOMMA
+  out = where[lastAUF+1:pos] if lastAUF > 0 else where[lastAUF+1:pos]
+  return out                                                   # findCMD
+
+def interpreteCMD(s, d, ignoreKeys, dtime_format, locale_format):           # needs d & ignoreKeys for getfronDict in execCMD
+  debugPrint("interpreteCMD "+s+" start")
+  merk = s
+  i = 0
+  while s.find("(") > 0 and s.find(")") > 0:
+    lastAUF = s.rfind("(")
+    firstZU = s[lastAUF:].find(")")+lastAUF
+    inner = findCMD(s,lastAUF)+s[lastAUF:firstZU+1]
+    value = execCMD(inner, d, ignoreKeys, dtime_format, locale_format)
+    s = s.replace(inner,value)
+    merk = merk.replace(inner,value)
+  debugPrint("interpreteCMD "+s+" stop")
+  return merk                                                  # interpreteCMD
+
+def interpreteTAG(s, d, ignoreKeys, dtime_format, locale_format):
+  out = guessTime(str(getfromDict(d,[s],ignoreKeys,"")),dtime_format,locale_format)
+  return out
+    
+def forwardDictToTagfile(url,d_in,fwd_sid,fwd_pwd,script,nr,ignoreKeys,remapKeys,fwd_type,fwd_options):
+  # read a file in and exchange all tags with current data and export the created outfile to url-dependend target (use default filename if not given in url)
+  debugPrint("forwardDictToTagfile "+nr+" start")
+  d = remappedDict(d_in,remapKeys,nr)                          # remap keys in current dictionary
+  ret = ""
+  d.update(addStatusToDict(d, False))
+
+  # gather banner config file name from FWD_OPTION
+  o = stringToDict(fwd_options.replace("\,","[Komma]"),",",strip=True)
+  infile = getfromDict(o,["infile"],ignoreKeys,"")
+  outfile = getfromDict(o,["outfile"],ignoreKeys,"")
+  append = getfromDict(o,["append"],ignoreKeys,"False")
+  configfile = getfromDict(o,["config"],ignoreKeys,"")
+  task = getfromDict(o,["task"],ignoreKeys,"save")
+  tag = getfromDict(o,["tag"],ignoreKeys,"<!-- @keyname -->")
+  postscript = getfromDict(o,["postscript"],ignoreKeys,"")
+  dtime_format = getfromDict(o,["dtime_format"],ignoreKeys,"%d.%m.%Y %H:%M:%S")
+  locale_format = getfromDict(o,["locale_format"],ignoreKeys,"")
+  pre_count = getfromDict(o,["pre_count"],ignoreKeys,"")
+  pre_fill = getfromDict(o,["pre_fill"],ignoreKeys," ")
+  dec_count = getfromDict(o,["dec_count"],ignoreKeys,"")
+  dec_separator =  getfromDict(o,["dec_separator"],ignoreKeys,"")
+
+  # read additional config - overrules fwd_option
+  if configfile != "" and os.path.exists(configfile):
+    tagconfig = readConfigFile(configfile)
+    infile = tagconfig.get('Tagfile','infile',fallback=infile).replace("\"","")
+    outfile = tagconfig.get('Tagfile','outfile',fallback=outfile).replace("\"","")
+    append = tagconfig.get('Tagfile','append',fallback=append).replace("\"","")
+    task = tagconfig.get('Tagfile','task',fallback=task).replace("\"","")
+    tag = tagconfig.get('Tagfile','tag',fallback=tag).replace("\"","")
+    postscript = tagconfig.get('Tagfile','postscript',fallback=postscript).replace("\"","")
+    dtime_format = tagconfig.get('Tagfile','dtime_format',fallback=dtime_format).replace("\"","").replace("\,",",")
+    locale_format = tagconfig.get('Tagfile','locale_format',fallback="").replace("\"","")
+    pre_count = tagconfig.get('Tagfile','pre_count',fallback=pre_count).replace("\"","")
+    pre_fill = tagconfig.get('Tagfile','pre_fill',fallback=pre_fill).replace("\"","")
+    dec_count = tagconfig.get('Tagfile','dec_count',fallback=dec_count).replace("\"","")
+    dec_separator = tagconfig.get('Tagfile','dec_separator',fallback=dec_separator).replace("\"","")
+
+  if locale_format == "":
+    locale_format = "en_US.UTF-8"
+    if myLanguage == "DE":   locale_format = "de_DE.UTF-8"     # is gathered from LoxBerry or set in config file (LANGUAGE) - may be ""
+    elif myLanguage == "NL": locale_format = "nl_NL.UTF-8"
+    elif myLanguage == "FR": locale_format = "fr_FR.UTF-8"
+    elif myLanguage == "ES": locale_format = "es_ES.UTF-8"
+    elif myLanguage == "SK": locale_format = "sk_SK.UTF-8"
+  append = mkBoolean(append)
+  task = task.upper()
+  dec_separator = dec_separator.replace("[Komma]",",")         # redo comma
+  if dtime_format == "": dtime_format = "%d.%m.%Y %H:%M:%S"    # has to be set!
+
+  # script position - export dict as string and import it afterwards - allows modifications
+  if script != "":
+    outstr = dictToString(d," ",klammern=False,ignoreKeys={},ignoreValues={},withkey=True,withvalue=True,hideSpace=True)
+    newstr = modExec(nr, script, outstr)                       # modify outstr with external script before processing
+    if newstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
+    elif outstr != newstr:                                     # script changed the string --> get back as dict
+      d = stringToDict(newstr," ")
+      for key, value in d.items(): d.update({key:str(value).replace("%20"," ")})
+
+  # read in infile
+  content = {}
+  if infile != "" and os.path.exists(infile):
+    try:
+      with open(infile, "r") as f: content = f.readlines()
+    except (OSError, NameError) as err:
+      ret = str(err)    
+  else: ret = "no input file specified" if infile == "" else "input file not found"                       # general error while saving
+
+  # build start_tag and end_tag
+  if "@keyname" in tag:
+    start_tag = tag[:tag.index("keyname")]
+    stop_tag = tag[tag.index("@keyname"):].replace("@keyname","")
+    # replace all tags with values
+    for i in range(len(content)):
+      line = content[i]
+      funcerr = False
+      while line.find(start_tag) >= 0 and not funcerr:
+        tag_start_pos = line.index(start_tag)
+        tag_stop_pos = line[tag_start_pos:].index(stop_tag)+tag_start_pos
+        tag = line[tag_start_pos+len(start_tag):tag_stop_pos]
+        if line[tag_start_pos+len(start_tag)] == "[":              # ist Funktion!
+          cmd_start_pos = tag_start_pos+len(start_tag)
+          cmd_stop_pos = line.index("]",cmd_start_pos)
+          cmd = line[cmd_start_pos+1:cmd_stop_pos]
+          if line[cmd_stop_pos+1] == "]": tag_stop_pos =+ len(stop_tag)
+          repl = start_tag+"["+cmd+"]"+stop_tag
+          funcerr = True if line.find(repl) < 0 else False
+          line = line.replace(repl, interpreteCMD(cmd, d, ignoreKeys, dtime_format, locale_format))
+        else:                                                      # einfacher Tag 
+          repl = start_tag+tag+stop_tag
+          line = line.replace(repl,fmt(interpreteTAG(tag, d, ignoreKeys, dtime_format, locale_format), pre_count, dec_count, dtime_format, locale_format, dec_separator, pre_fill))
+      content[i] = line if i < len(content)-1 else line.rstrip('\n')    # remove last lf
+
+  # save outfile or create outstring
+  outstr = "".join(content).rstrip('\n')
+  if ret == "" and outfile != "":
+    try:
+      apnd = "a" if append else "w"                            # for e.g. CSV creation
+      if append and os.path.exists(outfile): content.pop(0)    # remove 1. line (header)
+      with open(outfile, apnd) as f: f.writelines(content)
+      ret = "OK"
+    except (OSError, NameError) as err:
+      ret = str(err)     
+  else: ret = "no output file specified" if ret == "" else ret # general error while saving
+
+  # execute post script from fwd_options?
+  if postscript != "":
+    outstr = modExec(nr, postscript, outstr)                   # modify outstr with external script before processing
+    if outstr == execOnly:                                     # just run the exec-script but do not forward the string
+      updateFWDstate(execOnly, nr)
+      return
+
+  # further processing
+  path, filename = os.path.split(outfile)
+  path = os.getcwd()+"/" if path == "" else path
+  typ = "save" if task == "GET" or not append else "append"
+  typ += " to "+path+filename
+  if "http://" in url or "https://" in url:
+    typ = "send" if not append else "append"
+    typ += " (http/"+task+") "
+    if task == "POST":                                         # send as file via http/POST
+      path = url
+      text, ret = postFile(url, fwd_sid, fwd_pwd, filename, append, fwd_type, outfile)
+      typ += filename+" to "+path
+    else:                                                      # send outstr via http
+      text, ret, v = sendviaHTTP(url, task, outstr)            # task = GET or POST
+      typ += url+outstr
+  elif "ftp://" in url or "ftps://" in url:                    # save to FTP(S) server
+    path = url
+    typ = "save" if not append else "append"
+    typ += " (ftp) to "+path+filename
+    text, ret = ftpFile(url, fwd_sid, fwd_pwd, filename, append, outfile)
+  okstr = "<ERROR> " if ret[:2] != "OK" and ret[:3] != "200" else ""
+  qstr = ""
+  code = "OK" if okstr == "" else str(ret)+qstr
+  updateFWDstate(code, nr)
+  if sndlog: sndPrint(okstr + "FWD-"+nr+": " + typ + " : " + ret)
+  debugPrint("forwardDictToTagfile "+nr+" stop")
+  return                                                       # forwardDictToTagfile
+
+def ignoreOnValue(s, key, limit, value = ""):                  # v0.10: replace key name if value >= limit
+  try:                                                         # or use value instead ******
+    startpos = s.index(key+"=")
+    t = s[startpos+len(key)+1:]
+    endpos = t.find("&")
+    if endpos < 0: endpos = len(t)
+    isval = t[:endpos]
+    if float(isval) >= float(limit):
+      if value == "":
+        s = s.replace(key+"=","_"+key+"=")
+        logPrint("<WARNING> key "+key+" with value "+isval+" exceeds limit "+limit+" - removed!")
+      else:
+        s = s.replace(key+"="+isval,key+"="+value)
+        s += "&_"+key+"="+isval
+        logPrint("<WARNING> key "+key+" with value "+isval+" exceeds limit "+limit+" - capped!")
+  except: pass
+  return s
+
+# v0.10 enable debug mode via file trigger
+def setdebugStateFile(what):
+  fname = CONFIG_DIR+"/debug.enable"
+  if what == "enable" and not os.path.exists(fname):
+    with open(fname, 'a'): os.utime(fname)
+  elif what == "disable" and os.path.isfile(fname): os.remove(fname)
 
 # ------------------------------------------------------------
 # main
@@ -5745,7 +7902,7 @@ elif option == "-CHECKCONFIG":
   sys.exit(0)
 elif option == "HELP" or option == "-HELP" or option == "--HELP" or option == "?" or option == "-?" or option == "-h":
   print()
-  print("Phantasoft " + prgname + " " + prgver)
+  print("Phantasoft " + prgname + " " + prgbuild)
   print()
   print("creates a local web server to receive data from a local weather station and resend this different ways")
   print()
@@ -5786,7 +7943,14 @@ if not os.path.isfile(CONFIG_FILE):
   sys.exit(0)
 
 # Konfiguration einlesen
-config = readConfigFile(CONFIG_FILE)
+try:
+  config = readConfigFile(CONFIG_FILE)
+except UnicodeDecodeError:
+  # repair formerly encoding to UTF-8
+  import codecs
+  with codecs.open(CONFIG_FILE, "r", "ISO-8859-1") as source: content = source.read()
+  with codecs.open(CONFIG_FILE, "w", "UTF-8") as target: target.write(content)
+  config = readConfigFile(CONFIG_FILE)
 
 SVC_NAME = config.get('Config','SVC_NAME',fallback='foshkplugin')
 LOX_IP = config.get('Config','LOX_IP',fallback='LOX_IP')
@@ -5794,6 +7958,7 @@ LOX_PORT = config.get('Config','LOX_PORT',fallback='LOX_PORT')
 LB_IP = config.get('Config','LB_IP',fallback='LB_IP')
 LBU_PORT = config.get('Config','LBU_PORT',fallback='LBU_PORT')
 LBH_PORT = config.get('Config','LBH_PORT',fallback='LBH_PORT_DEFAULT')
+LINK_ADR = config.get('Config','LINK_ADR',fallback='')
 LOX_TIME = mkBoolean(config.get('Config','LOX_TIME',fallback="False"))
 USE_METRIC = mkBoolean(config.get('Config','USE_METRIC',fallback="True"))
 IGNORE_EMPTY = mkBoolean(config.get('Config','IGNORE_EMPTY',fallback="True"))
@@ -5807,6 +7972,8 @@ UDP_STATRESEND = config.get('Config','UDP_STATRESEND',fallback="0").replace("\""
 REBOOT_ENABLE = mkBoolean(config.get('Config','REBOOT_ENABLE',fallback="False"))
 RESTART_ENABLE = mkBoolean(config.get('Config','RESTART_ENABLE',fallback="False"))
 HIDDEN_FEATURES = mkBoolean(config.get('Config','HIDDEN_FEATURES',fallback="False"))
+# v0.10: change date/time format
+DT_FORMAT = config.get('Config','DT_FORMAT',fallback=DT_FORMAT).replace("\"","")
 WS_IP = config.get('Weatherstation','WS_IP',fallback='WS_IP')
 WS_PORT = config.get('Weatherstation','WS_PORT',fallback='WS_PORT')
 WS_INTERVAL = config.get('Weatherstation','WS_INTERVAL',fallback='60')
@@ -5817,15 +7984,22 @@ CSV_FIELDS = config.get('CSV','CSV_FIELDS',fallback='CSV_FIELDS').replace("\"","
 CSV_DAYFILE = config.get('CSV','CSV_DAYFILE',fallback='')
 EVAL_VALUES = mkBoolean(config.get('Export','EVAL_VALUES',fallback="False"))
 ADD_ITEMS = config.get('Export','ADD_ITEMS',fallback='').replace("\"","")
+ADD_DEWPT = mkBoolean(config.get('Export','ADD_DEWPT',fallback="False"))
+ADD_SPREAD = mkBoolean(config.get('Export','ADD_SPREAD',fallback="False"))
+ADD_SIGNAL = mkBoolean(config.get('Export','ADD_SIGNAL',fallback="False"))
 WSDOG_WARNING = mkBoolean(config.get('Warning','WSDOG_WARNING',fallback="True"))
 WSDOG_INTERVAL = config.get('Warning','WSDOG_INTERVAL',fallback='3')
 WSDOG_RESTART = config.get('Warning','WSDOG_RESTART',fallback='0')
+# v0.10 forward warning enable (push) and count of missed intervals - onetime warning!
+FWD_WARNING = mkBoolean(config.get('Warning','FWD_WARNING',fallback="True"))
+FWD_WARNINT = config.get('Warning','FWD_WARNINT',fallback=str(FWD_WARNINT))
 STORM_WARNING = mkBoolean(config.get('Warning','STORM_WARNING',fallback="True"))
 STORM_WARNDIFF = config.get('Warning','STORM_WARNDIFF',fallback='1.75')
 STORM_WARNDIFF3H = config.get('Warning','STORM_WARNDIFF3H',fallback='3.75')
 STORM_EXPIRE = config.get('Warning','STORM_EXPIRE',fallback='60')
 SENSOR_WARNING = mkBoolean(config.get('Warning','SENSOR_WARNING',fallback="False"))
 SENSOR_MANDATORY = config.get('Warning','SENSOR_MANDATORY',fallback='').replace("\"","")
+SENSOR_INTERVAL = config.get('Warning','SENSOR_INTERVAL',fallback="2")
 # ab v0.06 bei vorhandenem WH57/DP60 (Blitzwarner) aktiv:
 TSTORM_WARNING = mkBoolean(config.get('Warning','TSTORM_WARNING',fallback="True"))
 TSTORM_WARNCOUNT = config.get('Warning','TSTORM_WARNCOUNT',fallback='1')
@@ -5833,6 +8007,10 @@ TSTORM_WARNDIST = config.get('Warning','TSTORM_WARNDIST',fallback='20')
 TSTORM_EXPIRE = config.get('Warning','TSTORM_EXPIRE',fallback='30')
 # ab v0.06 battery warning
 BATTERY_WARNING = mkBoolean(config.get('Warning','BATTERY_WARNING',fallback="True"))
+# v0.10 exclude sensors
+BATTERY_WARNEXCLUDE = config.get('Warning','BATTERY_WARNEXCLUDE',fallback='').replace("\"","")
+# v0.10 reboot warning
+REBOOT_WARNING = mkBoolean(config.get('Warning','REBOOT_WARNING',fallback="True"))
 # ab v0.06 save some states for resurrection
 inWStimeoutWarning = mkBoolean(config.get('Status','inWStimeoutWarning',fallback="False"))
 inSensorWarning = mkBoolean(config.get('Status','inSensorWarning',fallback="False"))
@@ -5851,13 +8029,18 @@ lastStopTime = config.get('Status','StopTime',fallback="")
 LANGUAGE = config.get('Config','LANGUAGE',fallback='').replace("\"","")
 # ab v0.06 simple authentication-mechanism
 AUTH_PWD = config.get('Config','AUTH_PWD',fallback='').replace("\"","")
-# ab v0.06 fake outdoor sensor with internal values
-fakeOUT_TEMP = config.get('Export','OUT_TEMP',fallback='').replace("\"","")
-fakeOUT_HUM = config.get('Export','OUT_HUM',fallback='').replace("\"","")
+# ab v0.06 fake outdoor sensor with internal values - ignore a "@" with v0.10
+fakeOUT_TEMP = config.get('Export','OUT_TEMP',fallback='').replace("\"","").replace("@","")
+fakeOUT_HUM = config.get('Export','OUT_HUM',fallback='').replace("\"","").replace("@","")
 # ab v0.07 exchange incoming time string with local receiving time
 exchangeTime = mkBoolean(config.get('Export','OUT_TIME',fallback="False"))
 # v0.09 adjust missing http:// in fwd_url automatically
 URL_REPAIR = mkBoolean(config.get('Export','URL_REPAIR',fallback="True"))
+# v0.10 cut windgust value - if equal or higher rename the key windgustmph to _windgustmph
+LIMIT_WINDGUST = config.get('Export','LIMIT_WINDGUST',fallback='').replace("\"","")
+# v0.10 execute script for incoming data
+ADD_SCRIPT = config.get('Export','ADD_SCRIPT',fallback='').replace("\"","")
+
 # v0.07: use Pushover for push warnings
 PO_ENABLE = mkBoolean(config.get('Pushover','PO_ENABLE',fallback="False"))
 PO_URL = config.get('Pushover','PO_URL',fallback='https://api.pushover.net/1/messages.json').replace("\"","")
@@ -5882,11 +8065,7 @@ last_lightning = config.get('Status','last_lightning',fallback="")
 UDP_MINMAX = mkBoolean(config.get('Export','UDP_MINMAX',fallback="True"))
 # v0.08: max length of outgoing UDP packet; will be fragmented if longer than this value
 UDP_MAXLEN = config.get('Config','UDP_MAXLEN',fallback=config.get('Config','UDP_LEN',fallback=''))
-try:
-  UDP_MAXLEN = int(UDP_MAXLEN)
-except ValueError:
-  UDP_MAXLEN = 2000
-  pass
+UDP_MAXLEN = intFallback(UDP_MAXLEN,2000)
 if UDP_MAXLEN < 128: UDP_MAXLEN = 128
 # v0.08 coordinates
 COORD_LAT = config.get('Coordinates','LAT',fallback="").replace(",",".")
@@ -5898,11 +8077,19 @@ if LOG_LEVEL not in [ "ERROR", "WARNING", "INFO", "ALL" ]: LOG_LEVEL = "ALL"
 # v0.09: Sunduration
 useSunCalc = mkBoolean(config.get('Sunduration','SUN_CALC',fallback="False"))
 SUN_MIN = config.get('Sunduration','SUN_MIN',fallback=0)       ##
-SUN_COEF = config.get('Sunduration','SUN_COEF',fallback=0.8)   ##
-
+SUN_COEF = config.get('Sunduration','SUN_COEF',fallback=0.92)  ## v0.10 lt. Werner besserer Wert
 # v0.09: Interval warning
 INTVL_WARNING = mkBoolean(config.get('Warning','INTVL_WARNING',fallback="False"))
 INTVL_PCT = config.get('Warning','INTVL_PCT',fallback='10')    # percent
+# v0.10 hold time for keys sunshine
+SUNSHINE_HOLD = config.get('Sunduration','SUNSHINE_HOLD',fallback=0)
+# v0.10 reboot counter
+dailyRebootCounter = config.get('Status','dailyRebootCounter',fallback="")
+dailyRebootCounter = intFallback(dailyRebootCounter,0)
+# v0.10 LINK-ADR - address for all links
+if LINK_ADR == "": LINK_ADR = socket.gethostbyname(socket.gethostname()) if LB_IP == "" else LB_IP
+# v0.10 - color print
+COLOR_PRINT = mkBoolean(config.get('Logging','COLOR_PRINT',fallback="True"))
 
 # for firmware update check
 UPD_CHECK = mkBoolean(config.get('Update','UPD_CHECK',fallback="True"))
@@ -5922,55 +8109,31 @@ if SENSOR_WARNING and SENSOR_MANDATORY != "":
 else:
   SENSOR_WARNING = False
 
+# v0.10: exclude from battery warning
+BATTERY_WARNEXCLUDE = BATTERY_WARNEXCLUDE.replace(" ","").strip("\"")
+battex_arr = BATTERY_WARNEXCLUDE.split(",")
+
 # etwaige Anfuehrungszeichen entfernen
 #CSV_FIELDS = CSV_FIELDS.replace("\"","")
 #print("CSV-Fields: " + CSV_FIELDS)
 
-try: UDP_STATRESEND = int(UDP_STATRESEND)
-except ValueError: UDP_STATRESEND = 0                          # default: no regular resend of status
-
-try: WSDOG_INTERVAL = int(WSDOG_INTERVAL)
-except ValueError: WSDOG_INTERVAL = 3                          # default: warn after 3 intervals
-
-try: WSDOG_RESTART = int(WSDOG_RESTART)
-except ValueError: WSDOG_RESTART = 0                           # default: do not restart the plugin
-
-try: STORM_WARNDIFF = float(STORM_WARNDIFF)
-except ValueError: STORM_WARNDIFF = float(1.75)                # default: 1.75hPa
-
-try: STORM_WARNDIFF3H = float(STORM_WARNDIFF3H)
-except ValueError: STORM_WARNDIFF3H = float(3.75)              # default: 3.75hPa
-
-try: STORM_EXPIRE = int(STORM_EXPIRE)
-except ValueError: STORM_EXPIRE = 60                           # default: 60 minutes
-
-try: TSTORM_WARNCOUNT = int(TSTORM_WARNCOUNT)
-except ValueError: TSTORM_WARNCOUNT = 1                        # default: 1 lightning
-
-try: TSTORM_WARNDIST = int(TSTORM_WARNDIST)
-except ValueError: TSTORM_WARNDIST = 30                        # default: 30km
-
-try: TSTORM_EXPIRE = int(TSTORM_EXPIRE)
-except ValueError: TSTORM_EXPIRE = 15                          # default: 15 minutes
-
-try: lastStopTime = int(lastStopTime)
-except ValueError: lastStopTime = 0
-
-try: inStormWarnStart = int(inStormWarnStart)
-except ValueError: inStormWarnStart = 0
-
-try: inStormTime = int(inStormTime)
-except ValueError: inStormTime = 0
-
-try: inTSWarnStart = int(inTSWarnStart)
-except ValueError: inTSWarnStart = 0
-
-try: last_lightning_time = int(last_lightning_time)
-except ValueError: last_lightning_time = 0
-
-try: inTS_lightning_num = int(inTS_lightning_num)
-except ValueError: inTS_lightning_num = 0
-
+UDP_STATRESEND = intFallback(UDP_STATRESEND,0)                 # default: no regular resend of status
+WSDOG_INTERVAL = intFallback(WSDOG_INTERVAL,3)                 # default: warn after 3 intervals
+FWD_WARNINT = intFallback(FWD_WARNINT,FWD_WARNINT)             # default: warn after CONST intervals
+WSDOG_RESTART = intFallback(WSDOG_RESTART,0)                   # default: do not restart the plugin
+STORM_WARNDIFF = floatFallback(STORM_WARNDIFF,1.75)            # default: 1.75hPa
+STORM_WARNDIFF3H = floatFallback(STORM_WARNDIFF3H,3.75)        # default: 3.75hPa
+STORM_EXPIRE = intFallback(STORM_EXPIRE,60)                    # default: 60 minutes
+TSTORM_WARNCOUNT = intFallback(TSTORM_WARNCOUNT,1)             # default: 1 lightning
+TSTORM_WARNDIST = intFallback(TSTORM_WARNDIST,30)              # default: 30km
+TSTORM_EXPIRE = intFallback(TSTORM_EXPIRE,15)                  # default: 15 minutes
+lastStopTime = intFallback(lastStopTime,0)                     # default: 0 = never
+inStormWarnStart = intFallback(inStormWarnStart,0)             # default: 0 = never
+inStormTime = intFallback(inStormTime,0)                       # default: 0 = never
+inTSWarnStart = intFallback(inTSWarnStart,0)                   # default: 0 = never
+last_lightning_time = intFallback(last_lightning_time,0)       # default: 0 = never
+inTS_lightning_num = intFallback(inTS_lightning_num,0)         # default: 0 = never
+SENSOR_INTERVAL = intFallback(SENSOR_INTERVAL,2)               # default: after 2 intervals
 # in case autoconfig failed or WS_INTERVAL was set wrong reset it to a numerical value
 try: int(WS_INTERVAL)
 except ValueError: WS_INTERVAL="60"
@@ -5992,7 +8155,7 @@ for i in range(0, maxfwd+1):                                   # +1 because stop
     fwd_url = config.get(section,"FWD_URL",fallback="")
     fwd_interval = config.get(section,"FWD_INTERVAL",fallback=WS_INTERVAL)
     fwd_ignore = config.get(section,"FWD_IGNORE",fallback="").replace("\"","").replace(" ","").split(",")
-    fwd_type = config.get(section,"FWD_TYPE",fallback="WU").replace("\"","")
+    fwd_type = config.get(section,"FWD_TYPE",fallback="WU").replace("\"","").upper()
     fwd_sid = config.get(section,"FWD_SID",fallback="").replace("\"","")
     fwd_pwd = config.get(section,"FWD_PWD",fallback="").replace("\"","")
     fwd_status = mkBoolean(config.get(section,"FWD_STATUS",fallback="False"))
@@ -6002,29 +8165,55 @@ for i in range(0, maxfwd+1):                                   # +1 because stop
     fwd_nr = str(i) if i > 9 else "0"+str(i)                   # for logging - qualifies the corresponding forward
     fwd_last = 0                                               # last forward-time
     fwd_remap = config.get(section,"FWD_REMAP",fallback="").replace("\"","")
+    # v0.10 optional options & lastok
+    fwd_option = config.get(section,"FWD_OPTION",fallback="").replace("\"","")
+    fwd_lastok = 0
+    fwd_errcount = 0
+    fwd_code = ""
+    fwd_wint = config.get(section,"FWD_WARNINT",fallback=str(FWD_WARNINT))
+    # v0.10: for fwd_type = INFLUX* fwd_queue = True as default; all other: False
+    fwd_queue = config.get(section,"FWD_QUEUE",fallback="").upper()
+    if "INFLUX" in fwd_type and fwd_queue == "": fwd_queue = "INFLUX"
+    elif fwd_type == "AWEKAS" and fwd_queue == "": fwd_queue = "AWEKAS"
+    fwd_qdir = config.get(section,"FWD_QDIR",fallback="")
     try:
       d_remap = dict(x.split("=") for x in fwd_remap.split(",")) if fwd_remap != "" else {}
     except ValueError:
       d_remap = {}
       fwd_error = "<WARNING> you have to separate pairs in FWD_REMAP with \",\" - remapping disabled for "+section
       pass
-    try: fwd_interval_num = int(fwd_interval)
-    except ValueError: fwd_interval_num = 0
-    try: fwd_mqttcycle = int(fwd_mqttcycle)
-    except ValueError: fwd_mqttcycle = 0
-    if fwd_enable and (fwd_url != "" or fwd_exec != ""):       # v0.07: enable/disable manually
+    fwd_interval_num = intFallback(fwd_interval,0)
+    fwd_mqttcycle = intFallback(fwd_mqttcycle,0)
+    fwd_wint = intFallback(fwd_wint,int(FWD_WARNINT))
+    if fwd_enable and (fwd_url != "" or fwd_exec != "" or fwd_option != ""):       # v0.07: enable/disable manually
       # v0.09 repair broken target URL for WU, RAW, EW, RAWEW, EWRAW, LD, RAWCSV, CSVRAW, CSV, AMB, RAWAMB, AMBRAW, MT, WC, AWEKAS, WETTERCOM, WEATHER365, WETTERSEKTOR
       if URL_REPAIR and fwd_type in ["WU", "RAW", "EW", "RAWEW", "EWRAW", "LD", "RAWCSV", "CSVRAW", "CSV", "AMB", "RAWAMB", "AMBRAW", "MT", "WC", "AWEKAS", "WETTERCOM", "WEATHER365", "WETTERSEKTOR"]:
         if fwd_url != "" and fwd_exec == "" and not (fwd_url[:7] == "http://" or fwd_url[:8] == "https://"):
           fwd_url = "http://"+fwd_url
           if fwd_error != "": fwd_error+="\n"
           fwd_error += "<WARNING> FWD-"+fwd_nr+": URL must start with \"http://\" - adapted to "+fwd_url
-      fwd_arr.append([fwd_url,fwd_interval,fwd_interval_num,fwd_last,fwd_ignore,fwd_type,fwd_sid,fwd_pwd,fwd_status,fwd_minmax,fwd_exec,fwd_nr,fwd_mqttcycle,d_remap])
+      # 0:url,1:interval,2:interval_num,3:last,4:ignore,5:type,6:fwd_sid,7:fwd_pwd,8:status,9:minmax,10:script,11:nr,12:mqttcycle,13:fwd_remap,14:fwd_option,15:fwd_cmt,16:lastok,17:errcount,18:code,19:warnint,20:queuetype,21:queuedir
+      fwd_arr.append([fwd_url,fwd_interval,fwd_interval_num,fwd_last,fwd_ignore,fwd_type,fwd_sid,fwd_pwd,fwd_status,fwd_minmax,fwd_exec,fwd_nr,fwd_mqttcycle,d_remap,fwd_option,fwd_cmt,fwd_lastok,fwd_errcount,fwd_code,fwd_wint,fwd_queue,fwd_qdir])
       forwardMode = True
 
+# v0.10 Pushover custom notifications - 08.02.
+POcustomWarning = False
+POcustom_arr = []
+if PO_ENABLE:
+  section = "Pushover"
+  if config.has_section(section):
+    POcustomWarning = mkBoolean(config.get(section,"PO_CUSTOMWARNING",fallback="True"))
+    if POcustomWarning:
+      for i in range(0,POcustom_max+1):
+        nr = "" if i == 0 else str(i)
+        line = config.get(section,"PO_CUSTOM"+nr,fallback="")
+        if line != "":
+          po_cond, po_text, po_enable, po_hold, po_field, po_operator, po_val, po_broken = POcustomLine(line)
+          # 0:nr, 1:condition, 2:text, 3:enabled, 4:holdtime 5:field, 6:operator, 7:value, 8:triggered, 9:triggertime, 10:broken
+          POcustom_arr.append([i, po_cond, po_text, po_enable, po_hold, po_field, po_operator, po_val, False, 0, po_broken])
+
 CSVsave = True if CSV_NAME != '' and CSV_FIELDS != '' else False
-try: CSV_INTERVAL_num = int(CSV_INTERVAL)
-except ValueError: CSV_INTERVAL_num = 0
+CSV_INTERVAL_num = intFallback(CSV_INTERVAL,0)
 
 logfile = config.get('Logging','logfile',fallback='')
 rawfile = config.get('Logging','rawfile',fallback='')
@@ -6044,7 +8233,7 @@ if loglog :
     pass
 
 # raw-Logger
-myformatter = logging.Formatter('%(asctime)s.%(msecs)03d %(message)s',datefmt="%d.%m.%Y %H:%M:%S")
+myformatter = logging.Formatter('%(asctime)s.%(msecs)03d %(message)s',datefmt=DT_FORMAT)
 if rawlog :
   try:
     rawlogger = setup_logger('raw_logger',rawfile,format=myformatter)
@@ -6207,13 +8396,19 @@ elif option == '-GETCSVHEADER':                                # v0.07 now only 
     print()
   sys.exit(0)
 
-allPrint("<OK> "+prgname+" "+prgver+" started")
+allPrint("<OK> "+prgname+" "+prgbuild+" started")
+START_TIME = int(time.time())
 
 # v0.09 configuration file in use
 logPrint("<OK> using configuration file " + CONFIG_FILE)
 
 # v0.08 log level
 logPrint("<OK> log level set to " + LOG_LEVEL + " (out of ERROR, WARNING, INFO, ALL (default))")
+
+if LOG_ENABLE:
+  logPrint("<OK> Logging is globally enabled (loglog: "+str(loglog)+", sndlog: "+str(sndlog)+", rawlog: "+str(rawlog)+"; loglevel: "+LOG_LEVEL+" - to disable set LOG_ENABLE = False in config")
+else:
+  logPrint("<OK> logging is globally disabled - to enable set LOG_ENABLE = True in config")
 
 # get Language of LoxBerry:
 #myLanguage = getLBLang()
@@ -6250,14 +8445,13 @@ if STORM_WARNING:
 if EVAL_VALUES: wind_avg10m  = deque(maxlen=(int(10*60/int(WS_INTERVAL))))               # holds 10 minutes of speed, direction and windgust
 
 # read minmax array from file if available
-initMinMax()
-initLen = len(min_max)
+initMinMax()                                                   # set all to 0
 min_max_pickle = CONFIG_DIR+"/"+prgname+"-"+LBH_PORT+"-minmax.pkl"
-loadMinMax(min_max_pickle)
-if len(min_max) != initLen or not thisDay(min_max["minmax_init"]):
+modified = loadMinMax(min_max_pickle)                          # overwrite 0 values with saved values
+if not thisDay(min_max["minmax_init"]):                        # do not use if data is outdated
   logPrint("<WARNING> loaded min/max values are wrong - reinitialize")
   initMinMax()
-  # rename current dayfile so a new CSV file will be created
+if modified:                                                   # rename current dayfile so a new CSV file will be created
   if os.path.exists(CSV_DAYFILE):
     try:
       extpos = CSV_DAYFILE.rfind(".")
@@ -6280,7 +8474,8 @@ if SENSOR_WARNING:
   logPrint("<OK> sensor warning activated, will warn if data for mandatory sensor " + str(senmand_arr) + " is missed")
 
 if BATTERY_WARNING:
-  logPrint("<OK> battery warning enabled, will warn if battery level of all known sensors is critical - to disable set BATTERY_WARNING = False in config")
+  exstr = "(excluding "+BATTERY_WARNEXCLUDE+") " if BATTERY_WARNEXCLUDE != "" else ""
+  logPrint("<OK> battery warning enabled, will warn if battery level of all known sensors "+exstr+"is critical - to disable set BATTERY_WARNING = False in config")
 else:
   logPrint("<OK> battery warning disabled - to enable set BATTERY_WARNING = True in config")
 
@@ -6302,6 +8497,11 @@ if INTVL_WARNING:
   logPrint("<OK> interval warning enabled, will warn if the real sending interval is more than "+str(INTVL_LIMIT)+" ("+INTVL_PCT+"% above the defined value "+WS_INTERVAL+") - to disable set INTVL_WARNING = False in config")
 else:
   logPrint("<OK> interval warning disabled - to enable set INTVL_WARNING = True in config")
+
+if REBOOT_WARNING:
+  logPrint("<OK> reboot warning enabled, will warn if station reboot is detected via key runtime - to disable set REBOOT_WARNING = False in config")
+else:
+  logPrint("<OK> reboot warning disabled - to enable set REBOOT_WARNING = True in config")
 
 if UDP_STATRESEND > 0:
   logPrint("<OK> resend warnings per UDP every " + str(UDP_STATRESEND) + " seconds")
@@ -6329,11 +8529,45 @@ if exchangeTime:
 if PO_ENABLE and PO_TOKEN != "" and PO_USER != "":
   logPrint("<OK> sending of warnings via Pushover is activated - to disable just set Pushover\PO_ENABLE=False in config")
 
+if PO_ENABLE and PO_TOKEN != "" and PO_USER != "" and POcustomWarning:
+  # 0:nr, 1:condition, 2:text, 3:enabled, 4:holdtime 5:field, 6:operator, 7:value, 8:triggered, 9:triggertime, 10:broken
+  i = str(len(POcustom_arr))
+  logPrint("<OK> customized Pushover notifications with "+i+" rules activated - to disable just set Pushover\PO_CUSTOMWARNING=False in config")
+  for i in range(len(POcustom_arr)):
+    if POcustom_arr[i][10] == True: logPrint("<WARNING> custom PO rule PO_CUSTOM"+str(POcustom_arr[i][0])+" with condition \""+POcustom_arr[i][1]+"\" is invalid - rule disabled")
+
 if useSunCalc:
   if COORD_LAT == "" or COORD_LON == "":
     logPrint("<WARNING> you have to specify Coordinates\LAT and Coordinates\LON in config - falling back to standard calculation of sunhours!")
   else:
     logPrint("<OK> enhanced sunhours calculation with dynamic threshold enabled")
+
+if ADD_DEWPT:
+  logPrint("<OK> additional dew point calculation (indoor sensor, WH31, WH45) activated - to disable set Export\ADD_DEWPT = False in config")
+else:
+  logPrint("<OK> additional dew point calculation (indoor sensor, WH31, WH45) is deactivated - to enable set Export\ADD_DEWPT = True in config")
+
+if ADD_SPREAD:
+  logPrint("<OK> additional spread calculation (indoor sensor, WH31, WH45) activated - to disable set Export\ADD_SPREAD = False in config")
+else:
+  logPrint("<OK> additional spread calculation (indoor sensor, WH31, WH45) is deactivated - to enable set Export\ADD_SPREAD = True in config")
+
+if ADD_SIGNAL:
+  if addSignalValues(WS_IP) != "":
+    logPrint("<OK> additional output of the signal quality activated - to disable set Export\ADD_SIGNAL = False in config")
+  else:
+    logPrint("<ERROR> console "+WS_IP+" does not support gathering the signal quality; ADD_SIGNAL disabled")
+    ADD_SIGNAL = False
+else:
+  logPrint("<OK> additional output of the signal quality is deactivated - to enable set Export\ADD_SIGNAL = True in config")
+
+if FWD_WARNING:
+  logPrint("<OK> FWD warning enabled, warns if a forward had "+str(FWD_WARNINT)+" (specified globally or individually by FWD_WARNINT) unsuccessful attempts - to disable set FWD_WARNING = False in config")
+else:
+  logPrint("<OK> FWD warning disabled - to enable set FWD_WARNING = True in config")
+
+if ADD_SCRIPT != "":
+  logPrint("<OK> ADD_SCRIPT function for script "+ADD_SCRIPT+" activated - is executed for every incoming data record")
 
 if HIDDEN_FEATURES:
   logPrint("<OK> hidden features enabled - to disable set HIDDEN_FEATURES = False in config")
@@ -6341,6 +8575,11 @@ if HIDDEN_FEATURES:
 # v0.09 warn on errors in FWD_REMAP
 if fwd_error != "":
   logPrint(fwd_error)                                          # output error in FWD_REMAP
+
+# v0.10: enable debug mode the other way
+if os.path.exists(CONFIG_DIR+"/debug.enable"):
+  myDebug = True
+  logPrint("<OK> debug enabled via file debug.enable")
 
 # Webserver und zusaetzlich den UDP-Server starten
 myLB_IP = LB_IP if LB_IP != "" else "*"
@@ -6423,9 +8662,9 @@ if wsconnected:
   #    signum = getattr(signal,i)
   #    if signum != 18:
   #      signal.signal(signum,terminateProcess)
-  #      if myDebug: logPrint("<DEBUG> SIG-catch enabled for {}".format(i))
+  #      debugPrint("SIG-catch enabled for {}".format(i))
   #  except (OSError, RuntimeError, ValueError) as m:
-  #    if myDebug: logPrint ("<DEBUG> SIG-catch skipped for {}".format(i))
+  #    debugPrint ("SIG-catch skipped for {}".format(i))
 
   while wsconnected:
     try:
@@ -6459,9 +8698,11 @@ if wsconnected:
           elif data[1] == "Plugin.debug=enable":               # activate debug mode
             logPrint("<INFO> debug mode via UDP enabled from " + r_addr)
             myDebug = True
+            setdebugStateFile("enable")
           elif data[1] == "Plugin.debug=disable":              # disable debug mode
             logPrint("<INFO> debug mode via UDP disabled from " + r_addr)
             myDebug = False
+            setdebugStateFile("disable")
           elif data[1] == "Plugin.pushover=enable":            # activate Pushover warnings
             if PO_USER != "" and PO_TOKEN != "":
               PO_ENABLE = True
@@ -6471,6 +8712,15 @@ if wsconnected:
           elif data[1] == "Plugin.pushover=disable":           # disable Pushover warnings
             logPrint("<INFO> pushover warning via UDP disabled from " + r_addr)
             PO_ENABLE = False
+          elif data[1] == "Plugin.customwarning=enable":       # activate Pushover custom warnings
+            if PO_USER != "" and PO_TOKEN != "":
+              POcustomWarning = True
+              logPrint("<INFO> pushover custom warning via UDP enabled from " + r_addr)
+            else:
+              logPrint("<INFO> pushover customwarning could not be activated via UDP from " + r_addr + " - USER or TOKEN are not correctly set in config")
+          elif data[1] == "Plugin.customwarning=disable":      # disable Pushover custom warnings
+            logPrint("<INFO> pushover custom warning via UDP disabled from " + r_addr)
+            POcustomWarning = False
           elif data[1] == "Plugin.leakwarning=enable":         # activate leak warning
             logPrint("<INFO> leakwarning via UDP enabled from " + r_addr)
             LEAKAGE_WARNING = True
@@ -6485,10 +8735,29 @@ if wsconnected:
             CO2_WARNING = False
           elif data[1] == "Plugin.intvlwarning=enable":        # activate interval warning
             logPrint("<INFO> intvlwarning via UDP enabled from " + r_addr)
-            CO2_WARNING = True
+            INTVL_WARNING = True
           elif data[1] == "Plugin.intvlwarning=disable":       # disable interval warning
             logPrint("<INFO> intvlwarning via UDP disabled from " + r_addr)
-            CO2_WARNING = False
+            INTVL_WARNING = False
+          elif data[1] == "Plugin.rebootwarning=enable":       # activate reboot warning
+            logPrint("<INFO> rebootwarning via UDP enabled from " + r_addr)
+            REBOOT_WARNING = True
+          elif data[1] == "Plugin.rebootwarning=disable":      # disable reboot warning
+            logPrint("<INFO> rebootwarning via UDP disabled from " + r_addr)
+            REBOOT_WARNING = False
+          elif data[1] == "Plugin.fwdwarning=enable":          # activate FWD (forward) warning
+            logPrint("<INFO> FWD warning via UDP enabled from " + r_addr)
+            FWD_WARNING = True
+          elif data[1] == "Plugin.fwdwarning=disable":         # disable FWD (forward) warning
+            logPrint("<INFO> FWD warning via UDP disabled from " + r_addr)
+            FWD_WARNING = False
+          # v0.10 enable/disable battery warning - BATTERY_WARNING
+          elif data[1] == "Plugin.battwarning=enable":         # activate battery warning
+            logPrint("<INFO> battery warning via UDP enabled from " + r_addr)
+            BATTERY_WARNING = True
+          elif data[1] == "Plugin.battwarning=disable":        # disable battery warning
+            logPrint("<INFO> battery warning via UDP disabled from " + r_addr)
+            BATTERY_WARNING = False
     except:
       if sndlog :
         doNothing()
@@ -6523,6 +8792,6 @@ if UPD_CHECK:
 if STORM_WARNING: savePickle(CONFIG_FILE, CONFIG_DIR+"/"+prgname+"-"+LBH_PORT+"-stundenwerte.pkl")
 saveMinMax(min_max_pickle)
 sendUDP("SID=" + defSID + " running=0")
-allPrint("<OK> "+prgname+" "+prgver+" stopped")
+allPrint("<OK> "+prgname+" "+prgbuild+" stopped")
 #terminateProcess(0,0)
 
